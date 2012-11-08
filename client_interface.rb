@@ -1,3 +1,6 @@
+# The purpose of the interface modules is to provide an abstraction layer for converting messages to and from whatever form they need to be in to be consumed and processed
+# In the case of the user, this will take on the form of various text formats or commands to a GUI
+# In the case of an AI, this will be something more like meta-data to allow simple decision making sans-text-parsing
 module TextInterface
     def generate(message)
         case message.type

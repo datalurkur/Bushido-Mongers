@@ -1,3 +1,6 @@
+# Threadsafe logging that logs the name of the thread, the file and line number, log level, and log message
+# Requires setup
+# Functions as a singleton
 class Log
     class << self
         def setup(name="Main thread")

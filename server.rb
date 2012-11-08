@@ -4,6 +4,9 @@ require 'socket_utils'
 require 'irc_conduit'
 require 'irc_client'
 
+# Responsible for low-level socket IO, socket maintenance, and communication via IRC
+# Listens for new connections in a separate thread
+# Polls sockets for input on separate threads, for this reason, sockets should be modified and closed using the provided APIs
 class Server
     include SocketUtils
 

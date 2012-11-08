@@ -1,5 +1,7 @@
 require 'log'
 
+# Generic message defining, creation, checking, and delegation
+# Used in lots of places
 class Message
     class << self
         def define(type,message_class=nil,required_args=[])

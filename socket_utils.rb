@@ -1,10 +1,12 @@
 require 'thread'
-require 'digest'
 
+# Miscellaneous shared code and utilities
 module SocketUtils
     STATIC_SOCKET_READ_SIZE = 1024
     DEFAULT_LISTEN_PORT = 9999
 
+    # For a given socket protected by a mutex, take a partial buffer and poll for new messages
+    # If new messages are received (completely), unpack them from network format and recast them
     # Returns completed messages
     def buffer_socket_input(socket, mutex, buffer)
         messages   = []
@@ -36,6 +38,7 @@ module SocketUtils
         messages
     end
 
+    # Take a message and pack it into network format
     def pack_message(message)
         Log.debug(message.report)
         packed_data = Marshal.dump(message)

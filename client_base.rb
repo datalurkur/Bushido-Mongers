@@ -3,7 +3,9 @@ require 'socket_utils'
 
 require 'log'
 
-# Provides a low-level interface to server communications
+# ClientBase provides a low-level interface to server and client communications
+# In this case, the server is the actual server, and the "client" is whatever object is providing input from the user (this might be the command line or the IRCConduit, for example, hence the distinction)
+# All of the interesting functionality happens in the subclass, this class serves only to facilitate communication
 # Server IO is asynchronous
 # Client IO is asynchronous
 class ClientBase

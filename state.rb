@@ -1,5 +1,6 @@
 require 'message'
 
+# Provides a set of tools for maintaining a state stack and state variables
 module StateMaintainer
     def current_state
         raise "#{self.class} is stateless!" if @state_stack.empty?
@@ -25,6 +26,8 @@ module StateMaintainer
     def get(var);             internal_state[var];         end
 end
 
+# Parent class for classes which will control Client behavior
+# Function stubs to be defined by state subclasses
 class State
     def initialize(client)
         @client = client

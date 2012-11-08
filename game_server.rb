@@ -1,5 +1,8 @@
 require 'server'
 
+# GameServer is responsible for handling client communications above the socket layer and delegating them where appropriate
+# Handles logins and authentication
+# Handles lobby creation, maintenance, and destruction
 class GameServer < Server
     def initialize(config={})
         super(config)

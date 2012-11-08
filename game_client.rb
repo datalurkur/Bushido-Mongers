@@ -5,6 +5,9 @@ require 'states/login_state'
 
 require 'client_interface'
 
+# GameClient mostly functions as an input buffer and state container; it is also responsible for passing messages and interactables through the interface module for translation
+# When it comes to actual game events and functionality, the state objects do all the heavy lifting
+# GameClient basically gadflys for input events and passes any that come in to whatever state is currently controlling its behavior
 class GameClient < ClientBase
     include StateMaintainer
 
