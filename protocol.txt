@@ -8,10 +8,10 @@ S->C Auth Request  (method, hash)
 C->S Auth Response (password hashed according to method)
 S->C Login Success / Login Fail (reason)
 
-==================
-| LOBBY PROTOCOL |
-==================
-(Happens when client state is :lobby)
+========================
+| SERVER MENU PROTOCOL |
+========================
+(Happens when client state is :server_menu)
 Request Lobby List:
 C->S Query Lobbies
 S->C Lobby List
