@@ -1,104 +1,81 @@
+require 'log'
+
 class Message
     class << self
+        def define(type,message_class=nil,required_args=[])
+            raise "Message class must be a symbol, #{message_class.class} provided"      unless (Symbol === message_class)
+            raise "Required arguments must be an array, #{required_args.class} provided" unless (Array === required_args)
+            types[type] = {
+                :required => required_args,
+                :message_class => message_class || type
+            }
+        end
+
+        def types
+            @types ||= {}
+        end
+
+        def message_class_of(type)
+            types[type][:message_class]
+        end
+
+        def type_defined?(type)
+            types.has_key?(type)
+        end
+
+        def required_args(message_class)
+            types.keys.select { |k| types[k][:message_class] == message_class }
+        end
+
         def listeners(message_class)
-            @listeners ||= {}
-            @listeners[message_class] ||= []
+            Thread.current[:listeners] ||= {}
+            Thread.current[:listeners][message_class] ||= []
+            Thread.current[:listeners][message_class]
         end
 
-        def register_listener(listener, message_class)
-            self.listeners(message_class) << listener
-            self.listeners(message_class).uniq!
+        def get_listeners_for(type)
+            message_class = message_class_of(type)
+            listeners(message_class) + listeners(:all)
         end
 
-        def send(message)
-            self.listeners(message.class).each do |listener|
-                begin
-                    debug("Dispatching #{message.class} message to #{listener.class}",4)
-                    listener.parse_message(message)
-                rescue Exception => e
-                    debug("#{listener.class} failed to parse message #{message.class} : #{e.message}")
-                    debug(e.backtrace)
-                end
+        def register_listener(listener,message_class)
+            listeners(message_class) << listener
+            listeners(message_class).uniq!
+        end
+
+        def dispatch(type,args={})
+            m = Message.new(type,args)
+            get_listeners_for(type).each do |listener|
+                listener.process_message(m)
             end
         end
-    end
 
-    def initialize(data={}); @data=data; self; end
-    #def [](index); @data[index]; end
-    def method_missing(name,*args,&block); @data[name]; end
-
-    # Messages that the server cares about
-    class NewPlayer < Message
-        def initialize(player,castle,ninja); super(:player=>player, :castle=>castle, :ninja=>ninja); end
-    end
-    class SetPlayerReady < Message
-        def initialize(player,state); super(:player=>player, :state=>state); end
-    end
-
-    # Messages that clients care about
-    class PlayerRejected < Message
-        def initialize(player,reason); super(:player=>player, :reason=>reason); end
-    end
-    class PlayerJoins < Message
-        def initialize(player,castle,ninja); super(:player=>player, :castle=>castle, :ninja=>ninja); end
-    end
-    class PlayerResigns < Message
-        def initialize(player); super(:player=>player); end
-    end
-    class PlayerDefeated < Message
-        def initialize(player,reason); super(:player=>player, :reason=>reason); end
-    end
-    class RegistrationBegins < Message; end
-    class GamePending < Message; end
-    class GameStarts < Message; end
-    class NextRound < Message; end
-    class GameEnds < Message
-        def initialize(winner); super(:winner=>winner); end
-    end
-
-    # Messages that game state cares about
-    # Rooms also care about this one
-    class UnitMoves < Message
-        def initialize(agent,portal); super(:agent=>agent, :portal=>portal); end
-    end
-    class UnitAttacks < Message
-        def initialize(agent,target); super(:agent=>agent, :target=>target); end
-    end
-    class UnitDies < Message
-        def initialize(agent,slayer); super(:agent=>agent, :slayer=>slayer); end
-    end
-    class UnitReincarnates < Message
-        def initialize(agent,location); super(:agent=>agent, :location=>location); end
-    end
-    class Intel < Message
-        def initialize(agent,action,location,means); super(:agent=>agent, :action=>action, :location=>location); end
-    end
-    # Messages ninjas care about
-    class SetNinjaMove < Message
-        def initialize(owner,portal); super(:owner=>owner, :portal=>portal); end
-    end
-    class SetNinjaAction < Message
-        def initialize(owner,action_name); super(:owner=>owner, :action_name=>action_name); end
-    end
-
-    # Messages players care about
-    class News < Message
-        def initialize(recipients,message)
-            rcpts = unless Array === recipients
-                [recipients]
-            else
-                recipients
-            end
-            super(:recipients=>rcpts, :message=>message)
+        def check_message(type,args)
+            raise "Unknown message type #{type}" unless type_defined?(type)
+            required_args(type).each { |arg| raise "#{arg} required for #{type} messages" unless args.has_key?(arg) }
         end
-        def self.move(recipient,witness,agent,source,dest,portal)
-            message="FIXME"
-            News.new(recipient,message)
+    end
+
+    def initialize(type,args={})
+        Message.check_message(type,args)
+        @type = type
+        @args = args
+
+        self
+    end
+
+    def type; @type; end
+
+    def report
+        "#{@type}: #{@args.inspect}"
+    end
+
+    def method_missing(name,*args)
+        unless @args[name]
+            raise "No parameter #{name} for message type #{type}"
         end
-        def self.action(recipient,witness,agent,action,location,name)
-            message="FIXME"
-            News.new(owner,message)
-        end
+        @args[name]
     end
 end
 
+require 'message_defs'

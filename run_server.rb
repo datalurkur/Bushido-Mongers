@@ -1,31 +1,19 @@
 #!/usr/bin/ruby
 
-require 'irc_server'
+require 'game_server'
 
-Signal.trap("TERM") do
-    $server.stop if $server.running
+config = {
+    :irc_enabled => false,
+    :irc_server  => "irc.freenode.net",
+    :irc_port    => 7000,
+    :irc_nick    => "ninja_game_bot",
+    :listen_port => 9999,
+}
+
+Log.setup
+s = GameServer.new(config)
+
+while s.is_running?
 end
 
-# Parameters
-servername = "irc.freenode.net"
-port       = 7000
-nick       = "ninja_game_bot"
-
-# Construct the IRC object
-$server = IRCServer.new
-$server.start(servername,port,nick)
-
-while($server.running) do
-    begin
-        # Get local user input
-        input = gets
-        case input
-        when /stop/
-            debug("Stopping server")
-            $server.stop
-        else
-        end
-    rescue Exception => e
-        debug(["Failed to parse admin command",e.message,e.backtrace])
-    end
-end
+s.teardown

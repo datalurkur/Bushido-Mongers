@@ -1,0 +1,25 @@
+==================
+| LOGIN PROTOCOL |
+==================
+(Happens when client state is :login)
+Login:
+C->S Login Request (username)
+S->C Auth Request  (method, hash)
+C->S Auth Response (password hashed according to method)
+S->C Login Success / Login Fail (reason)
+
+==================
+| LOBBY PROTOCOL |
+==================
+(Happens when client state is :lobby)
+Request Lobby List:
+C->S Query Lobbies
+S->C Lobby List
+
+Join Lobby:
+C->S Join Lobby (lobby ID)
+S->C Join Lobby Success / Join Lobby Fail (reason)
+
+Create Lobby:
+C->S Create Lobby (lobby name)
+S->C Create Lobby Success / Fail (reason)

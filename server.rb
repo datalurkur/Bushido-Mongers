@@ -1,139 +1,134 @@
-require 'game'
-require 'client'
+require 'socket'
+
+require 'socket_utils'
+require 'irc_conduit'
+require 'irc_client'
 
 class Server
-    attr_reader :running
+    include SocketUtils
 
-    def initialize
-        Message.register_listener(self, Message::RegistrationBegins)
-        Message.register_listener(self, Message::PlayerJoins)
-        Message.register_listener(self, Message::SetPlayerReady)
-        Message.register_listener(self, Message::PlayerRejected)
-        Message.register_listener(self, Message::PlayerDefeated)
-        Message.register_listener(self, Message::GamePending)
-        Message.register_listener(self, Message::GameStarts)
-        Message.register_listener(self, Message::NextRound)
-        Message.register_listener(self, Message::GameEnds)
-        Message.register_listener(self, Message::News)
-
-        @game    = Game.new
+    def initialize(config={})
+        @config  = config
         @running = false
-        @clients = {}
 
-        self
+        setup
     end
 
-    def send(client,message); raise "Send must be implemented by a subclass";  end
+    def is_running?; @running; end
 
-    def start
-        debug("Starting server")
+    def setup
+        start_listening_for_connections
+
+        # Open the IRC Conduit if required
+        if @config[:irc_enabled]
+            IRCConduit.start(@config[:irc_server], @config[:irc_port], @config[:irc_nick], self)
+        end
+
         @running = true
     end
 
-    def stop
-        debug("Stopping server")
-        msg_to_all_players("Server is shutting down")
+    def start_listening_for_connections
+        # Establish the listen socket
+        # This is used not only be remotely connecting clients, but also by the IRC Clients
+        Log.debug("Listen port undefined, using default port #{DEFAULT_LISTEN_PORT}") unless @config[:listen_port]
+        @config[:listen_port] ||= DEFAULT_LISTEN_PORT
+
+        @sockets_mutex = Mutex.new
+        @client_sockets = {}
+
+        @accept_socket = TCPServer.new(@config[:listen_port]) 
+        @accept_thread = Thread.new do
+            Log.name_thread("accept_thread")
+            while(true)
+                begin
+                    # Accept the new connection
+                    socket = @accept_socket.accept
+                    set_client_info(socket, {
+                        :state         => :accepted,
+                        :mutex         => Mutex.new
+                    })
+                    alter_client_info(socket, {:listen_thread => spawn_listen_thread_for(socket)})
+                rescue Exception => e
+                    Log.debug(["Failed to accept connection",e.message,e.backtrace])
+                end
+            end
+        end
+    end
+
+    def stop_listening_for_connections
+        @accept_thread.kill
+        @accept_socket.close
+        @sockets_mutex.synchronize do
+            @client_sockets.each_key do |k|
+                @client_sockets[k][:listen_thread].kill
+                k.close
+            end
+            @client_sockets.clear
+        end
+    end
+
+    def teardown
+        stop_listening_for_connections
+        IRCConduit.stop
         @running = false
     end
 
-    def save(name)
-        raise "Save feature not implemented"
+    def terminate_client(socket)
+        @sockets_mutex.synchronize {
+            @client_sockets[socket][:listen_thread].kill
+            socket.close
+            @client_sockets.delete(socket)
+        }
     end
 
-    def load(name)
-        raise "Load feature not implemented"
+    def get_client_info(socket)
+        info = nil
+        @sockets_mutex.synchronize { info = @client_sockets[socket] }
+        info
     end
 
-    def msg(client,message)
-        return if message.nil?
-        (Array === message) ? (message.each { |m| send(client,m) }) : send(client,message)
+    def alter_client_info(socket,info)
+        @sockets_mutex.synchronize { @client_sockets[socket].merge!(info) }
     end
 
-    def process_client_command(client,message)
-        unless @clients[client]
-            @clients[client] ||= Client.new(@game)
-            msg(client,"Welcome, #{client}!")
-            results = @clients[client].set_state(:setup)
-            msg(client,results)
-        else
-            results = @clients[client].process(message)
-            msg(client,results)
-        end
+    def set_client_info(socket,info)
+        @sockets_mutex.synchronize { @client_sockets[socket] = info }
     end
 
-    def all_players;    @clients.keys                                      end
-    def active_players; @clients.keys.select { |k| @clients[k].active? };  end
-
-    def msg_to_all_players(message);    all_players.each    { |client| msg(client,message) }; end
-    def msg_to_active_players(message); active_players.each { |client| msg(client,message) }; end
-
-    def get_client(player)
-        p = @clients.values.select { |i| i.player == player }
-        raise "Duplicate players detected" if p.size > 1
-        raise "Error locating player" if p.empty?
-        p[0]
-    end
-
-    def update_client_state(filter,update)
-        eligible_clients = @clients.keys.select do |client_key|
-            c = @clients[client_key]
-            case filter
-            when Array;  filter.include?(c.state)
-            when Symbol; filter == c.state
-            when Client; filter == c
+    def spawn_listen_thread_for(socket)
+        sockaddr = socket.addr.last
+        @threadcount           ||= {}
+        @threadcount[sockaddr] ||= 0
+        @threadcount[sockaddr]  += 1
+        thread_name = "#{sockaddr} (#{@threadcount[sockaddr]})"
+        Log.debug("Listening for client input from #{sockaddr}")
+        Thread.new do
+            Log.name_thread(thread_name)
+            data_buffer = ""
+            while(true)
+                begin
+                    lines = []
+                    while lines.empty?
+                        new_lines = buffer_socket_input(socket, get_client_info(socket)[:mutex], data_buffer)
+                        lines.concat(new_lines)
+                    end
+                    lines.each { |line| process_client_message(socket, line) }
+                rescue Exception => e
+                    Log.debug(["Server failed to process input from socket",e.message,e.backtrace])
+                end
             end
         end
-        eligible_clients.each do |client_key|
-            results = @clients[client_key].set_state(update)
-            msg(client_key, results)
-        end
     end
 
-    def update_clients_for_next_round
-        active_players.each do |client_name|
-            debug("Updating #{client_name}",4)
-            client = @clients[client_name]
-            
-            # Handle news
-            client.news do |news|
-                msg(client_name, news)
-            end
-            client.clear_news
-        end
+    def send_to_client(socket, message)
+        packed_data = pack_message(message)
+        get_client_info(socket)[:mutex].synchronize {
+            socket.puts(packed_data)
+        }
     end
 
-    def parse_message(message)
-        case message
-        when Message::RegistrationBegins
-            msg_to_all_players("Waiting for players to join.")
-            update_client_state([:pending,:playing,:defeated], :waiting)
-        when Message::SetPlayerReady
-            msg_to_all_players("#{message.player} is#{message.state ? "" : " not"} ready")
-        when Message::PlayerJoins
-            msg_to_all_players("#{message.player} has joined the game.")
-            update_client_state(get_client(message.player), :waiting)
-        when Message::PlayerResigns
-            update_client_state(get_client(message.player), (@game.state == :playing) ? :defeated : :setup)
-            msg_to_all_players("#{message.player} has resigned.")
-        when Message::PlayerRejected
-            msg(message.player,"Join request rejected - #{message.reason}")
-        when Message::PlayerDefeated
-            msg_to_all_players("#{message.player} has been defeated - #{message.reason}")
-            update_client_state(get_client(message.player), :defeated)
-        when Message::GamePending
-            msg_to_all_players("There are enough players to begin the game; type \"ready\" to start the game (all players must be ready).")
-            update_client_state(:waiting,:pending)
-        when Message::GameStarts
-            msg_to_all_players("The game has begun!")
-            update_client_state(:pending,:playing)
-            update_clients_for_next_round
-        when Message::GameEnds
-            msg_to_all_players("The game has ended, all honor to the victor, #{message.winner}!")
-        when Message::NextRound
-            msg_to_all_players("The round has ended.")
-            update_clients_for_next_round
-        when Message::News
-            message.recipients.each { |r| get_client(r).add_news(message.message) }
-        end
+    # Special callback for the IRC interface
+    def new_irc_user(nick)
+        IRCClient.new(@config[:listen_port], nick)
     end
 end
