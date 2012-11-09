@@ -30,7 +30,7 @@ class Log
         end
 
         # THREADSAFE
-        def debug(msg,level=1)
+        def debug(msg, level=1)
             raise "Logging system never initialized" unless @logging_setup
             @log_mutex.synchronize do
                 file,line = caller[2].split(/:/)
@@ -38,20 +38,20 @@ class Log
                 thread_name = @log_threads[Thread.current] || @default_thread_name
 
                 if level <= @log_files[file]
-                    @longest_file = [@longest_file,file.to_s.length].max
+                    @longest_file = [@longest_file, file.to_s.length].max
                     if Hash === msg
-                        msg.each { |l| debug_line(thread_name,file,line,level,l) }
+                        msg.each { |l| debug_line(thread_name, file, line, level, l) }
                     elsif Array === msg
-                        msg.flatten.each { |l| debug_line(thread_name,file,line,level,l) }
+                        msg.flatten.each { |l| debug_line(thread_name, file, line, level, l) }
                     else
-                        debug_line(thread_name,file,line,level,msg)
+                        debug_line(thread_name, file, line, level, msg)
                     end
                 end
             end
         end
 
         # NOT THREADSAFE
-        def debug_line(thread_name,file,line,level,msg)
+        def debug_line(thread_name, file, line, level, msg)
             puts "[#{thread_name.ljust(@longest_thread_name)}] #{file.to_s.ljust(@longest_file)}:#{line.to_s.ljust(3)} (#{level.to_s.ljust(@max_log_level.to_s.length)}) | #{msg}"
         end
     end

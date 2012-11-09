@@ -11,8 +11,8 @@ require 'client_interface'
 class GameClient < ClientBase
     include StateMaintainer
 
-    def initialize(ip,port,interface,initial_state={})
-        super(ip,port)
+    def initialize(ip, port, interface, initial_state={})
+        super(ip, port)
 
         @interface = interface
 
@@ -46,6 +46,6 @@ class GameClient < ClientBase
     end
 
     def get_from_client(text)
-        @interface.parse(current_state.get_exchange_context,text)
+        @interface.parse(current_state.get_exchange_context, text)
     end
 end

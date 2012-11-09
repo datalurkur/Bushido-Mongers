@@ -20,7 +20,7 @@ module TextInterface
         end
     end
 
-    def parse(context,text)
+    def parse(context, text)
         unless context
             debug("No context for parsing input, returning raw command")
             return Message.new(:raw_command,{:command=>text})
@@ -32,7 +32,7 @@ module TextInterface
         when :choose_from_list
             choice = get_choice(context,text)
             if choice
-                Message.new(:valid_input,{:input=>choice})
+                Message.new(:valid_input, {:input=>choice})
             else
                 Message.new(:invalid_input)
             end
@@ -64,7 +64,7 @@ module SlimInterface
         end
 
         def list(subject,items)
-            ([subject] + decorate(items,style)).join(" ")
+            ([subject] + decorate(items, style)).join(" ")
         end
 
         def get_choice(context,text)
@@ -87,16 +87,16 @@ module VerboseInterface
             "Enter #{field.to_title}:"
         end
 
-        def list(subject,items,style=:number)
-            ([subject] + decorate(items,style)).join("\n")
+        def list(subject, items, style=:number)
+            ([subject] + decorate(items, style)).join("\n")
         end
 
-        def get_choice(context,text)
+        def get_choice(context, text)
             index = text.to_i
             unless (0...context.choices.size).include?(index)
                 nil
             else
-                context.choices[index]    
+                context.choices[index]
             end
         end
     end
@@ -104,6 +104,8 @@ end
 
 # Provides meta-data for AI or non-textual clients
 module MetaDataInterface
+    extend TextInterface
+
     class << self
         def text_field(field)
             [:text_field,field]
@@ -113,7 +115,7 @@ module MetaDataInterface
             [:list,items]
         end
 
-        def get_choice(context,text)
+        def get_choice(context, text)
             text
         end
     end
