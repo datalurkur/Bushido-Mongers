@@ -4,81 +4,40 @@ require 'crypto_utils'
 class ServerMenuState < State
     def initialize(client)
         super(client)
+
+        define_exchange(:menu_choice, :choose_from_list, {:choices => menu_choices}) do |choice|
+            case choice
+            when :list_lobbies; @client.send_to_server(Message.new(:list_lobbies))
+            when :create_lobby; @entry_type = :create_lobby; begin_exchange(:lobby_name)
+            when :join_lobby;   @entry_type = :join_lobby;   begin_exchange(:lobby_name)
+            when :disconnect;   @client.set_state(LoginState.new(@client))
+            end
+        end
+
+        define_exchange_chain([
+            [:lobby_name,     :text_field],
+            [:lobby_password, :text_field]
+        ]) do
+            password_hash = LameCrypto.hash_using_method(@client.get(:hash_method),@client.get(:password),@client.get(:server_hash))
+            @client.unset(:password)
+            @client.send_to_server(Message.new(@entry_type,{:lobby_name=>@client.get(:lobby_name),:lobby_password=>password_hash}))
+        end
+
         @client.send_to_client(Message.new(:notify, {:text=>"You have connected to the server as #{@client.get(:name)}"}))
         @client.send_to_server(Message.new(:get_motd))
     end
 
-    def menu_choices; [
-        :list_lobbies,
-        :join_lobby,
-        :create_lobby,
-        :disconnect
-    ]; end
-
-    def display_menu
-        @client.send_to_client(Message.new(:choose, {:field=>:server_menu,:choices=>menu_choices}))
-    end
-        
-    def from_client(message)
-        case message.type
-        when :choice
-            case message.choice
-            when :list_lobbies
-                @client.send_to_server(Message.new(:list_lobbies))
-                return
-            when :create_lobby
-                @local_state = :create_name
-                @client.send_to_client(Message.new(:query,{:field=>:lobby_name}))
-                return
-            when :join_lobby
-                @local_state = :join_name
-                @client.send_to_client(Message.new(:query,{:field=>:lobby_name}))
-                return
-            when :disconnect
-                # anjean; eventually, LoginState will be replaced here with ConnectState
-                @client.set_state(LoginState.new(@client))
-                return
-            end
-        when :response
-            case @local_state
-            when :join_name
-                @local_state = :join_password
-                @client.set(:lobby_name,message.value)
-                @client.send_to_client(Message.new(:query,{:field=>:lobby_password}))
-                return
-            when :join_password
-                @local_state = :joining_lobby
-                hashed_password = LameCrypto.hash_using_method(@client.get(:hash_method),message.value,@client.get(:server_hash))
-                @client.send_to_server(Message.new(:join_lobby,{:lobby_name=>@client.get(:lobby_name),:lobby_password=>hashed_password}))
-                return
-            when :create_name
-                @local_state = :create_password
-                @client.set(:lobby_name,message.value)
-                @client.send_to_client(Message.new(:query,{:field=>:lobby_password}))
-                return
-            when :create_password
-                @local_state = :creating_lobby
-                hashed_password = LameCrypto.hash_using_method(@client.get(:hash_method),message.value,@client.get(:server_hash))
-                @client.send_to_server(Message.new(:create_lobby,{:lobby_name=>@client.get(:lobby_name),:lobby_password=>hashed_password}))
-                return
-            end
-        when :invalid_choice
-            display_menu
-            return
-        end
-
-        super(message)
-    end
+    def menu_choices; [:list_lobbies, :join_lobby, :create_lobby, :disconnect]; end
 
     def from_server(message)
         case message.type
         when :motd
             @client.send_to_client(Message.new(:notify, {:text=>message.motd}))
-            display_menu
+            begin_exchange(:menu_choice)
             return
         when :lobby_list
             @client.send_to_client(Message.new(:list, {:title=>"Available Game Lobbies", :items=>message.lobbies}))
-            display_menu
+            begin_exchange(:menu_choice)
             return
         when :join_success
             @client.send_to_client(Message.new(:notify, {:text=>"Joined #{@client.get(:lobby_name)}"}))
@@ -86,7 +45,7 @@ class ServerMenuState < State
             return
         when :join_fail
             @client.send_to_client(Message.new(:notify, {:text=>"Failed to join lobby: #{message.reason}"}))
-            @local_state = nil
+            @entry_type = nil
             return
         when :create_success
             @client.send_to_client(Message.new(:notify, {:text=>"#{@client.get(:lobby_name)} created"}))
@@ -94,7 +53,7 @@ class ServerMenuState < State
             return
         when :create_fail
             @client.send_to_client(Message.new(:notify, {:text=>"Failed to create lobby: #{message.reason}"}))
-            @local_state = nil
+            @entry_type = nil
             return
         end
 

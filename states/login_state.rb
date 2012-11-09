@@ -5,41 +5,32 @@ require 'crypto_utils'
 class LoginState < State
     def initialize(client)
         super(client)
-        @client.send_to_client(Message.new(:notify, {:text => "Preparing to log in"}))
-        Log.debug(client.get_internal_state.inspect)
-        @client.get(:username) ? send_login_request : query_name
-    end
 
-    def from_client(message)
-        case message.type
-        when :response
-            if @local_state == :query_name
-                @client.set(:username,message.value)
-                send_login_request
-                return
-            elsif @local_state == :query_password
-                #hash = LameCrypto.hash_using_method(@client.get(:hash_method),message.value,@client.get(:server_hash))
-                #@client.set(:password_hash,hash)
-                @client.set(:password,message.value)
-                send_auth_response
-                return
-            end
+        define_exchange(:username, :text_field) do
+            send_login_request
         end
 
-        super(message)
+        define_exchange(:password, :text_field) do
+            send_auth_response
+
+        end
+
+        @client.send_to_client(Message.new(:notify, {:text => "Preparing to log in"}))
+        @client.get(:username) ? send_login_request : begin_exchange(:name)
     end
 
     def from_server(message)
         case message.type
         when :login_reject
             if @local_state == :login_request
+                # anjean ; fix this to not crash ; BAYUD
                 raise "Login failed - #{message.reason}"
             end
         when :auth_request
             if @local_state == :login_request
                 @client.set(:hash_method,message.hash_method)
                 @client.set(:server_hash,message.server_hash)
-                @client.get(:password) ? send_auth_response : query_password
+                @client.get(:password) ? send_auth_response : begin_exchange(:password)
                 return
             end
         when :auth_reject
@@ -55,16 +46,6 @@ class LoginState < State
         end
 
         super(message)
-    end
-
-    def query_name
-        @client.send_to_client(Message.new(:query, {:field=>:username}))
-        @local_state = :query_name
-    end
-
-    def query_password
-        @client.send_to_client(Message.new(:query, {:field=>:password}))
-        @local_state = :query_password
     end
 
     def send_login_request

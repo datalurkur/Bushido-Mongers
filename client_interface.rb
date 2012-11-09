@@ -10,11 +10,11 @@ end
 module TextInterface
     def generate(message)
         case message.type
-        when :notify; message.text
-        when :query;  query(message.field)
+        when :notify;           message.text
+        when :text_field;       text_field(message.field)
         # While these would appear to be the same, one prompts a response (and this is very different to an AI!)
-        when :choose; list(message.field.to_title,message.choices)
-        when :list;   list(message.title,message.items)
+        when :choose_from_list; list(message.field.to_title,message.choices)
+        when :list;             list(message.title,message.items)
         else
             raise "Unhandled client message type #{message.type}"
         end
@@ -22,18 +22,19 @@ module TextInterface
 
     def parse(context,text)
         unless context
+            debug("No context for parsing input, returning raw command")
             return Message.new(:raw_command,{:command=>text})
         end
 
         case context.type
-        when :query
-            Message.new(:response,{:value=>text})
-        when :choose
+        when :text_field
+            Message.new(:valid_input,{:input=>text})
+        when :choose_from_list
             choice = get_choice(context,text)
             if choice
-                Message.new(:choice,{:choice=>choice})
+                Message.new(:valid_input,{:input=>choice})
             else
-                Message.new(:invalid_choice)
+                Message.new(:invalid_input)
             end
         else
             raise "Unhandled client message type #{context.type}"
@@ -58,7 +59,7 @@ module SlimInterface
     extend TextInterface
 
     class << self
-        def query(field)
+        def text_field(field)
             "Enter #{field.to_title}:"
         end
 
@@ -82,7 +83,7 @@ module VerboseInterface
     extend TextInterface
 
     class << self
-        def query(field)
+        def text_field(field)
             "Enter #{field.to_title}:"
         end
 
@@ -104,8 +105,8 @@ end
 # Provides meta-data for AI or non-textual clients
 module MetaDataInterface
     class << self
-        def query(field)
-            [:query,field]
+        def text_field(field)
+            [:text_field,field]
         end
 
         def list(items)

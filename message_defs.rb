@@ -21,11 +21,14 @@ Message.define(:create_fail,    :server_menu, [:reason])
 
 # Client / Interface Messages
 # Interface Messages
-Message.define(:query,          :interface, [:field])
-Message.define(:response,       :interface, [:value])
-Message.define(:choose,         :interface, [:field,:choices])
-Message.define(:choice,         :interface, [:choice])
-Message.define(:invalid_choice, :interface)
+# This group is a special class of messages which are used by the state to perform interactions
+# Each prompt must have a "field" attribute
+Message.define(:text_field,       :prompt,   [:field])
+Message.define(:choose_from_list, :prompt,   [:field,:choices])
+Message.define(:valid_input,      :response, [:input])
+Message.define(:invalid_input,    :response)
+
+# Mostly just raw text messages
 Message.define(:notify,         :interface, [:text])
 Message.define(:list,           :interface, [:title,:items])
 Message.define(:raw_command,    :interface, [:command])

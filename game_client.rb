@@ -42,13 +42,10 @@ class GameClient < ClientBase
     end
 
     def send_to_client(message)
-        @context = message
         @interface.generate(message)
     end
 
     def get_from_client(text)
-        ret = @interface.parse(@context,text)
-        @context = nil
-        ret
+        @interface.parse(current_state.get_exchange_context,text)
     end
 end
