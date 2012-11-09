@@ -106,19 +106,19 @@ class Server
         thread_name = "#{sockaddr} (#{@threadcount[sockaddr]})"
         Log.debug("Listening for client input from #{sockaddr}")
         Thread.new do
-            Log.name_thread(thread_name)
-            data_buffer = ""
-            while(true)
-                begin
+            begin
+                Log.name_thread(thread_name)
+                data_buffer = ""
+                while(true)
                     lines = []
                     while lines.empty?
                         new_lines = buffer_socket_input(socket, get_client_info(socket)[:mutex], data_buffer)
                         lines.concat(new_lines)
                     end
                     lines.each { |line| process_client_message(socket, line) }
-                rescue Exception => e
-                    Log.debug(["Server failed to process input from socket",e.message,e.backtrace])
                 end
+            rescue Exception => e
+                Log.debug(["Thread exited abnormally",e.message,e.backtrace])
             end
         end
     end

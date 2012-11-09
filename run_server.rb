@@ -8,6 +8,7 @@ config = {
     :irc_port    => 7000,
     :irc_nick    => "ninja_game_bot",
     :listen_port => 9999,
+    :motd        => "Youkoso!",
 }
 
 Log.setup

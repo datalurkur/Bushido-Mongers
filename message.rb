@@ -8,7 +8,7 @@ class Message
             raise "Message class must be a symbol, #{message_class.class} provided"      unless (Symbol === message_class)
             raise "Required arguments must be an array, #{required_args.class} provided" unless (Array === required_args)
             types[type] = {
-                :required => required_args,
+                :required_args => required_args,
                 :message_class => message_class || type
             }
         end
@@ -25,8 +25,8 @@ class Message
             types.has_key?(type)
         end
 
-        def required_args(message_class)
-            types.keys.select { |k| types[k][:message_class] == message_class }
+        def required_args(type)
+            types[type][:required_args]
         end
 
         def listeners(message_class)

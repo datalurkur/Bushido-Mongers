@@ -52,7 +52,7 @@ class Log
 
         # NOT THREADSAFE
         def debug_line(thread_name,file,line,level,msg)
-            puts "[#{thread_name.rjust(@longest_thread_name)}] #{file.to_s.rjust(@longest_file)}:#{line.to_s.ljust(3)} (#{level.to_s.ljust(@max_log_level.to_s.length)}) | #{msg}"
+            puts "[#{thread_name.ljust(@longest_thread_name)}] #{file.to_s.ljust(@longest_file)}:#{line.to_s.ljust(3)} (#{level.to_s.ljust(@max_log_level.to_s.length)}) | #{msg}"
         end
     end
 end

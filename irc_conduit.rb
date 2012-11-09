@@ -82,14 +82,18 @@ class IRCConduit
                 Log.debug("IRC Connected!")
 
                 @listen_thread = Thread.new do
-                    Log.name_thread("irc_listen")
-                    while true
-                        read_buffer = @primary_socket.gets
-                        if read_buffer.length > 0
-                            process_message(read_buffer)
+                    begin
+                        Log.name_thread("irc_listen")
+                        while true
+                            read_buffer = @primary_socket.gets
+                            if read_buffer.length > 0
+                                process_message(read_buffer)
+                            end
                         end
+                        Log.debug("Thread exiting")
+                    rescue Exception => e
+                        Log.debug(["Thread exited abnormally",e.message,e.backtrace])
                     end
-                    Log.debug("Thread exiting")
                 end
 
                 Log.debug("Thread is listening")

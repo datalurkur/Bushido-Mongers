@@ -16,7 +16,7 @@ class GameClient < ClientBase
 
         @interface = interface
 
-        internal_state=initial_state
+        set_internal_state(initial_state)
         set_state(LoginState.new(self))
 
         @running = true

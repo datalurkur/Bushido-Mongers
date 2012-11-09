@@ -39,19 +39,19 @@ class ClientBase
         @server_mutex          = Mutex.new
         @server_message_buffer = []
         @server_listen_thread  = Thread.new do
-            Log.name_thread("server_polling")
-            data_buffer = ""
-            while(true)
-                begin
+            begin
+                Log.name_thread("server_polling")
+                data_buffer = ""
+                while(true)
                     lines = []
                     while lines.empty?
                         new_lines = buffer_socket_input(@socket, @socket_mutex, data_buffer)
                         lines.concat(new_lines)
                     end
                     @server_mutex.synchronize { @server_message_buffer.concat(lines) }
-                rescue Exception => e
-                    Log.debug(["Client failed to process input from socket",e.message,e.backtrace])
                 end
+            rescue Exception => e
+                Log.debug(["Thread exited abnormally",e.message,e.backtrace])
             end
         end
     end
@@ -66,11 +66,15 @@ class ClientBase
         @client_mutex          = Mutex.new
         @client_message_buffer = []
         @client_listen_thread  = Thread.new do
-            Log.name_thread("client_polling")
-            while(true)
-                input = get_from_client
-                Log.debug("Received client message #{input.type}")
-                @client_mutex.synchronize { @client_message_buffer << input }
+            begin
+                Log.name_thread("client_polling")
+                while(true)
+                    input = get_from_client
+                    Log.debug("Received client message #{input.type}")
+                    @client_mutex.synchronize { @client_message_buffer << input }
+                end
+            rescue Exception => e
+                Log.debug(["Thread exited abnormally",e.message,e.backtrace])
             end
         end
     end

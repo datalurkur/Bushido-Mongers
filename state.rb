@@ -20,10 +20,11 @@ module StateMaintainer
         @state_stack.pop
     end
 
-    def internal_state;       @internal_state ||= {};      end
-    def internal_state=(val); @internal_state   = val;     end
-    def set(var,value);       internal_state[var] = value; end
-    def get(var);             internal_state[var];         end
+    def get_internal_state;      @internal_state ||= {};          end
+    def set_internal_state(val); @internal_state = val;           end
+    def set(var,value);          get_internal_state[var] = value; end
+    def unset(var);              get_internal_state.delete(var);  end
+    def get(var);                get_internal_state[var];         end
 end
 
 # Parent class for classes which will control Client behavior

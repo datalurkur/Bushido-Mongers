@@ -1,3 +1,9 @@
+class Symbol
+    def to_title
+        self.to_s.gsub(/_/, ' ').gsub(/(^| )(.)/) { "#{$1}#{$2.upcase}" }
+    end
+end
+
 # The purpose of the interface modules is to provide an abstraction layer for converting messages to and from whatever form they need to be in to be consumed and processed
 # In the case of the user, this will take on the form of various text formats or commands to a GUI
 # In the case of an AI, this will be something more like meta-data to allow simple decision making sans-text-parsing
@@ -5,8 +11,10 @@ module TextInterface
     def generate(message)
         case message.type
         when :notify; message.text
-        when :query; query(message.field)
-        when :choose; list(message.field,message.choices)
+        when :query;  query(message.field)
+        # While these would appear to be the same, one prompts a response (and this is very different to an AI!)
+        when :choose; list(message.field.to_title,message.choices)
+        when :list;   list(message.title,message.items)
         else
             raise "Unhandled client message type #{message.type}"
         end
@@ -21,9 +29,26 @@ module TextInterface
         when :query
             Message.new(:response,{:value=>text})
         when :choose
-            Message.new(:choice,{:choice=>get_choice(context,text)})
+            choice = get_choice(context,text)
+            if choice
+                Message.new(:choice,{:choice=>choice})
+            else
+                Message.new(:invalid_choice)
+            end
         else
             raise "Unhandled client message type #{context.type}"
+        end
+    end
+
+    def decorate(list,style)
+        return ["[none]"] if list.empty?
+        case style
+        when :number
+            (0...list.size).collect { |i| "(#{i}) #{list[i]}" }
+        when :letter
+            raise "Feature unimplemented"
+        when :bullet
+            list.collect { |i| "-#{i}" }
         end
     end
 end
@@ -34,15 +59,20 @@ module SlimInterface
 
     class << self
         def query(field)
-            "Enter #{field}:"
+            "Enter #{field.to_title}:"
         end
 
-        def list(items)
-            raise "Feature not yet implemented"
+        def list(subject,items)
+            ([subject] + decorate(items,style)).join(" ")
         end
 
         def get_choice(context,text)
-            raise "Feature not yet implemented"
+            index = text.to_i
+            unless (0...context.choices.size).include?(index)
+                nil
+            else
+                context.choices[index]    
+            end
         end
     end
 end
@@ -53,15 +83,20 @@ module VerboseInterface
 
     class << self
         def query(field)
-            "Enter #{field}:"
+            "Enter #{field.to_title}:"
         end
 
-        def list(items)
-            raise "Feature not yet implemented"
+        def list(subject,items,style=:number)
+            ([subject] + decorate(items,style)).join("\n")
         end
 
         def get_choice(context,text)
-            raise "Feature not yet implemented"
+            index = text.to_i
+            unless (0...context.choices.size).include?(index)
+                nil
+            else
+                context.choices[index]    
+            end
         end
     end
 end
@@ -78,7 +113,7 @@ module MetaDataInterface
         end
 
         def get_choice(context,text)
-            raise "Feature not yet implemented"
+            text
         end
     end
 end
