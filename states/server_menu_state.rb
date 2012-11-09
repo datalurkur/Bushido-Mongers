@@ -41,7 +41,7 @@ class ServerMenuState < State
             return
         when :join_success
             @client.send_to_client(Message.new(:notify, {:text=>"Joined #{@client.get(:lobby_name)}"}))
-            # anjean; fixme - switch to lobby state
+            @client.set_state(LobbyState.new(@client))
             return
         when :join_fail
             @client.send_to_client(Message.new(:notify, {:text=>"Failed to join lobby: #{message.reason}"}))
@@ -49,7 +49,7 @@ class ServerMenuState < State
             return
         when :create_success
             @client.send_to_client(Message.new(:notify, {:text=>"#{@client.get(:lobby_name)} created"}))
-            # anjean; fixme - switch to lobby state
+            @client.set_state(LobbyState.new(@client))
             return
         when :create_fail
             @client.send_to_client(Message.new(:notify, {:text=>"Failed to create lobby: #{message.reason}"}))

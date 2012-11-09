@@ -1,4 +1,5 @@
 require 'state'
+require 'states/lobby_state'
 require 'states/server_menu_state'
 require 'crypto_utils'
 
