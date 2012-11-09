@@ -68,6 +68,8 @@ class Message
 
     def type; @type; end
 
+    def message_class; Message.message_class_of(@type); end
+
     def report
         "#{@type}: #{@args.inspect}"
     end

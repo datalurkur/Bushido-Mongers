@@ -1,5 +1,6 @@
-# Seriously, guys, this isn't real crypto.  Don't use this for anything that *actually* needs to be secure
+require 'digest'
 
+# Seriously, guys, this isn't real crypto.  Don't use this for anything that *actually* needs to be secure
 class String
     def xor(other)
         l = [self.length, other.length].max
