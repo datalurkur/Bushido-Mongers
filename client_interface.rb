@@ -22,7 +22,7 @@ module TextInterface
 
     def parse(context, text)
         unless context
-            debug("No context for parsing input, returning raw command")
+            Log.debug("No context for parsing input, returning raw command")
             return Message.new(:raw_command,{:command=>text})
         end
 
@@ -104,8 +104,6 @@ end
 
 # Provides meta-data for AI or non-textual clients
 module MetaDataInterface
-    extend TextInterface
-
     class << self
         def text_field(field)
             [:text_field,field]
