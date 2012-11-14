@@ -1,0 +1,3 @@
+attack charge chop slice stab
+eat chomp gnaw bit
+drink quaff
