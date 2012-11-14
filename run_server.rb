@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-require 'game_server'
+require 'net/game_server'
 
 config = {
     :irc_enabled => false,

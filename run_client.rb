@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-require 'remote_client'
+require 'net/remote_client'
 
 config = {
     :username => "datalurkur",

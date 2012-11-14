@@ -57,7 +57,8 @@ class DerpyPNG
         @colors = []
         @width  = width
         @height = height
-        @bitmap = Array.new(width) { Array.new(height,0) }
+        @bitmap = Array.new(height) { Array.new(width,0) }
+        set_pixel(0,0,:black)
     end
 
     def maximize_contrast
@@ -87,17 +88,40 @@ class DerpyPNG
         end
     end
 
-    def set_pixel_at(x,y,index)
-        @bitmap[y][x] = index
+    def fill_box(x,y,w,h,color)
+        (x...(x+w)).each do |i|
+            (y...(y+h)).each do |j|
+                set_pixel(i,j,color)
+            end
+        end
     end
 
-    def set_pixel(x,y,r,g,b)
+    def set_pixel(x,y,color)
+        case color
+        when :red;   index_and_set(x,y,255,0,0)
+        when :green; index_and_set(x,y,0,255,0)
+        when :blue;  index_and_set(x,y,0,0,255)
+        when :white; index_and_set(x,y,255,255,255)
+        when :black; index_and_set(x,y,0,0,0)
+        else
+            raise "Unknown color #{color}"
+        end
+    end
+
+    def index_and_set(x,y,r,g,b)
         color_index = @colors.index([r,g,b])
         unless color_index
+            if @colors.size >= 256
+                raise "Max number of colors reached for indexed color"
+            end
             color_index = @colors.size
             @colors << [r,g,b]
         end
-        set_pixel_at(x,y,color_index)
+        set_index_at(x,y,color_index)
+    end
+
+    def set_index_at(x,y,index)
+        @bitmap[y][x] = index
     end
 
     def interlace

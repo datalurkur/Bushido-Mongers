@@ -1,4 +1,4 @@
-require 'log'
+require 'util/log'
 
 # Generic message defining, creation, checking, and delegation
 # Used in lots of places

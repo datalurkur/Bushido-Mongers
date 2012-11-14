@@ -5,6 +5,16 @@ class Thing
         end
 
         def types; @types ||= {}; end
+        def type_described?(type); types.has_key?(type); end
+
+        def attrs(type)
+            types[type]
+        end
+
+        def create(type)
+            raise "Thing #{type} has not been described" unless type_described?(type)
+            Thing.new(type, attrs(type))
+        end
     end
 end
 

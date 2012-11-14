@@ -1,2 +1,0 @@
-class Ninja
-end
