@@ -1,0 +1,16 @@
+Clan
+Guild
+Family
+Territory
+Emperor
+Bushido
+Ninjutsu
+Ninja
+Shinobi
+Kaginawa
+Sword
+Shuriken
+Cloak
+Mountain
+Castle
+Village
