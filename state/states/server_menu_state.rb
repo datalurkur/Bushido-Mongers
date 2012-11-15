@@ -46,6 +46,7 @@ class ServerMenuState < State
         when :join_fail
             @client.send_to_client(Message.new(:notify, {:text=>"Failed to join lobby: #{message.reason}"}))
             @entry_type = nil
+            begin_exchange(:menu_choice)
             return
         when :create_success
             @client.send_to_client(Message.new(:notify, {:text=>"#{@client.get(:lobby_name)} created"}))
@@ -54,6 +55,7 @@ class ServerMenuState < State
         when :create_fail
             @client.send_to_client(Message.new(:notify, {:text=>"Failed to create lobby: #{message.reason}"}))
             @entry_type = nil
+            begin_exchange(:menu_choice)
             return
         end
 

@@ -6,33 +6,33 @@ class Area < RegionContainer
     end
 
     def self.test_area
-        # [0]
+        # [a]
         #  |
-        # [1]-[2]
+        # [b]-[c]
         #  |   |
-        # [3]-[4]-[5]
+        # [d]-[e]-[f]
         #      |
-        #     [6]
+        #     [g]
         #      |
-        #     [7]
+        #     [h]
 
         area = Area.new("Test Area", 5)
 
-        add_region(0,4,Room.new(0))
-        add_region(0,3,Room.new(1))
-        add_region(1,3,Room.new(2))
-        add_region(0,2,Room.new(3))
-        add_region(1,2,Room.new(4))
-        add_region(2,2,Room.new(5))
-        add_region(1,1,Room.new(6))
-        add_region(1,0,Room.new(7))
-        connect_regions([0,4],[0,3])
-        connect_regions([0,3],[1,3])
-        connect_regions([0,3],[0,2])
-        connect_regions([1,3],[1,2])
-        connect_regions([0,2],[1,2])
-        connect_regions([1,2],[2,2])
-        connect_regions([1,2],[1,1])
-        connect_regions([1,1],[1,0])
+        add_region(0,4,Room.new(:a))
+        add_region(0,3,Room.new(:b))
+        add_region(1,3,Room.new(:c))
+        add_region(0,2,Room.new(:d))
+        add_region(1,2,Room.new(:e))
+        add_region(2,2,Room.new(:f))
+        add_region(1,1,Room.new(:g))
+        add_region(1,0,Room.new(:h))
+        connect_regions(:a,:b)
+        connect_regions(:b,:c)
+        connect_regions(:b,:d)
+        connect_regions(:c,:e)
+        connect_regions(:d,:e)
+        connect_regions(:e,:f)
+        connect_regions(:e,:g)
+        connect_regions(:h,:g)
     end
 end

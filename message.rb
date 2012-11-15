@@ -47,7 +47,9 @@ class Message
 
         def dispatch(type, args={})
             m = Message.new(type, args)
-            get_listeners_for(type).each do |listener|
+            l = get_listeners_for(type)
+            Log.debug("Message falling upon deaf ears") if l.empty?
+            l.each do |listener|
                 listener.process_message(m)
             end
         end

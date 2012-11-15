@@ -15,10 +15,25 @@ class GameServer < Server
         @lobbies     = []
     end
 
+    def get_socket_for_user(username)
+        matching_sockets = nil
+        @user_mutex.synchronize { matching_sockets = @user_info.keys.select { |s| @user_info[s][:username] == username } }
+        if matching_sockets.size > 1
+            Log.debug("WARNING - Multiple sockets found for user #{username}")
+            nil
+        elsif matching_sockets.size == 0
+            Log.debug("WARNING - Socket not found for user #{username}")
+            nil
+        else
+            matching_sockets.first
+        end
+    end
+
     def process_client_message(socket,message)
         case message.message_class
         when :login;       process_login_message(socket,message)
         when :server_menu; process_server_menu_message(socket,message)
+        when :lobby;       process_lobby_message(socket,message)
         else
             debug("Unhandled class of client message: #{message.message_class}")
         end
@@ -40,40 +55,50 @@ class GameServer < Server
             }
             send_to_client(socket, Message.new(:lobby_list,{:lobbies=>lobbies}))
         when :join_lobby
+            lobby         = nil
+            username      = nil
             password_hash = nil
             @user_mutex.synchronize {
+                username      = @user_info[socket][:username]
                 password_hash = message.lobby_password.xor(@user_info[socket][:server_hash])
             }
             @lobby_mutex.synchronize {
                 lobby = @lobbies.find { |lobby| lobby.name == message.lobby_name }
-                if lobby.nil?
-                    send_to_client(socket, Message.new(:join_fail, {:reason=>"Lobby #{message.lobby_name} does not exist"}))
-                elsif lobby.check_password(password_hash)
-                    @user_mutex.synchronize {
-                        lobby.add_user(@user_info[socket][:username])
-                        @user_info[socket][:lobby] = lobby
-                        @user_info[socket][:state] = :lobby
-                    }
-                    send_to_client(socket, Message.new(:join_success))
-                else
-                    send_to_client(socket, Message.new(:join_fail, {:reason=>"Incorrect password"}))
-                end
             }
+            if lobby.nil?
+                send_to_client(socket, Message.new(:join_fail, {:reason=>"Lobby #{message.lobby_name} does not exist"}))
+            elsif lobby.check_password(password_hash)
+                @lobby_mutex.synchronize {
+                    lobby.add_user(username)
+                }
+                @user_mutex.synchronize {
+                    @user_info[socket][:lobby] = lobby
+                    @user_info[socket][:state] = :lobby
+                }
+                send_to_client(socket, Message.new(:join_success))
+            else
+                send_to_client(socket, Message.new(:join_fail, {:reason=>"Incorrect password"}))
+            end
         when :create_lobby
             password_hash = nil
+            username      = nil
             @user_mutex.synchronize {
                 password_hash = message.lobby_password.xor(@user_info[socket][:server_hash])
+                username      = @user_info[socket][:username]
             }
             @lobby_mutex.synchronize {
                 if @lobbies.find { |lobby| lobby.name == message.name }
                     send_to_client(socket, Message.new(:create_fail, {:reason=>"Lobby name #{message.lobby_name} taken"}))
                 else
-                    lobby = Lobby.new(message.lobby_name,password_hash)
-                    @user_mutex.synchronize {
-                        lobby.add_user(@user_info[socket][:username])
+                    lobby = Lobby.new(message.lobby_name,password_hash,username) do |user,message|
+                        socket = get_socket_for_user(user)
+                        send_to_client(socket,message) unless socket.nil?
+                    end
+                    @lobbies << lobby
+                    @user_mutex.synchronize do
                         @user_info[socket][:lobby] = lobby
                         @user_info[socket][:state] = :lobby
-                    }
+                    end
                     send_to_client(socket, Message.new(:create_success))
                 end
             }
@@ -134,7 +159,38 @@ class GameServer < Server
                 send_to_client(socket, Message.new(:auth_accept))
             }
         else
-            debug("Unhandled login message type #{message.type} received from client")
+            Log.debug("Unhandled login message type #{message.type} received from client")
+        end
+    end
+
+    def process_lobby_message(socket, message)
+        lobby      = nil
+        user_state = nil
+        @user_mutex.synchronize {
+            user_state = @user_info[socket][:state]
+            lobby      = @user_info[socket][:lobby]
+        }
+        if user_state != :lobby || lobby.nil?
+            Log.debug("Invalid lobby message received from client")
+            return
+        end
+        case message.type
+        when :get_game_params
+            Log.debug("UNIMPLEMENTED")
+        when :generate_game
+            Log.debug("UNIMPLEMENTED")
+        when :create_character
+            Log.debug("UNIMPLEMENTED")
+        when :list_characters
+            Log.debug("UNIMPLEMENTED")
+        when :select_character
+            Log.debug("UNIMPLEMENTED")
+        when :start_game
+            Log.debug("UNIMPLEMENTED")
+        when :toggle_pause
+            Log.debug("UNIMPLEMENTED")
+        else
+            Log.debug("Unhandled lobby message type #{message.type} received from client")
         end
     end
 end
