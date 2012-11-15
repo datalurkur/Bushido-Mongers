@@ -1,9 +1,14 @@
 require 'math/noise/noise'
-require 'connected_tile'
+require 'world/connected_region'
 
-class Zone < ConnectedTile
-    def initialize(size)
-        noisemaker = Noise.new
+class Zone < ConnectedRegion
+    def initialize(name, size)
+        super(name, size)
+    end
+
+    def self.test_zone
+        zone = Zone.new("Test Zone", 1)
+        zone.add_region(0,0,Area.test_area)
     end
 
     def self.zone_generation_test(w,h,scale,offset,threshold)
