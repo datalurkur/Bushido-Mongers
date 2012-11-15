@@ -177,16 +177,36 @@ class GameServer < Server
         case message.type
         when :get_game_params
             Log.debug("UNIMPLEMENTED")
+            send_to_client(socket, Message.new(:game_params, {:params=>{}}))
         when :generate_game
-            Log.debug("UNIMPLEMENTED")
+            lobby    = nil
+            username = nil
+            @user_mutex.synchronize {
+                username  = @user_info[socket][:username]
+                lobby     = @user_info[socket][:lobby]
+            }
+            @lobby_mutex.synchronize {
+                lobby.generate_game(username)
+            }
         when :create_character
             Log.debug("UNIMPLEMENTED")
+            send_to_client(socket, Message.new(:character_not_ready, {:reason=>"Feature unimplemented"}))
         when :list_characters
             Log.debug("UNIMPLEMENTED")
+            send_to_client(socket, Message.new(:character_list, {:list=>[]}))
         when :select_character
             Log.debug("UNIMPLEMENTED")
+            send_to_client(socket, Message.new(:character_not_ready, {:reason=>"Feature unimplemented"}))
         when :start_game
-            Log.debug("UNIMPLEMENTED")
+            lobby    = nil
+            username = nil
+            @user_mutex.synchronize {
+                username  = @user_info[socket][:username]
+                lobby     = @user_info[socket][:lobby]
+            }
+            @lobby_mutex.synchronize {
+                lobby.start_game(username)
+            }
         when :toggle_pause
             Log.debug("UNIMPLEMENTED")
         else

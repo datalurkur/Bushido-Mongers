@@ -9,7 +9,10 @@ class RegionContainer
         @connections = Array.new(size) { Array.new(size) }
     end
 
-    def location_of(region); @lookup[region]; end
+    def location_of(region)
+        raise "Region #{region} does not exist" unless @lookup.has_key?(region)
+        @lookup[region]
+    end
     def region_at?(x,y); @regions[x][y]; end
     def region_exists?(region); @lookup.has_key?(region); end
     def region_connected?(region,dir)
@@ -17,10 +20,7 @@ class RegionContainer
         @connections[x][y]
     end
 
-    def regions_adjacent?(r1, r2)
-        c1 = location_of(r1)
-        c2 = location_of(r2)
-
+    def regions_adjacent?(c1, c2)
         d = [
             (c1[0] - c2[0]).abs,
             (c1[1] - c2[1]).abs
@@ -55,9 +55,9 @@ class RegionContainer
     def set_region(x,y,region)
         raise "Attempting to overwrite region at #{[x,y].inspect}" if region_at?(x,y)
         raise "Region already registered to #{location_of(region)}" if region_exists?(region)
-        @lookup[region]    = [x,y]
-        @regions[x][y]     = region
-        @connections[x][y] = {}
+        @lookup[region.name] = [x,y]
+        @regions[x][y]       = region
+        @connections[x][y]   = {}
     end
 
     def connect_region(x,y,direction)
@@ -72,10 +72,10 @@ class RegionContainer
     end
 
     def connect_coords(c1, c2)
-        [c1,c2].each { |coords| raise "No existing region at #{coords.inspect}" unless region_exists?(*coords) }
+        [c1,c2].each { |coords| raise "No existing region at #{coords.inspect}" unless region_at?(*coords) }
         raise "Regions are not adjacent, and portals are not yet implemented" unless regions_adjacent?(c1, c2)
         dirs = direction_to(c1, c2)
-        connect_region(c1,dirs[0])
-        connect_region(c2,dirs[1])
+        connect_region(c1[0], c1[1], dirs[0])
+        connect_region(c2[0], c2[1], dirs[1])
     end
 end

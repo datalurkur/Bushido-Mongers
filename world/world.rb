@@ -1,4 +1,5 @@
 require 'world/region_container'
+require 'world/zone'
 
 class World < RegionContainer
     def initialize(size)
@@ -7,6 +8,7 @@ class World < RegionContainer
 
     def self.test_world
         world = World.new(1)
-        world.add_region(0,0,Zone.test_zone)
+        world.set_region(0,0,Zone.test_zone)
+        world
     end
 end

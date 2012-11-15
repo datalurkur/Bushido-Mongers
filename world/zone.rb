@@ -1,14 +1,17 @@
-require 'math/noise/noise'
-require 'world/connected_region'
+require 'world/region_container'
+require 'world/area'
 
-class Zone < ConnectedRegion
+require 'math/noise/noise'
+
+class Zone < RegionContainer
     def initialize(name, size)
         super(name, size)
     end
 
     def self.test_zone
         zone = Zone.new("Test Zone", 1)
-        zone.add_region(0,0,Area.test_area)
+        zone.set_region(0,0,Area.test_area)
+        zone
     end
 
     def self.zone_generation_test(w,h,scale,offset,threshold)

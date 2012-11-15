@@ -5,6 +5,9 @@ require 'net/remote_client'
 config = {
     :username => "datalurkur",
     :password => "herpderp",
+    :lobby_name => "test_lobby",
+    :lobby_password => "test",
+    :server_menu_autocmd => :create_lobby
 }
 
 Log.setup

@@ -18,16 +18,28 @@ class ServerMenuState < State
             [:lobby_name,     :text_field],
             [:lobby_password, :text_field]
         ]) do
-            password_hash = LameCrypto.hash_using_method(@client.get(:hash_method),@client.get(:password),@client.get(:server_hash))
-            @client.unset(:password)
-            @client.send_to_server(Message.new(@entry_type,{:lobby_name=>@client.get(:lobby_name),:lobby_password=>password_hash}))
+            enter_lobby(@entry_type)
         end
 
         @client.send_to_client(Message.new(:notify, {:text=>"You have connected to the server as #{@client.get(:name)}"}))
-        @client.send_to_server(Message.new(:get_motd))
+
+        case @client.get(:server_menu_autocmd)
+        when :join_lobby
+            enter_lobby(:join_lobby)
+        when :create_lobby
+            enter_lobby(:create_lobby)
+        else
+            @client.send_to_server(Message.new(:get_motd))
+        end
     end
 
     def menu_choices; [:list_lobbies, :join_lobby, :create_lobby, :disconnect]; end
+
+    def enter_lobby(entry_type)
+        password_hash = LameCrypto.hash_using_method(@client.get(:hash_method),@client.get(:password),@client.get(:server_hash))
+        @client.unset(:password)
+        @client.send_to_server(Message.new(entry_type,{:lobby_name=>@client.get(:lobby_name),:lobby_password=>password_hash}))
+    end
 
     def from_server(message)
         case message.type

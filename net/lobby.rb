@@ -1,3 +1,4 @@
+require 'game/game_core'
 require 'util/log'
 
 # Lobbies group players together with a Game and facilitate communications between the game and the client sockets
@@ -17,6 +18,7 @@ class Lobby
         # Local state, basically
         @game_state    = :genesis
         @game_core     = nil
+        @game_args     = {}
 
         # How the lobby sends messages back to clients (while still using the thread-safe mutexes and methods)
         unless block_given?
@@ -26,6 +28,10 @@ class Lobby
 
         # Players are filled in as users create or select characters
         @players       = {}
+    end
+
+    def is_admin?(user)
+        @admin == user
     end
 
     def send_to_user(user, message)
@@ -71,28 +77,38 @@ class Lobby
         end
     end
 
-    def generate_game(args={})
+    def generate_game(username)
+        unless is_admin?(username)
+            send_to_user(username, Message.new(:generation_fail, {:reason => "You are not the lobby admin"}))
+            return false
+        end
+
         if @game_state == :genesis
-            @game_core = GameCore.new(args)
+            @game_core = GameCore.new(@game_args)
             @game_state = :ready
             Log.debug("Game created")
             broadcast(Message.new(:generation_success))
             true
         else
             Log.debug("Lobby is not in :genesis state")
-            broadcast(Message.new(:generation_fail, {:reason => "Lobby is not in :genesis (#{@game_state})"}))
+            send_to_user(username, Message.new(:generation_fail, {:reason => "Lobby is not in :genesis (#{@game_state})"}))
             false
         end
     end
 
-    def start_game
+    def start_game(username)
+        unless is_admin?(username)
+            send_to_user(username, Message.new(:start_fail, {:reason => "You are not the lobby admin"}))
+            return false
+        end
+
         if @game_state == :ready
             @game_state = :playing
             Log.debug("Game started")
             broadcast(Message.new(:start_success))
         else
             Log.debug("Failed to start game - Lobby is not in :ready state")
-            broadcast(Message.new(:start_fail, {:reason => "Lobby is not :ready (#{@game_state})"}))
+            send_to_user(username, Message.new(:start_fail, {:reason => "Lobby is not :ready (#{@game_state})"}))
             false
         end
     end
