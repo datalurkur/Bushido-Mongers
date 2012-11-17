@@ -1,4 +1,105 @@
 require 'world/zone'
+require 'util/basic'
+
+class ZoneTemplate
+    class << self
+        def types; @types ||= {}; end
+
+        def get_params(type)
+            raise "ZoneTemplate #{type} not found" unless @types.has_key?(type)
+            @types[type]
+        end
+
+        def filter_types(&block)
+            if block_given?
+                @types.keys.select { |type| block.call(get_params(type)) }
+            else
+                @types.keys
+            end 
+        end
+
+        def required_params; [
+            :keywords,
+            :depth_range
+        ]; end
+
+        def define(type, properties, &block)
+            required_params.each { |key| raise "ZoneTemplate #{type} lacks key #{key}" unless properties.has_key?(key) }
+            types[type] = properties
+            types[type].merge!(:generate_proc => block) if block_given?
+        end
+
+        def generate_random(depth_range, size)
+            eligible_types = filter_types { |params| (params[:depth_range] & depth_range).size > 0 }
+
+            type  = generate(eligible_types.rand_key, size)
+            depth = (get_params(type)[:depth_range] & depth_range).rand
+
+            generate(type, size, depth)
+        end
+
+        # Generate a specific type of size x size dimensions and depth
+        # We want to give ZoneTemplates the ability to have an effect on the generation of sub-zones
+        # parent_params is in place for when this method is called from within another ZoneTemplate
+        def generate(type, size, depth, parent_params={})
+            params = get_params(type)
+
+            # We need special functionality to do this, see the method definition for more information
+            # Another possibility is just passing both sets and letting the generation code deal with them
+            merged_params = merge_template_parameters(params, parent_params)
+
+            # FIXME - Generate a random name using the keywords
+            name = "Generic Zone Name"
+
+            # Setup the empty zone
+            zone = setup_zone(name, size, depth)
+
+            # Populate it with stuff
+            if params[:generate_proc]
+                params[:generate_proc].call(zone, merged_params)
+            else
+                default_generation(zone, merged_params)
+            end
+
+            # Toss it back
+            zone
+        end
+
+        # Merge ZoneTemplate parameter sets, respecting the nature of each special parameter
+        # The default case is for a child field to override a parent field
+        def merge_template_parameters(child, parent)
+            result = {}
+
+            # First merge in the parent params, then the child params, allowing the child params to override
+            result.merge!(parent)
+            result.merge!(child)
+
+            # We want to merge both sets of keywords together
+            # FIXME - Deal with keyword incompatibilities cleverly somehow here
+            result[:keywords] = (child[:keywords] + parent[:keywords]).uniq
+
+            # Return the resultant hash
+            result
+        end
+
+        def setup_zone(name, size, depth)
+            zone = if depth == 1
+                ZoneLeaf.new(name)
+            else
+                ZoneContainer.new(name, size, depth)
+            end
+            zone
+        end
+
+        def default_generation(zone, params)
+            # FIXME
+        end
+    end
+end
+
+ZoneTemplate.define(:meadow, {})
+
+=begin
 require 'basic_extensions'
 
 # FIXME: Restructure ZoneTemplate as a factory.
@@ -56,3 +157,4 @@ if $0 == __FILE__
     p ZoneTemplate.rand(3)
     p ZoneTemplate.rand(5)
 end
+=end

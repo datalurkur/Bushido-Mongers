@@ -1,4 +1,5 @@
 #!/usr/bin/ruby
+require 'util/basic'
 require 'world/zone'
 
 Log.setup("Zone Test")
@@ -83,9 +84,7 @@ assert(a.connected_leaf(:south) == c11_01)
 assert(c11_01.connected_leaf(:north) == a)
 
 puts "4) Check that Leaves at a higher depth accurately get a list of Leaves they can connect to (a => b00,b01)"
-results = a.connectable_leaves(:east)
-correct = [b00, b01]
-assert(results.length == correct.length && correct.length == (results & correct).length)
+assert([b00, b01].contents_equivalent?(a.connectable_leaves(:east)))
 
 puts "5) Check that Leaves at a lower depth accurately get the Leaf they can connect to at a higher depth (b01 => a)"
 assert(b00.connectable_leaves(:west) == [a])
