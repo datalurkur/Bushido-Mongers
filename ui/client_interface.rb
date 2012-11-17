@@ -45,7 +45,7 @@ module TextInterface
         return ["[none]"] if list.empty?
         case style
         when :number
-            (1..list.size).collect { |i| "(#{i}) #{list[i]}" }
+            (0...list.size).collect { |i| "(#{i+1}) #{list[i]}" }
         when :letter
             raise "Feature unimplemented"
         when :bullet
@@ -72,7 +72,7 @@ module SlimInterface
             unless (1..context.choices.size).include?(index)
                 nil
             else
-                context.choices[index]    
+                context.choices[index-1]
             end
         end
     end
@@ -96,7 +96,7 @@ module VerboseInterface
             unless (1..context.choices.size).include?(index)
                 nil
             else
-                context.choices[index]
+                context.choices[index-1]
             end
         end
     end

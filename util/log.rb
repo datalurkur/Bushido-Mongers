@@ -1,3 +1,5 @@
+require 'thread'
+
 # Threadsafe logging that logs the name of the thread, the file and line number, log level, and log message
 # Requires setup
 # Functions as a singleton
