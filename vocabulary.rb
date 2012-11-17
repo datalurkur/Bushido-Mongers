@@ -1,18 +1,8 @@
+require 'basic_extensions'
 require 'set'
 
 VOCAB_DEBUG = 0
 $vocab_dir = 'vocabulary'
-
-class Array; def rand() self[Kernel.rand(self.size)]; end; end
-
-class Set; def rand() self.to_a.rand; end; end
-
-class String
-    # For now, just capitalize the beginning.
-    def sentence
-        self.gsub(/^(\w)/) { $1.upcase }
-    end
-end
 
 module Words
     TYPES = :noun, :verb, :adjective, :adverb
