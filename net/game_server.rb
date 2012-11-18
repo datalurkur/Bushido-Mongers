@@ -141,13 +141,14 @@ class GameServer < Server
                 end
                 if competing_sockets.size > 1
                     Log.debug("Username #{username} already active")
-                    # There are other sockets with this username, see if the password match
-                    matching_passwords = @user_info.keys.select { |k|
+                    # There are other sockets with this username, see if the password matches
+                    matching_passwords = competing_sockets.select { |k|
                         (@user_info[k][:password_hash] == password_hash) || @user_info[k][:password_hash].nil?
                     }
                     if matching_passwords.size == competing_sockets.size
                         # The passwords match, this must be a reconnecting user
                         # Close the other sockets
+                        # FIXME - We should probably do something nicer here like the log the user out and drop them back to the login menu
                         other_sockets = competing_sockets.reject { |k| k == socket }
                         other_sockets.each { |k| @user_info.delete(k); terminate_client(k) }
                     else

@@ -50,7 +50,9 @@ class Server
                         :state         => :accepted,
                         :mutex         => Mutex.new
                     })
-                    alter_client_info(socket, {:listen_thread => spawn_listen_thread_for(socket)})
+                    alter_client_info(socket) do |hash|
+                        hash[:listen_thread] = spawn_listen_thread_for(socket)
+                    end
                 rescue Exception => e
                     Log.debug(["Failed to accept connection",e.message,e.backtrace])
                 end
@@ -77,6 +79,7 @@ class Server
     end
 
     def terminate_client(socket)
+        Log.debug("Terminating client socket")
         @sockets_mutex.synchronize {
             @client_sockets[socket][:listen_thread].kill
             socket.close
@@ -90,8 +93,11 @@ class Server
         info
     end
 
-    def alter_client_info(socket,info)
-        @sockets_mutex.synchronize { @client_sockets[socket].merge!(info) }
+    def alter_client_info(socket, info = {}, &block)
+        @sockets_mutex.synchronize {
+            @client_sockets[socket].merge!(info)
+            (block.call(@client_sockets[socket]) if block_given?)
+        }
     end
 
     def set_client_info(socket,info)
@@ -106,28 +112,45 @@ class Server
         thread_name = "#{sockaddr} (#{@threadcount[sockaddr]})"
         Log.debug("Listening for client input from #{sockaddr}")
         Thread.new do
+            mutex = get_client_info(socket)[:mutex]
             begin
                 Log.name_thread(thread_name)
                 data_buffer = ""
                 while(true)
                     lines = []
+                    Log.debug("Buffering input from client", 8)
                     while lines.empty?
-                        new_lines = buffer_socket_input(socket, get_client_info(socket)[:mutex], data_buffer)
+                        new_lines = buffer_socket_input(socket, mutex, data_buffer)
                         lines.concat(new_lines)
                     end
+                    Log.debug("Processing #{lines.size} lines of input from client", 8)
                     lines.each { |line| process_client_message(socket, line) }
                 end
             rescue Exception => e
-                Log.debug(["Thread exited abnormally",e.message,e.backtrace])
+                Log.debug(["Thread exited abnormally", e.message, e.backtrace])
             end
         end
     end
 
     def send_to_client(socket, message)
-        packed_data = pack_message(message)
-        get_client_info(socket)[:mutex].synchronize {
-            socket.puts(packed_data)
-        }
+        # This really doesn't need to be in a begin / rescue block, but until we find this thread concurrency bug, I need all the logging I can get
+        begin
+            Log.debug("Packing message #{message.type} for client", 8)
+            packed_data = pack_message(message)
+            Log.debug("Fetching client mutex", 8)
+            get_client_info(socket)[:mutex].synchronize {
+                Log.debug("Message going out to socket", 8)
+                #socket.puts(packed_data)
+                begin
+                    socket.write_nonblock(packed_data)
+                rescue Exception => e
+                    Log.debug(["Failed to write to client socket", e.message, e.backtrace])
+                end
+            }
+            Log.debug("Message sent and mutex released", 8)
+        rescue Exception => e
+            Log.debug(["Failed to send data to client", e.message, e.backtrace])
+        end
     end
 
     # Special callback for the IRC interface

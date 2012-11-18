@@ -15,7 +15,15 @@ module SocketUtils
         mutex.synchronize {
             begin
                 data_in = socket.read_nonblock(STATIC_SOCKET_READ_SIZE)
-            rescue
+            rescue EOFError
+                # This means there is no data to read
+            rescue Errno::EAGAIN
+                # Resource temporarily unavailable (basically means the operation would block, which we don't want)
+            rescue Errno::ECONNRESET
+                raise Errno::ECONNRESET
+            rescue Exception => e
+                # This on the other hand was unexpected and needs to be investigated
+                Log.debug(["Failed to read data from socket",e.class,e.message])
             end
         }
         return [] unless data_in
