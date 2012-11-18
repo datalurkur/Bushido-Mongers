@@ -68,4 +68,5 @@ Message.define(:invalid_input,    :response)
 # Mostly just raw text messages
 Message.define(:notify,         :interface, [:text])
 Message.define(:list,           :interface, [:title,:items])
+Message.define(:properties,     :interface, [:title,:hash])
 Message.define(:raw_command,    :interface, [:command])

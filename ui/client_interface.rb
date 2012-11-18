@@ -15,6 +15,7 @@ module TextInterface
         # While these would appear to be the same, one prompts a response (and this is very different to an AI!)
         when :choose_from_list; list(message.field.to_title,message.choices)
         when :list;             list(message.title,message.items)
+        when :properties;       properties(message.title,message.hash)
         else
             raise "Unhandled client message type #{message.type}"
         end
@@ -67,6 +68,10 @@ module SlimInterface
             ([subject] + decorate(items, style)).join(" ")
         end
 
+        def properties(subject,hash)
+            ([subject] + hash.collect { |k,v| "#{k}=>#{v}" }).join(" ")
+        end
+
         def get_choice(context,text)
             index = text.to_i
             unless (1..context.choices.size).include?(index)
@@ -91,6 +96,10 @@ module VerboseInterface
             ([subject] + decorate(items, style)).join("\n")
         end
 
+        def properties(subject, hash)
+            ([subject] + hash.collect { |k,v| "\t#{k} => #{v}" }).join("\n")
+        end
+
         def get_choice(context, text)
             index = text.to_i
             unless (1..context.choices.size).include?(index)
@@ -106,11 +115,15 @@ end
 module MetaDataInterface
     class << self
         def text_field(field)
-            [:text_field,field]
+            [:text_field, field]
         end
 
-        def list(items)
-            [:list,items]
+        def list(subject, items)
+            [:list, subject, items]
+        end
+
+        def properties(subject, hash)
+            [:properties, subject, hash]
         end
 
         def get_choice(context, text)
