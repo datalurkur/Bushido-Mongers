@@ -55,7 +55,7 @@ class Lobby
 
     def add_user(username)
         Log.debug("#{username} joining #{name}")
-        broadcast(Message.new(:user_joins, {:username => username}))
+        broadcast(Message.new(:user_joins, {:username => username}), [username])
         @users << username
 
         if @default_admin == username && @admin != username
@@ -118,7 +118,7 @@ class Lobby
         when :get_game_params
             # Eventually there will actually *be* game params, at which point we'll want to send them here
             Log.debug("PARTIALLY IMPLEMENTED")
-            send_to_user(socket, Message.new(:game_params, {:params=>{}}))
+            send_to_user(username, Message.new(:game_params, {:params=>{}}))
         when :generate_game
             generate_game(username)
         when :create_character
@@ -135,7 +135,7 @@ class Lobby
             Log.debug("UNIMPLEMENTED")
             send_to_user(username, Message.new(:character_not_ready, {:reason=>"Feature unimplemented"}))
         when :start_game
-            lobby.start_game(username)
+            start_game(username)
         when :toggle_pause
             Log.debug("UNIMPLEMENTED")
         else

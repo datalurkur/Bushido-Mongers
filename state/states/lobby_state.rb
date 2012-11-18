@@ -48,6 +48,9 @@ class LobbyState < State
             @client.send_to_client(Message.new(:notify, {:text=>"Game failed to start, #{message.reason}"}))
             begin_exchange(:menu_choice)
             return
+        when :user_joins
+            @client.send_to_client(Message.new(:notify, {:text=>"#{message.username} has joined the lobby"}))
+            return
         end
 
         super(message)
