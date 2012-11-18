@@ -1,4 +1,5 @@
 require 'world/world'
+require 'game/player'
 
 class GameCore
     attr_reader :world

@@ -1,3 +1,5 @@
+require 'util/log'
+
 =begin
     NECESSARY ENHANCEMENTS
     ======================
@@ -17,12 +19,14 @@ class Player
         # Basically if we store all the character information inside the object and use a random hash as the filename, we lose the ability to pull out metadata about a corrupt character
         # It just turns into a random hash that we know nothing about
         def to_filename(name)
-            name.downcase.gsub(/ /, '_') + "_" + Time.now.to_i.to_s
+            name.gsub(/ /, '_') + "_" + Time.now.to_i.to_s
         end
 
         def parse_filename(name)
-            parts = name.split(/_/)
-            [parts[0...-1].join('_'), parts.last]
+            parts          = name.split(/_/)
+            character_name = parts[0...-1].join(' ')
+            timestamp      = parts.last
+            [character_name, timestamp]
         end
 
         def get_user_directory(username)
@@ -39,21 +43,22 @@ class Player
             udir = get_user_directory(username)
 
             # Get a list of all versions of all characters for this user
-            saves = Dir.entries(udir)
+            saves = Dir.entries(udir).reject { |filename| filename == "." || filename == ".." }
 
-            # Parse the character meta-data from the entries
+            # Parse the character meta-data from the saves
             saves.collect do |filename|
-                name, timestamp = parse_filename(filename)
+                character_name, timestamp = parse_filename(filename)
                 cdata = begin
-                    Marshal.load(File.read(File.join(udir, filename))
+                    Marshal.load(File.read(File.join(udir, filename)))
                 rescue
                     nil
                 end
 
                 {
-                    :filename  => name,
-                    :timestamp => timestamp,
-                    :character => cdata
+                    :filename       => filename,
+                    :character_name => character_name,
+                    :character      => cdata,
+                    :timestamp      => timestamp,
                 }
             end
         end
@@ -67,11 +72,13 @@ class Player
         end
 
         def get_characters_for(username)
-            user_directory_contents(username).collect { |fdata| fdata[:character].name }.uniq
+            user_directory_contents(username).collect do |fdata|
+                fdata[:character_name]
+            end.uniq.compact
         end
 
         def get_character_history(username, character_name)
-            user_directory_contents(username).collect { |fdata| fdata[:chracter].name == character_name }
+            user_directory_contents(username).collect { |fdata| fdata[:character_name] == character_name }
         end
     end
 

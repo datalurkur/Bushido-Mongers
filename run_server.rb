@@ -12,6 +12,11 @@ config = {
 }
 
 Log.setup
+
+# DEBUG
+require 'game/player_test'
+recreate_test_player("test_user")
+
 s = GameServer.new(config)
 
 while s.is_running?

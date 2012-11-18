@@ -87,7 +87,7 @@ class GameServer < Server
                 username      = @user_info[socket][:username]
             }
             @lobby_mutex.synchronize {
-                if @lobbies.find { |lobby| lobby.name == message.name }
+                if @lobbies.find { |lobby| lobby.name == message.lobby_name }
                     send_to_client(socket, Message.new(:create_fail, {:reason=>"Lobby name #{message.lobby_name} taken"}))
                 else
                     lobby = Lobby.new(message.lobby_name,password_hash,username) do |user,message|
@@ -166,51 +166,16 @@ class GameServer < Server
     def process_lobby_message(socket, message)
         lobby      = nil
         user_state = nil
+        username   = nil
         @user_mutex.synchronize {
             user_state = @user_info[socket][:state]
+            username   = @user_info[socket][:username]
             lobby      = @user_info[socket][:lobby]
         }
         if user_state != :lobby || lobby.nil?
             Log.debug("Invalid lobby message received from client")
             return
         end
-        case message.type
-        when :get_game_params
-            Log.debug("UNIMPLEMENTED")
-            send_to_client(socket, Message.new(:game_params, {:params=>{}}))
-        when :generate_game
-            lobby    = nil
-            username = nil
-            @user_mutex.synchronize {
-                username  = @user_info[socket][:username]
-                lobby     = @user_info[socket][:lobby]
-            }
-            @lobby_mutex.synchronize {
-                lobby.generate_game(username)
-            }
-        when :create_character
-            Log.debug("UNIMPLEMENTED")
-            send_to_client(socket, Message.new(:character_not_ready, {:reason=>"Feature unimplemented"}))
-        when :list_characters
-            Log.debug("UNIMPLEMENTED")
-            send_to_client(socket, Message.new(:character_list, {:list=>[]}))
-        when :select_character
-            Log.debug("UNIMPLEMENTED")
-            send_to_client(socket, Message.new(:character_not_ready, {:reason=>"Feature unimplemented"}))
-        when :start_game
-            lobby    = nil
-            username = nil
-            @user_mutex.synchronize {
-                username  = @user_info[socket][:username]
-                lobby     = @user_info[socket][:lobby]
-            }
-            @lobby_mutex.synchronize {
-                lobby.start_game(username)
-            }
-        when :toggle_pause
-            Log.debug("UNIMPLEMENTED")
-        else
-            Log.debug("Unhandled lobby message type #{message.type} received from client")
-        end
+        lobby.process_message(username, message)
     end
 end

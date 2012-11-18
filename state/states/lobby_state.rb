@@ -37,7 +37,7 @@ class LobbyState < State
             begin_exchange(:menu_choice)
             return
         when :character_list
-            @client.send_to_client(Message.new(:list, {:title=>"Characters", :items=>message.list}))
+            @client.send_to_client(Message.new(:list, {:title=>"Characters", :items=>message.characters}))
             begin_exchange(:menu_choice)
             return
         when :start_success

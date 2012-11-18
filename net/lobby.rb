@@ -112,4 +112,34 @@ class Lobby
             false
         end
     end
+
+    def process_message(username, message)
+        case message.type
+        when :get_game_params
+            # Eventually there will actually *be* game params, at which point we'll want to send them here
+            Log.debug("PARTIALLY IMPLEMENTED")
+            send_to_user(socket, Message.new(:game_params, {:params=>{}}))
+        when :generate_game
+            generate_game(username)
+        when :create_character
+            # Basically, this is the event that triggers the character to be saved and used
+            # The server isn't involved in the character creation dialog at all, only the committing of that data
+            Log.debug("UNIMPLEMENTED")
+            send_to_user(username, Message.new(:character_not_ready, {:reason=>"Feature unimplemented"}))
+        when :list_characters
+            character_list = Player.get_characters_for(username)
+            # Eventually, we'll want to do some kind of filtering on what sorts of characters are acceptable for this lobby (maximum level, etc)
+            Log.debug("PARTIALLY IMPLEMENTED")
+            send_to_user(username, Message.new(:character_list, {:characters=>character_list}))
+        when :select_character
+            Log.debug("UNIMPLEMENTED")
+            send_to_user(username, Message.new(:character_not_ready, {:reason=>"Feature unimplemented"}))
+        when :start_game
+            lobby.start_game(username)
+        when :toggle_pause
+            Log.debug("UNIMPLEMENTED")
+        else
+            Log.debug("Unhandled lobby message type #{message.type} received from client")
+        end
+    end
 end

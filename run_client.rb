@@ -2,11 +2,12 @@
 
 require 'net/remote_client'
 
+# DEBUG
 config = {
-    :username => "datalurkur",
-    :password => "herpderp",
+    :username => "test_user",
+    :password => "test_password",
     :lobby_name => "test_lobby",
-    :lobby_password => "test",
+    :lobby_password => "test_lobby_password",
     :server_menu_autocmd => :create_lobby
 }
 
