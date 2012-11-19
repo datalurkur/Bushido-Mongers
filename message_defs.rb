@@ -34,12 +34,12 @@ Message.define(:generation_success,  :lobby)                # S->C
 Message.define(:generation_fail,     :lobby, [:reason])     # S->C
 
 # Character creation / selection
-Message.define(:create_character,    :lobby, [:attributes]) # C->S
-Message.define(:list_characters,     :lobby)                # C->S
-Message.define(:character_list,      :lobby, [:characters]) # S->C
-Message.define(:select_character,    :lobby)                # C->S
-Message.define(:character_ready,     :lobby)                # S->C
-Message.define(:character_not_ready, :lobby, [:reason])     # S->C
+Message.define(:create_character,    :lobby, [:attributes])     # C->S
+Message.define(:list_characters,     :lobby)                    # C->S
+Message.define(:character_list,      :lobby, [:characters])     # S->C
+Message.define(:select_character,    :lobby, [:character_name]) # C->S
+Message.define(:character_ready,     :lobby)                    # S->C
+Message.define(:character_not_ready, :lobby, [:reason])         # S->C
 
 # Game administration and information
 Message.define(:start_game,          :lobby)                # C->S

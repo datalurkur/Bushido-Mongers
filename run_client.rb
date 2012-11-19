@@ -11,5 +11,5 @@ config = {
     :server_menu_autocmd => :create_lobby
 }
 
-Log.setup
+Log.setup("Main Thread", "client")
 c = RemoteClient.new("localhost",RemoteClient::DEFAULT_LISTEN_PORT,config)

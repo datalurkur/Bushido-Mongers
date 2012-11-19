@@ -35,7 +35,7 @@ module SocketUtils
             if buffer.size >= next_length + 4
                 message = Marshal.load(buffer[4,next_length])
                 raise "Invalid object received: #{message.class} #{message.inspect}" unless Message === message
-                Log.debug(message.report)
+                Log.debug(message.report, 6)
                 messages << message
                 buffer = buffer[(next_length+1)..-1]
             else
@@ -48,7 +48,7 @@ module SocketUtils
 
     # Take a message and pack it into network format
     def pack_message(message)
-        Log.debug(message.report)
+        Log.debug(message.report, 6)
         packed_data = Marshal.dump(message)
         length      = packed_data.size
         [length].pack("N") + packed_data

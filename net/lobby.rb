@@ -132,8 +132,18 @@ class Lobby
             Log.debug("PARTIALLY IMPLEMENTED")
             send_to_user(username, Message.new(:character_list, {:characters=>character_list}))
         when :select_character
-            Log.debug("UNIMPLEMENTED")
-            send_to_user(username, Message.new(:character_not_ready, {:reason=>"Feature unimplemented"}))
+            character_list = Player.get_characters_for(username)
+            characters = character_list.select { |c| c[:character_name] == message.character_name }
+            if characters.size > 1
+                Log.debug("More than 1 character named #{message.character_name} found for user #{username}")
+                send_to_user(username, Message.new(:character_not_ready, {:reason=>"Server failure"}))
+            elsif characters.size == 0
+                Log.debug("No character named #{message.character_name} found for user #{username}")
+                send_to_user(username, Message.new(:character_not_ready, {:reason=>"Character #{message.character_name} does not exit"}))
+            else
+                Log.debug("#{username} selects character named #{message.character_name}")
+                send_to_user(username, Message.new(:character_ready))
+            end
         when :start_game
             start_game(username)
         when :toggle_pause

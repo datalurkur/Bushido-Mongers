@@ -21,7 +21,7 @@ class ServerMenuState < State
             enter_lobby(@entry_type)
         end
 
-        @client.send_to_client(Message.new(:notify, {:text=>"You have connected to the server as #{@client.get(:name)}"}))
+        @client.send_to_client(Message.new(:notify, {:text=>"You have connected to the server as #{@client.get(:username)}"}))
 
         case @client.get(:server_menu_autocmd)
         when :join_lobby

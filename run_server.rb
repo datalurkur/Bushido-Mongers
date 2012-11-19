@@ -11,7 +11,7 @@ config = {
     :motd        => "Youkoso!",
 }
 
-Log.setup
+Log.setup("Main Thread", "server")
 
 # DEBUG
 require 'game/player_test'

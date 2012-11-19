@@ -82,7 +82,7 @@ class ClientBase
     end
 
     def start_processing_client_messages
-        Log.debug("Polling for client messages")
+        Log.debug("Polling for client messages", 8)
         @client_mutex          = Mutex.new
         @client_message_buffer = []
         @client_listen_thread  = Thread.new do
@@ -90,7 +90,7 @@ class ClientBase
                 Log.name_thread("client_polling")
                 while(true)
                     input = get_from_client
-                    Log.debug("Received client message #{input.type}")
+                    Log.debug("Received client message #{input.type}", 8)
                     @client_mutex.synchronize { @client_message_buffer << input }
                 end
             rescue Exception => e
