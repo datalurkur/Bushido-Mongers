@@ -2,6 +2,11 @@ require 'message'
 
 # Provides a set of tools for maintaining a state stack and state variables
 module StateMaintainer
+    def setup_state
+        @internal_config = {}
+        @var_mutex       = Mutex.new
+    end
+
     def current_state
         raise "#{self.class} is stateless!" if @state_stack.empty?
         @state_stack.last
@@ -20,11 +25,18 @@ module StateMaintainer
         @state_stack.pop
     end
 
-    def get_internal_config;      @internal_config ||= {};          end
-    def set_internal_config(val); @internal_config = val;           end
-    def set(var,value);           get_internal_config[var] = value; end
-    def unset(var);               get_internal_config.delete(var);  end
-    def get(var);                 get_internal_config[var];         end
+    def get_internal_config;      @internal_config;       end
+    def set_internal_config(val); @internal_config = val; end
+
+    def set(var,value)
+        @var_mutex.synchronize { get_internal_config[var] = value }
+    end
+    def unset(var)
+        @var_mutex.synchronize { get_internal_config.delete(var) }
+    end
+    def get(var)
+        @var_mutex.synchronize { get_internal_config[var] }
+    end
 end
 
 # Parent class for classes which will control Client behavior
@@ -41,7 +53,9 @@ class State
     end
 
     def from_client(message)
-        process_exchange(message)
+        unless process_exchange(message, :client)
+            Log.debug(["Unhandled message #{message.type} encountered during client processing for #{self.class}", caller])
+        end
     end
 
     def from_server(message)
@@ -51,7 +65,9 @@ class State
             @client.send_to_client(Message.new(:notify, {:text=>"The connection with the server has been lost"}))
             ConnectState.new(@client, :set)
         else
-            Log.debug(["Unhandled message #{message.type} encountered during server processing for #{self.class}", caller])
+            unless process_exchange(message, :server)
+                Log.debug(["Unhandled message #{message.type} encountered during server processing for #{self.class}", caller])
+            end
         end
     end
 
@@ -78,51 +94,129 @@ class State
                     :type => type,
                     :next => fields[i+1],
                 }
+                @exchanges[field].merge!(opt_args)
             end
         end
     end
 
     def begin_exchange(field)
         raise "Undefined data exchange for #{field}" unless @exchanges[field]
-        exchange_message = set_exchange_context(field)
-        @client.send_to_client(exchange_message)
+        set_exchange_context(field)
+        if get_exchange_target == :client
+            @client.send_to_client(get_exchange_context)
+        else
+            @client.send_to_server(get_exchange_context)
+        end
     end
 
     def set_exchange_context(field)
-        @current_exchange = case @exchanges[field][:type]
-        when :text_field;       Message.new(:text_field,{:field=>field})
-        when :choose_from_list; Message.new(:choose_from_list,{:field=>field,:choices=>@exchanges[field][:choices]})
-        else;                   raise "Unhandled exchange type #{@exchanges[field]}"
+        params = @exchanges[field]
+        @current_exchange = case params[:type]
+        when :text_field
+            Message.new(:text_field)
+        when :choose_from_list
+            choices = if params[:choices_from]
+                @client.get(params[:choices_from])
+            else
+                params[:choices]
+            end
+            Message.new(:choose_from_list, {:choices => choices})
+        when :query
+            Log.debug("Querying server with params #{params.inspect}")
+            Message.new(params[:query_method])
+        when :post
+            Log.debug("Posting data to server #{params.inspect}")
+            data = if params[:data_from]
+                @client.get(params[:data_from])
+            else
+                params[:data]
+            end
+            Message.new(params[:post_method], {params[:data_key] => data})
+        else
+            raise "Unhandled exchange type #{params[:type]}"
         end
-        @current_exchange
+
+        @exchange_field = field
+
+        @exchange_target = case params[:type]
+        when :query, :post
+            :server
+        when :text_field, :choose_from_list
+            :client
+        end
     end
 
     def clear_exchange_context
         @current_exchange = nil
+        @exchange_field   = nil
+        @exchange_target  = nil
     end
 
     def get_exchange_context
         @current_exchange
     end
 
-    def process_exchange(message)
+    def get_exchange_field
+        @exchange_field
+    end
+
+    def get_exchange_target
+        @exchange_target
+    end
+
+    def process_server_exchange(message)
+        field = get_exchange_field
+        clear_exchange_context
+
+        if message.type == :invalid_request
+            Log.debug("Server exchange failed - #{message.reason}")
+            return false
+        else
+            Log.debug("Setting client field #{field} to #{message.send(field)} based on server input")
+            @client.set(field, message.send(field))
+            return true
+        end
+    end
+
+    def process_client_exchange(message)
+        field   = get_exchange_field
         context = get_exchange_context
-        if context
-            clear_exchange_context
-            if message.type == :invalid_input
-                # Exchange failed, retry
-                begin_exchange(context.field)
+        clear_exchange_context
+
+        if message.type == :invalid_input
+            # Exchange failed, retry
+            begin_exchange(field)
+            return false
+        else
+            Log.debug("Setting client field #{field} to #{message.input} based on client input")
+            @client.set(field, message.input)
+            return true
+        end
+    end
+
+    def process_exchange(message, origin)
+        context = get_exchange_context
+        field   = get_exchange_field
+
+        if context && origin == get_exchange_target
+            result = if origin == :server
+                process_server_exchange(message)
             else
-                @client.set(context.field,message.input)
-                if @exchanges[context.field][:on_finish]
-                    @exchanges[context.field][:on_finish].call(message.input)
+                process_client_exchange(message)
+            end
+
+            if result
+                if @exchanges[field][:on_finish]
+                    @exchanges[field][:on_finish].call(message.input)
                 end
-                if @exchanges[context.field][:next]
-                    begin_exchange(@exchanges[context.field][:next])
+
+                if @exchanges[field][:next]
+                    begin_exchange(@exchanges[field][:next])
                 end
             end
+            return true
         else
-            Log.debug("No data requested, message \"#{message.type}\" discarded")
+            return false
         end
     end
 end

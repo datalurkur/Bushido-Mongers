@@ -2,6 +2,9 @@
 # This is more of an internal tool used by the low-level socket code to inform the state management when a connection with the server dies
 Message.define(:connection_reset, :socket)
 
+# This is used by the server to inform the client that it requested information in a bad way
+Message.define(:invalid_request,  :socket, [:reason])
+
 # Login phase
 Message.define(:login_request, :login, [:username])
 Message.define(:login_reject,  :login, [:reason])
@@ -62,9 +65,8 @@ Message.define(:location,       :game, [:zone, :area])
 # Client / Interface Messages
 # Interface Messages
 # This group is a special class of messages which are used by the state to perform interactions
-# Each prompt must have a "field" attribute
-Message.define(:text_field,       :prompt,   [:field])
-Message.define(:choose_from_list, :prompt,   [:field,:choices])
+Message.define(:text_field,       :prompt)
+Message.define(:choose_from_list, :prompt,   [:choices])
 Message.define(:valid_input,      :response, [:input])
 Message.define(:invalid_input,    :response)
 

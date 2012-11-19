@@ -14,6 +14,7 @@ class GameClient < ClientBase
 
         @interface = interface
 
+        setup_state
         set_internal_config(initial_config)
 
         initial_state.new(self, :set)

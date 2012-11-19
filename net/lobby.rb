@@ -17,7 +17,10 @@ class Lobby
 
         # Local state, basically
         @game_state    = :genesis
+
+        # Game objects
         @game_core     = nil
+        @player_map    = {}
         @game_args     = {}
 
         # How the lobby sends messages back to clients (while still using the thread-safe mutexes and methods)
@@ -77,6 +80,9 @@ class Lobby
         end
     end
 
+    def set_user_character(username, character)
+    end
+
     def generate_game(username)
         unless is_admin?(username)
             send_to_user(username, Message.new(:generation_fail, {:reason => "You are not the lobby admin"}))
@@ -133,7 +139,7 @@ class Lobby
             send_to_user(username, Message.new(:character_list, {:characters=>character_list}))
         when :select_character
             character_list = Player.get_characters_for(username)
-            characters = character_list.select { |c| c[:character_name] == message.character_name }
+            characters = character_list.select { |c| c == message.character_name }
             if characters.size > 1
                 Log.debug("More than 1 character named #{message.character_name} found for user #{username}")
                 send_to_user(username, Message.new(:character_not_ready, {:reason=>"Server failure"}))

@@ -11,11 +11,11 @@ module TextInterface
     def generate(message)
         case message.type
         when :notify;           message.text
-        when :text_field;       text_field(message.field)
+        when :text_field;       text_field()
         # While these would appear to be the same, one prompts a response (and this is very different to an AI!)
-        when :choose_from_list; list(message.field.to_title,message.choices)
-        when :list;             list(message.title,message.items)
-        when :properties;       properties(message.title,message.hash)
+        when :choose_from_list; list(message.choices)
+        when :list;             list(message.items)
+        when :properties;       properties(message.hash)
         else
             raise "Unhandled client message type #{message.type}"
         end
@@ -60,16 +60,15 @@ module SlimInterface
     extend TextInterface
 
     class << self
-        def text_field(field)
-            "Enter #{field.to_title}:"
+        def text_field
         end
 
-        def list(subject,items)
-            ([subject] + decorate(items, style)).join(" ")
+        def list(items)
+            decorate(items, style).join(" ")
         end
 
-        def properties(subject,hash)
-            ([subject] + hash.collect { |k,v| "#{k}=>#{v}" }).join(" ")
+        def properties(hash)
+            hash.collect { |k,v| "#{k}=>#{v}" }.join(" ")
         end
 
         def get_choice(context,text)
@@ -88,16 +87,15 @@ module VerboseInterface
     extend TextInterface
 
     class << self
-        def text_field(field)
-            "Enter #{field.to_title}:"
+        def text_field
         end
 
-        def list(subject, items, style=:number)
-            ([subject] + decorate(items, style)).join("\n")
+        def list(items, style=:number)
+            decorate(items, style).join("\n")
         end
 
-        def properties(subject, hash)
-            ([subject] + hash.collect { |k,v| "\t#{k} => #{v}" }).join("\n")
+        def properties(hash)
+            hash.collect { |k,v| "\t#{k} => #{v}" }.join("\n")
         end
 
         def get_choice(context, text)
@@ -114,16 +112,16 @@ end
 # Provides meta-data for AI or non-textual clients
 module MetaDataInterface
     class << self
-        def text_field(field)
-            [:text_field, field]
+        def text_field
+            [:text_field]
         end
 
-        def list(subject, items)
-            [:list, subject, items]
+        def list(items)
+            [:list, items]
         end
 
-        def properties(subject, hash)
-            [:properties, subject, hash]
+        def properties(hash)
+            [:properties, hash]
         end
 
         def get_choice(context, text)
