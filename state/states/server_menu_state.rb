@@ -2,15 +2,15 @@ require 'state/state'
 require 'util/crypto'
 
 class ServerMenuState < State
-    def initialize(client)
-        super(client)
+    def initialize(client, method)
+        super(client, method)
 
         define_exchange(:menu_choice, :choose_from_list, {:choices => menu_choices}) do |choice|
             case choice
             when :list_lobbies; @client.send_to_server(Message.new(:list_lobbies))
             when :create_lobby; @entry_type = :create_lobby; begin_exchange(:lobby_name)
             when :join_lobby;   @entry_type = :join_lobby;   begin_exchange(:lobby_name)
-            when :disconnect;   @client.set_state(LoginState.new(@client))
+            when :disconnect;   LoginState.new(@client, :set)
             end
         end
 
@@ -53,7 +53,7 @@ class ServerMenuState < State
             return
         when :join_success
             @client.send_to_client(Message.new(:notify, {:text=>"Joined #{@client.get(:lobby_name)}"}))
-            @client.set_state(LobbyState.new(@client))
+            LobbyState.new(@client, :set)
             return
         when :join_fail
             @client.send_to_client(Message.new(:notify, {:text=>"Failed to join lobby: #{message.reason}"}))
@@ -62,7 +62,7 @@ class ServerMenuState < State
             return
         when :create_success
             @client.send_to_client(Message.new(:notify, {:text=>"#{@client.get(:lobby_name)} created"}))
-            @client.set_state(LobbyState.new(@client))
+            LobbyState.new(@client, :set)
             return
         when :create_fail
             @client.send_to_client(Message.new(:notify, {:text=>"Failed to create lobby: #{message.reason}"}))

@@ -4,8 +4,8 @@ require 'state/states/server_menu_state'
 require 'util/crypto'
 
 class LoginState < State
-    def initialize(client)
-        super(client)
+    def initialize(client, method)
+        super(client, method)
 
         define_exchange(:username, :text_field) do
             send_login_request
@@ -13,7 +13,6 @@ class LoginState < State
 
         define_exchange(:password, :text_field) do
             send_auth_response
-
         end
 
         @client.send_to_client(Message.new(:notify, {:text => "Preparing to log in"}))
@@ -41,7 +40,7 @@ class LoginState < State
         when :auth_accept
             if @local_state == :auth_response
                 # Move to the Server Menu state
-                @client.set_state(ServerMenuState.new(@client))
+                ServerMenuState.new(@client, :set)
                 return
             end
         end

@@ -20,19 +20,24 @@ module StateMaintainer
         @state_stack.pop
     end
 
-    def get_internal_state;      @internal_state ||= {};          end
-    def set_internal_state(val); @internal_state = val;           end
-    def set(var,value);          get_internal_state[var] = value; end
-    def unset(var);              get_internal_state.delete(var);  end
-    def get(var);                get_internal_state[var];         end
+    def get_internal_config;      @internal_config ||= {};          end
+    def set_internal_config(val); @internal_config = val;           end
+    def set(var,value);           get_internal_config[var] = value; end
+    def unset(var);               get_internal_config.delete(var);  end
+    def get(var);                 get_internal_config[var];         end
 end
 
 # Parent class for classes which will control Client behavior
 # Function stubs to be defined by state subclasses
 class State
-    def initialize(client)
+    def initialize(client, method=nil)
         @client    = client
         @exchanges = {}
+
+        case method
+        when :set;  @client.set_state(self)
+        when :push; @client.push_state(self)
+        end
     end
 
     def from_client(message)
@@ -40,7 +45,7 @@ class State
     end
 
     def from_server(message)
-        Log.debug("Unhandled message #{message.type} encountered during server processing for #{self.class}")
+        Log.debug(["Unhandled message #{message.type} encountered during server processing for #{self.class}", caller])
     end
 
     def define_exchange(field,type,opt_args={},&on_finish)
@@ -52,7 +57,6 @@ class State
     end
 
     def define_exchange_chain(ordered_list,&on_finish)
-        # anjean; write some validation here to ensure no infinite loops (unless someone might want that?)
         fields = ordered_list.collect { |args| args[0] }
         ordered_list.each_with_index do |args,i|
             field    = args[0]

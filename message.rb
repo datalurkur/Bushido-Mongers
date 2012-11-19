@@ -4,7 +4,7 @@ require 'util/log'
 # Used in lots of places
 class Message
     class << self
-        def define(type, message_class=nil, required_args=[])
+        def define(type, message_class, required_args=[])
             raise "Message class must be a symbol, #{message_class.class} provided"      unless (Symbol === message_class)
             raise "Required arguments must be an array, #{required_args.class} provided" unless (Array === required_args)
             types[type] = {

@@ -1,8 +1,8 @@
 require 'state/state'
 
 class LobbyState < State
-    def initialize(client)
-        super(client)
+    def initialize(client, method)
+        super(client, method)
         @client.send_to_client(Message.new(:notify, {:text=>"You have entered the lobby"}))
 
         define_exchange(:menu_choice, :choose_from_list, {:choices => menu_choices}) do |choice|

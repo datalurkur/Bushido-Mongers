@@ -12,23 +12,45 @@ require 'util/log'
 class ClientBase
     include SocketUtils
 
-    def initialize(ip,port)
-        setup(ip,port)
+    def initialize
+        setup
     end
 
-    def setup(ip,port)
-        @socket = TCPSocket.new(ip,port)
-        start_processing_server_messages
+    def setup
+        @client_message_buffer = []
+        @client_mutex          = Mutex.new
         start_processing_client_messages
+
+        @server_message_buffer = []
+        @server_mutex          = Mutex.new
+    end
+
+    def connect(ip, port)
+        @socket                = TCPSocket.new(ip,port)
+        @socket_mutex          = Mutex.new
+        start_processing_server_messages
+    end
+
+    def disconnect
+        if @socket
+            stop_processing_server_messages
+            @socket.close
+            @socket       = nil
+            @socket_mutex = nil
+        end
     end
 
     def teardown
+        disconnect
         stop_processing_client_messages
-        stop_processing_server_messages
-        @socket.close
     end
 
     def send_to_server(message)
+        if @socket.nil?
+            Log.debug("No connection")
+            return
+        end
+
         # This really doesn't need to be in a begin / rescue block, but until we find this thread concurrency bug, I need all the logging I can get
         begin
             Log.debug("Packing message #{message.type} for server", 8)
@@ -36,7 +58,6 @@ class ClientBase
             Log.debug("Fetching socket mutex", 8)
             @socket_mutex.synchronize {
                 Log.debug("Message going out to socket", 8)
-                #@socket.puts(packed_data)
                 begin
                     @socket.write_nonblock(packed_data)
                 rescue Exception => e
@@ -50,9 +71,6 @@ class ClientBase
     end
 
     def start_processing_server_messages
-        @socket_mutex          = Mutex.new
-        @server_mutex          = Mutex.new
-        @server_message_buffer = []
         @server_listen_thread  = Thread.new do
             begin
                 Log.name_thread("server_polling")
@@ -68,8 +86,9 @@ class ClientBase
                     @server_mutex.synchronize { @server_message_buffer.concat(lines) }
                 end
             rescue Errno::ECONNRESET
-                # FIXME - We need to handle disconnects gracefully (ie bounce back to the login menu rather than dying horribly)
-                raise Errno::ECONNRESET
+                # Pass a fake server message informing the client that the connection was reset
+                reset_message = Message.new(:connection_reset)
+                @server_mutex.synchronize { @server_message_buffer << reset_message }
             rescue Exception => e
                 Log.debug(["Thread exited abnormally",e.message,e.backtrace])
             end
@@ -78,13 +97,10 @@ class ClientBase
 
     def stop_processing_server_messages
         @server_listen_thread.kill
-        @socket_mutex = nil
     end
 
     def start_processing_client_messages
         Log.debug("Polling for client messages", 8)
-        @client_mutex          = Mutex.new
-        @client_message_buffer = []
         @client_listen_thread  = Thread.new do
             begin
                 Log.name_thread("client_polling")
@@ -101,7 +117,6 @@ class ClientBase
 
     def stop_processing_client_messages
         @client_listen_thread.kill
-        @client_mutex = nil
     end
 
     def get_client_messages

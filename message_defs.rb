@@ -1,4 +1,7 @@
 # Client / Server Messages
+# This is more of an internal tool used by the low-level socket code to inform the state management when a connection with the server dies
+Message.define(:connection_reset, :socket)
+
 # Login phase
 Message.define(:login_request, :login, [:username])
 Message.define(:login_reject,  :login, [:reason])

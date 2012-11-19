@@ -1,9 +1,7 @@
 require 'net/client_base'
 
 require 'state/state'
-require 'state/states/login_state'
-
-#require 'ui/client_interface'
+require 'state/states/connect_state'
 
 # GameClient mostly functions as an input buffer and state container; it is also responsible for passing messages and interactables through the interface module for translation
 # When it comes to actual game events and functionality, the state objects do all the heavy lifting
@@ -11,13 +9,14 @@ require 'state/states/login_state'
 class GameClient < ClientBase
     include StateMaintainer
 
-    def initialize(ip, port, interface, initial_state={})
-        super(ip, port)
+    def initialize(interface, initial_config={}, initial_state=ConnectState)
+        super()
 
         @interface = interface
 
-        set_internal_state(initial_state)
-        set_state(LoginState.new(self))
+        set_internal_config(initial_config)
+
+        initial_state.new(self, :set)
 
         @running = true
         start_main_loop
