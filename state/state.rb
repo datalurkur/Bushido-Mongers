@@ -45,7 +45,14 @@ class State
     end
 
     def from_server(message)
-        Log.debug(["Unhandled message #{message.type} encountered during server processing for #{self.class}", caller])
+        case message.type
+        when :connection_reset
+            @client.disconnect
+            @client.send_to_client(Message.new(:notify, {:text=>"The connection with the server has been lost"}))
+            ConnectState.new(@client, :set)
+        else
+            Log.debug(["Unhandled message #{message.type} encountered during server processing for #{self.class}", caller])
+        end
     end
 
     def define_exchange(field,type,opt_args={},&on_finish)

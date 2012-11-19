@@ -9,6 +9,7 @@ class ConnectState < State
             [:server_ip,   :text_field],
             [:server_port, :text_field]
         ]) do
+            attempt_connection
         end
 
         if @client.get(:server_ip) && @client.get(:server_port)

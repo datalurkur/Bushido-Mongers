@@ -16,15 +16,16 @@ class LoginState < State
         end
 
         @client.send_to_client(Message.new(:notify, {:text => "Preparing to log in"}))
-        @client.get(:username) ? send_login_request : begin_exchange(:name)
+        @client.get(:username) ? send_login_request : begin_exchange(:username)
     end
 
     def from_server(message)
         case message.type
         when :login_reject
             if @local_state == :login_request
-                # anjean ; fix this to not crash ; BAYUD
-                raise "Login failed - #{message.reason}"
+                @client.send_to_client(Message.new(:notify, {:text => "Login rejected - #{message.reason}"}))
+                begin_exchange(:username)
+                return
             end
         when :auth_request
             if @local_state == :login_request
@@ -35,7 +36,9 @@ class LoginState < State
             end
         when :auth_reject
             if @local_state == :auth_response
-                raise "Login failed - #{message.reason}"
+                @client.send_to_client(Message.new(:notify, {:text => "Login authorization failed - #{message.reason}"}))
+                begin_exchange(:username)
+                return
             end
         when :auth_accept
             if @local_state == :auth_response

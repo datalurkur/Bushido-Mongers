@@ -104,6 +104,11 @@ class Server
         @sockets_mutex.synchronize { @client_sockets[socket] = info }
     end
 
+    def clear_client_info(socket)
+        socket.close
+        @sockets_mutex.synchronize { @client_sockets.delete(socket) }
+    end
+
     def spawn_listen_thread_for(socket)
         sockaddr = socket.addr.last
         @threadcount           ||= {}
@@ -126,9 +131,12 @@ class Server
                     Log.debug("Processing #{lines.size} lines of input from client", 8)
                     lines.each { |line| process_client_message(socket, line) }
                 end
+            rescue Errno::ECONNRESET
+                Log.debug("Client disconnected")
             rescue Exception => e
                 Log.debug(["Thread exited abnormally", e.message, e.backtrace])
             end
+            clear_client_info(socket)
         end
     end
 
@@ -137,17 +145,19 @@ class Server
         begin
             Log.debug("Packing message #{message.type} for client", 8)
             packed_data = pack_message(message)
-            Log.debug("Fetching client mutex", 8)
-            get_client_info(socket)[:mutex].synchronize {
-                Log.debug("Message going out to socket", 8)
-                #socket.puts(packed_data)
-                begin
+            begin
+                Log.debug("Fetching client mutex", 8)
+                get_client_info(socket)[:mutex].synchronize {
+                    Log.debug("Message going out to socket", 8)
                     socket.write_nonblock(packed_data)
-                rescue Exception => e
-                    Log.debug(["Failed to write to client socket", e.message, e.backtrace])
-                end
-            }
-            Log.debug("Message sent and mutex released", 8)
+                }
+                Log.debug("Message sent and mutex released", 8)
+            rescue Errno::ECONNRESET
+                Log.debug("Client connection reset")
+                clear_client_info(socket)
+            rescue Exception => e
+                Log.debug(["Failed to write to client socket", e.message, e.backtrace])
+            end
         rescue Exception => e
             Log.debug(["Failed to send data to client", e.message, e.backtrace])
         end
