@@ -6,25 +6,24 @@ class LobbyState < State
         @client.send_to_client(Message.new(:notify, {:text=>"You have entered the lobby"}))
 
         define_exchange_chain([
-            [:characters,       :query,            {:query_method => :list_characters}],
+            [:characters,       :server_query,     {:query_method => :list_characters}],
             [:character,        :choose_from_list, {:choices_from => :characters}],
-            [:select_character, :post,             {
-                :post_method => :select_character,
-                :data_key    => :character_name,
-                :data_from   => :character
-            }]
         ]) do |choice|
-            Log.debug("Player chooses #{choice} (#{@client.get(:character)})")
+            @client.send_to_server(Message.new(:select_character, {:character_name => @client.get(:character)}))
         end
 
         define_exchange(:menu_choice, :choose_from_list, {:choices => menu_choices}) do |choice|
             case choice
-            when :get_game_params;  @client.send_to_server(Message.new(:get_game_params))
-            when :generate_game;    @client.send_to_server(Message.new(:generate_game))
+            when :get_game_params
+                @client.send_to_server(Message.new(:get_game_params))
+            when :generate_game
+                @client.send_to_server(Message.new(:generate_game))
             when :create_character
                 raise "This really needs its own menu, even apart from the character selection sub-menu that already needs to exist (and doesn't)"
-            when :select_character; begin_exchange(:characters)
-            when :start_game;       @client.send_to_server(Message.new(:start_game))
+            when :select_character
+                begin_exchange(:characters)
+            when :start_game
+                @client.send_to_server(Message.new(:start_game))
             end
         end
 

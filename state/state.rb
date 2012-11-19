@@ -121,17 +121,12 @@ class State
                 params[:choices]
             end
             Message.new(:choose_from_list, {:choices => choices})
-        when :query
-            Log.debug("Querying server with params #{params.inspect}")
-            Message.new(params[:query_method])
-        when :post
-            Log.debug("Posting data to server #{params.inspect}")
-            data = if params[:data_from]
-                @client.get(params[:data_from])
-            else
-                params[:data]
-            end
-            Message.new(params[:post_method], {params[:data_key] => data})
+        when :fast_query
+            Log.debug(["Fast-querying with params", params])
+            Message.new(:fast_query, {:field => field})
+        when :server_query
+            Log.debug(["Querying server with params", params])
+            Message.new(params[:query_method], params[:query_params] || {})
         else
             raise "Unhandled exchange type #{params[:type]}"
         end
@@ -139,7 +134,7 @@ class State
         @exchange_field = field
 
         @exchange_target = case params[:type]
-        when :query, :post
+        when :server_query
             :server
         when :text_field, :choose_from_list
             :client
