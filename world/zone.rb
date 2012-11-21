@@ -13,6 +13,14 @@ class Zone
         @offset = offset
     end
 
+    def get_full_coordinates
+        if @parent
+            @parent.get_full_coordinates + [@offset]
+        else
+            []
+        end
+    end
+
     def direction_opposite(direction)
         case direction
         when :north; :south

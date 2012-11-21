@@ -25,15 +25,15 @@ Message.define(:create_lobby,   :server_menu, [:lobby_name,:lobby_password])
 Message.define(:create_success, :server_menu)
 Message.define(:create_fail,    :server_menu, [:reason])
 
-# Lobby phase
 # Inter-player communication
-Message.define(:send_chat,           :lobby, [:chat_text])
-Message.define(:send_whisper,        :lobby, [:recipient,:chat_text])
-Message.define(:receive_chat,        :lobby, [:sender,:chat_text,:is_whisper])
+Message.define(:send_chat,           :chat, [:chat_text])
+Message.define(:send_whisper,        :chat, [:recipient,:chat_text])
+Message.define(:receive_chat,        :chat, [:sender,:chat_text,:is_whisper])
 
+# Lobby phase
 # Game / World generation
 Message.define(:get_game_params,     :lobby)                # C->S
-# FIXME - Add protocol for setting game parameters
+# TODO - Add protocol for setting game parameters
 Message.define(:game_params,         :lobby, [:params])     # S->C
 Message.define(:generate_game,       :lobby)                # C->S
 Message.define(:generation_success,  :lobby)                # S->C

@@ -77,29 +77,23 @@ class Log
         end
 
         # NOT THREADSAFE
-=begin
-        def debug_obj(thread_name, file, line, level, msg, handle=Kernel)
-            if Hash === msg
-                msg.each { |l| debug_line(thread_name, file, line, level, l, handle) }
-            elsif Array === msg
-                msg.flatten.each { |l| debug_line(thread_name, file, line, level, l, handle) }
-            else
-                debug_line(thread_name, file, line, level, msg, handle)
-            end
-        end
-=end
-
-        def debug_line(thread_name, file, line, level, msg, handle)
+        def debug_line(thread_name, file, line, level, msg, handle, indent=0)
             @longest_file = [@longest_file, file.to_s.length].max
 
             msg_array = case msg
-            when Hash;  msg
-            when Array; msg.flatten
+            when Array; msg
+            when Hash;  ["{"] + msg.collect { |k,v| "\t#{k.inspect} => #{v.inspect}" } + ["}"]
             else;       [msg]
             end
 
             msg_array.each do |m|
-                handle.puts "[#{thread_name.ljust(@longest_thread_name)}] #{file.to_s.ljust(@longest_file)}:#{line.to_s.ljust(3)} (#{level.to_s.ljust(@max_log_level.to_s.length)}) | #{m}"
+                case m
+                when Array, Hash
+                    # Handle nested arrays
+                    debug_line(thread_name, file, line, level, m, handle, indent+1)
+                else
+                    handle.puts "[#{thread_name.ljust(@longest_thread_name)}] #{file.to_s.ljust(@longest_file)}:#{line.to_s.ljust(3)} (#{level.to_s.ljust(@max_log_level.to_s.length)}) | #{"\t"*indent}#{m}"
+                end
             end
         end
     end

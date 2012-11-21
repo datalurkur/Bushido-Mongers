@@ -1,6 +1,6 @@
 class Array
     def rand()
-        self[rand(self.size)]
+        self[Kernel.rand(self.size)]
     end
 
     def contents_equivalent?(other)

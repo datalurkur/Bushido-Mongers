@@ -48,16 +48,10 @@ class Player
             # Parse the character meta-data from the saves
             saves.collect do |filename|
                 character_name, timestamp = parse_filename(filename)
-                cdata = begin
-                    Marshal.load(File.read(File.join(udir, filename)))
-                rescue
-                    nil
-                end
 
                 {
                     :filename       => filename,
                     :character_name => character_name,
-                    :character      => cdata,
                     :timestamp      => timestamp,
                 }
             end
@@ -71,6 +65,10 @@ class Player
             f.close
         end
 
+        def load_character(username, filename)
+            Marshal.load(File.read(File.join(get_user_directory(username), filename)))
+        end
+
         def get_characters_for(username)
             user_directory_contents(username).collect do |fdata|
                 fdata[:character_name]
@@ -78,7 +76,9 @@ class Player
         end
 
         def get_character_history(username, character_name)
-            user_directory_contents(username).collect { |fdata| fdata[:character_name] == character_name }
+            contents = user_directory_contents(username)
+            history  = contents.select { |fdata| fdata[:character_name] == character_name }
+            history.sort { |x,y| x[:timestamp] <=> y[:timestamp] }
         end
     end
 
