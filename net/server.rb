@@ -13,8 +13,16 @@ class Server
     def initialize(config={})
         @config  = config
         @running = false
+    end
 
+    def start
         setup
+        @running = true
+    end
+
+    def stop
+        @running = false
+        teardown
     end
 
     def is_running?; @running; end
@@ -26,8 +34,6 @@ class Server
         if @config[:irc_enabled]
             IRCConduit.start(@config[:irc_server], @config[:irc_port], @config[:irc_nick], self)
         end
-
-        @running = true
     end
 
     def start_listening_for_connections
@@ -74,8 +80,9 @@ class Server
 
     def teardown
         stop_listening_for_connections
-        IRCConduit.stop
-        @running = false
+        if @config[:irc_enabled]
+            IRCConduit.stop
+        end
     end
 
     def terminate_client(socket)

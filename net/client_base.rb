@@ -13,7 +13,14 @@ class ClientBase
     include SocketUtils
 
     def initialize
+    end
+
+    def start
         setup
+    end
+
+    def stop
+        teardown
     end
 
     def setup

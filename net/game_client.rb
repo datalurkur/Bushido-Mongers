@@ -9,19 +9,27 @@ require 'state/states/connect_state'
 class GameClient < ClientBase
     include StateMaintainer
 
-    def initialize(interface, initial_config={}, initial_state=ConnectState)
+    def initialize(interface, initial_config={})
         super()
 
         @interface = interface
 
         setup_state
         set_internal_config(initial_config)
+    end
 
+    def start(initial_state=ConnectState)
+        super()
         initial_state.new(self, :set)
-
         @running = true
         start_main_loop
     end
+
+    def stop
+        @running = false
+        super()
+    end
+
 
     def running?; @running; end
 
@@ -35,10 +43,6 @@ class GameClient < ClientBase
                 current_state.from_server(message)
             end
         end
-    end
-
-    def stop
-        @running = false
     end
 
     def send_to_client(message)

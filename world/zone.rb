@@ -1,7 +1,6 @@
 require 'util/math'
 require 'util/log'
 
-# FIXME - Better separate zone and leaf functionality
 class Zone
     attr_reader :name, :offset
     def initialize(name)

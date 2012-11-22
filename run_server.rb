@@ -1,5 +1,9 @@
 #!/usr/bin/ruby
 
+# Uncomment to enable code coverage
+#require 'util/coverage'
+#CodeCoverage.setup
+
 require 'net/game_server'
 
 config = {
@@ -17,9 +21,30 @@ Log.setup("Main Thread", "server")
 require 'game/player_test'
 recreate_test_player("test_user")
 
-s = GameServer.new(config)
-
-while s.is_running?
+signals = ["TERM","INT"]
+signals.each do |signal|
+    Signal.trap(signal) {
+        # TODO - Save the game here so that we don't lose progress
+        Log.debug("Caught signal #{signal}")
+        $server.stop if $server
+    }
 end
 
-s.teardown
+$server = GameServer.new(config)
+$server.start
+while $server.is_running?
+end
+
+# Uncomment to enable code coverage output
+# (be sure to also uncomment the code coverage lines at the top of this file)
+=begin
+puts "CodeCoverage Results:"
+CodeCoverage.results.each do |klass, hash|
+    puts "\t#{klass}"
+    sorted_keys = hash.keys.sort { |x,y| x.to_s <=> y.to_s }
+    sorted_keys.each do |file|
+        calls = hash[file]
+        puts "\t\t#{calls} : #{file}"
+    end
+end
+=end

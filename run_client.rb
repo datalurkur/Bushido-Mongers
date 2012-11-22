@@ -14,4 +14,15 @@ config = {
 }
 
 Log.setup("Main Thread", "client")
-c = RemoteClient.new(config)
+
+$client = RemoteClient.new(config)
+
+signals = ["TERM","INT"]
+signals.each do |signal|
+    Signal.trap(signal) {
+        Log.debug("Caught signal #{signal}")
+        $client.stop if $client
+    }
+end
+
+$client.start
