@@ -1,4 +1,5 @@
 require 'state/state'
+require 'state/states/playing_state'
 
 class LobbyState < State
     def initialize(client, method)
@@ -47,12 +48,6 @@ class LobbyState < State
             @client.send_to_client(Message.new(:notify, {:text=>"World failed to generate, #{message.reason}"}))
             begin_exchange(:menu_choice)
             return
-        # Let the exchange chain handle this
-        #when :character_list
-        #    @client.send_to_client(Message.new(:list, {:title=>"Characters", :items=>message.characters}))
-        #    @client.set(:characters, message.characters)
-        #    begin_exchange(:character)
-        #    return
         when :start_success
             @client.send_to_client(Message.new(:notify, {:text=>"Game has started"}))
             begin_exchange(:menu_choice)
@@ -71,6 +66,10 @@ class LobbyState < State
         when :character_not_ready
             @client.send_to_client(Message.new(:notify, {:text=>"Character not ready - #{message.reason}"}))
             begin_exchange(:menu_choice)
+            return
+        when :begin_playing
+            Log.debug("Entering PlayingState")
+            @client.set_state(PlayingState.new(@client))
             return
         end
 

@@ -28,17 +28,21 @@ module SocketUtils
         }
         return [] unless data_in
 
+        Log.debug("#{data_in.size} bytes received", 6)
+        Log.debug(data_in.inspect, 6)
         buffer += data_in
         while true
             break unless buffer.size >= 4
             next_length = buffer.unpack("N")[0]
+            Log.debug("Unpacking message of size #{next_length}", 6)
             if buffer.size >= next_length + 4
                 message = Marshal.load(buffer[4,next_length])
                 raise "Invalid object received: #{message.class} #{message.inspect}" unless Message === message
                 Log.debug(message.report, 6)
                 messages << message
-                buffer = buffer[(next_length+1)..-1]
+                buffer = buffer[(next_length+4)..-1]
             else
+                Log.debug("#{buffer.size} bytes left, returning input for now")
                 break
             end
         end

@@ -1,9 +1,7 @@
 # Client / Server Messages
 # This is more of an internal tool used by the low-level socket code to inform the state management when a connection with the server dies
 Message.define(:connection_reset, :socket)
-
-# This is used by the server to inform the client that it requested information in a bad way
-Message.define(:invalid_request,  :socket, [:reason])
+Message.define(:invalid_packet, :socket)
 
 # Login phase
 Message.define(:login_request, :login, [:username])
@@ -46,6 +44,7 @@ Message.define(:character_list,      :lobby, [:characters])     # S->C
 Message.define(:select_character,    :lobby, [:character_name]) # C->S
 Message.define(:character_ready,     :lobby)                    # S->C
 Message.define(:character_not_ready, :lobby, [:reason])         # S->C
+Message.define(:begin_playing,       :lobby)                    # S->C
 
 # Game administration and information
 Message.define(:start_game,          :lobby)                # C->S
@@ -59,8 +58,9 @@ Message.define(:user_leaves,         :lobby, [:username])   # S->C
 Message.define(:admin_change,        :lobby, [:admin])      # S->C
 
 # Gameplay
-Message.define(:query_location, :game)
-Message.define(:location,       :game, [:zone, :area])
+Message.define(:fast_query,    :game, [:field])
+Message.define(:query_result,  :game, [:result])
+Message.define(:invalid_query, :game, [:reason])
 
 # Client / Interface Messages
 # Interface Messages

@@ -40,6 +40,7 @@ class GameClient < ClientBase
             end
 
             get_server_messages.each do |message|
+                Log.debug("Parsing message #{message.type}", 7)
                 current_state.from_server(message)
             end
         end

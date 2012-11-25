@@ -132,18 +132,18 @@ class Lobby
                 return
             end
 
+            send_to_user(username, Message.new(:character_ready))
+
             if @game_state == :playing
                 commit_character_choice(username)
             end
-
-            # FIXME - We need to differentiate between "this character is pending awaiting game start" and "this character is now in game"
-            send_to_user(username, Message.new(:character_ready))
         end
     end
 
     def commit_character_choice(username) 
         @game_core.add_player(username, @users[username][:pending_character])
         @users[username][:pending_character] = nil
+        send_to_user(username, Message.new(:begin_playing))
     end
 
     def generate_game(username)
@@ -174,14 +174,14 @@ class Lobby
         if @game_state == :ready
             @game_state = :playing
 
+            Log.debug("Game started")
+            broadcast(Message.new(:start_success))
+
             @users.each do |username,user|
                 if user[:pending_character]
                     commit_character_choice(username)
                 end
             end
-
-            Log.debug("Game started")
-            broadcast(Message.new(:start_success))
         else
             Log.debug("Failed to start game - Lobby is not in :ready state")
             send_to_user(username, Message.new(:start_fail, {:reason => "Lobby is not :ready (#{@game_state})"}))

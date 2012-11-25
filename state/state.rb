@@ -134,7 +134,7 @@ class State
         @exchange_field = field
 
         @exchange_target = case params[:type]
-        when :server_query
+        when :server_query, :fast_query
             :server
         when :text_field, :choose_from_list
             :client
@@ -163,7 +163,7 @@ class State
         field = get_exchange_field
         clear_exchange_context
 
-        if message.type == :invalid_request
+        if message.type == :invalid_query
             Log.debug("Server exchange failed - #{message.reason}")
             return false
         else
