@@ -13,13 +13,16 @@ class ClientBase
     include SocketUtils
 
     def initialize
+        @setup = false
     end
 
     def start
         setup
+        @setup = true
     end
 
     def stop
+        @setup = false
         teardown
     end
 
@@ -33,6 +36,7 @@ class ClientBase
     end
 
     def connect(ip, port)
+        raise "Can't attempt to connect until client has started" unless @setup
         @socket                = TCPSocket.new(ip,port)
         @socket_mutex          = Mutex.new
         start_processing_server_messages
