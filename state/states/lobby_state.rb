@@ -36,6 +36,8 @@ class LobbyState < State
 
     def from_server(message)
         case message.type
+        when :admin_change
+            @client.send_to_client(Message.new(:notify, {:text=>"#{message.admin} has assumed the role of admin"}))
         when :game_params
             @client.send_to_client(Message.new(:list, {:title=>"Game Parameters", :items=>message.params}))
             begin_exchange(:menu_choice)

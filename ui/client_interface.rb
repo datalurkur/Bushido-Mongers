@@ -11,7 +11,7 @@ module TextInterface
     def generate(message)
         case message.type
         when :notify;           message.text
-        when :text_field;       text_field()
+        when :text_field;       text_field(message.field)
         # While these would appear to be the same, one prompts a response (and this is very different to an AI!)
         when :choose_from_list; list(message.choices)
         when :list;             list(message.items)
@@ -60,7 +60,8 @@ module SlimInterface
     extend TextInterface
 
     class << self
-        def text_field
+        def text_field(field)
+            field.to_title
         end
 
         def list(items)
@@ -87,7 +88,8 @@ module VerboseInterface
     extend TextInterface
 
     class << self
-        def text_field
+        def text_field(field)
+            field.to_title
         end
 
         def list(items, style=:number)
@@ -112,8 +114,8 @@ end
 # Provides meta-data for AI or non-textual clients
 module MetaDataInterface
     class << self
-        def text_field
-            [:text_field]
+        def text_field(field)
+            [:text_field, field]
         end
 
         def list(items)

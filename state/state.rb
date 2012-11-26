@@ -113,7 +113,7 @@ class State
         params = @exchanges[field]
         @current_exchange = case params[:type]
         when :text_field
-            Message.new(:text_field)
+            Message.new(:text_field, {:field => field})
         when :choose_from_list
             choices = if params[:choices_from]
                 @client.get(params[:choices_from])
