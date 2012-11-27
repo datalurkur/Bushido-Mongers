@@ -52,6 +52,7 @@ class LobbyState < State
             begin_exchange(:menu_choice)
             return
         when :begin_playing
+            pass_to_client(message)
             @client.set_state(PlayingState.new(@client))
             return
         end

@@ -44,7 +44,7 @@ Message.define(:character_list,      :lobby, [:characters])                     
 Message.define(:select_character,    :lobby, [:character_name])                     # C->S
 Message.define(:character_ready,     :lobby, [],        "Character ready")          # S->C
 Message.define(:character_not_ready, :lobby, [:reason], "Character not ready")      # S->C
-Message.define(:begin_playing,       :lobby)                                        # S->C
+Message.define(:begin_playing,       :lobby, [],        "Begin playing")            # S->C
 
 # Game administration and information
 Message.define(:start_game,          :lobby)                                        # C->S
