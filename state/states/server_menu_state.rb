@@ -5,7 +5,7 @@ class ServerMenuState < State
     def initialize(client, method)
         super(client, method)
 
-        define_exchange(:menu_choice, :choose_from_list, {:choices => menu_choices}) do |choice|
+        define_exchange(:server_menu_choice, :choose_from_list, {:choices => server_menu_choices}) do |choice|
             case choice
             when :list_lobbies; @client.send_to_server(Message.new(:list_lobbies))
             when :create_lobby; @entry_type = :create_lobby; begin_exchange(:lobby_name)
@@ -31,7 +31,7 @@ class ServerMenuState < State
         end
     end
 
-    def menu_choices; [:list_lobbies, :join_lobby, :create_lobby, :disconnect]; end
+    def server_menu_choices; [:list_lobbies, :join_lobby, :create_lobby, :disconnect]; end
 
     def enter_lobby(entry_type)
         password_hash = LameCrypto.hash_using_method(@client.get(:hash_method),@client.get(:password),@client.get(:server_hash))
@@ -43,11 +43,11 @@ class ServerMenuState < State
         case message.type
         when :motd
             pass_to_client(message)
-            begin_exchange(:menu_choice)
+            begin_exchange(:server_menu_choice)
             return
         when :lobby_list
             @client.send_to_client(Message.new(:list, {:title=>"Available Game Lobbies", :items=>message.lobbies}))
-            begin_exchange(:menu_choice)
+            begin_exchange(:server_menu_choice)
             return
         when :join_success,
              :create_success
@@ -58,7 +58,7 @@ class ServerMenuState < State
              :create_fail
             pass_to_client(message)
             @entry_type = nil
-            begin_exchange(:menu_choice)
+            begin_exchange(:server_menu_choice)
             return
         when :admin_change
             if message.result != @client.get(:username)

@@ -12,7 +12,7 @@ class LobbyState < State
             @client.send_to_server(Message.new(:select_character, {:character_name => @client.get(:character)}))
         end
 
-        define_exchange(:menu_choice, :choose_from_list, {:choices => menu_choices}) do |choice|
+        define_exchange(:lobby_menu_choice, :choose_from_list, {:field => :lobby_menu_choice, :choices => lobby_menu_choices}) do |choice|
             case choice
             when :get_game_params
                 @client.send_to_server(Message.new(:get_game_params))
@@ -27,11 +27,11 @@ class LobbyState < State
             end
         end
 
-        begin_exchange(:menu_choice)
+        begin_exchange(:lobby_menu_choice)
     end
 
     # FIXME - This menu needs to be refined and broken up into categories (game administration, player selection, etc)
-    def menu_choices; [:get_game_params, :generate_game, :create_character, :select_character, :start_game]; end
+    def lobby_menu_choices; [:get_game_params, :generate_game, :create_character, :select_character, :start_game]; end
 
     def from_server(message)
         case message.type
@@ -40,7 +40,7 @@ class LobbyState < State
             pass_to_client(message)
         when :game_params
             @client.send_to_client(Message.new(:list, {:title=>"Game Parameters", :items=>message.params}))
-            begin_exchange(:menu_choice)
+            begin_exchange(:lobby_menu_choice)
             return
         when :generation_success,
              :generation_fail,
@@ -49,7 +49,7 @@ class LobbyState < State
              :character_ready,
              :character_not_ready
             pass_to_client(message)
-            begin_exchange(:menu_choice)
+            begin_exchange(:lobby_menu_choice)
             return
         when :begin_playing
             pass_to_client(message)

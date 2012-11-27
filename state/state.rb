@@ -128,7 +128,7 @@ class State
             else
                 params[:choices]
             end
-            Message.new(:choose_from_list, {:choices => choices})
+            Message.new(:choose_from_list, {:field => field, :choices => choices})
         when :fast_query
             Log.debug(["Fast-querying with params", params])
             Message.new(:fast_query, {:field => field})

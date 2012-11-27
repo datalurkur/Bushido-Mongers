@@ -8,7 +8,7 @@ module TextInterface
         case message.type
         when :text_field;       text_field(message.field)
         # While these would appear to be the same, one prompts a response (and this is very different to an AI!)
-        when :choose_from_list; list(message.choices)
+        when :choose_from_list; list(message.choices, message.field)
         when :list;             list(message.items)
         when :properties;       properties(message.hash)
         else
@@ -69,7 +69,7 @@ module SlimInterface
             field.to_title
         end
 
-        def list(items, style=:number)
+        def list(items, field=nil, style=:number)
             decorate(items, style).join(" ")
         end
 
@@ -97,7 +97,7 @@ module VerboseInterface
             field.to_title
         end
 
-        def list(items, style=:number)
+        def list(items, field=nil, style=:number)
             decorate(items, style).join("\n")
         end
 
@@ -118,15 +118,26 @@ end
 
 # Provides meta-data for AI or non-textual clients
 module MetaDataInterface
-    extend TextInterface
-
     class << self
+        def generate(message)
+            message
+        end
+
+        def parse(context, text)
+            unless context
+                Log.debug("No context for parsing input, returning raw command")
+                Message.new(:raw_command,{:command=>text})
+            else
+                Message.new(:valid_input, {:input=>text})
+            end
+        end
+
         def text_field(field)
             [:text_field, field]
         end
 
-        def list(items)
-            [:list, items]
+        def list(items, field)
+            [:list, field, items]
         end
 
         def properties(hash)

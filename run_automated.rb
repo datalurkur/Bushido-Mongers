@@ -22,7 +22,7 @@ signals.each do |signal|
     }
 end
 
-$client.push_pair({:type => :choose_from_list,  :choices => [:list_lobbies, :join_lobby, :create_lobby, :disconnect]},
+$client.push_pair({:type => :choose_from_list,  :field => :server_menu_choice, :choices => [:list_lobbies, :join_lobby, :create_lobby, :disconnect]},
                   {:type => :valid_input,       :input => :join_lobby})
 $client.push_pair({:type => :text_field,        :field => :lobby_name},
                   {:type => :valid_input,       :input => $config[:lobby_name]})

@@ -34,6 +34,7 @@ class PairedAutoClient < GameClient
     end
 
     def send_to_client(message)
+        Log.debug(["Sending to client #{message.type}", message.params])
         if @interface == MetaDataInterface
             super(message)
         else
@@ -48,6 +49,7 @@ class PairedAutoClient < GameClient
 
         if @interface == MetaDataInterface
             @pairs.each do |pair|
+                Log.debug(["Responding to #{context.type}", context.params])
                 if pair.match(context) == :server
                     @old_context = context
                     return super(pair.client_response[:input])

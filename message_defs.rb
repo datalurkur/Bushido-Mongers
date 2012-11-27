@@ -69,8 +69,8 @@ Message.define(:room_info,     :game, [:name, :keywords, :contents, :exits])    
 # Client / Interface Messages
 # Interface Messages
 # This group is a special class of messages which are used by the state to perform interactions
-Message.define(:text_field,       :prompt)
-Message.define(:choose_from_list, :prompt,   [:choices])
+Message.define(:text_field,       :prompt,   [:field])
+Message.define(:choose_from_list, :prompt,   [:field, :choices])
 Message.define(:valid_input,      :response, [:input])
 Message.define(:invalid_input,    :response)
 

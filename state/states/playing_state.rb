@@ -4,7 +4,7 @@ class PlayingState < State
     def initialize(client)
         super(client)
 
-        define_exchange(:menu_choice, :choose_from_list, {:choices => menu_choices}) do |choice|
+        define_exchange(:playing_menu_choice, :choose_from_list, {:choices => playing_menu_choices}) do |choice|
             case choice
             when :inspect
                 @client.send_to_server(Message.new(:inspect_room))
@@ -17,10 +17,10 @@ class PlayingState < State
             end
         end
 
-        begin_exchange(:menu_choice)
+        begin_exchange(:playing_menu_choice)
     end
 
-    def menu_choices; [:inspect, :move, :act]; end
+    def playing_menu_choices; [:inspect, :move, :act]; end
 
     def from_server(message)
         case message.type

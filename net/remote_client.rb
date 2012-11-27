@@ -12,7 +12,6 @@ class RemoteClient < GameClient
         puts super(message)
     end
 
-    # Called from a thread in ClientBase
     def get_from_client
         super(gets.chomp)
     end
