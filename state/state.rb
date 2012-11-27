@@ -69,8 +69,8 @@ class State
     def from_server(message)
         case message.type
         when :connection_reset
+            pass_to_client(message)
             @client.disconnect
-            @client.send_to_client(Message.new(:alert, {:alert => :connection_reset}))
             ConnectState.new(@client, :set)
         else
             unless process_exchange(message, :server)
