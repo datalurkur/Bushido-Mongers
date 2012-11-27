@@ -48,7 +48,7 @@ class GameServer < Server
         }
         case message.type
         when :get_motd
-            send_to_client(socket, Message.new(:motd,{:motd=>@config[:motd]}))
+            send_to_client(socket, Message.new(:motd,{:text=>@config[:motd]}))
         when :list_lobbies
             lobbies = @lobby_mutex.synchronize {
                 @lobbies.collect { |lobby| lobby.name }

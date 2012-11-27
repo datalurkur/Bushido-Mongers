@@ -15,18 +15,11 @@ class LoginState < State
             send_auth_response
         end
 
-        @client.send_to_client(Message.new(:notify, {:text => "Preparing to log in"}))
         @client.get(:username) ? send_login_request : begin_exchange(:username)
     end
 
     def from_server(message)
         case message.type
-        when :login_reject
-            if @local_state == :login_request
-                @client.send_to_client(Message.new(:notify, {:text => "Login rejected - #{message.reason}"}))
-                begin_exchange(:username)
-                return
-            end
         when :auth_request
             if @local_state == :login_request
                 @client.set(:hash_method,message.hash_method)
@@ -35,17 +28,14 @@ class LoginState < State
                 return
             end
         when :auth_reject
-            if @local_state == :auth_response
-                @client.send_to_client(Message.new(:notify, {:text => "Login authorization failed - #{message.reason}"}))
-                begin_exchange(:username)
-                return
-            end
+        when :login_reject
+            pass_to_client(message)
+            begin_exchange(:username)
+            return
         when :auth_accept
-            if @local_state == :auth_response
-                # Move to the Server Menu state
-                ServerMenuState.new(@client, :set)
-                return
-            end
+            pass_to_client(message)
+            ServerMenuState.new(@client, :set)
+            return
         end
 
         super(message)

@@ -10,14 +10,23 @@ end
 module TextInterface
     def generate(message)
         case message.type
-        when :notify;           message.text
         when :text_field;       text_field(message.field)
         # While these would appear to be the same, one prompts a response (and this is very different to an AI!)
         when :choose_from_list; list(message.choices)
         when :list;             list(message.items)
         when :properties;       properties(message.hash)
         else
-            raise "Unhandled client message type #{message.type}"
+            if message.has_param?(:text)
+                if message.has_param?(:reason)
+                    "#{message.text} - #{message.reason}"
+                elsif message.has_param?(:result)
+                    "#{message.text} - #{message.result}"
+                else
+                    message.text
+                end
+            else
+                raise "Unhandled client message type #{message.type} : #{message.params.inspect}"
+            end
         end
     end
 

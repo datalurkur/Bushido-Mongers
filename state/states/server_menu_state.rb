@@ -21,8 +21,6 @@ class ServerMenuState < State
             enter_lobby(@entry_type)
         end
 
-        @client.send_to_client(Message.new(:notify, {:text=>"You have connected to the server as #{@client.get(:username)}"}))
-
         case @client.get(:server_menu_autocmd)
         when :join_lobby
             enter_lobby(:join_lobby)
@@ -44,30 +42,30 @@ class ServerMenuState < State
     def from_server(message)
         case message.type
         when :motd
-            @client.send_to_client(Message.new(:notify, {:text=>message.motd}))
+            pass_to_client(message)
             begin_exchange(:menu_choice)
             return
         when :lobby_list
             @client.send_to_client(Message.new(:list, {:title=>"Available Game Lobbies", :items=>message.lobbies}))
             begin_exchange(:menu_choice)
             return
-        when :join_success
-            @client.send_to_client(Message.new(:notify, {:text=>"Joined #{@client.get(:lobby_name)}"}))
+        when :join_success,
+             :create_success
+            pass_to_client(message)
             LobbyState.new(@client, :set)
             return
-        when :join_fail
-            @client.send_to_client(Message.new(:notify, {:text=>"Failed to join lobby: #{message.reason}"}))
+        when :join_fail,
+             :create_fail
+            pass_to_client(message)
             @entry_type = nil
             begin_exchange(:menu_choice)
             return
-        when :create_success
-            @client.send_to_client(Message.new(:notify, {:text=>"#{@client.get(:lobby_name)} created"}))
-            LobbyState.new(@client, :set)
-            return
-        when :create_fail
-            @client.send_to_client(Message.new(:notify, {:text=>"Failed to create lobby: #{message.reason}"}))
-            @entry_type = nil
-            begin_exchange(:menu_choice)
+        when :admin_change
+            if message.result != @client.get(:username)
+                Log.debug("Something really funky is happening - we're getting a message that the admin has been set to #{message.result} (not this user) during the server menu state.  How the hell.")
+            else
+                pass_to_client(message)
+            end
             return
         end
 

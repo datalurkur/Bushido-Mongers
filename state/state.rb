@@ -52,17 +52,25 @@ class State
         end
     end
 
+    def pass_to_client(message)
+        @client.send_to_client(message)
+    end
+
     def from_client(message)
         unless process_exchange(message, :client)
-            Log.debug(["Unhandled message #{message.type} encountered during client processing for #{self.class}", caller])
+            if message.type == :raw_command
+                Log.debug("Discarding raw command #{message.command}")
+            else
+                Log.debug(["Unhandled message #{message.type} encountered during client processing for #{self.class}", caller])
+            end
         end
     end
 
     def from_server(message)
         case message.type
         when :connection_reset
+            pass_to_client(message)
             @client.disconnect
-            @client.send_to_client(Message.new(:notify, {:text=>"The connection with the server has been lost"}))
             ConnectState.new(@client, :set)
         else
             unless process_exchange(message, :server)

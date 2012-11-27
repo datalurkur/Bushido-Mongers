@@ -4,13 +4,15 @@ require 'util/log'
 # Used in lots of places
 class Message
     class << self
-        def define(type, message_class, required_args=[])
+        def define(type, message_class, required_args=[], text=nil)
             raise "Message class must be a symbol, #{message_class.class} provided"      unless (Symbol === message_class)
             raise "Required arguments must be an array, #{required_args.class} provided" unless (Array === required_args)
             types[type] = {
                 :required_args => required_args,
-                :message_class => message_class || type
+                :message_class => message_class || type,
+                :default_args  => {}
             }
+            (types[type][:default_args][:text] = text) unless text.nil?
         end
 
         def types
@@ -58,12 +60,17 @@ class Message
             raise "Unknown message type #{type}" unless type_defined?(type)
             required_args(type).each { |arg| raise "#{arg} required for #{type} messages" unless args.has_key?(arg) }
         end
+
+        def default_args(type)
+            types[type][:default_args]
+        end
     end
 
     def initialize(type, args={})
+        Log.debug(["Creating a message of type #{type}", args], 6)
         Message.check_message(type, args)
         @type = type
-        @args = args
+        @args = Message.default_args(type).merge(args)
 
         self
     end
@@ -74,6 +81,14 @@ class Message
 
     def report
         "#{@type}: #{@args.inspect}"
+    end
+
+    def has_param?(name)
+        @args.has_key?(name)
+    end
+
+    def params
+        @args
     end
 
     def method_missing(name, *args)
