@@ -33,9 +33,9 @@ class GameServer < Server
         case message.message_class
         when :login;       process_login_message(socket,message)
         when :server_menu; process_server_menu_message(socket,message)
-        when :lobby;       process_lobby_message(socket,message)
+        when :lobby,:game; process_lobby_message(socket,message)
         else
-            debug("Unhandled class of client message: #{message.message_class}")
+            Log.debug("Unhandled class of client message: #{message.message_class}")
         end
     end
 
@@ -123,9 +123,11 @@ class GameServer < Server
             }))
         when :auth_response
             competing_sockets = []
+            username          = nil
+            password_hash     = nil
             @user_mutex.synchronize {
                 if @user_info[socket][:state] != :authenticating
-                    debug("Invalid authentication response from client in #{@user_info[socket][:state]} state")
+                    Log.debug("Invalid authentication response from client in #{@user_info[socket][:state]} state")
                     return
                 end
 
@@ -136,29 +138,39 @@ class GameServer < Server
                 competing_sockets = @user_info.keys.select { |k|
                     (@user_info[k][:username] == username)
                 }
-                if competing_sockets.size > 2
-                    Log.debug("Warning: Inconsistent user state for #{username}")
-                end
-                if competing_sockets.size > 1
-                    Log.debug("Username #{username} already active")
-                    # There are other sockets with this username, see if the password matches
+            }
+            if competing_sockets.size > 2
+                Log.debug("Warning: Inconsistent user state for #{username}")
+            end
+            if competing_sockets.size > 1
+                Log.debug("Username #{username} already active")
+                # There are other sockets with this username, see if the password matches
+                matching_passwords = []
+                @user_mutex.synchronize {
                     matching_passwords = competing_sockets.select { |k|
                         (@user_info[k][:password_hash] == password_hash) || @user_info[k][:password_hash].nil?
                     }
-                    if matching_passwords.size == competing_sockets.size
-                        # The passwords match, this must be a reconnecting user
-                        # Close the other sockets
-                        # FIXME - We should probably do something nicer here like the log the user out and drop them back to the login menu
-                        other_sockets = competing_sockets.reject { |k| k == socket }
-                        other_sockets.each { |k| @user_info.delete(k); terminate_client(k) }
-                    else
-                        send_to_client(socket, Message.new(:auth_reject,{:reason => "Incorrect password"}))
-                        return
+                }
+                if matching_passwords.size == competing_sockets.size
+                    # The passwords match, this must be a reconnecting user
+                    # Close the other sockets
+                    other_sockets = competing_sockets.reject { |k| k == socket }
+                    other_sockets.each do |k|
+                        lobby = nil
+                        @user_mutex.synchronize {
+                            lobby = @user_info[k][:lobby]
+                            @user_info.delete(k)
+                            terminate_client(k)
+                        }
+                        lobby.remove_user(username) if lobby
                     end
+                else
+                    send_to_client(socket, Message.new(:auth_reject,{:reason => "Incorrect password"}))
+                    return
                 end
-                @user_info[socket][:state] = :server_menu
-                send_to_client(socket, Message.new(:auth_accept))
-            }
+            end
+            @user_mutex.synchronize { @user_info[socket][:state] = :server_menu }
+            send_to_client(socket, Message.new(:auth_accept))
         else
             Log.debug("Unhandled login message type #{message.type} received from client")
         end

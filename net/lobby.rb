@@ -64,6 +64,11 @@ class Lobby
     end
 
     def add_user(username)
+        if @users[username]
+            Log.debug("#{username} is already active in the lobby")
+            return
+        end
+
         Log.debug("#{username} joining #{name}")
         broadcast(Message.new(:user_joins, {:result => username}), [username])
         @users[username] = {}
@@ -77,6 +82,11 @@ class Lobby
     end
 
     def remove_user(username)
+        unless @users[username]
+            Log.debug("No user #{username}")
+            return
+        end
+
         if is_playing?(username)
             # Save the player
             Player.save_character(username, @game_core.get_player(username))
@@ -190,6 +200,29 @@ class Lobby
     end
 
     def process_message(username, message)
+        case message.message_class
+        when :lobby; process_lobby_message(username, message)
+        when :game;  process_game_message(username, message)
+        else 
+            Log.debug("Unhandled class of client message: #{message.message_class}")
+        end
+    end
+
+    def process_game_message(username, message)
+        case message.type
+        when :inspect_room
+            send_to_user(username, Message.new(:room_info, {
+                :name => "",
+                :keywords => [],
+                :contents => [],
+                :exits => [],
+            }))
+        else
+            Log.debug("Unhandled game message type #{message.type} received from client")
+        end
+    end
+
+    def process_lobby_message(username, message)
         case message.type
         when :get_game_params
             # Eventually there will actually *be* game params, at which point we'll want to send them here

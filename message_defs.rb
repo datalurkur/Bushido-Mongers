@@ -58,9 +58,13 @@ Message.define(:user_leaves,         :lobby, [:result], "User leaves")          
 Message.define(:admin_change,        :lobby, [:result], "Admin changed")            # S->C
 
 # Gameplay
-Message.define(:fast_query,    :game, [:field])
-Message.define(:query_result,  :game, [:result])
-Message.define(:invalid_query, :game, [:reason])
+Message.define(:inspect_room,  :game)                                               # C->S
+Message.define(:room_info,     :game, [:name, :keywords, :contents, :exits])        # S->C
+
+# I'm thinking of doing away with these in favor of more explicit queries
+#Message.define(:fast_query,    :game, [:field])
+#Message.define(:query_result,  :game, [:result])
+#Message.define(:invalid_query, :game, [:reason])
 
 # Client / Interface Messages
 # Interface Messages

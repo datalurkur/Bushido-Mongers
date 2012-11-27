@@ -7,17 +7,27 @@ class PlayingState < State
         define_exchange(:menu_choice, :choose_from_list, {:choices => menu_choices}) do |choice|
             case choice
             when :inspect
+                @client.send_to_server(Message.new(:inspect_room))
             when :move
+                # FIXME
+                @client.send_to_server(Message.new(:inspect_room))
             when :act
+                # FIXME
+                @client.send_to_server(Message.new(:inspect_room))
             end
         end
+
+        begin_exchange(:menu_choice)
     end
 
     def menu_choices; [:inspect, :move, :act]; end
 
     def from_server(message)
-        #case message.type
-        #end
+        case message.type
+        when :room_info
+            Log.debug(["Received room info from server", message.name, message.keywords, message.contents, message.exits])
+            return
+        end
 
         super(message)
     end
