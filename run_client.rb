@@ -2,8 +2,7 @@
 
 require 'net/remote_client'
 
-# DEBUG
-config = {
+$config = {
     :server_ip => "localhost",
     :server_port => RemoteClient::DEFAULT_LISTEN_PORT,
     :username => "test_user",
@@ -15,7 +14,7 @@ config = {
 
 Log.setup("Main Thread", "client")
 
-$client = RemoteClient.new(config)
+$client = RemoteClient.new($config)
 
 signals = ["TERM","INT"]
 signals.each do |signal|
