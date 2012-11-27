@@ -4,7 +4,6 @@ require 'state/states/playing_state'
 class LobbyState < State
     def initialize(client, method)
         super(client, method)
-        @client.send_to_client(Message.new(:notify, {:text=>"You have entered the lobby"}))
 
         define_exchange_chain([
             [:characters,       :server_query,     {:query_method => :list_characters}],
@@ -36,41 +35,23 @@ class LobbyState < State
 
     def from_server(message)
         case message.type
-        when :admin_change
-            @client.send_to_client(Message.new(:notify, {:text=>"#{message.admin} has assumed the role of admin"}))
+        when :admin_change,
+             :user_joins
+            pass_to_client(message)
         when :game_params
             @client.send_to_client(Message.new(:list, {:title=>"Game Parameters", :items=>message.params}))
             begin_exchange(:menu_choice)
             return
-        when :generation_success
-            @client.send_to_client(Message.new(:notify, {:text=>"World has been generated"}))
-            begin_exchange(:menu_choice)
-            return
-        when :generation_fail
-            @client.send_to_client(Message.new(:notify, {:text=>"World failed to generate, #{message.reason}"}))
-            begin_exchange(:menu_choice)
-            return
-        when :start_success
-            @client.send_to_client(Message.new(:notify, {:text=>"Game has started"}))
-            begin_exchange(:menu_choice)
-            return
-        when :start_fail
-            @client.send_to_client(Message.new(:notify, {:text=>"Game failed to start, #{message.reason}"}))
-            begin_exchange(:menu_choice)
-            return
-        when :user_joins
-            @client.send_to_client(Message.new(:notify, {:text=>"#{message.username} has joined the lobby"}))
-            return
-        when :character_ready
-            @client.send_to_client(Message.new(:notify, {:text=>"Character ready"}))
-            begin_exchange(:menu_choice)
-            return
-        when :character_not_ready
-            @client.send_to_client(Message.new(:notify, {:text=>"Character not ready - #{message.reason}"}))
+        when :generation_success,
+             :generation_fail,
+             :start_success,
+             :start_fail,
+             :character_ready,
+             :character_not_ready
+            pass_to_client(message)
             begin_exchange(:menu_choice)
             return
         when :begin_playing
-            Log.debug("Entering PlayingState")
             @client.set_state(PlayingState.new(@client))
             return
         end

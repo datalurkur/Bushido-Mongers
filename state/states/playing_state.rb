@@ -7,11 +7,8 @@ class PlayingState < State
         define_exchange(:menu_choice, :choose_from_list, {:choices => menu_choices}) do |choice|
             case choice
             when :inspect
-                @client.send_to_client(Message.new(:notify, {:text=>"Inspecting"}))
             when :move
-                @client.send_to_client(Message.new(:notify, {:text=>"Moving"}))
             when :act
-                @client.send_to_client(Message.new(:notify, {:text=>"Acting"}))
             end
         end
     end

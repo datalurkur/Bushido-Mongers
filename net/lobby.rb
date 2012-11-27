@@ -65,14 +65,14 @@ class Lobby
 
     def add_user(username)
         Log.debug("#{username} joining #{name}")
-        broadcast(Message.new(:user_joins, {:username => username}), [username])
+        broadcast(Message.new(:user_joins, {:result => username}), [username])
         @users[username] = {}
 
         # TODO - Add a privelege set so that other users can be granted admin
         if @default_admin == username
             @users[username][:admin] = true
             Log.debug("#{username} reclaiming admin priveleges")
-            broadcast(Message.new(:admin_change, {:admin => username}))
+            broadcast(Message.new(:admin_change, {:result => username}))
         end
     end
 
@@ -84,7 +84,7 @@ class Lobby
         end
         @users.delete(username)
         Log.debug("#{username} has left #{name}")
-        broadcast(Message.new(:user_leaves, {:username => username}))
+        broadcast(Message.new(:user_leaves, {:result => username}))
     end
 
     def get_user_characters(username)

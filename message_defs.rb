@@ -1,27 +1,27 @@
 # Client / Server Messages
 # This is more of an internal tool used by the low-level socket code to inform the state management when a connection with the server dies
-Message.define(:connection_reset, :socket)
-Message.define(:invalid_packet, :socket)
+Message.define(:connection_reset, :socket, [],        "The connection was reset")
+Message.define(:invalid_packet,   :socket, [:reason], "Unexpected message")
 
 # Login phase
 Message.define(:login_request, :login, [:username])
-Message.define(:login_reject,  :login, [:reason])
+Message.define(:login_reject,  :login, [:reason], "Username rejected")
 Message.define(:auth_request,  :login, [:hash_method,:server_hash])
 Message.define(:auth_response, :login, [:password_hash])
-Message.define(:auth_reject,   :login, [:reason])
-Message.define(:auth_accept,   :login)
+Message.define(:auth_reject,   :login, [:reason], "Credentials rejected")
+Message.define(:auth_accept,   :login, [],        "Credentials accepted")
 
 # Server Menu phase
 Message.define(:get_motd,       :server_menu)
-Message.define(:motd,           :server_menu, [:motd])
+Message.define(:motd,           :server_menu, [:text])
 Message.define(:list_lobbies,   :server_menu)
 Message.define(:lobby_list,     :server_menu, [:lobbies])
 Message.define(:join_lobby,     :server_menu, [:lobby_name,:lobby_password])
-Message.define(:join_success,   :server_menu)
-Message.define(:join_fail,      :server_menu, [:reason])
+Message.define(:join_success,   :server_menu, [],        "Lobby joined")
+Message.define(:join_fail,      :server_menu, [:reason], "Failed to join lobby")
 Message.define(:create_lobby,   :server_menu, [:lobby_name,:lobby_password])
-Message.define(:create_success, :server_menu)
-Message.define(:create_fail,    :server_menu, [:reason])
+Message.define(:create_success, :server_menu, [],        "Lobby created")
+Message.define(:create_fail,    :server_menu, [:reason], "Failed to create lobby")
 
 # Inter-player communication
 Message.define(:send_chat,           :chat, [:chat_text])
@@ -30,32 +30,32 @@ Message.define(:receive_chat,        :chat, [:sender,:chat_text,:is_whisper])
 
 # Lobby phase
 # Game / World generation
-Message.define(:get_game_params,     :lobby)                # C->S
+Message.define(:get_game_params,     :lobby)                                        # C->S
 # TODO - Add protocol for setting game parameters
-Message.define(:game_params,         :lobby, [:params])     # S->C
-Message.define(:generate_game,       :lobby)                # C->S
-Message.define(:generation_success,  :lobby)                # S->C
-Message.define(:generation_fail,     :lobby, [:reason])     # S->C
+Message.define(:game_params,         :lobby, [:params])                             # S->C
+Message.define(:generate_game,       :lobby)                                        # C->S
+Message.define(:generation_success,  :lobby, [],        "World generated")          # S->C
+Message.define(:generation_fail,     :lobby, [:reason], "World failed to generate") # S->C
 
 # Character creation / selection
-Message.define(:create_character,    :lobby, [:attributes])     # C->S
-Message.define(:list_characters,     :lobby)                    # C->S
-Message.define(:character_list,      :lobby, [:characters])     # S->C
-Message.define(:select_character,    :lobby, [:character_name]) # C->S
-Message.define(:character_ready,     :lobby)                    # S->C
-Message.define(:character_not_ready, :lobby, [:reason])         # S->C
-Message.define(:begin_playing,       :lobby)                    # S->C
+Message.define(:create_character,    :lobby, [:attributes])                         # C->S
+Message.define(:list_characters,     :lobby)                                        # C->S
+Message.define(:character_list,      :lobby, [:characters])                         # S->C
+Message.define(:select_character,    :lobby, [:character_name])                     # C->S
+Message.define(:character_ready,     :lobby, [],        "Character ready")          # S->C
+Message.define(:character_not_ready, :lobby, [:reason], "Character not ready")      # S->C
+Message.define(:begin_playing,       :lobby)                                        # S->C
 
 # Game administration and information
-Message.define(:start_game,          :lobby)                # C->S
-Message.define(:start_success,       :lobby)                # S->C
-Message.define(:start_fail,          :lobby, [:reason])     # S->C
-Message.define(:toggle_pause,        :lobby)                # C->S
-Message.define(:pause_state,         :lobby)                # S->C
+Message.define(:start_game,          :lobby)                                        # C->S
+Message.define(:start_success,       :lobby, [],        "Game started")             # S->C
+Message.define(:start_fail,          :lobby, [:reason], "Failed to start game")     # S->C
+#Message.define(:toggle_pause,        :lobby)                                       # C->S
+#Message.define(:pause_state,         :lobby)                                       # S->C
 
-Message.define(:user_joins,          :lobby, [:username])   # S->C
-Message.define(:user_leaves,         :lobby, [:username])   # S->C
-Message.define(:admin_change,        :lobby, [:admin])      # S->C
+Message.define(:user_joins,          :lobby, [:result], "User joins")               # S->C
+Message.define(:user_leaves,         :lobby, [:result], "User leaves")              # S->C
+Message.define(:admin_change,        :lobby, [:result], "Admin changed")            # S->C
 
 # Gameplay
 Message.define(:fast_query,    :game, [:field])
@@ -71,7 +71,6 @@ Message.define(:valid_input,      :response, [:input])
 Message.define(:invalid_input,    :response)
 
 # Mostly just raw text messages
-Message.define(:notify,         :interface, [:text])
-Message.define(:list,           :interface, [:title,:items])
-Message.define(:properties,     :interface, [:title,:hash])
+Message.define(:list,           :interface, [:title, :items])
+Message.define(:properties,     :interface, [:title, :hash])
 Message.define(:raw_command,    :interface, [:command])
