@@ -1,3 +1,4 @@
 attack charge chop slice stab
 eat chomp gnaw bit
 drink quaff
+see observe notice spot detect perceive

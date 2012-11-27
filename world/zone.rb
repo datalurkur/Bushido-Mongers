@@ -1,5 +1,6 @@
 require 'util/math'
 require 'util/log'
+require 'vocabulary'
 
 class Zone
     attr_reader :name, :offset
@@ -64,8 +65,6 @@ class Zone
             get_zone(*adjacent_coords).find_neighbor_leaves_downwards(dir, upwards_history, 1)
         end
     end
-
-
 end
 
 class ZoneContainer < Zone
@@ -177,5 +176,10 @@ class ZoneLeaf < Zone
         else
             connected_leaves.first
         end
+    end
+
+    def description
+        descriptor = {:agent => "You", :verb => :see, :target => (@name || "Zone")}
+        puts Words::Sentence.generate(descriptor)
     end
 end
