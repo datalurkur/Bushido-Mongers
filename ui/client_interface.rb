@@ -131,21 +131,5 @@ module MetaDataInterface
                 Message.new(:valid_input, {:input=>text})
             end
         end
-
-        def text_field(field)
-            [:text_field, field]
-        end
-
-        def list(items, field)
-            [:list, field, items]
-        end
-
-        def properties(hash)
-            [:properties, hash]
-        end
-
-        def get_choice(context, text)
-            text
-        end
     end
 end
