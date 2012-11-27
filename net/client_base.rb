@@ -116,9 +116,11 @@ class ClientBase
             begin
                 Log.name_thread("client_polling")
                 while(true)
-                    input = get_from_client
-                    Log.debug("Received client message #{input.type}", 8)
-                    @client_mutex.synchronize { @client_message_buffer << input }
+                    if @setup && input = get_from_client
+                        raise RuntimeError, "Received non-message #{input.inspect} from client!" unless Message === input
+                        Log.debug("Received client message #{input.type}", 8)
+                        @client_mutex.synchronize { @client_message_buffer << input }
+                    end
                 end
             rescue Exception => e
                 Log.debug(["Thread exited abnormally",e.message,e.backtrace])

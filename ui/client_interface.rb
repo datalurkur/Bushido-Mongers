@@ -1,8 +1,4 @@
-class Symbol
-    def to_title
-        self.to_s.gsub(/_/, ' ').gsub(/(^| )(.)/) { "#{$1}#{$2.upcase}" }
-    end
-end
+require 'util/basic'
 
 # The purpose of the interface modules is to provide an abstraction layer for converting messages to and from whatever form they need to be in to be consumed and processed
 # In the case of the user, this will take on the form of various text formats or commands to a GUI
@@ -38,7 +34,7 @@ module TextInterface
 
         case context.type
         when :text_field
-            Message.new(:valid_input,{:input=>text})
+            Message.new(:valid_input, {:input=>text})
         when :choose_from_list
             choice = get_choice(context,text)
             if choice
@@ -51,7 +47,7 @@ module TextInterface
         end
     end
 
-    def decorate(list,style)
+    def decorate(list, style)
         return ["[none]"] if list.empty?
         case style
         when :number
@@ -73,7 +69,7 @@ module SlimInterface
             field.to_title
         end
 
-        def list(items)
+        def list(items, style=:number)
             decorate(items, style).join(" ")
         end
 
@@ -81,7 +77,7 @@ module SlimInterface
             hash.collect { |k,v| "#{k}=>#{v}" }.join(" ")
         end
 
-        def get_choice(context,text)
+        def get_choice(context, text)
             index = text.to_i
             unless (1..context.choices.size).include?(index)
                 nil
@@ -122,6 +118,8 @@ end
 
 # Provides meta-data for AI or non-textual clients
 module MetaDataInterface
+    extend TextInterface
+
     class << self
         def text_field(field)
             [:text_field, field]

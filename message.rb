@@ -61,6 +61,13 @@ class Message
             required_args(type).each { |arg| raise "#{arg} required for #{type} messages" unless args.has_key?(arg) }
         end
 
+        def match_message(message, hash)
+            raise "Not a message: #{message.inspect}" unless Message === message
+            raise "Unknown message type #{type}" unless type_defined?(message.type)
+            return false if hash[:type] && message.type != hash[:type]
+            return hash.keys.reject { |k| k == :type }.all? { |k| (message.has_param?(k) && message.send(k) == hash[k]) }
+        end
+
         def default_args(type)
             types[type][:default_args]
         end

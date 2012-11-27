@@ -76,13 +76,14 @@ class Log
             end
         end
 
+private
         # NOT THREADSAFE
         def debug_line(thread_name, file, line, level, msg, handle, indent=0)
             @longest_file = [@longest_file, file.to_s.length].max
 
             msg_array = case msg
             when Array; msg
-            when Hash;  ["{"] + msg.collect { |k,v| "\t#{k.inspect} => #{v.inspect}" } + ["}"]
+            when Hash;  ["{" + msg.collect { |k,v| "#{k.inspect} => #{v.inspect}" }.join(", ") + "}"]
             else;       [msg]
             end
 
