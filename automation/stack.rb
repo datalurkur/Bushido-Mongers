@@ -23,19 +23,23 @@ class AutomationStack
     end
 
     def find_response_for(message)
+        Log.debug(["Handling message #{message.type}", message.params], 4)
         matching_types = @response_procs.keys.select do |hash|
             Message.match_message(message, hash)
         end
         if matching_types.empty?
-            Log.debug(["No response found for message #{message.type}, ignoring", message.params])
+            Log.debug("No response found", 2)
             nil
         else
-            Log.debug(["Found multiple matches for message #{message.type}", message.params]) if matching_types.size > 1
+            if matching_types.size > 1
+                Log.debug("Found multiple matches", 2)
+            end
             @response_procs[matching_types.first]
         end
     end
 
-    def get_response
+    def gets
+        Log.debug("Getting stack response", 6)
         response = nil
         while response.nil?
             @response_mutex.synchronize { response = @outgoing_responses.shift }
@@ -43,7 +47,8 @@ class AutomationStack
         response
     end
 
-    def put_query(message)
+    def puts(message)
+        Log.debug("Putting stack query", 6)
         response_proc = find_response_for(message)
         if response_proc
             response_proc.call(self, message)
@@ -51,6 +56,8 @@ class AutomationStack
     end
 
     def put_response(response)
+        Log.debug("Stack responding with #{response.inspect}", 6)
         @response_mutex.synchronize { @outgoing_responses << response }
+        Log.debug("Done responding", 8)
     end
 end

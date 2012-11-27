@@ -5,7 +5,7 @@ require 'net/stack_client'
 $config = {
     :server_ip => "localhost",
     :server_port => StackClient::DEFAULT_LISTEN_PORT,
-    :username => "stack_client",
+    :username => "test_user",
     :password => "stack_pass",
     :lobby_name => "test_lobby",
     :lobby_password => "test",
@@ -61,14 +61,33 @@ end
 $client.stack.specify_response_for(:generation_success) do |stack, message|
     stack.set_state(:start_game)
 end
+$client.stack.specify_response_for(:generation_fail) do |stack, message|
+    if message.reason == :already_generated
+        stack.set_state(:start_game)
+    else
+        puts "Couldn't generate world - #{message.reason}"
+        $client.release_control
+    end
+end
 $client.stack.specify_response_for(:start_success) do |stack, message|
     stack.set_state(:select_character)
+end
+$client.stack.specify_response_for(:start_fail) do |stack, message|
+    if message.reason == :already_started
+        stack.set_state(:select_character)
+    else
+        puts "Couldn't start game - #{message.reason}"
+        $client.release_control
+    end
 end
 $client.stack.specify_response_for(:choose_from_list, {:field => :character}) do |stack, message|
     stack.put_response(message.choices.rand)
 end
 $client.stack.specify_response_for(:character_ready) do |stack, message|
     stack.clear_state
+end
+$client.stack.specify_response_for(:begin_playing) do |stack, message|
+    $client.release_control
 end
 
 $client.start

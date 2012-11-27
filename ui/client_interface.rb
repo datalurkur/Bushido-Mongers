@@ -29,14 +29,14 @@ module TextInterface
     def parse(context, text)
         unless context
             Log.debug("No context for parsing input, returning raw command")
-            return Message.new(:raw_command,{:command=>text})
+            return Message.new(:raw_command,{:command=>text.chomp})
         end
 
         case context.type
         when :text_field
-            Message.new(:valid_input, {:input=>text})
+            Message.new(:valid_input, {:input=>text.chomp})
         when :choose_from_list
-            choice = get_choice(context,text)
+            choice = get_choice(context,text.chomp)
             if choice
                 Message.new(:valid_input, {:input=>choice})
             else

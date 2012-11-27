@@ -158,7 +158,7 @@ class Lobby
 
     def generate_game(username)
         unless is_admin?(username)
-            send_to_user(username, Message.new(:generation_fail, {:reason => "You are not the game admin"}))
+            send_to_user(username, Message.new(:generation_fail, {:reason => :access_denied}))
             return false
         end
 
@@ -168,16 +168,19 @@ class Lobby
             Log.debug("Game created")
             broadcast(Message.new(:generation_success))
             true
+        elsif @game_state == :playing || @game_state == :ready
+            send_to_user(username, Message.new(:generation_fail, {:reason => :already_generated}))
+            false
         else
-            Log.debug("Lobby is not in :genesis state")
-            send_to_user(username, Message.new(:generation_fail, {:reason => "Lobby is not in :genesis (#{@game_state})"}))
+            Log.debug("Funky - unknown game state here")
+            send_to_user(username, Message.new(:generation_fail, {:reason => :unknown}))
             false
         end
     end
 
     def start_game(username)
         unless is_admin?(username)
-            send_to_user(username, Message.new(:start_fail, {:reason => "You are not the game admin"}))
+            send_to_user(username, Message.new(:start_fail, {:reason => :access_denied}))
             return false
         end
 
@@ -192,9 +195,11 @@ class Lobby
                     commit_character_choice(username)
                 end
             end
-        else
-            Log.debug("Failed to start game - Lobby is not in :ready state")
-            send_to_user(username, Message.new(:start_fail, {:reason => "Lobby is not :ready (#{@game_state})"}))
+        elsif @game_state == :playing
+            send_to_user(username, Message.new(:start_fail, {:reason => :already_started}))
+            false
+        else @game_state == :genesis
+            send_to_user(username, Message.new(:start_fail, {:reason => :world_not_generated}))
             false
         end
     end

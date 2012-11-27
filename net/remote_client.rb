@@ -13,6 +13,6 @@ class RemoteClient < GameClient
     end
 
     def get_from_client
-        super(gets.chomp)
+        super(gets)
     end
 end
