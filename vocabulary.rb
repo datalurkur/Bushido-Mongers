@@ -1,4 +1,4 @@
-require 'basic_extensions'
+require 'util/basic'
 require 'set'
 
 VOCAB_DEBUG = 0
@@ -10,7 +10,7 @@ module Words
     # Unify all the Word.synonyms entries.
     def self.synonymify(*families)
         families.flatten!
-        puts "synonymify: #{families.inspect}" if VOCAB_DEBUG > 0
+        puts "synonymify: #{families.inspect}" if VOCAB_DEBUG > 1
 
         # Add already-existing synonyms.
         synonyms = families.inject([]) do |list, f|
@@ -104,12 +104,12 @@ module Words
                 if families.size > 1
                     raise NameError, "#{hash[type]} already defined in #{families.size} families: #{families.inspect}!"
                 end
-                puts "#{hash[type]} already defined in #{families.size} families: #{families.inspect}!"
+                puts "#{hash[type]} already defined in #{families.size} families: #{families.inspect}!" if VOCAB_DEBUG > 0
                 old_wf = families.first
                 if hash[:keywords] && old_wf.keywords != hash[:keywords]
                     old_wf.keywords += hash[:keywords].map(&:to_sym)
                     old_wf.keywords.flatten
-                    puts "Added keywords #{hash[:keywords]} to #{old_wf.inspect}"
+                    puts "Added keywords #{hash[:keywords]} to #{old_wf.inspect}" if VOCAB_DEBUG > 0
                 end
                 return old_wf
             end
@@ -141,7 +141,7 @@ module Words
         @families ||= []
         Words::TYPES.each do |type|
             Dir.glob("#{$vocab_dir}/#{type}s_*.txt").each do |file|
-                puts "Reading #{file}"
+                puts "Reading #{file}" if VOCAB_DEBUG > 0
                 keyword = file.match(/^.*#{type}s_(.*).txt/)[1]
                 File.readlines(file).each do |line|
                     self.add_family(type => line.chomp, :keywords => [keyword])
@@ -149,7 +149,7 @@ module Words
             end
         end
         Dir.glob("#{$vocab_dir}/synonyms_*.txt").each do |file|
-            puts "Reading #{file}"
+            puts "Reading #{file}" if VOCAB_DEBUG > 0
             wordtype = file.match(/^.*synonyms_(.*).txt/)[1]
             File.readlines(file).each do |line|
                 # Add all the words as word-families, then associate them all.
@@ -161,7 +161,7 @@ module Words
             end
         end
         Dir.glob("#{$vocab_dir}/groups_*.txt").each do |file|
-            puts "Reading #{file}"
+            puts "Reading #{file}" if VOCAB_DEBUG > 0
             type = file.match(/^.*groups_(.*).txt/)[1]
             File.readlines(file).each do |line|
                 list = line.split(/\s/)
@@ -173,7 +173,7 @@ module Words
     end
 
     module Sentence
-        def self.generate(descriptor, synonym)
+        def self.generate(descriptor, synonym = nil)
             subject = descriptor[:agent]
             subject_str = subject.to_s
             object = descriptor[:target] if descriptor[:target]
@@ -181,7 +181,7 @@ module Words
             action = Words.find(:text => descriptor[:action]).first.synonyms.rand
 
             phrase, subject_adj, adverb = ''
-            if matches = Words.find(:keyword => synonym)
+            if synonym && matches = Words.find(:keyword => synonym)
                 describer = matches.rand
                 phrase = "with #{describer.noun}"
                 subject_adj = describer.adjective

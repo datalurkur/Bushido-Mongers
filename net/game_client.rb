@@ -30,7 +30,6 @@ class GameClient < ClientBase
         super()
     end
 
-
     def running?; @running; end
 
     def start_main_loop

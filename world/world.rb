@@ -37,7 +37,7 @@ class World < ZoneContainer
         d = ZoneLeaf.new("d")
         d.connect_to(:east)
 
-        world = World.new("Test World", 2, 3)
+        world = World.new("Test World", 2, 2)
         world.set_zone(0,0,a)
         world.set_zone(1,0,b)
         world.set_zone(0,1,c)
