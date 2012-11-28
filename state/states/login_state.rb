@@ -27,8 +27,7 @@ class LoginState < State
                 @client.get(:password) ? send_auth_response : begin_exchange(:password)
                 return
             end
-        when :auth_reject
-        when :login_reject
+        when :login_reject, :auth_reject
             pass_to_client(message)
             begin_exchange(:username)
             return
