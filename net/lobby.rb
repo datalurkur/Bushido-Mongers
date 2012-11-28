@@ -226,6 +226,7 @@ class Lobby
         when :move
             room = @game_core.get_player_position(username)
             if room.exits.include?(message.direction)
+                @game_core.move_player(username, message.direction)
                 send_to_user(username, Message.new(:move_success))
             else
                 send_to_user(username, Message.new(:move_fail, {:reason => :no_exit}))

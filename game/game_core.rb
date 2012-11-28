@@ -30,9 +30,22 @@ class GameCore
 
     def get_player_position(username)
         coords = @positions[username]
-        room = @world.get_zone(coords)
+        room   = @world.get_zone(coords)
         raise "Player is not in a room!" unless Room === room
         room
+    end
+
+    def set_player_position(username, room)
+        raise "Player is not in a room!" unless Room === room
+        @positions[username] = room.get_full_coordinates
+    end
+
+    def move_player(username, direction)
+        old_room = get_player_position(username)
+        new_room = old_room.connected_leaf(direction)
+
+        Log.debug("Moving #{username} from #{old_room.name} to #{new_room.name}")
+        set_player_position(username, new_room)
     end
 
     def remove_player(username)

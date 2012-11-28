@@ -49,14 +49,14 @@ class Zone
     # upwards_history is a list of the offsets used to walk upwards to this part of the tree, with the original leaf at index 0
     # dir is the direction we want to traverse from that leaf to arrive at the destination leaf
     def find_neighbor_leaves_upwards(dir, upwards_history)
-        Log.debug("(UP) Finding neighbor leaves to the #{dir} of #{upwards_history.last.inspect} in #{@name}",5)
+        Log.debug("(UP) Finding neighbor leaves to the #{dir} of #{upwards_history.last.inspect} in #{@name}", 5)
         adjacent_coords = case dir
         when :north; [upwards_history.last.x,   upwards_history.last.y+1]
         when :south; [upwards_history.last.x,   upwards_history.last.y-1]
         when :east;  [upwards_history.last.x+1, upwards_history.last.y  ]
         when :west;  [upwards_history.last.x-1, upwards_history.last.y  ]
         end
-        Log.debug("\t#{adjacent_coords.inspect}",7)
+        Log.debug("\t#{adjacent_coords.inspect}", 7)
 
         if adjacent_coords.x < 0 || adjacent_coords.x >= @size || adjacent_coords.y < 0 || adjacent_coords.y >= @size
             raise "Reached the edge of the world looking for leaves in #{@name}" if @parent.nil?
@@ -136,7 +136,7 @@ class ZoneContainer < Zone
             (0...@size)
         end
 
-        Log.debug("(DOWN) Finding neighbor leaves on the #{direction_opposite(dir)} side of #{@name} on the range #{traversal_range.inspect}",5)
+        Log.debug("(DOWN) Finding neighbor leaves on the #{direction_opposite(dir)} side of #{@name} on the range #{traversal_range.inspect}", 5)
 
         traversal_range.collect do |dim|
             coords = case dir
@@ -150,6 +150,13 @@ class ZoneContainer < Zone
                 zone_at(*coords).find_neighbor_leaves_downwards(dir, upwards_history, depth+1):
                 []
         end.flatten
+    end
+
+    def check_consistency
+        Log.debug("Checking the consistency of #{@name}", 3)
+        @zonemap.each_value do |zone|
+            zone.check_consistency
+        end
     end
 end
 
@@ -181,7 +188,7 @@ class ZoneLeaf < Zone
     end
 
     def connected_leaf(direction)
-        Log.debug("Finding leaf connected to the #{direction} of #{@name} (#{@offset.inspect})",5)
+        Log.debug("Finding leaf connected to the #{direction} of #{@name} (#{@offset.inspect})", 5)
         raise "Can't traverse to the #{direction} from #{@name}" unless connected_to?(direction)
         connected_leaves = connectable_leaves(direction).select { |leaf| leaf.connected_to?(direction_opposite(direction)) }
         if connected_leaves.size == 0
@@ -190,6 +197,15 @@ class ZoneLeaf < Zone
             raise "Found multiple connections for a single leaf"
         else
             connected_leaves.first
+        end
+    end
+
+    def check_consistency
+        @connections.keys.select { |d| @connections[d] }.each do |dir|
+            other = connected_leaf(dir)
+            unless other.connected_leaf(direction_opposite(dir)) == self
+                raise "Zone connection consistency check failed - #{@name} does not connect uniquely to the #{dir} with #{other.name}"
+            end
         end
     end
 end

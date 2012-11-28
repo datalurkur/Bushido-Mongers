@@ -40,10 +40,11 @@ class World < Area
         world = World.new("Test World", 2, 2)
         world.set_zone(0,0,a)
         world.set_zone(1,0,b)
-        world.set_zone(0,1,c)
-        world.set_zone(1,1,d)
+        world.set_zone(1,1,c)
+        world.set_zone(0,1,d)
 
         world.add_starting_location(d.get_full_coordinates)
+        world.check_consistency
         world
     end
 end
