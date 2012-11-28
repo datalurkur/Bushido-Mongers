@@ -66,7 +66,7 @@ class GameServer < Server
                 lobby = @lobbies.find { |lobby| lobby.name == message.lobby_name }
             }
             if lobby.nil?
-                send_to_client(socket, Message.new(:join_fail, {:reason=>"Lobby #{message.lobby_name} does not exist"}))
+                send_to_client(socket, Message.new(:join_fail, {:reason => :lobby_does_not_exist}))
             elsif lobby.check_password(password_hash)
                 @lobby_mutex.synchronize {
                     lobby.add_user(username)
@@ -77,7 +77,7 @@ class GameServer < Server
                 }
                 send_to_client(socket, Message.new(:join_success))
             else
-                send_to_client(socket, Message.new(:join_fail, {:reason=>"Incorrect password"}))
+                send_to_client(socket, Message.new(:join_fail, {:reason => :incorrect_password}))
             end
         when :create_lobby
             password_hash = nil
@@ -88,7 +88,7 @@ class GameServer < Server
             }
             @lobby_mutex.synchronize {
                 if @lobbies.find { |lobby| lobby.name == message.lobby_name }
-                    send_to_client(socket, Message.new(:create_fail, {:reason=>"Lobby name #{message.lobby_name} taken"}))
+                    send_to_client(socket, Message.new(:create_fail, {:reason => :lobby_exists}))
                 else
                     lobby = Lobby.new(message.lobby_name,password_hash,username) do |user,message|
                         socket = get_socket_for_user(user)
@@ -136,7 +136,7 @@ class GameServer < Server
 
                 @user_info[socket][:password_hash] = password_hash
                 competing_sockets = @user_info.keys.select { |k|
-                    (@user_info[k][:username] == username)
+                    (@user_info[k][:username] == username) && @user_info[k].has_key?(:password_hash)
                 }
             }
             if competing_sockets.size > 2
@@ -148,7 +148,7 @@ class GameServer < Server
                 matching_passwords = []
                 @user_mutex.synchronize {
                     matching_passwords = competing_sockets.select { |k|
-                        (@user_info[k][:password_hash] == password_hash) || @user_info[k][:password_hash].nil?
+                        (@user_info[k][:password_hash] == password_hash)
                     }
                 }
                 if matching_passwords.size == competing_sockets.size
@@ -165,7 +165,10 @@ class GameServer < Server
                         lobby.remove_user(username) if lobby
                     end
                 else
-                    send_to_client(socket, Message.new(:auth_reject,{:reason => "Incorrect password"}))
+                    @user_mutex.synchronize {
+                        @user_info[socket].delete(:password_hash)
+                    }
+                    send_to_client(socket, Message.new(:auth_reject, {:reason => :incorrect_password}))
                     return
                 end
             end

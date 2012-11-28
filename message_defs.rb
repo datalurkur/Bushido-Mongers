@@ -60,6 +60,9 @@ Message.define(:admin_change,        :lobby, [:result], "Admin changed")        
 # Gameplay
 Message.define(:inspect_room,  :game)                                               # C->S
 Message.define(:room_info,     :game, [:name, :keywords, :contents, :exits])        # S->C
+Message.define(:move,          :game, [:direction])                                 # S->C
+Message.define(:move_fail,     :game, [:reason])                                    # S->C
+Message.define(:move_success,  :game)                                               # S->C
 
 # I'm thinking of doing away with these in favor of more explicit queries
 #Message.define(:fast_query,    :game, [:field])
