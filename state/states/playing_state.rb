@@ -25,7 +25,7 @@ class PlayingState < State
     def from_server(message)
         case message.type
         when :room_info
-            Log.debug(["Received room info from server", message.name, message.keywords, message.contents, message.exits])
+            Log.debug(["Received room info from server", message.params])
             return
         end
 

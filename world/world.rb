@@ -1,7 +1,7 @@
 require 'util/basic'
-require 'world/zone'
+require 'world/room'
 
-class World < ZoneContainer
+class World < Area
     def initialize(name, max_depth,size)
         super(name, size, max_depth)
     end
@@ -23,18 +23,18 @@ class World < ZoneContainer
         #     |
         # a---b
 
-        a = ZoneLeaf.new("a")
+        a = Room.new("a")
         a.connect_to(:east)
 
-        b = ZoneLeaf.new("b")
+        b = Room.new("b")
         b.connect_to(:west)
         b.connect_to(:north)
 
-        c = ZoneLeaf.new("c")
+        c = Room.new("c")
         c.connect_to(:south)
         c.connect_to(:west)
 
-        d = ZoneLeaf.new("d")
+        d = Room.new("d")
         d.connect_to(:east)
 
         world = World.new("Test World", 2, 2)

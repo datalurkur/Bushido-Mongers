@@ -29,7 +29,10 @@ class GameCore
     end
 
     def get_player_position(username)
-        @positions[username]
+        coords = @positions[username]
+        room = @world.get_zone(coords)
+        raise "Player is not in a room!" unless Room === room
+        room
     end
 
     def remove_player(username)

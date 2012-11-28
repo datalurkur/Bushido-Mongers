@@ -216,11 +216,12 @@ class Lobby
     def process_game_message(username, message)
         case message.type
         when :inspect_room
+            room = @game_core.get_player_position(username)
             send_to_user(username, Message.new(:room_info, {
-                :name => "",
-                :keywords => [],
-                :contents => [],
-                :exits => [],
+                :name     => room.name,
+                :keywords => room.keywords,
+                :contents => room.contents,
+                :exits    => room.exits,
             }))
         else
             Log.debug("Unhandled game message type #{message.type} received from client")

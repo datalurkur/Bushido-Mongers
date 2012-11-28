@@ -62,7 +62,7 @@ class Zone
             raise "Reached the edge of the world looking for leaves in #{@name}" if @parent.nil?
             @parent.find_neighbor_leaves_upwards(dir, upwards_history + [@offset])
         else
-            get_zone(*adjacent_coords).find_neighbor_leaves_downwards(dir, upwards_history, 1)
+            zone_at(*adjacent_coords).find_neighbor_leaves_downwards(dir, upwards_history, 1)
         end
     end
 end
@@ -82,7 +82,18 @@ class ZoneContainer < Zone
         @zones[x][y]
     end
 
-    def get_zone(x, y)
+    def get_zone(positions)
+        p = positions.first
+        subzone = zone_at(p.x, p.y)
+        if positions.size == 1
+            raise "Found a non-leaf zone" unless ZoneLeaf === subzone
+            subzone
+        else
+            subzone.get_zone(positions[1..-1])
+        end
+    end
+
+    def zone_at(x, y)
         raise "No zone at #{[x,y].inspect} in #{@name}" if @zones[x][y].nil?
         @zones[x][y]
     end
@@ -136,7 +147,7 @@ class ZoneContainer < Zone
             end
 
             has_zone?(*coords) ?
-                get_zone(*coords).find_neighbor_leaves_downwards(dir, upwards_history, depth+1):
+                zone_at(*coords).find_neighbor_leaves_downwards(dir, upwards_history, depth+1):
                 []
         end.flatten
     end
@@ -148,6 +159,8 @@ class ZoneLeaf < Zone
 
         @connections = {}
     end
+
+    def exits; @connections.keys; end
 
     def find_neighbor_leaves_downwards(dir, upwards_history, depth)
         [self]
@@ -176,10 +189,5 @@ class ZoneLeaf < Zone
         else
             connected_leaves.first
         end
-    end
-
-    def description
-        descriptor = {:agent => "You", :verb => :see, :target => (@name || "Zone")}
-        puts Words::Sentence.generate(descriptor)
     end
 end
