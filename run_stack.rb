@@ -22,7 +22,7 @@ signals.each do |signal|
     }
 end
 $client.stack.set_state(:join_lobby)
-$client.stack.specify_response_for(:choose_from_list, {:field => :server_menu_choice}) do |stack, message|
+$client.stack.specify_response_for(:choose_from_list, {:field => :server_menu}) do |stack, message|
     if stack.get_state == :join_lobby
         puts "Attempting to join lobby #{$config[:lobby_name]}/#{$config[:lobby_password]}"
         stack.put_response(:join_lobby)
@@ -48,7 +48,7 @@ end
         stack.set_state(:generate_game)
     end
 end
-$client.stack.specify_response_for(:choose_from_list, {:field => :lobby_menu_choice}) do |stack, message|
+$client.stack.specify_response_for(:choose_from_list, {:field => :lobby_menu}) do |stack, message|
     case stack.get_state
     when :generate_game
         stack.put_response(:generate_game)

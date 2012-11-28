@@ -45,6 +45,9 @@ class State
     def initialize(client, method=nil)
         @client    = client
         @exchanges = {}
+        @eids      = 0
+
+        @previous_result = nil
 
         case method
         when :set;  @client.set_state(self)
@@ -79,37 +82,36 @@ class State
         end
     end
 
-    def define_exchange(field,type,opt_args={},&on_finish)
-        @exchanges[field] = {
+    def define_exchange(type, opt_args={}, &on_finish)
+        id = @eids
+        @eids += 1
+        @exchanges[id] = {
             :type      => type,
             :on_finish => on_finish,
         }
-        @exchanges[field].merge!(opt_args)
+        @exchanges[id].merge!(opt_args)
+        Log.debug("Defined exchange #{id} with params #{@exchanges[id].inspect}")
+        id
     end
 
-    def define_exchange_chain(ordered_list,&on_finish)
-        fields = ordered_list.collect { |args| args[0] }
-        ordered_list.each_with_index do |args,i|
-            field    = args[0]
-            type     = args[1]
-            opt_args = args[2] || {}
+    def define_exchange_chain(ordered_list, &on_finish)
+        base_id = @eids
+        ordered_list.each_with_index do |element, i|
+            type     = element[0]
+            opt_args = element[1]
 
-            fields << field
             if (i+1) == ordered_list.size
-                define_exchange(field,type,opt_args,&on_finish)
+                define_exchange(type, opt_args, &on_finish)
             else
-                @exchanges[field] = {
-                    :type => type,
-                    :next => fields[i+1],
-                }
-                @exchanges[field].merge!(opt_args)
+                define_exchange(type, opt_args.merge(:next => base_id + i + 1))
             end
         end
+        base_id
     end
 
-    def begin_exchange(field)
-        raise "Undefined data exchange for #{field}" unless @exchanges[field]
-        set_exchange_context(field)
+    def begin_exchange(id)
+        raise "Undefined data exchange #{id}" unless @exchanges[id]
+        set_exchange_context(id, @previous_result)
         if get_exchange_target == :client
             @client.send_to_client(get_exchange_context)
         else
@@ -117,39 +119,32 @@ class State
         end
     end
 
-    def set_exchange_context(field)
-        params = @exchanges[field]
+    def set_exchange_context(id, previous_result)
+        params = @exchanges[id]
         @current_exchange = case params[:type]
         when :text_field
-            Message.new(:text_field, {:field => field})
+            unless params.has_key?(:field)
+                raise "Text fields must be given an identifier"
+            end
+            Message.new(:text_field, {:field => params[:field]})
         when :choose_from_list
+            unless params.has_key?(:field)
+                raise "Choice fields must be given an identifier"
+            end
             choices = if params[:choices_from]
-                case params[:choices_from]
-                when Array
-                    # Deal with nested results (example: if the server returns a hash)
-                    result = @client.get(params[:choices_from][0])
-                    params[:choices_from][1..-1].each do |key|
-                        result = result[key]
-                    end
-                    result
-                else
-                    @client.get(params[:choices_from])
-                end
+                previous_result[params[:choices_from]]
             else
                 params[:choices]
             end
-            Message.new(:choose_from_list, {:field => field, :choices => choices})
-        when :fast_query
-            Log.debug(["Fast-querying with params", params])
-            Message.new(:fast_query, {:field => field})
+            Message.new(:choose_from_list, {:field => params[:field], :choices => choices})
         when :server_query
             Log.debug(["Querying server with params", params])
-            Message.new(params[:query_method] || field, params[:query_params] || {})
+            Message.new(params[:query_method], params[:query_params] || {})
         else
             raise "Unhandled exchange type #{params[:type]}"
         end
 
-        @exchange_field = field
+        @exchange_id     = id
 
         @exchange_target = case params[:type]
         when :server_query, :fast_query
@@ -161,7 +156,7 @@ class State
 
     def clear_exchange_context
         @current_exchange = nil
-        @exchange_field   = nil
+        @exchange_id      = nil
         @exchange_target  = nil
     end
 
@@ -169,8 +164,8 @@ class State
         @current_exchange
     end
 
-    def get_exchange_field
-        @exchange_field
+    def get_exchange_id
+        @exchange_id
     end
 
     def get_exchange_target
@@ -178,36 +173,44 @@ class State
     end
 
     def process_server_exchange(message)
-        field = get_exchange_field
+        id      = get_exchange_id
+        context = get_exchange_context
         clear_exchange_context
 
         if message.type == :invalid_query
             Log.debug("Server exchange failed - #{message.reason}")
             return false
         else
-            if message.has_param?(field)
-                Log.debug("Setting client field #{field} to #{message.send(field)} based on server input")
-                @client.set(field, message.send(field))
+            if context.has_param?(:field) && message.has_param?(context.field)
+                result = message.send(context.field)
+                Log.debug("Setting client field #{context.field} to #{result} based on server input")
+                @client.set(context.field, result)
+                @previous_result = result
             else
-                Log.debug(["Setting a batch of parameters for #{field}", message.params])
-                @client.set(field, message.params)
+                if context.has_param?(:field)
+                    @client.set(context.field, message.params)
+                end
+                @previous_result = message.params
             end
             return true
         end
     end
 
     def process_client_exchange(message)
-        field   = get_exchange_field
+        id      = get_exchange_id
         context = get_exchange_context
         clear_exchange_context
 
         if message.type == :invalid_input
             # Exchange failed, retry
-            begin_exchange(field)
+            begin_exchange(id)
             return false
         else
-            Log.debug("Setting client field #{field} to #{message.input} based on client input")
-            @client.set(field, message.input)
+            if context.has_param?(:field)
+                Log.debug("Setting client field #{context.field} to #{message.input} based on client input")
+                @client.set(context.field, message.input)
+                @previous_result = message.input
+            end
             return true
         end
     end
@@ -215,7 +218,7 @@ class State
     def process_exchange(message, origin)
         Log.debug(["Attempting to process #{origin} exchange #{message.type}", message.params], 7)
         context = get_exchange_context
-        field   = get_exchange_field
+        id      = get_exchange_id
 
         if context && origin == get_exchange_target
             result = if origin == :server
@@ -225,12 +228,14 @@ class State
             end
 
             if result
-                if @exchanges[field][:on_finish]
-                    @exchanges[field][:on_finish].call(@client.get(field))
+                if @exchanges[id][:on_finish]
+                    @exchanges[id][:on_finish].call(@previous_result)
                 end
 
-                if @exchanges[field][:next]
-                    begin_exchange(@exchanges[field][:next])
+                if @exchanges[id][:next]
+                    begin_exchange(@exchanges[id][:next])
+                else
+                    @previous_result = nil
                 end
             end
             return true

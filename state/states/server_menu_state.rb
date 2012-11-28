@@ -5,18 +5,18 @@ class ServerMenuState < State
     def initialize(client, method)
         super(client, method)
 
-        define_exchange(:server_menu_choice, :choose_from_list, {:choices => server_menu_choices}) do |choice|
+        @server_menu_exchange = define_exchange(:choose_from_list, {:field => :server_menu, :choices => server_menu_choices}) do |choice|
             case choice
             when :list_lobbies; @client.send_to_server(Message.new(:list_lobbies))
-            when :create_lobby; @entry_type = :create_lobby; begin_exchange(:lobby_name)
-            when :join_lobby;   @entry_type = :join_lobby;   begin_exchange(:lobby_name)
+            when :create_lobby; @entry_type = :create_lobby; begin_exchange(@lobby_name_exchange)
+            when :join_lobby;   @entry_type = :join_lobby;   begin_exchange(@lobby_name_exchange)
             when :disconnect;   LoginState.new(@client, :set)
             end
         end
 
-        define_exchange_chain([
-            [:lobby_name,     :text_field],
-            [:lobby_password, :text_field]
+        @lobby_name_exchange = define_exchange_chain([
+            [:text_field, {:field => :lobby_name}],
+            [:text_field, {:field => :lobby_password}]
         ]) do
             enter_lobby(@entry_type)
         end
@@ -43,11 +43,11 @@ class ServerMenuState < State
         case message.type
         when :motd
             pass_to_client(message)
-            begin_exchange(:server_menu_choice)
+            begin_exchange(@server_menu_exchange)
             return
         when :lobby_list
             @client.send_to_client(Message.new(:list, {:title=>"Available Game Lobbies", :items=>message.lobbies}))
-            begin_exchange(:server_menu_choice)
+            begin_exchange(@server_menu_exchange)
             return
         when :join_success,
              :create_success
@@ -58,7 +58,7 @@ class ServerMenuState < State
              :create_fail
             pass_to_client(message)
             @entry_type = nil
-            begin_exchange(:server_menu_choice)
+            begin_exchange(@server_menu_exchange)
             return
         when :admin_change
             if message.result != @client.get(:username)

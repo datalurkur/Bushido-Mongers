@@ -28,11 +28,11 @@ class AutomationStack
             Message.match_message(message, hash)
         end
         if matching_types.empty?
-            Log.debug("No response found", 2)
+            Log.debug("No response found for #{message.type}", 2)
             nil
         else
             if matching_types.size > 1
-                Log.debug("Found multiple matches", 2)
+                Log.debug("Found multiple matches for #{message.type}", 2)
             end
             @response_procs[matching_types.first]
         end

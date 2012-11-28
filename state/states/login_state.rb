@@ -7,15 +7,15 @@ class LoginState < State
     def initialize(client, method)
         super(client, method)
 
-        define_exchange(:username, :text_field) do
+        @username_exchange = define_exchange(:text_field, {:field => :username}) do
             send_login_request
         end
 
-        define_exchange(:password, :text_field) do
+        @password_exchange = define_exchange(:text_field, {:field => :password}) do
             send_auth_response
         end
 
-        @client.get(:username) ? send_login_request : begin_exchange(:username)
+        @client.get(:username) ? send_login_request : begin_exchange(@username_exchange)
     end
 
     def from_server(message)
@@ -24,12 +24,12 @@ class LoginState < State
             if @local_state == :login_request
                 @client.set(:hash_method,message.hash_method)
                 @client.set(:server_hash,message.server_hash)
-                @client.get(:password) ? send_auth_response : begin_exchange(:password)
+                @client.get(:password) ? send_auth_response : begin_exchange(@password_exchange)
                 return
             end
         when :login_reject, :auth_reject
             pass_to_client(message)
-            begin_exchange(:username)
+            begin_exchange(@username_exchange)
             return
         when :auth_accept
             pass_to_client(message)
