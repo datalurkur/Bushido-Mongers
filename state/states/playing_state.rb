@@ -26,6 +26,7 @@ class PlayingState < State
         case message.type
         when :room_info
             Log.debug(["Received room info from server", message.params])
+            begin_exchange(:playing_menu_choice)
             return
         end
 
