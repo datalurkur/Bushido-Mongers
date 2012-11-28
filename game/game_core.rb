@@ -40,6 +40,16 @@ class GameCore
         @positions[username] = room.get_full_coordinates
     end
 
+    def player_can_move?(username, direction, reason)
+        old_room = get_player_position(username)
+        if !(old_room.connected_to?(direction))
+            reason = :no_path
+            false
+        else
+            return true
+        end
+    end
+
     def move_player(username, direction)
         old_room = get_player_position(username)
         new_room = old_room.connected_leaf(direction)

@@ -167,10 +167,6 @@ class ZoneLeaf < Zone
         @connections = {}
     end
 
-    def exits
-        @connections.keys.select { |dir| @connections[dir] }
-    end
-
     def find_neighbor_leaves_downwards(dir, upwards_history, depth)
         [self]
     end
@@ -181,6 +177,10 @@ class ZoneLeaf < Zone
 
     def connected_to?(direction)
         @connections[direction]
+    end
+
+    def connected_directions
+        @connections.keys.select { |dir| @connections[dir] }
     end
 
     def connectable_leaves(direction)
