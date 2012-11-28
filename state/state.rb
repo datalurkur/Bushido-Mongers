@@ -124,7 +124,17 @@ class State
             Message.new(:text_field, {:field => field})
         when :choose_from_list
             choices = if params[:choices_from]
-                @client.get(params[:choices_from])
+                case params[:choices_from]
+                when Array
+                    # Deal with nested results (example: if the server returns a hash)
+                    result = @client.get(params[:choices_from][0])
+                    params[:choices_from][1..-1].each do |key|
+                        result = result[key]
+                    end
+                    result
+                else
+                    @client.get(params[:choices_from])
+                end
             else
                 params[:choices]
             end
@@ -134,7 +144,7 @@ class State
             Message.new(:fast_query, {:field => field})
         when :server_query
             Log.debug(["Querying server with params", params])
-            Message.new(params[:query_method], params[:query_params] || {})
+            Message.new(params[:query_method] || field, params[:query_params] || {})
         else
             raise "Unhandled exchange type #{params[:type]}"
         end
@@ -175,8 +185,13 @@ class State
             Log.debug("Server exchange failed - #{message.reason}")
             return false
         else
-            Log.debug("Setting client field #{field} to #{message.send(field)} based on server input")
-            @client.set(field, message.send(field))
+            if message.has_param?(field)
+                Log.debug("Setting client field #{field} to #{message.send(field)} based on server input")
+                @client.set(field, message.send(field))
+            else
+                Log.debug(["Setting a batch of parameters for #{field}", message.params])
+                @client.set(field, message.params)
+            end
             return true
         end
     end
@@ -198,6 +213,7 @@ class State
     end
 
     def process_exchange(message, origin)
+        Log.debug(["Attempting to process #{origin} exchange #{message.type}", message.params], 7)
         context = get_exchange_context
         field   = get_exchange_field
 
@@ -210,7 +226,7 @@ class State
 
             if result
                 if @exchanges[field][:on_finish]
-                    @exchanges[field][:on_finish].call(message.input)
+                    @exchanges[field][:on_finish].call(@client.get(field))
                 end
 
                 if @exchanges[field][:next]
@@ -219,6 +235,7 @@ class State
             end
             return true
         else
+            Log.debug("No context present or origin and target do not match", 7)
             return false
         end
     end

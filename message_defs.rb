@@ -61,8 +61,8 @@ Message.define(:admin_change,        :lobby, [:result], "Admin changed")        
 Message.define(:inspect_room,  :game)                                               # C->S
 Message.define(:room_info,     :game, [:name, :keywords, :contents, :exits])        # S->C
 Message.define(:move,          :game, [:direction])                                 # S->C
-Message.define(:move_fail,     :game, [:reason])                                    # S->C
-Message.define(:move_success,  :game)                                               # S->C
+Message.define(:move_fail,     :game, [:reason], "Failed to move")                  # S->C
+Message.define(:move_success,  :game, [],        "Moved")                           # S->C
 
 # I'm thinking of doing away with these in favor of more explicit queries
 #Message.define(:fast_query,    :game, [:field])
@@ -78,6 +78,6 @@ Message.define(:valid_input,      :response, [:input])
 Message.define(:invalid_input,    :response)
 
 # Mostly just raw text messages
-Message.define(:list,           :interface, [:title, :items])
-Message.define(:properties,     :interface, [:title, :hash])
+Message.define(:list,           :interface, [:field, :items])
+Message.define(:properties,     :interface, [:field, :properties])
 Message.define(:raw_command,    :interface, [:command])

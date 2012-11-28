@@ -10,7 +10,7 @@ module TextInterface
         # While these would appear to be the same, one prompts a response (and this is very different to an AI!)
         when :choose_from_list; list(message.choices, message.field)
         when :list;             list(message.items)
-        when :properties;       properties(message.hash)
+        when :properties;       properties(message.properties)
         else
             if message.has_param?(:text)
                 if message.has_param?(:reason)
@@ -73,8 +73,8 @@ module SlimInterface
             decorate(items, style).join(" ")
         end
 
-        def properties(hash)
-            hash.collect { |k,v| "#{k}=>#{v}" }.join(" ")
+        def properties(props)
+            props.collect { |k,v| "#{k}=>#{v}" }.join(" ")
         end
 
         def get_choice(context, text)
@@ -101,8 +101,8 @@ module VerboseInterface
             decorate(items, style).join("\n")
         end
 
-        def properties(hash)
-            hash.collect { |k,v| "\t#{k} => #{v}" }.join("\n")
+        def properties(props)
+            props.collect { |k,v| "\t#{k} => #{v}" }.join("\n")
         end
 
         def get_choice(context, text)

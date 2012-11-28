@@ -223,6 +223,13 @@ class Lobby
                 :contents => room.contents,
                 :exits    => room.exits,
             }))
+        when :move
+            room = @game_core.get_player_position(username)
+            if room.exits.include?(message.direction)
+                send_to_user(username, Message.new(:move_success))
+            else
+                send_to_user(username, Message.new(:move_fail, {:reason => :no_exit}))
+            end
         else
             Log.debug("Unhandled game message type #{message.type} received from client")
         end
