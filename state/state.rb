@@ -90,7 +90,7 @@ class State
             :on_finish => on_finish,
         }
         @exchanges[id].merge!(opt_args)
-        Log.debug("Defined exchange #{id} with params #{@exchanges[id].inspect}")
+        Log.debug(["Defined exchange #{id}", @exchanges[id]], 5)
         id
     end
 

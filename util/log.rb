@@ -68,33 +68,63 @@ class Log
                 @source_files[file] ||= @max_log_level
                 thread_name = @source_threads[Thread.current] || @default_thread_name
 
-                if level <= @source_files[file]
-                    debug_line(thread_name, file, line, level, msg, Kernel)
-                    debug_line(thread_name, file, line, level, msg, @filtered_logfile)
+                to_print = (Array === msg) ? msg : [msg]
+                to_print.each do |m|
+                    if level <= @source_files[file]
+                        debug_line(m, thread_name, file, line, level, Kernel)
+                        debug_line(m, thread_name, file, line, level, @filtered_logfile)
+                    end
+                    debug_line(m, thread_name, file, line, level, @verbose_logfile)
                 end
-                debug_line(thread_name, file, line, level, msg, @verbose_logfile)
             end
         end
 
 private
         # NOT THREADSAFE
-        def debug_line(thread_name, file, line, level, msg, handle, indent=0)
+        def debug_line(msg, thread_name, file, line, level, handle, prefix=nil)
             @longest_file = [@longest_file, file.to_s.length].max
 
-            msg_array = case msg
-            when Array; msg
-            when Hash;  ["{" + msg.collect { |k,v| "#{k.inspect} => #{v.inspect}" }.join(", ") + "}"]
-            else;       [msg]
-            end
+            msg_prefix = prefix || "[#{thread_name.ljust(@longest_thread_name)}] #{file.to_s.ljust(@longest_file)}:#{line.to_s.ljust(3)} (#{level.to_s.ljust(@max_log_level.to_s.length)}) | "
 
-            msg_array.each do |m|
-                case m
-                when Array, Hash
-                    # Handle nested arrays
-                    debug_line(thread_name, file, line, level, m, handle, indent+1)
+            case msg
+            when Array
+                handle.puts(msg_prefix + "[")
+                if msg.empty?
+                    handle.puts(msg_prefix + "\t" + "<EMPTY>")
                 else
-                    handle.puts "[#{thread_name.ljust(@longest_thread_name)}] #{file.to_s.ljust(@longest_file)}:#{line.to_s.ljust(3)} (#{level.to_s.ljust(@max_log_level.to_s.length)}) | #{"\t"*indent}#{m}"
+                    msg.each do |element|
+                        debug_line(element, thread_name, file, line, level, handle, msg_prefix + "\t")
+                    end
                 end
+                handle.puts(msg_prefix + "]")
+            when Hash
+                handle.puts(msg_prefix + "{")
+                if msg.empty?
+                    handle.puts(msg_prefix + "\t" + "<EMPTY>")
+                else
+                    longest_key = msg.keys.inject(0) { |longest,key|
+                        [key.inspect.length, longest].max
+                    }
+                    msg.each do |key, value|
+                        output        = key.inspect.ljust(longest_key) + " => "
+                        value_printed = false
+
+                        unless (Array === value) || (Hash === value)
+                            output += value.inspect
+                            value_printed = true
+                        end
+
+                        handle.puts(msg_prefix + "\t" + output)
+                        unless value_printed
+                            debug_line(value, thread_name, file, line, level, handle, msg_prefix + "\t\t")
+                        end
+                    end
+                end
+                handle.puts(msg_prefix + "}")
+            when String
+                handle.puts(msg_prefix + msg)
+            else
+                handle.puts(msg_prefix + msg.inspect)
             end
         end
     end
