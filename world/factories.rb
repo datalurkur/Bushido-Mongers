@@ -5,27 +5,27 @@ class WorldFactory
 class << self
     def generate(size, depth, config={})
         # TODO - Make the seeding a bit more intelligent
-        #seed = Time.now.to_i
-        seed = 1354174054
+        seed = Time.now.to_i
         Log.debug("Seeding world with #{seed}")
         srand(seed)
 
         # TODO - Generate a cool name for the world
         world_name = "Default World Name"
         world = World.new(world_name, size, depth)
-        config[:openness]      ||= 0.3
-        config[:connectedness] ||= 0.3
-        populate_area(world, config[:openness], config[:connectedness])
+        config[:openness]           ||= 0.75 # Larger numbers lead to more rooms overall
+        config[:connectedness]      ||= 0.75 # Larger numbers lead to more passageways
+        config[:area_size_tendency] ||= 0.35 # Larger numbers move the balance of small/large rooms towards the large end
+        populate_area(world, config)
         world
     end
 
     # Based
-    def generate_area(size, depth, parent_area)
+    def generate_area(size, depth, parent_area, config)
         # TODO - This is where the logic for selecting zone templates and applying them comes into play
 
         # For now, just create a generic area or room randomly
         name = "#{parent_area.name}-#{rand(1000)}"
-        area = if (depth < 2) || (rand() < 0.5)
+        area = if (depth < 2) || (rand() < config[:area_size_tendency])
             Log.debug("Generating room #{name}", 5)
             Room.new(name)
         else
@@ -34,16 +34,14 @@ class << self
         end
 
         if Area === area
-            # These will almost certainly be set by the zone template
-            openness      = 0.5
-            connectedness = 0.5
-            populate_area(area, openness, connectedness, parent_area)
+            # The config will almost certainly be modified by the zone template
+            populate_area(area, config, parent_area)
         end
 
         area
     end
 
-    def populate_area(area, openness, connectedness, parent_area=nil)
+    def populate_area(area, config, parent_area=nil)
         Log.debug("Populating area #{area.name}", 5)
         noise_size = 3*area.size
         noisemap = NoiseMap.new(noise_size)
@@ -55,27 +53,27 @@ class << self
                 Log.debug("Filling #{[x,y].inspect}", 5)
                 iX = 3*x + 1.0
                 iY = 3*y + 1.0
-                if noisemap.get_scaled(iX, iY, 0.0, 1.0) > openness
+                if noisemap.get_scaled(iX, iY, 0.0, 1.0) < config[:openness]
                     # Create a zone at these coordinates
-                    subarea = generate_area(area.size, area.depth - 1, area)
+                    subarea = generate_area(area.size, area.depth - 1, area, config)
                     area.set_zone(x, y, subarea)
                     Log.debug("Set subarea #{subarea.name} with coords #{subarea.get_full_coordinates.inspect}", 7)
 
                     # Potentially generate connectivity information
                     if Room === subarea
-                        if noisemap.get_scaled(iX-1, iY,   0.0, 1.0) > connectedness
+                        if noisemap.get_scaled(iX-1, iY,   0.0, 1.0) < config[:connectedness]
                             Log.debug("Connecting room to the west", 9)
                             subarea.connect_to(:west)
                         end
-                        if noisemap.get_scaled(iX+1, iY,   0.0, 1.0) > connectedness
+                        if noisemap.get_scaled(iX+1, iY,   0.0, 1.0) < config[:connectedness]
                             Log.debug("Connecting room to the east", 9)
                             subarea.connect_to(:east)
                         end
-                        if noisemap.get_scaled(iX,   iY-1, 0.0, 1.0) > connectedness
+                        if noisemap.get_scaled(iX,   iY-1, 0.0, 1.0) < config[:connectedness]
                             Log.debug("Connecting room to the south", 9)
                             subarea.connect_to(:south)
                         end
-                        if noisemap.get_scaled(iX,   iY+1, 0.0, 1.0) > connectedness
+                        if noisemap.get_scaled(iX,   iY+1, 0.0, 1.0) < config[:connectedness]
                             Log.debug("Connecting room to the north", 9)
                             subarea.connect_to(:north)
                         end

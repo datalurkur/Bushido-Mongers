@@ -34,11 +34,11 @@ class World < Area
             Log.debug("Writing data for #{leaf.name} at #{leaf_coords.inspect}", 7)
 
             # Compute the coordinates of this leaf
-            png_coords  = [0,0]
+            png_coords  = [0,png_size-1]
             leaf_coords.each_with_index do |c,i|
                 Log.debug("\tMultiplying coordinates #{c.inspect} by #{depth_powers[i]} and cell size #{cell_size}", 9)
                 png_coords[0] += (c[0] * depth_powers[i+1] * cell_size)
-                png_coords[1] += (c[1] * depth_powers[i+1] * cell_size)
+                png_coords[1] -= (c[1] * depth_powers[i+1] * cell_size)
             end
             Log.debug("\tPNG coordinates computed to be #{png_coords.inspect}", 7)
 
@@ -47,7 +47,7 @@ class World < Area
             png_room_size   = local_cell_size - (corridor_size * 2)
             Log.debug("\tPNG Cell/Room size computed to be #{local_cell_size}/#{png_room_size}", 7)
 
-            png.fill_box(png_coords.x + corridor_size, png_coords.y + corridor_size, png_room_size, png_room_size, color)
+            png.fill_box(png_coords.x + corridor_size, png_coords.y - corridor_size - png_room_size, png_room_size, png_room_size, color)
 
             Log.debug("\tDrawing corridors", 7)
             leaf.connected_directions.each do |dir|
@@ -88,7 +88,7 @@ class World < Area
                 end
                 Log.debug("\t\tOffset found to be #{corridor_offset.inspect}", 9)
 
-                png.fill_box(png_coords.x + corridor_offset.x, png_coords.y + corridor_offset.y, corridor_size, corridor_size, color)
+                png.fill_box(png_coords.x + corridor_offset.x, png_coords.y - corridor_offset.y - corridor_size, corridor_size, corridor_size, color)
             end
         end
 
