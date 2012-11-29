@@ -24,36 +24,36 @@ class World < Area
         cells_per_side = depth_powers.first
         png_size       = cell_size * cells_per_side
         cell_sizes     = depth_powers.reverse.collect { |p| png_size / p }
-        Log.debug("Printing a map of the world with cell size #{cell_size}, size/depth of #{@size}/#{@depth} (#{cells_per_side} cells per side), and a png size of #{png_size}")
-        Log.debug("Preliminary depth power computation: #{depth_powers.inspect}")
-        Log.debug("Preliminary png cell size computation: #{cell_sizes.inspect}")
+        Log.debug("Printing a map of the world with cell size #{cell_size}, size/depth of #{@size}/#{@depth} (#{cells_per_side} cells per side), and a png size of #{png_size}", 5)
+        Log.debug("Preliminary depth power computation: #{depth_powers.inspect}", 5)
+        Log.debug("Preliminary png cell size computation: #{cell_sizes.inspect}", 5)
         png = DerpyPNG.new(png_size, png_size)
 
         leaves.each do |leaf|
             leaf_coords = leaf.get_full_coordinates
-            Log.debug("Writing data for #{leaf.name} at #{leaf_coords.inspect}")
+            Log.debug("Writing data for #{leaf.name} at #{leaf_coords.inspect}", 7)
 
             # Compute the coordinates of this leaf
             png_coords  = [0,0]
             leaf_coords.each_with_index do |c,i|
-                Log.debug("\tMultiplying coordinates #{c.inspect} by #{depth_powers[i]} and cell size #{cell_size}")
+                Log.debug("\tMultiplying coordinates #{c.inspect} by #{depth_powers[i]} and cell size #{cell_size}", 9)
                 png_coords[0] += (c[0] * depth_powers[i+1] * cell_size)
                 png_coords[1] += (c[1] * depth_powers[i+1] * cell_size)
             end
-            Log.debug("\tPNG coordinates computed to be #{png_coords.inspect}")
+            Log.debug("\tPNG coordinates computed to be #{png_coords.inspect}", 7)
 
             # Compute the size of this leaf
             local_cell_size = cell_sizes[leaf_coords.size]
             png_room_size   = local_cell_size - (corridor_size * 2)
-            Log.debug("\tPNG Cell/Room size computed to be #{local_cell_size}/#{png_room_size}")
+            Log.debug("\tPNG Cell/Room size computed to be #{local_cell_size}/#{png_room_size}", 7)
 
             png.fill_box(png_coords.x + corridor_size, png_coords.y + corridor_size, png_room_size, png_room_size, color)
 
-            Log.debug("\tDrawing corridors")
+            Log.debug("\tDrawing corridors", 7)
             leaf.connected_directions.each do |dir|
                 other = leaf.connected_leaf(dir)
                 other_coords = other.get_full_coordinates
-                Log.debug("\t\tCorridor to the #{dir} is connected to #{other.name}")
+                Log.debug("\t\tCorridor to the #{dir} is connected to #{other.name}", 9)
 
                 corridor_offset = [0,0]
                 shift_cell_size = local_cell_size
@@ -63,7 +63,7 @@ class World < Area
                     (leaf_coords.size...other_coords.size).each do |i|
                         diff_coords    = other_coords[i]
                         diff_cell_size = cell_sizes[i+1]
-                        Log.debug("\t\tShifting coordinates by #{diff_coords.inspect} * #{diff_cell_size}")
+                        Log.debug("\t\tShifting coordinates by #{diff_coords.inspect} * #{diff_cell_size}", 9)
 
                         case dir
                         when :north, :south
@@ -86,7 +86,7 @@ class World < Area
                     (corridor_offset[0] += edge_shift) if (dir == :east)
                      corridor_offset[1] += half_shift
                 end
-                Log.debug("\t\tOffset found to be #{corridor_offset.inspect}")
+                Log.debug("\t\tOffset found to be #{corridor_offset.inspect}", 9)
 
                 png.fill_box(png_coords.x + corridor_offset.x, png_coords.y + corridor_offset.y, corridor_size, corridor_size, color)
             end

@@ -40,6 +40,7 @@ class NoiseMap
 
     def get(x, y)
         raise "NoiseMap not populated" unless @populated
+        raise "Coordinates #{[x,y].inspect} out of bounds" unless x >= 0 && y >= 0 && x < @size && y < @size
         @map[x][y]
     end
 

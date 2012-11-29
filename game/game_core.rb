@@ -5,7 +5,7 @@ class GameCore
     attr_reader :world
 
     def initialize(args={})
-        @world            = World.test_world
+        @world            = World.test_world_2
         @players          = {}
         @positions        = {}
         @cached_positions = {}

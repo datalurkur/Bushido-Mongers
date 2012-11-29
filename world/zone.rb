@@ -3,6 +3,17 @@ require 'util/log'
 require 'vocabulary'
 
 class Zone
+    class << self
+        def direction_opposite(direction)
+            case direction
+            when :north; :south
+            when :south; :north
+            when :east;  :west
+            when :west;  :east
+            end
+        end
+    end
+
     attr_reader :name, :offset
     def initialize(name)
         @name = name
@@ -18,15 +29,6 @@ class Zone
             @parent.get_full_coordinates + [@offset]
         else
             []
-        end
-    end
-
-    def direction_opposite(direction)
-        case direction
-        when :north; :south
-        when :south; :north
-        when :east;  :west
-        when :west;  :east
         end
     end
 
@@ -62,12 +64,17 @@ class Zone
             raise "Reached the edge of the world looking for leaves in #{@name}" if @parent.nil?
             @parent.find_neighbor_leaves_upwards(dir, upwards_history + [@offset])
         else
-            zone_at(*adjacent_coords).find_neighbor_leaves_downwards(dir, upwards_history, 1)
+            if has_zone?(*adjacent_coords)
+                zone_at(*adjacent_coords).find_neighbor_leaves_downwards(dir, upwards_history[0...-1])
+            else
+                []
+            end
         end
     end
 end
 
 class ZoneContainer < Zone
+    attr_reader :size
     def initialize(name, size, depth)
         super(name)
 
@@ -79,17 +86,40 @@ class ZoneContainer < Zone
     end
 
     def leaves
-        @zonemap.values.collect do |zone|
-            if ZoneContainer === zone
-                zone.leaves
-            elsif ZoneLeaf === zone
-                zone
+        @zones.collect do |row|
+            row.collect do |zone|
+                if ZoneContainer === zone
+                    zone.leaves
+                else
+                    zone
+                end
             end
-        end.flatten
+        end.flatten.compact
     end
 
     def has_zone?(x, y)
         @zones[x][y]
+    end
+
+    def abuts_edge?(dir, coords)
+        this_edge = case dir
+        when :north
+            coords.last.y == (@size - 1)
+        when :south
+            coords.last.y == 0
+        when :east
+            coords.last.x == (@size - 1)
+        when :west
+            coords.last.x == 0
+        end
+
+        if this_edge && @parent
+            @parent.abuts_edge?(dir, coords[0...-1])
+        elsif this_edge
+            true
+        else
+            false
+        end
     end
 
     def depth
@@ -119,17 +149,19 @@ class ZoneContainer < Zone
         zone.set_parent(self, [x,y])
     end
 
+    # TODO - Remove this method, hashing zones by name is dangerous
     def zone_location(zone_name)
         raise "No zone #{zone_name} found in #{@name}" unless @zonemap.has_key?(zone_name)
         @zonemap[zone_name].offset
     end
 
+    # TODO - Remove this method, hashing zones by name is dangerous
     def zone_named(zone_name)
         raise "No zone #{zone_name} found in #{@name}" unless @zonemap.has_key?(zone_name)
         @zonemap[zone_name]
     end
 
-    # FIXME - This needs to be expanded upon to allow zones to be connected to zones from other parents
+    # TODO - Remove this method, hashing zones by name is dangerous
     def connect_zones(zone_a, zone_b)
         coords_a = zone_location(zone_a)
         coords_b = zone_location(zone_b)
@@ -138,10 +170,12 @@ class ZoneContainer < Zone
         zone_named(zone_b).connect_to(dirs[1])
     end
 
-    def find_neighbor_leaves_downwards(dir, upwards_history, depth)
+    def find_neighbor_leaves_downwards(dir, upwards_history)
+        Log.debug("(DOWN) Traversing down with history #{upwards_history.inspect}", 5)
         # We want to traverse downwards respective to the coordinates we used when traversing upwards
-        traversal_range = if depth < upwards_history.size
-            last_traversal = upwards_history[upwards_history.size - depth]
+        traversal_range = unless upwards_history.empty?
+            last_traversal = upwards_history.last
+            Log.debug("(Last traversal: #{last_traversal.inspect})", 5)
             case dir
             when :north, :south; [last_traversal.x]
             when :east,  :west;  [last_traversal.y]
@@ -150,7 +184,7 @@ class ZoneContainer < Zone
             (0...@size)
         end
 
-        Log.debug("(DOWN) Finding neighbor leaves on the #{direction_opposite(dir)} side of #{@name} on the range #{traversal_range.inspect}", 5)
+        Log.debug("Finding neighbor leaves on the #{Zone.direction_opposite(dir)} side of #{@name} on the range #{traversal_range.inspect}", 5)
 
         traversal_range.collect do |dim|
             coords = case dir
@@ -160,16 +194,25 @@ class ZoneContainer < Zone
             when :west;  [@size-1, dim    ]
             end
 
-            has_zone?(*coords) ?
-                zone_at(*coords).find_neighbor_leaves_downwards(dir, upwards_history, depth+1):
+            Log.debug("\tChecking #{coords.inspect}", 5)
+            if has_zone?(*coords)
+                Log.debug("Zone found!", 5)
+                zone_at(*coords).find_neighbor_leaves_downwards(dir, upwards_history[0...-1])
+            else
+                Log.debug("Zone missing", 5)
                 []
+            end
         end.flatten
     end
 
     def check_consistency
         Log.debug("Checking the consistency of #{@name}", 3)
-        @zonemap.each_value do |zone|
-            zone.check_consistency
+        (0...@size).each do |x|
+            (0...@size).each do |y|
+                if has_zone?(x,y)
+                    zone_at(x,y).check_consistency
+                end
+            end
         end
     end
 end
@@ -185,12 +228,21 @@ class ZoneLeaf < Zone
         @parent.depth - 1
     end
 
-    def find_neighbor_leaves_downwards(dir, upwards_history, depth)
+    def find_neighbor_leaves_downwards(dir, upwards_history)
+        Log.debug("Leaf found at #{get_full_coordinates.inspect}", 5)
         [self]
+    end
+
+    def abuts_edge?(dir)
+        @parent.abuts_edge?(dir, get_full_coordinates)
     end
 
     def connect_to(direction)
         @connections[direction] = true
+    end
+
+    def remove_connection(direction)
+        @connections[direction] = false
     end
 
     def connected_to?(direction)
@@ -208,7 +260,7 @@ class ZoneLeaf < Zone
     def connected_leaf(direction)
         Log.debug("Finding leaf connected to the #{direction} of #{@name} (#{@offset.inspect})", 5)
         raise "Can't traverse to the #{direction} from #{@name}" unless connected_to?(direction)
-        connected_leaves = connectable_leaves(direction).select { |leaf| leaf.connected_to?(direction_opposite(direction)) }
+        connected_leaves = connectable_leaves(direction).select { |leaf| leaf.connected_to?(Zone.direction_opposite(direction)) }
         if connected_leaves.size == 0
             raise "Could not find a leaf connected to the #{direction} of #{@name}"
         elsif connected_leaves.size > 1
@@ -221,7 +273,7 @@ class ZoneLeaf < Zone
     def check_consistency
         @connections.keys.select { |d| @connections[d] }.each do |dir|
             other = connected_leaf(dir)
-            unless other.connected_leaf(direction_opposite(dir)) == self
+            unless other.connected_leaf(Zone.direction_opposite(dir)) == self
                 raise "Zone connection consistency check failed - #{@name} does not connect uniquely to the #{dir} with #{other.name}"
             end
         end
