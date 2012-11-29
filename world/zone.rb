@@ -78,6 +78,16 @@ class ZoneContainer < Zone
         @zonemap     = {}
     end
 
+    def leaves
+        @zonemap.values.collect do |zone|
+            if ZoneContainer === zone
+                zone.leaves
+            elsif ZoneLeaf === zone
+                zone
+            end
+        end.flatten
+    end
+
     def has_zone?(x, y)
         @zones[x][y]
     end
@@ -162,18 +172,6 @@ class ZoneContainer < Zone
             zone.check_consistency
         end
     end
-
-    def draw_to_png(png, cell_size, corridor_size, offset=[0,0])
-        subcell_size = cell_size / @size
-        Log.debug("Drawing cell at #{offset.inspect} with cell size #{cell_size} (drawing subcells #{subcell_size})", 2)
-        (0...@size).each do |x|
-            (0...@size).each do |y|
-                if @zones[x][y]
-                    @zones[x][y].draw_to_png(png, subcell_size, corridor_size, [offset.x + (x * subcell_size), offset.y + (y * subcell_size)])
-                end
-            end
-        end
-    end
 end
 
 class ZoneLeaf < Zone
@@ -226,24 +224,6 @@ class ZoneLeaf < Zone
             unless other.connected_leaf(direction_opposite(dir)) == self
                 raise "Zone connection consistency check failed - #{@name} does not connect uniquely to the #{dir} with #{other.name}"
             end
-        end
-    end
-
-    def draw_to_png(png, cell_size, corridor_size, offset, color=:white)
-        room_size = cell_size - (corridor_size * 2)
-        Log.debug("Drawing room with cell size #{cell_size}, room size #{room_size}, and corridor size #{corridor_size}", 2)
-        png.fill_box(offset.x + corridor_size, offset.y + corridor_size, room_size, room_size, color)
-        if connected_to?(:north)
-            png.fill_box(offset.x + ((cell_size - corridor_size) / 2), offset.y + room_size + corridor_size, corridor_size, corridor_size, color)
-        end
-        if connected_to?(:south)
-            png.fill_box(offset.x + ((cell_size - corridor_size) / 2), offset.y, corridor_size, corridor_size, color)
-        end
-        if connected_to?(:east)
-            png.fill_box(offset.x + room_size + corridor_size, offset.y + ((cell_size - corridor_size) / 2), corridor_size, corridor_size, color)
-        end
-        if connected_to?(:west)
-            png.fill_box(offset.x, offset.y + ((cell_size - corridor_size) / 2), corridor_size, corridor_size, color)
         end
     end
 end
