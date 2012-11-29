@@ -1,5 +1,7 @@
 #include "noise.h"
 
+#define NOISE_SIZE 256
+
 void MarkPerlin(Perlin *cPerlin) {
     // Do nothing
 }
@@ -11,7 +13,7 @@ void FreePerlin(Perlin *cPerlin) {
 
 VALUE AllocPerlin(VALUE rPerlinClass) {
     Perlin *cPerlin = (Perlin*)malloc(sizeof(Perlin));
-    setupPermutationTable(cPerlin, 256);
+    setupPermutationTable(cPerlin, NOISE_SIZE);
     VALUE rPerlin = Data_Wrap_Struct(rPerlinClass, MarkPerlin, FreePerlin, cPerlin);
     return rPerlin;
 }
@@ -20,6 +22,7 @@ void Init_noise() {
     VALUE noiseClass = rb_define_class("Noise", rb_cObject);
     rb_define_method(noiseClass, "perlin3", RUBY_METHOD_FUNC(Perlin3), 3);
     rb_define_method(noiseClass, "perlin2", RUBY_METHOD_FUNC(Perlin2), 2);
+    rb_define_method(noiseClass, "noise_size", RUBY_METHOD_FUNC(NoiseSize), 0);
     rb_define_alloc_func(noiseClass, AllocPerlin);
 }
 
@@ -37,4 +40,8 @@ VALUE Perlin2(VALUE rSelf, VALUE x, VALUE y) {
 
     Data_Get_Struct(rSelf, Perlin, cPerlin);
     return rb_float_new(noise2(cPerlin, NUM2DBL(x), NUM2DBL(y)));
+}
+
+VALUE NoiseSize(VALUE rSelf) {
+    return INT2NUM(NOISE_SIZE);
 }
