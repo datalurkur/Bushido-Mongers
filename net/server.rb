@@ -136,7 +136,7 @@ class Server
                         lines.concat(new_lines)
                     end
                     Log.debug("Processing #{lines.size} lines of input from client", 8)
-                    lines.each { |line| process_client_message(socket, line) }
+                    lines.each { |line| process_client_message(line, socket) }
                 end
             rescue Errno::ECONNRESET
                 Log.debug("Client disconnected")

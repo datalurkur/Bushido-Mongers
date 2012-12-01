@@ -31,25 +31,34 @@ class Message
             types[type][:required_args]
         end
 
-        def listeners(message_class)
-            Thread.current[:listeners] ||= {}
-            Thread.current[:listeners][message_class] ||= []
-            Thread.current[:listeners][message_class]
+        def listeners(core, message_class)
+            @listeners                      ||= {}
+            @listeners[core]                ||= {}
+            @listeners[core][message_class] ||= [] 
+            @listeners[core][message_class]
         end
 
-        def get_listeners_for(type)
+        def get_listeners_for(core, type)
             message_class = message_class_of(type)
-            listeners(message_class) + listeners(:all)
+            listeners(core, message_class) + listeners(core, :all)
         end
 
-        def register_listener(listener, message_class)
-            listeners(message_class) << listener
-            listeners(message_class).uniq!
+        def register_listener(core, message_class, listener)
+            Log.debug("#{listener.class} starts listening for #{message_class} messages")
+            listeners(core, message_class) << listener
+            listeners(core, message_class).uniq!
         end
 
-        def dispatch(type, args={})
+        def unregister_listener(core, message_class, listener)
+            Log.debug("#{listener.class} stops listening for #{message_class} messages")
+            listeners(core, message_class).delete(listener)
+        end
+
+        # TODO - I feel like this could be more intelligent - why pass the core every time if we could generally know which core we're dispatching from?
+        def dispatch(core, type, args={})
+            Log.debug("Dispatching #{type} message")
             m = Message.new(type, args)
-            l = get_listeners_for(type)
+            l = get_listeners_for(core, type)
             Log.debug("Message falling upon deaf ears") if l.empty?
             l.each do |listener|
                 listener.process_message(m)

@@ -57,12 +57,18 @@ Message.define(:user_joins,          :lobby, [:result], "User joins")           
 Message.define(:user_leaves,         :lobby, [:result], "User leaves")              # S->C
 Message.define(:admin_change,        :lobby, [:result], "Admin changed")            # S->C
 
-# Gameplay
+# Gameplay Protocol
+# Interactions between a client and the game lobby
 Message.define(:inspect_room,  :game)                                               # C->S
 Message.define(:room_info,     :game, [:name, :keywords, :contents, :exits])        # S->C
 Message.define(:move,          :game, [:direction])                                 # S->C
 Message.define(:move_fail,     :game, [:reason], "Failed to move")                  # S->C
 Message.define(:move_success,  :game, [],        "Moved")                           # S->C
+
+# Core Game Information
+# Messages passed by the game core to the lobby
+Message.define(:tick,          :core)
+Message.define(:unit_moves,    :core, [:unit, :start, :finish])
 
 # I'm thinking of doing away with these in favor of more explicit queries
 #Message.define(:fast_query,    :game, [:field])

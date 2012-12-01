@@ -87,7 +87,7 @@ class IRCConduit
                         while true
                             read_buffer = @primary_socket.gets
                             if read_buffer.length > 0
-                                process_message(read_buffer)
+                                process_raw_message(read_buffer)
                             end
                         end
                         Log.debug("Thread exiting")
@@ -148,7 +148,7 @@ class IRCConduit
             end
         end
 
-        def process_message(message)
+        def process_raw_message(message)
             case message.strip
             when /^PING :(.+)$/i
                 # IRC Heartbeat

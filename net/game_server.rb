@@ -29,17 +29,17 @@ class GameServer < Server
         end
     end
 
-    def process_client_message(socket,message)
+    def process_client_message(message, socket)
         case message.message_class
-        when :login;       process_login_message(socket,message)
-        when :server_menu; process_server_menu_message(socket,message)
-        when :lobby,:game; process_lobby_message(socket,message)
+        when :login;       process_login_message(message, socket)
+        when :server_menu; process_server_menu_message(message, socket)
+        when :lobby,:game; process_lobby_message(message, socket)
         else
             Log.debug("Unhandled class of client message: #{message.message_class}")
         end
     end
 
-    def process_server_menu_message(socket,message)
+    def process_server_menu_message(message, socket)
         @user_mutex.synchronize {
             if @user_info[socket][:state] != :server_menu
                 debug("Invalid message - #{@user_info[socket][:username]} is not in the server menu")
@@ -107,7 +107,7 @@ class GameServer < Server
         end
     end
 
-    def process_login_message(socket,message)
+    def process_login_message(message, socket)
         case message.type
         when :login_request
             server_hash = Digest::MD5.new.to_s
@@ -179,7 +179,7 @@ class GameServer < Server
         end
     end
 
-    def process_lobby_message(socket, message)
+    def process_lobby_message(message, socket)
         lobby      = nil
         user_state = nil
         username   = nil
@@ -192,6 +192,6 @@ class GameServer < Server
             Log.debug("Invalid lobby message received from client")
             return
         end
-        lobby.process_message(username, message)
+        lobby.process_message(message, username)
     end
 end

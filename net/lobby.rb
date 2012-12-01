@@ -163,7 +163,11 @@ class Lobby
         end
 
         if @game_state == :genesis
+            # Create the new game core
             @game_core = GameCore.new(@game_args)
+            # Start listening for messages from this core
+            Message.register_listener(@game_core, :core, self)
+
             @game_state = :ready
             Log.debug("Game created")
             broadcast(Message.new(:generation_success))
@@ -195,6 +199,8 @@ class Lobby
                     commit_character_choice(username)
                 end
             end
+
+            @game_core.start_ticking
         elsif @game_state == :playing
             send_to_user(username, Message.new(:start_fail, {:reason => :already_started}))
             false
@@ -204,16 +210,24 @@ class Lobby
         end
     end
 
-    def process_message(username, message)
+    def process_message(message, username=nil)
         case message.message_class
-        when :lobby; process_lobby_message(username, message)
-        when :game;  process_game_message(username, message)
+        when :lobby; process_lobby_message(message, username)
+        when :game;  process_game_message(message, username)
+        when :core;  process_core_message(message)
         else 
             Log.debug("Unhandled class of client message: #{message.message_class}")
         end
     end
 
-    def process_game_message(username, message)
+    def process_core_message(message)
+        case message.type
+        when :tick
+            Log.debug("Lobby tick")
+        end
+    end
+
+    def process_game_message(message, username)
         case message.type
         when :inspect_room
             room = @game_core.get_player_position(username)
@@ -236,7 +250,7 @@ class Lobby
         end
     end
 
-    def process_lobby_message(username, message)
+    def process_lobby_message(message, username)
         case message.type
         when :get_game_params
             # Eventually there will actually *be* game params, at which point we'll want to send them here

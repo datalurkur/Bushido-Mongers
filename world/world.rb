@@ -19,7 +19,7 @@ class World < Area
         starting_locations.rand
     end
 
-    def print_map(filename, cell_size=20, corridor_size=4, color=:white)
+    def print_map(filename, cell_size=10, corridor_size=2, color=:white)
         depth_powers   = (0..@depth-1).collect { |n| @size ** n }.reverse
         cells_per_side = depth_powers.first
         png_size       = cell_size * cells_per_side
