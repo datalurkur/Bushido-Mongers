@@ -120,7 +120,7 @@ class World < Area
         world.set_zone(1,1,c)
         world.set_zone(0,1,d)
 
-        world.add_starting_location(d.get_full_coordinates)
+        world.add_starting_location(d)
         world.check_consistency
         world
     end
@@ -164,7 +164,7 @@ class World < Area
         world.set_zone(0,0,c)
         world.set_zone(1,0,d)
 
-        world.add_starting_location(c11_01.get_full_coordinates)
+        world.add_starting_location(c11_01)
         world.check_consistency
         world
     end

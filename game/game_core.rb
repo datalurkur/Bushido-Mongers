@@ -1,14 +1,15 @@
 require 'world/world'
-require 'game/player'
+require 'game/player_manager'
+require 'ai/npc_manager'
 
 class GameCore
     attr_reader :world
 
+    include NPCManager
+    include PlayerManager
+
     def initialize(args={})
         @world            = World.test_world_2
-        @npcs             = []
-        @players          = {}
-        @positions        = {}
         @cached_positions = {}
 
         # TODO - Set this to something much higher once we're out of debug
@@ -53,55 +54,16 @@ class GameCore
     end
 
     def add_player(username, character)
-        @players[username]   = character
-        @positions[username] = if @cached_positions[username]
+        start_position = if @cached_positions[username]
             @cached_positions[username]
         else
             @world.random_starting_location
         end
-    end
-
-    def has_player?(username)
-        @players.has_key?(username)
-    end
-
-    def get_player(username)
-        @players[username]
-    end
-
-    def get_player_position(username)
-        coords = @positions[username]
-        room   = @world.get_zone(coords)
-        raise "Player is not in a room!" unless Room === room
-        room
-    end
-
-    def set_player_position(username, room)
-        raise "Player is not in a room!" unless Room === room
-        @positions[username] = room.get_full_coordinates
-    end
-
-    def player_can_move?(username, direction, reason)
-        old_room = get_player_position(username)
-        if !(old_room.connected_to?(direction))
-            reason = :no_path
-            false
-        else
-            return true
-        end
-    end
-
-    def move_player(username, direction)
-        old_room = get_player_position(username)
-        new_room = old_room.connected_leaf(direction)
-
-        Log.debug("Moving #{username} from #{old_room.name} to #{new_room.name}")
-        set_player_position(username, new_room)
+        super(username, character, start_position)
     end
 
     def remove_player(username)
-        @cached_positions[username] = @positions[username]
-        @players.delete(username)
-        @positions.delete(username)
+        @cached_positions[username] = get_player_position(username)
+        super(username)
     end
 end
