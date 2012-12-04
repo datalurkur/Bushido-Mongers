@@ -1,12 +1,18 @@
-require 'ai/behavior'
+require 'ai/behavior_set'
 
-NPCBehavior.define(:random_movement) do |actor|
-    actor.move(actor.location.connected_directions.rand)
+Behavior.define(:random_movement) do |actor|
+    direction = actor.position.connected_directions.rand
+    if direction
+        Log.debug("#{actor.name} moves to the #{direction}")
+        actor.move(direction)
+    else
+        Log.debug("#{actor.name} sits around with nowhere to go")
+    end
 end
 
-NPCBehavior.define(:attack, &:are_enemies_present?) do |actor|
-    attackee = NPCBehavior.enemies_present.rand
+Behavior.define(:attack, :are_enemies_present?) do |actor|
+    attackee = Behavior.enemies_present(actor).rand
     actor.attack(attackee)
 end
 
-BehaviorSet.define(:random_attack_and_move, {0 => :attack, 1 => :random_movement})
+BehaviorSet.define(:random_attack_and_move, {0 => [:attack], 1 => [:random_movement]})

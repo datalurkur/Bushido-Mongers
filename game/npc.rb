@@ -1,4 +1,5 @@
 require 'game/mob'
+require 'ai/basic_behavior'
 
 class NPC < Mob
     def initialize(name)
@@ -15,8 +16,12 @@ class NPC < Mob
         @behavior.act(self)
     end
 
+    def attack(target)
+        Log.debug("#{name} attacking #{target.name}")
+    end
+
     def process_message(message)
-        case message
+        case message.type
         when :tick
             tick
         else

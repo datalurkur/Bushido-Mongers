@@ -1,5 +1,6 @@
 require 'world/zone'
 require 'util/basic'
+require 'util/formatting'
 
 class ZoneTemplate
     class << self

@@ -9,31 +9,29 @@ class Behavior
         end
 
         # <Symbol:behavior> is possible when <Proc:criteria> is met, and is defined by <Proc:action>
-        def define(behavior, criteria=nil, &block)
+        def define(behavior, criterion=nil, &block)
             raise ArgumentError unless block_given?
-            @criteria[behavior] = criteria
-            @actions[behavior] = block
+            criteria[behavior] = criterion
+            actions[behavior] = block
         end
 
         def criteria_met?(behavior, actor)
-            raise ArgumentError unless @critera.has_key?(behavior)
-            if @criteria[behavior]
-                return @criteria[behavior].call(actor)
+            if Symbol === criteria[behavior]
+                return send(criteria[behavior], actor)
+            elsif Proc === criteria[behavior]
+                return criteria[behavior].call(actor)
             else
                 return true
             end
         end
 
-        def perform_behavior(behavior, actor)
-            raise ArgumentError unless @critera.has_key?(behavior)
-            @actions[behavior].call(actor)
+        def act(behavior, actor)
+            unless actions.has_key?(behavior)
+                raise ArgumentError, "#{behavior.inspect} not found in list of behaviors"
+            end
+            actions[behavior].call(actor)
         end
-    end
-end
 
-# Using inheritance as a means of scoping behaviors, if this ever becomes necessary
-class NPCBehavior < Behavior
-    class << self
         def are_enemies_present?(actor)
             !enemies_present(actor).empty?
         end

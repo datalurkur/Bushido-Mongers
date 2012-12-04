@@ -28,21 +28,8 @@ class Range
     end
 end
 
-class Symbol
-    def to_title
-        self.to_s.gsub(/_/, ' ').gsub(/(^| )(.)/) { "#{$1}#{$2.upcase}" }
-    end
-end
-
 class Set
     def rand()
         self.to_a.rand
-    end
-end
-
-class String
-    # For now, just capitalize the beginning.
-    def sentence
-        self.gsub(/^(\w)/) { $1.upcase }
     end
 end

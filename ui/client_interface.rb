@@ -98,11 +98,11 @@ module VerboseInterface
         end
 
         def list(items, field=nil, style=:number)
-            decorate(items, style).join("\n")
+            decorate(items, style).to_formatted_string("", true)
         end
 
         def properties(props)
-            props.collect { |k,v| "\t#{k} => #{v}" }.join("\n")
+            props.to_formatted_string("", true)
         end
 
         def get_choice(context, text)

@@ -1,4 +1,5 @@
 require 'util/basic'
+require 'util/formatting'
 require 'set'
 
 VOCAB_DEBUG = 0

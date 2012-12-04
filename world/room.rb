@@ -1,4 +1,5 @@
 require 'world/zone'
+require 'game/npc'
 
 module ZoneWithKeywords
     def keywords
@@ -40,6 +41,18 @@ class Room < ZoneLeaf
     def remove_occupant(occupant)
         @occupants.delete(occupant)
     end
+
+    # Determines how a leaf populates itself in the absence of parent data
+    def populate(core)
+        Log.debug("Populating leaf #{name}")
+
+        # FIXME - This will be more complex based on keywords
+        if rand(10) < 5
+            npc = NPC.new("Test NPC #{rand(100000)}")
+            npc.set_position(self)
+            core.add_npc(npc)
+        end
+    end
 end
 
 class Area < ZoneContainer
@@ -48,5 +61,15 @@ class Area < ZoneContainer
     def initialize(name, size, depth, keywords=[])
         add_keywords(keywords)
         super(name, size, depth)
+    end
+
+    # Decides whether an Area populates its sub-Areas / Leaves directly, or defers to them to do so
+    def populate(core)
+        Log.debug("Populating area #{name}")
+
+        # FIXME - This will be more complex based on keywords
+        leaves.each do |leaf|
+            leaf.populate(core)
+        end
     end
 end

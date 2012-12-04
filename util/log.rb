@@ -1,4 +1,5 @@
 require 'thread'
+require 'util/formatting'
 
 # Threadsafe logging that logs the name of the thread, the file and line number, log level, and log message
 # Requires setup
@@ -84,7 +85,7 @@ class Log
             end
         end
 
-private
+        private
         # NOT THREADSAFE
         def print_line(msg, thread_name, file, line, level, handle, prefix=nil)
             @longest_file = [@longest_file, file.to_s.length].max
@@ -92,40 +93,8 @@ private
             msg_prefix = prefix || "[#{thread_name.ljust(@longest_thread_name)}] #{file.to_s.ljust(@longest_file)}:#{line.to_s.ljust(3)} (#{level.to_s.ljust(@max_log_level.to_s.length)}) | "
 
             case msg
-            when Array
-                handle.puts(msg_prefix + "[")
-                if msg.empty?
-                    handle.puts(msg_prefix + "\t" + "<EMPTY>")
-                else
-                    msg.each do |element|
-                        print_line(element, thread_name, file, line, level, handle, msg_prefix + "\t")
-                    end
-                end
-                handle.puts(msg_prefix + "]")
-            when Hash
-                handle.puts(msg_prefix + "{")
-                if msg.empty?
-                    handle.puts(msg_prefix + "\t" + "<EMPTY>")
-                else
-                    longest_key = msg.keys.inject(0) { |longest,key|
-                        [key.inspect.length, longest].max
-                    }
-                    msg.each do |key, value|
-                        output        = key.inspect.ljust(longest_key) + " => "
-                        value_printed = false
-
-                        unless (Array === value) || (Hash === value)
-                            output += value.inspect
-                            value_printed = true
-                        end
-
-                        handle.puts(msg_prefix + "\t" + output)
-                        unless value_printed
-                            print_line(value, thread_name, file, line, level, handle, msg_prefix + "\t\t")
-                        end
-                    end
-                end
-                handle.puts(msg_prefix + "}")
+            when Array, Hash
+                handle.puts msg.to_formatted_string(msg_prefix)
             when String
                 handle.puts(msg_prefix + msg)
             else
