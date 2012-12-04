@@ -30,50 +30,45 @@ Message.define(:receive_chat,        :chat, [:sender,:chat_text,:is_whisper])
 
 # Lobby phase
 # Game / World generation
-Message.define(:get_game_params,     :lobby)                                        # C->S
+Message.define(:get_game_params,     :lobby)                                                # C->S
 # TODO - Add protocol for setting game parameters
-Message.define(:game_params,         :lobby, [:params])                             # S->C
-Message.define(:generate_game,       :lobby)                                        # C->S
-Message.define(:generation_success,  :lobby, [],        "World generated")          # S->C
-Message.define(:generation_fail,     :lobby, [:reason], "World failed to generate") # S->C
+Message.define(:game_params,         :lobby, [:params])                                     # S->C
+Message.define(:generate_game,       :lobby)                                                # C->S
+Message.define(:generation_success,  :lobby, [],        "World generated")                  # S->C
+Message.define(:generation_fail,     :lobby, [:reason], "World failed to generate")         # S->C
 
 # Character creation / selection
-Message.define(:create_character,    :lobby, [:attributes])                         # C->S
-Message.define(:list_characters,     :lobby)                                        # C->S
-Message.define(:character_list,      :lobby, [:characters])                         # S->C
-Message.define(:select_character,    :lobby, [:character_name])                     # C->S
-Message.define(:character_ready,     :lobby, [],        "Character ready")          # S->C
-Message.define(:character_not_ready, :lobby, [:reason], "Character not ready")      # S->C
-Message.define(:begin_playing,       :lobby, [],        "Begin playing")            # S->C
+Message.define(:create_character,    :lobby, [:attributes])                                 # C->S
+Message.define(:list_characters,     :lobby)                                                # C->S
+Message.define(:character_list,      :lobby, [:characters])                                 # S->C
+Message.define(:select_character,    :lobby, [:character_name])                             # C->S
+Message.define(:character_ready,     :lobby, [],        "Character ready")                  # S->C
+Message.define(:character_not_ready, :lobby, [:reason], "Character not ready")              # S->C
+Message.define(:begin_playing,       :lobby, [],        "Begin playing")                    # S->C
 
 # Game administration and information
-Message.define(:start_game,          :lobby)                                        # C->S
-Message.define(:start_success,       :lobby, [],        "Game started")             # S->C
-Message.define(:start_fail,          :lobby, [:reason], "Failed to start game")     # S->C
-#Message.define(:toggle_pause,        :lobby)                                       # C->S
-#Message.define(:pause_state,         :lobby)                                       # S->C
+Message.define(:start_game,          :lobby)                                                # C->S
+Message.define(:start_success,       :lobby, [],        "Game started")                     # S->C
+Message.define(:start_fail,          :lobby, [:reason], "Failed to start game")             # S->C
+#Message.define(:toggle_pause,        :lobby)                                               # C->S
+#Message.define(:pause_state,         :lobby)                                               # S->C
 
-Message.define(:user_joins,          :lobby, [:result], "User joins")               # S->C
-Message.define(:user_leaves,         :lobby, [:result], "User leaves")              # S->C
-Message.define(:admin_change,        :lobby, [:result], "Admin changed")            # S->C
+Message.define(:user_joins,          :lobby, [:result], "User joins")                       # S->C
+Message.define(:user_leaves,         :lobby, [:result], "User leaves")                      # S->C
+Message.define(:admin_change,        :lobby, [:result], "Admin changed")                    # S->C
 
 # Gameplay Protocol
 # Interactions between a client and the game lobby
-Message.define(:inspect_room,  :game)                                               # C->S
-Message.define(:room_info,     :game, [:name, :keywords, :contents, :exits])        # S->C
-Message.define(:move,          :game, [:direction])                                 # S->C
-Message.define(:move_fail,     :game, [:reason], "Failed to move")                  # S->C
-Message.define(:move_success,  :game, [],        "Moved")                           # S->C
+Message.define(:inspect_room,  :game)                                                       # C->S
+Message.define(:room_info,     :game, [:name, :keywords, :contents, :occupants, :exits])    # S->C
+Message.define(:move,          :game, [:direction])                                         # S->C
+Message.define(:move_fail,     :game, [:reason], "Failed to move")                          # S->C
+Message.define(:move_success,  :game, [],        "Moved")                                   # S->C
 
 # Core Game Information
 # Messages passed by the game core to the lobby
 Message.define(:tick,          :core)
 Message.define(:unit_moves,    :core, [:unit, :start, :finish])
-
-# I'm thinking of doing away with these in favor of more explicit queries
-#Message.define(:fast_query,    :game, [:field])
-#Message.define(:query_result,  :game, [:result])
-#Message.define(:invalid_query, :game, [:reason])
 
 # Client / Interface Messages
 # Interface Messages

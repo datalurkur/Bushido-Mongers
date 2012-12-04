@@ -23,12 +23,22 @@ class Room < ZoneLeaf
     include ZoneWithKeywords
 
     attr_reader :contents
+    attr_reader :occupants
 
     def initialize(name, keywords=[])
         add_keywords(keywords)
         super(name)
 
-        @contents = []
+        @contents  = []
+        @occupants = []
+    end
+
+    def add_occupant(occupant)
+        @occupants << occupant
+    end
+
+    def remove_occupant(occupant)
+        @occupants.delete(occupant)
     end
 end
 

@@ -229,10 +229,11 @@ class Lobby
         when :inspect_room
             room = @game_core.get_character(username).position
             send_to_user(username, Message.new(:room_info, {
-                :name     => room.name,
-                :keywords => room.keywords,
-                :contents => room.contents,
-                :exits    => room.connected_directions,
+                :name      => room.name,
+                :keywords  => room.keywords,
+                :contents  => room.contents.collect(&:name),  # Don't pass actual objects here, just names
+                :occupants => room.occupants.collect(&:name), # The lobby will re-translate the names into objects upon their return
+                :exits     => room.connected_directions,
             }))
         when :move
             character = @game_core.get_character(username)

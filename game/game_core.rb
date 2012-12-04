@@ -75,9 +75,11 @@ class GameCore
 
     def add_npc(npc)
         @npcs << npc
+        Message.register_listener(self, :core, npc)
     end
 
     def remove_npc(npc)
+        Message.unregister_listener(self, :core, npc)
         @npcs.delete(npc)
     end
 end

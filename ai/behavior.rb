@@ -15,18 +15,18 @@ class Behavior
             @actions[behavior] = block
         end
 
-        def criteria_met?(behavior, core, actor)
+        def criteria_met?(behavior, actor)
             raise ArgumentError unless @critera.has_key?(behavior)
             if @criteria[behavior]
-                return @criteria[behavior].call(core, actor)
+                return @criteria[behavior].call(actor)
             else
                 return true
             end
         end
 
-        def perform_behavior(behavior, core, actor)
+        def perform_behavior(behavior, actor)
             raise ArgumentError unless @critera.has_key?(behavior)
-            @actions[behavior].call(core, actor)
+            @actions[behavior].call(actor)
         end
     end
 end
@@ -34,12 +34,12 @@ end
 # Using inheritance as a means of scoping behaviors, if this ever becomes necessary
 class NPCBehavior < Behavior
     class << self
-        def are_enemies_present?(core, actor)
-            !enemies_present(core, actor).empty?
+        def are_enemies_present?(actor)
+            !enemies_present(actor).empty?
         end
 
-        def enemies_present(core, actor)
-            others  = (core.occupants_at(actor.position) - [actor])
+        def enemies_present(actor)
+            others  = actor.position.occupants - [actor]
             enemies = others.select { |other| are_enemies?(actor, other) }
         end
 
