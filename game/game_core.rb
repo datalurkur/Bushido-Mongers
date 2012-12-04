@@ -1,16 +1,10 @@
 require 'world/world'
-require 'game/player_manager'
-require 'ai/npc_manager'
 
 class GameCore
     attr_reader :world
 
-    include NPCManager
-    include PlayerManager
-
     def initialize(args={})
         @world            = World.test_world_2
-        @cached_positions = {}
 
         # TODO - Set this to something much higher once we're out of debug
         @tick_rate        = args[:tick_rate] || (5)
@@ -53,17 +47,37 @@ class GameCore
         Message.dispatch(self, :tick)
     end
 
+    def characters;       @characters ||= {};       end
+
+    def cached_positions; @cached_positions ||= {}; end
+
     def add_player(username, character)
-        start_position = if @cached_positions[username]
-            @cached_positions[username]
-        else
-            @world.random_starting_location
-        end
-        super(username, character, start_position)
+        characters[username] = character
+        character.set_position(cached_positions[username] || @world.random_starting_location)
+    end
+
+    def has_active_character?(username)
+        characters.has_key?(username)
+    end
+
+    def get_character(username)
+        characters[username]
     end
 
     def remove_player(username)
-        @cached_positions[username] = get_player_position(username)
-        super(username)
+        cached_positions[username] = characters[username].position
+        characters.delete(username)
+    end
+
+    def npcs
+        @npcs ||= []
+    end
+
+    def add_npc(npc)
+        @npcs << npc
+    end
+
+    def remove_npc(npc)
+        @npcs.delete(npc)
     end
 end

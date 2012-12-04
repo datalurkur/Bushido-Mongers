@@ -1,17 +1,18 @@
+require 'game/mob'
 require 'util/log'
 
 =begin
     NECESSARY ENHANCEMENTS
     ======================
     1) There needs to be some discussion about character portability between worlds.
-    We should allow this, but we need to think about things like player location between worlds.
-        - If a player saves and reloads a character in the same world, he should be at the same location
-        - If a player saves and reloads a character between worlds, his old position doesn't make sense for the new world
-    This means we need a way to identify which world a player was saved in (or store player position within the world, that might make more sense)
+    We should allow this, but we need to think about things like character location between worlds.
+        - If a character saves and reloads a character in the same world, he should be at the same location
+        - If a character saves and reloads a character between worlds, his old position doesn't make sense for the new world
+    This means we need a way to identify which world a character was saved in (or store character position within the world, that might make more sense)
     This means we also need a way to identify worlds uniquely (I suggest hashing the name of the world with a timestamp)
 =end
 
-class Player
+class Character < Mob
     class << self
         CHARACTER_DIRECTORY = "data/characters"
 
@@ -57,7 +58,7 @@ class Player
             end
         end
 
-        def save_character(username, character)
+        def save(username, character)
             filename = to_filename(character.name)
             full_filename = File.join(get_user_directory(username), filename)
             f = File.open(full_filename, 'w')
@@ -65,7 +66,7 @@ class Player
             f.close
         end
 
-        def load_character(username, filename)
+        def load(username, filename)
             Marshal.load(File.read(File.join(get_user_directory(username), filename)))
         end
 
@@ -75,15 +76,14 @@ class Player
             end.uniq.compact
         end
 
-        def get_character_history(username, character_name)
+        def get_history(username, character_name)
             contents = user_directory_contents(username)
             history  = contents.select { |fdata| fdata[:character_name] == character_name }
             history.sort { |x,y| x[:timestamp] <=> y[:timestamp] }
         end
     end
 
-    attr_reader :name
     def initialize(name)
-        @name = name
+        super(name)
     end
 end

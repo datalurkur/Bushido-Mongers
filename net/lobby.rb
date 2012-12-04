@@ -27,9 +27,6 @@ class Lobby
             raise "Lobby has no means with which to send client data"
         end
         @send_callback = block
-
-        # Players are filled in as users create or select characters
-        @players       = {}
     end
 
     def is_admin?(username)
@@ -37,7 +34,7 @@ class Lobby
     end
 
     def is_playing?(username)
-        @game_core && @game_core.has_player?(username)
+        @game_core && @game_core.has_active_character?(username)
     end
 
     def send_to_user(user, message)
@@ -88,8 +85,8 @@ class Lobby
         end
 
         if is_playing?(username)
-            # Save the player
-            Player.save_character(username, @game_core.get_player(username))
+            # Save the character
+            Character.save(username, @game_core.get_character(username))
             @game_core.remove_player(username)
         end
         @users.delete(username)
@@ -98,7 +95,7 @@ class Lobby
     end
 
     def get_user_characters(username)
-        character_list = Player.get_characters_for(username)
+        character_list = Character.get_characters_for(username)
         # TODO - Eventually, we'll want to do some kind of filtering on what sorts of characters are acceptable for this lobby (maximum level, etc)
         character_list
     end
@@ -108,7 +105,7 @@ class Lobby
         raise "User already active" if @game_state == :playing && is_playing?(username)
 
         # Get a list of the user's saved characters
-        character_list = Player.get_characters_for(username)
+        character_list = Character.get_characters_for(username)
 
         # See if this character is in that list
         characters = character_list.select { |c| c == character_name }
@@ -120,13 +117,13 @@ class Lobby
             Log.debug("#{username} selects character named #{character_name}")
 
             # Gather all the saves for this character
-            character_history = Player.get_character_history(username, character_name)
+            character_history = Character.get_history(username, character_name)
 
             # Try to load saves (starting with the latest)
             character_history.each do |cdata|
                 begin
-                    player = Player.load_character(username, cdata[:filename])
-                    @users[username][:pending_character] = player
+                    character = Character.load(username, cdata[:filename])
+                    @users[username][:pending_character] = character
                     break
                 rescue Exception => e
                     # This one failed to load, try the next one
@@ -230,7 +227,7 @@ class Lobby
     def process_game_message(message, username)
         case message.type
         when :inspect_room
-            room = @game_core.get_player_position(username)
+            room = @game_core.get_character(username).position
             send_to_user(username, Message.new(:room_info, {
                 :name     => room.name,
                 :keywords => room.keywords,
@@ -238,12 +235,12 @@ class Lobby
                 :exits    => room.connected_directions,
             }))
         when :move
-            reason = nil
-            unless @game_core.player_can_move?(username, message.direction, reason)
-                send_to_user(username, Message.new(:move_fail, {:reason => reason}))
-            else
-                @game_core.move_player(username, message.direction)
+            character = @game_core.get_character(username)
+            result    = character.move(message.direction)
+            if result.nil?
                 send_to_user(username, Message.new(:move_success))
+            else
+                send_to_user(username, Message.new(:move_fail, {:reason => result}))
             end
         else
             Log.debug("Unhandled game message type #{message.type} received from client")

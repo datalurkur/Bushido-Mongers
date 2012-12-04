@@ -9,24 +9,47 @@ class Behavior
         end
 
         # <Symbol:behavior> is possible when <Proc:criteria> is met, and is defined by <Proc:action>
-        def define(behavior, critera, action)
+        def define(behavior, criteria=nil, &block)
+            raise ArgumentError unless block_given?
             @criteria[behavior] = criteria
-            @actions[behavior] = action
+            @actions[behavior] = block
         end
 
-        # I'm kind of assuming that "state" is going to be room_info, but named it "state" in case we decide to change that later
-        def criteria_met?(behavior, state)
+        def criteria_met?(behavior, core, actor)
             raise ArgumentError unless @critera.has_key?(behavior)
             if @criteria[behavior]
-                @criteria[behavior].call(state)
+                return @criteria[behavior].call(core, actor)
             else
-                true
+                return true
             end
         end
 
-        def perform_behavior(behavior, state)
+        def perform_behavior(behavior, core, actor)
             raise ArgumentError unless @critera.has_key?(behavior)
-            @actions[behavior].call(state)
+            @actions[behavior].call(core, actor)
+        end
+    end
+end
+
+# Using inheritance as a means of scoping behaviors, if this ever becomes necessary
+class NPCBehavior < Behavior
+    class << self
+        def are_enemies_present?(core, actor)
+            !enemies_present(core, actor).empty?
+        end
+
+        def enemies_present(core, actor)
+            others  = (core.occupants_at(actor.position) - [actor])
+            enemies = others.select { |other| are_enemies?(actor, other) }
+        end
+
+        def are_enemies?(actor_a, actor_b)
+            if NPC === actor_a && NPC === actor_b
+                # TODO - Faction stuff goes here
+                return true
+            else
+                return true
+            end
         end
     end
 end

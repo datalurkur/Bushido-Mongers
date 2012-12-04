@@ -30,7 +30,7 @@ class LobbyState < State
         begin_exchange(@lobby_menu_exchange)
     end
 
-    # FIXME - This menu needs to be refined and broken up into categories (game administration, player selection, etc)
+    # FIXME - This menu needs to be refined and broken up into categories (game administration, character selection, etc)
     def lobby_menu_choices; [:get_game_params, :generate_game, :create_character, :select_character, :start_game]; end
 
     def from_server(message)

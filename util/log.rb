@@ -61,6 +61,11 @@ class Log
         end
 
         # THREADSAFE
+        def warning(msg, level=1)
+            # FIXME - Make this look different from a debug message - color perhaps?
+            debug(msg, level)
+        end
+
         def debug(msg, level=1)
             raise "Logging system never initialized" unless @logging_setup
             @log_mutex.synchronize do
@@ -71,17 +76,17 @@ class Log
                 to_print = (Array === msg) ? msg : [msg]
                 to_print.each do |m|
                     if level <= @source_files[file]
-                        debug_line(m, thread_name, file, line, level, Kernel)
-                        debug_line(m, thread_name, file, line, level, @filtered_logfile)
+                        print_line(m, thread_name, file, line, level, Kernel)
+                        print_line(m, thread_name, file, line, level, @filtered_logfile)
                     end
-                    debug_line(m, thread_name, file, line, level, @verbose_logfile)
+                    print_line(m, thread_name, file, line, level, @verbose_logfile)
                 end
             end
         end
 
 private
         # NOT THREADSAFE
-        def debug_line(msg, thread_name, file, line, level, handle, prefix=nil)
+        def print_line(msg, thread_name, file, line, level, handle, prefix=nil)
             @longest_file = [@longest_file, file.to_s.length].max
 
             msg_prefix = prefix || "[#{thread_name.ljust(@longest_thread_name)}] #{file.to_s.ljust(@longest_file)}:#{line.to_s.ljust(3)} (#{level.to_s.ljust(@max_log_level.to_s.length)}) | "
@@ -93,7 +98,7 @@ private
                     handle.puts(msg_prefix + "\t" + "<EMPTY>")
                 else
                     msg.each do |element|
-                        debug_line(element, thread_name, file, line, level, handle, msg_prefix + "\t")
+                        print_line(element, thread_name, file, line, level, handle, msg_prefix + "\t")
                     end
                 end
                 handle.puts(msg_prefix + "]")
@@ -116,7 +121,7 @@ private
 
                         handle.puts(msg_prefix + "\t" + output)
                         unless value_printed
-                            debug_line(value, thread_name, file, line, level, handle, msg_prefix + "\t\t")
+                            print_line(value, thread_name, file, line, level, handle, msg_prefix + "\t\t")
                         end
                     end
                 end

@@ -18,8 +18,8 @@ config = {
 Log.setup("Main Thread", "server")
 
 # DEBUG
-require 'game/player_test'
-recreate_test_player("test_user")
+require 'game/character_test'
+recreate_test_character("test_user")
 
 signals = ["TERM","INT"]
 signals.each do |signal|
