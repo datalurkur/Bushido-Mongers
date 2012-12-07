@@ -3,7 +3,6 @@ require 'util/log'
 
 module AbstractType
     def types
-        Log.debug(["Collecting subtypes for #{self}", properties, required_params, on_create])
         type_register.collect do |subtype|
             if AbstractType === subtype
                 subtype.types
@@ -14,7 +13,7 @@ module AbstractType
     end
 
     def included(klass)
-        Log.debug("#{klass} registered as a child of #{self}")
+        Log.debug("#{klass} registered as a child of #{self}", 8)
         type_register << klass
         klass.merge_parent(self)
     end
@@ -56,7 +55,6 @@ module ObjectType
             end
 
             def merge_parent(parent)
-                Log.debug("Merging properties from #{parent} into #{self}")
                 set_properties(parent.properties.merge(properties))
                 set_required_params(required_params.concat(parent.required_params).uniq)
                 set_on_create(parent.on_create + on_create)
@@ -99,14 +97,12 @@ end
 module ObjectDSL
     class << self
         def describe(type, args={}, &block)
-            Log.debug("Describing #{type}")
+            Log.debug("Describing #{type}", 5)
             type_class = args[:abstract] ? create_module(type) : create_class(type)
             type_class.class_exec { include ObjectType }
             type_class.class_exec { extend AbstractType } if args[:abstract]
             type_class.class_exec(&block) if block_given?
             type_class.create_property_readers
-            puts type_class.properties.inspect
-            puts type_class.required_params.inspect
         end
 
         def create_module(symbolic_name)
