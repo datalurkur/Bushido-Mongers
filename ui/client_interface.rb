@@ -1,4 +1,5 @@
 require 'util/basic'
+require 'vocabulary'
 
 # The purpose of the interface modules is to provide an abstraction layer for converting messages to and from whatever form they need to be in to be consumed and processed
 # In the case of the user, this will take on the form of various text formats or commands to a GUI
@@ -10,7 +11,7 @@ module TextInterface
         # While these would appear to be the same, one prompts a response (and this is very different to an AI!)
         when :choose_from_list; list(message.choices, message.field)
         when :list;             list(message.items)
-        when :properties;       properties(message.properties)
+        when :properties;       properties(message)
         else
             if message.has_param?(:text)
                 if message.has_param?(:reason)
@@ -73,8 +74,8 @@ module SlimInterface
             decorate(items, style).join(" ")
         end
 
-        def properties(props)
-            props.collect { |k,v| "#{k}=>#{v}" }.join(" ")
+        def properties(message)
+            message.properties.collect { |k,v| "#{k}=>#{v}" }.join(" ")
         end
 
         def get_choice(context, text)
@@ -101,8 +102,12 @@ module VerboseInterface
             decorate(items, style).to_formatted_string("", true)
         end
 
-        def properties(props)
-            props.to_formatted_string("", true)
+        def properties(message)
+            if message.field == :room_info
+                return Words::AreaDescription.new(message.properties)
+            end
+
+            message.properties.to_formatted_string("", true)
         end
 
         def get_choice(context, text)

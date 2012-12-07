@@ -8,25 +8,9 @@ $vocab_dir = 'vocabulary'
 module Words
     TYPES = :noun, :verb, :adjective, :adverb
 
-    # Unify all the Word.synonyms entries.
-    def self.synonymify(*families)
-        families.flatten!
-        puts "synonymify: #{families.inspect}" if VOCAB_DEBUG > 1
-
-        # Add already-existing synonyms.
-        synonyms = families.inject([]) do |list, f|
-            list + [f] + [f.synonyms]
-        end.flatten!
-
-        families.each do |f|
-            f.synonyms = synonyms
-        end
-        families
-    end
-
     # Receives query hash; returns list of matching families or nil
     def self.find(input = {})
-        input[:text] = input[:text].to_sym if String === input[:text]
+        input[:text] = input[:text].to_sym if input[:text] && String === input[:text]
 
         @families ||= []
         search_families = @families.dup
@@ -58,6 +42,10 @@ module Words
         end
 
         return results.empty? ? nil : results
+    end
+
+    def self.proper_nouns
+        Words.find(:keyword => :proper).map(&:noun).map(&:to_s)
     end
 
     class WordFamily
@@ -137,13 +125,13 @@ module Words
         end
     end
 
-    # Serves as the de-facto Words initializer.
+    # The de-facto Words initializer.
     def self.load()
         @families ||= []
         Words::TYPES.each do |type|
             Dir.glob("#{$vocab_dir}/#{type}s_*.txt").each do |file|
                 puts "Reading #{file}" if VOCAB_DEBUG > 0
-                keyword = file.match(/^.*#{type}s_(.*).txt/)[1]
+                keyword = file.match(/^.*#{type}s_(.*).txt/)[1].to_sym
                 File.readlines(file).each do |line|
                     self.add_family(type => line.chomp, :keywords => [keyword])
                 end
@@ -173,59 +161,153 @@ module Words
         end
     end
 
-    module Sentence
-        def self.generate(descriptor, synonym = nil)
-            subject = descriptor[:agent]
-            subject_str = subject.to_s
-            object = descriptor[:target] if descriptor[:target]
+    #:keywords=>[], :contents=>[], :occupants=>["Test NPC 23683", "Test NPC 35550", "Test Character"], :exits=>[:west], :name=>"b00"
 
-            action = Words.find(:text => descriptor[:action]).first.synonyms.rand
+    class AreaDescription
+        def initialize(props = {})
+            @sentences = []
 
-            phrase, subject_adj, adverb = ''
-            if synonym && matches = Words.find(:keyword => synonym)
-                describer = matches.rand
-                phrase = "with #{describer.noun}"
-                subject_adj = describer.adjective
-                adverb = describer.adverb
+            if props[:keywords].empty?
+                @sentences << Sentence.new(:subject => "You", :action => "see", :target => "boring room")
+            else
+                @sentences << Sentence.new(:subject => "You", :action => "see", :target => "boring room", :detail => props[:keywords].rand)
             end
 
-            return (
-                subject.to_s(subject_adj) +
-                (adverb ? ' ' + adverb.to_s : '') +
-                " #{action.verb}s" +
-                (object ? ' ' + object.to_s : '') +
-                (phrase ? ' ' + phrase.to_s : '') +
-            ".").sentence
+            if !props[:contents].empty?
+                @sentences << Sentence.new(:subject => "You", :action => "see", :target => "boring room")
+            end
+
+            if !props[:occupants].empty?
+                @sentences << Sentence.new(:subject => "You", :action => "see", :target => props[:occupants])
+            end
+        end
+
+        def to_s
+            @sentences.map(&:to_s).join(" ")
         end
     end
-end
 
-require 'thing'
-class Thing
-    attr_accessor :name
-    attr_reader :article
+    class Sentence
+        class SentencePart < String
+            # Descriptors can be either adjectives or adverbs attached to the part.
+            # The subparts should always be strings.
+            attr_accessor :descriptors, :phrases, :plural
 
-    def initialize(name, settings=[])
-        @name = name
-    end
+            def initialize(str)
+                super(str.to_s || '')
+                @descriptors = []
+                @phrases = []
+                @plural = false
+            end
 
-    # FIXME: Check for first-person, use first-person pronoun.
-    def to_s(adj = nil)
-        @representation = case rand(2)
-        when 0; "the #{adj ? adj.to_s + ' ' : ''}#{self.class.to_s.downcase}"
-        when 1; (adj ? adj.to_s + ' ' : '') + self.name
+            def full
+                start = ''
+                # catch article
+                main = if m = self.match(/^(the) (.*)/)
+                    start = m[1]
+                    m[2]
+                else
+                    self.pluralize
+                end
+                [start, @descriptors, main, @phrases].flatten.reject { |s| s.to_s.empty? }.join(" ")
+            end
+
+            def plural?
+                return true if @plural
+                # Otherwise, make a nasty first-guess.
+                self[-1] == 's' || self.match(' and ')
+            end
+
+            def pluralize
+                # Make a nasty first-approximation.
+                if (plural? && noun?) || (!plural? && verb?)
+                    self.gsub!(/s?$/, 's')
+                end
+                self
+            end
+
+            def verb?() false; end
+            def noun?() false; end
+        end
+
+        class Verb < SentencePart
+            def verb?() true; end
+        end
+
+        class Noun < SentencePart
+            def initialize(str)
+                if Array === str
+                    pop = str.pop
+                    super(str.join(", ") + " and " + str[-1])
+                elsif str.respond_to?(:name)
+                    super(rand(2) == 0 ? "the #{str.class.to_s.downcase}" : str.name)
+                else
+                    super(str)
+                end
+            end
+
+            def noun?() true; end
+        end
+
+        def initialize(descriptor, synonym = nil)
+            @tense = :present
+            @features = []
+
+            @features << :expletive if rand(2) == 0
+
+            @subject = if descriptor[:subject]
+                descriptor[:subject]
+            elsif descriptor[:agent]
+                (rand(2) == 0 ? "the #{descriptor[:agent].class.to_s.downcase}" : descriptor[:agent].name)
+            end
+
+            @subject = Noun.new(@subject)
+            @verb    = Verb.new(descriptor[:verb] || descriptor[:action])
+            @dir_obj = Noun.new(descriptor[:target])
+            @ind_obj = Noun.new(descriptor[:tool])
+
+            # Synonymify the verb, maybe.
+            verb_syns = Words.find(:text => @verb).first.synonyms.map(&:verb)
+            @verb     = Verb.new(verb_syns.rand) if rand(2) == 0
+
+            @verb.plural = true if @subject.plural?
+
+            # action descriptors: The generic ninja generically slices the goat with genericness.
+            phrase, adverb = ''
+            if synonym && matches = Words.find(:keyword => synonym)
+                describer = matches.rand
+                @subject.descriptors << describer.adjective
+                @verb.descriptors << describer.adverb
+                @verb.phrases << "with #{describer.noun}"
+            end
+        end
+
+        def to_s
+#            (@features.include?(:expletive) ? "There #{@subject.plural? ? "are" : "is"}" : '') +
+            ([@subject, @verb, @dir_obj, @ind_obj].map(&:full).join(" ") + '.').sentence
         end
     end
-end
 
-class Ninja < Thing
-end
+private
+    # Unify all the Word.synonyms entries.
+    def self.synonymify(*families)
+        families.flatten!
+        puts "synonymify: #{families.inspect}" if VOCAB_DEBUG > 1
 
-class Goat < Thing
+        # Add already-existing synonyms.
+        synonyms = families.inject([]) do |list, f|
+            list + [f] + [f.synonyms]
+        end.flatten!
+
+        families.each do |f|
+            f.synonyms = synonyms
+        end
+        families
+    end
 end
 
 class Action
-    # {:agent => <Ninja, :name => "Kenji Scrimshank">, :target => <Goat, :name => "Billy Goat Balrog">, :verb => :attack, :utensil => :agent_current_weapon}
+    # {:agent => <Ninja, :name => "Kenji Scrimshank">, :target => <Goat, :name => "Billy Goat Balrog">, :verb => :attack, :tool => :agent_current_weapon}
     def self.do(descriptor = {})
         self.send(descriptor[:action], descriptor)
     end
@@ -239,13 +321,18 @@ class Action
         when 16..20; :good
         end
 
-        puts Words::Sentence.generate(descriptor, keyword)
+        puts Words::Sentence.new(descriptor, keyword)
     end
 end
 
 Words.load
 
 if $0 == __FILE__
+    require 'util/log'
+    Log.setup("Vocabulary Test", "wordtest")
+    require 'game/npc'
+    class Ninja < NPC; end
+    class Goat  < NPC; end
     agent = Ninja.new("Kenji Scrimshank")
     target = Goat.new("Billy Goat Balrog")
     5.times do

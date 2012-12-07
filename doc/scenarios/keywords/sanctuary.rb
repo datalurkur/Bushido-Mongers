@@ -25,7 +25,7 @@
     AJEAN: For now, I'm assuming #3, since it has the most flexibility
 =end
 
-Zone.describe(:santuary, {
+Zone.describe(:sanctuary, {
     :always_contains => [:haven],
     :may_contain     => [:tavern, :inn],
     :never_contains  => [:dungeon],

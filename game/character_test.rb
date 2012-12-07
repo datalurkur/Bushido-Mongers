@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 
 require 'game/character'
+require 'vocabulary'
 
 def recreate_test_character(username, clean=true)
     if clean
@@ -8,6 +9,7 @@ def recreate_test_character(username, clean=true)
         Dir.entries(userdir).reject { |file| file == "." || file == ".." }.each { |file| File.delete(File.join(userdir, file)) }
     end
 
-    c = Character.new("Test Character")
+    c = Character.new(Words.proper_nouns.rand)
+
     Character.save(username, c)
 end
