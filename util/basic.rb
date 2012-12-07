@@ -33,3 +33,23 @@ class Set
         self.to_a.rand
     end
 end
+
+class String
+    def to_caml
+        gsub(/\/(.?)/) { "::#{$1.upcase}" }.gsub(/(?:^|_)(.)/) { $1.upcase }
+    end
+
+    def to_const
+        Object.const_defined?(self) ? Object.const_get(self) : Object.const_missing(self)
+    end
+end
+
+class Symbol
+    def to_caml
+        to_s.to_caml
+    end
+
+    def to_const
+        to_s.to_const
+    end
+end
