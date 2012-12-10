@@ -116,7 +116,7 @@ module ObjectRawParser
         end
 
         def parse_object(next_object, unparsed_objects, metadata, object_database)
-            Log.debug("Parsing object #{next_object.inspect}")
+            Log.debug("Parsing object #{next_object.inspect}", 8)
 
             # Do some sanity checking
             unless metadata.has_key?(next_object)
@@ -144,6 +144,11 @@ module ObjectRawParser
                 :default_values => {}
             }
 
+            # Set up to accumulate subtypes if this is an abstract type
+            if object_data[:abstract]
+                object_data[:subtypes] = []
+            end
+
             # Pull in information from the parent(s)
             # Since this happens for every object (including abstract objects) we only need to do it for one level of parents
             unless object_data[:is_a] == :root
@@ -151,6 +156,7 @@ module ObjectRawParser
                 [:has, :needs, :at_creation, :default_values].each do |key|
                     object_data[key] = parent_object[key].dup
                 end
+                parent_object[:subtypes] << next_object
             end
 
             if object_metadata[:data]
@@ -197,7 +203,7 @@ module ObjectRawParser
                 end
             end
 
-            Log.debug("Adding object #{next_object.inspect}")
+            Log.debug("Adding object #{next_object.inspect}", 8)
             object_database[next_object] = object_data
         end
 

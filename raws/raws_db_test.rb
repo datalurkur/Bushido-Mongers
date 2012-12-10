@@ -1,6 +1,20 @@
 require 'raws/db'
+require 'game/tables'
 
 Log.setup("main thread", "test")
 
-db = ObjectDB.new("default")
-Log.debug(["DB", db.db])
+raw_group = "default"
+
+Log.debug("Loading #{raw_group} raws")
+db = ObjectDB.new(raw_group)
+
+Log.debug(["Types of items:", db.types_of(:item)])
+
+test_item_type = :cap
+Log.debug("Creating a #{test_item_type}")
+test_item_args = {:quality => :fine, :materials => [db.create(:iron)] }
+test_item = db.create(test_item_type, test_item_args)
+
+Log.debug("Test item is a metal? #{test_item.is_a?(:metal)}")
+Log.debug("Test item is a constructable? #{test_item.is_a?(:constructable)}")
+Log.debug("Test item is a headgear? #{test_item.is_a?(:headgear)}")

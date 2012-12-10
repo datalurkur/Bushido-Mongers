@@ -1,0 +1,11 @@
+abstract item material;
+
+abstract material metal {
+    has int melting_point;
+}
+
+metal iron {
+    melting_point 1538;
+    value 10;
+    weight 5;
+}
