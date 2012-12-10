@@ -35,6 +35,15 @@ class Set
 end
 
 class String
+    def indices(substr)
+        ret   = []
+        i
+        while (i = index(substr))
+            ret << i
+        end
+        ret.empty? ? nil : ret
+    end
+
     def to_caml
         gsub(/\/(.?)/) { "::#{$1.upcase}" }.gsub(/(?:^|_)(.)/) { $1.upcase }
     end
