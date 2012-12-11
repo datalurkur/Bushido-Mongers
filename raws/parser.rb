@@ -153,9 +153,12 @@ module ObjectRawParser
             # Since this happens for every object (including abstract objects) we only need to do it for one level of parents
             unless object_data[:is_a] == :root
                 parent_object = object_database[object_data[:is_a]]
+                raise "Parent object type '#{object_data[:is_a]}' not abstract!" unless parent_object[:abstract]
+
                 [:has, :needs, :at_creation, :default_values].each do |key|
                     object_data[key] = parent_object[key].dup
                 end
+
                 parent_object[:subtypes] << next_object
             end
 

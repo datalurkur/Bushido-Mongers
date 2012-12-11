@@ -67,7 +67,7 @@ class Message
 
         def check_message(type, args)
             raise "Unknown message type #{type}" unless type_defined?(type)
-            required_args(type).each { |arg| raise "#{arg} required for #{type} messages" unless args.has_key?(arg) }
+            required_args(type).each { |arg| raise "#{arg} required for #{type} of message #{self.inspect}" unless args.has_key?(arg) }
         end
 
         def match_message(message, hash)

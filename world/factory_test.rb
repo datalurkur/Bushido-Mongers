@@ -1,3 +1,5 @@
+#!/usr/bin/ruby
+
 require 'world/factories'
 
 Log.setup("main thread", "factory_test")

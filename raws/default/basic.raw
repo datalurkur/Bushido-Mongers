@@ -1,3 +1,13 @@
+abstract root npc {
+    has float weight;
+    has_many sym factions;
+    has_many sym can_spawn_in;
+    has_many sym never_spawn_in;
+
+    can_spawn_in nothing;
+    never_spawn_in nothing;
+}
+
 abstract root item {
     has float weight;
     has int value;
