@@ -5,9 +5,12 @@ class Symbol
 end
 
 class String
-    # For now, just capitalize the beginning.
     def sentence
-        self.gsub(/^(\w)/) { $1.upcase }
+        # Whitespace cleanup.
+        word = self.gsub(/^\s+/, '')
+        word.gsub!(/\s+([\.\?\!])$/, '\1')
+        # Capitalize the beginning.
+        word.gsub!(/^(\w)/) { $1.upcase }
     end
 end
 
