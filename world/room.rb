@@ -11,12 +11,12 @@ module ZoneWithKeywords
     end
 
     def add_keyword(keyword)
-        @keywords << keyword
-        @keywords.uniq!
+        keywords << keyword
+        keywords.uniq!
     end
 
     def remove_keyword(keyword)
-        @keywords.delete(keyword)
+        keywords.delete(keyword)
     end
 end
 
