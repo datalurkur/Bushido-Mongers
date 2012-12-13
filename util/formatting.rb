@@ -12,6 +12,10 @@ class String
         # Capitalize the beginning.
         word.gsub!(/^(\w)/) { $1.upcase }
     end
+
+    def title
+        self.split(' ').map(&:capitalize).join(' ')
+    end
 end
 
 class Array

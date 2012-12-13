@@ -7,15 +7,13 @@ class World < Area
         super(name, size, max_depth)
     end
 
+    # Also see the recursive method Area::add_starting_location.
     def starting_locations
         @starting_locations ||= []
     end
 
-    def add_starting_location(location)
-        starting_locations << location
-    end
-
     def random_starting_location
+        raise "No starting locations!" if starting_locations.empty?
         starting_locations.rand
     end
 

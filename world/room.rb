@@ -2,6 +2,8 @@ require 'world/zone'
 require 'game/npc'
 
 module ZoneWithKeywords
+    attr_accessor :zone
+
     def keywords
         @keywords ||= []
     end
@@ -46,6 +48,9 @@ class Room < ZoneLeaf
     def populate(core)
         Log.debug("Populating leaf #{name}")
 
+        # FIXME: This should be somewhere else, and not so inclusive.
+        @parent.add_starting_location(self)# if rand(2) == 0
+
         # FIXME - This will be more complex based on keywords
         if rand(10) < 5
             npc = NPC.new("Test NPC #{rand(100000)}")
@@ -61,6 +66,15 @@ class Area < ZoneContainer
     def initialize(name, size, depth, keywords=[])
         add_keywords(keywords)
         super(name, size, depth)
+    end
+
+    def add_starting_location(location)
+        puts "#{self.name}.add_starting_location(#{location}): #{@parent.inspect}"
+        if @parent
+            @parent.add_starting_location(location) if @parent
+        else
+            starting_locations << location
+        end
     end
 
     # Decides whether an Area populates its sub-Areas / Leaves directly, or defers to them to do so

@@ -20,7 +20,7 @@ end
 
 class Range
     def &(other)
-        self.to_a & other.to_a
+        self.to_a & [other]
     end
 
     def rand_from_intersection(other)

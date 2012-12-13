@@ -1,4 +1,4 @@
-require 'world/world'
+require 'world/factories'
 
 class GameCore
     attr_reader :world
@@ -10,7 +10,8 @@ class GameCore
         @ticking_mutex    = Mutex.new
 
         # Create the world and breathe life into it
-        @world            = World.test_world_2
+#        @world            = World.test_world_2
+        @world            = WorldFactory.generate(2, 1)
         populate
     end
 

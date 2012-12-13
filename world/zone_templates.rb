@@ -7,13 +7,14 @@ class ZoneTemplate
         def types; @types ||= {}; end
 
         def get_params(type)
-            raise "ZoneTemplate #{type} not found" unless @types.has_key?(type)
+            return {} unless type
+            raise "ZoneTemplate #{type.inspect} not found" unless @types.has_key?(type)
             @types[type]
         end
 
         def filter_types(&block)
             if block_given?
-                @types.keys.select { |type| block.call(get_params(type)) }
+                @types.select { |type, params| block.call(type, params) }
             else
                 @types.keys
             end 
@@ -30,44 +31,40 @@ class ZoneTemplate
             types[type].merge!(:generate_proc => block) if block_given?
         end
 
-        def generate_random(depth_range, size)
-            eligible_types = filter_types { |params| (params[:depth_range] & depth_range).size > 0 }
-
-            type  = generate(eligible_types.rand_key, size)
-            depth = (get_params(type)[:depth_range] & depth_range).rand
-
-            generate(type, size, depth)
-        end
-
-        # Generate a specific type of size x size dimensions and depth
-        # We want to give ZoneTemplates the ability to have an effect on the generation of sub-zones
-        # parent_params is in place for when this method is called from within another ZoneTemplate
-        def generate(type, size, depth, parent_params={})
-            params = get_params(type)
-
-            # We need special functionality to do this, see the method definition for more information
-            # Another possibility is just passing both sets and letting the generation code deal with them
-            merged_params = merge_template_parameters(params, parent_params)
-
-            # FIXME - Generate a random name using the keywords
-            name = "Generic Zone Name"
-
-            # Setup the empty zone
-            zone = setup_zone(name, size, depth)
-
-            # Populate it with stuff
-            if params[:generate_proc]
-                params[:generate_proc].call(zone, merged_params)
-            else
-                default_generation(zone, merged_params)
+        def random(parent, size, depth)
+            possible = ZoneTemplate.types.keys
+            never = []
+            if parent
+                possible = get_params(parent)[:may_contain] || possible
+                never = get_params(parent)[:never_contains] || never
             end
 
-            # Toss it back
-            zone
+            eligible_types = filter_types do |type, params|
+                possible.include?(type) &&
+                !never.include?(type) &&
+                ((params[:depth_range] & depth).size > 0)
+            end
+
+            if eligible_types.empty?
+                # This might warrant more discussion about what to do, but for now, just use the parent or a random template.
+                #raise "Cannot find random template for constraints: " +
+                #    "#{parent.inspect} depth #{depth.inspect} size #{size}"
+                if parent
+                    return parent, get_params(parent)
+                else
+                    return filter_types.rand
+                end
+            end
+
+            type, params = eligible_types.rand
+            merged_params = merge_template_parameters(params, get_params(parent))
+            return type, merged_params
         end
 
         # Merge ZoneTemplate parameter sets, respecting the nature of each special parameter
         # The default case is for a child field to override a parent field
+        # FIXME: Note that this doesn't work all the way up the chain yet. Only parent
+        # zone parameters are currently inherited.
         def merge_template_parameters(child, parent)
             result = {}
 
@@ -77,19 +74,25 @@ class ZoneTemplate
 
             # We want to merge both sets of keywords together
             # FIXME - Deal with keyword incompatibilities cleverly somehow here
-            result[:keywords] = (child[:keywords] + parent[:keywords]).uniq
+            result[:keywords] = (child[:keywords] + (parent[:keywords] || [])).uniq
 
             # Return the resultant hash
             result
         end
 
-        def setup_zone(name, size, depth)
-            zone = if depth == 1
-                ZoneLeaf.new(name)
+        # Takes a ZoneLeaf or ZoneContainer, and populates it.
+        def populate_zone(zone, size, depth)
+            raise "#{zone.inspect} is not a ZoneWithKeywords!" unless zone.respond_to?(:zone)
+
+            # FIXME: This should use merged params somehow.
+            params = get_params(zone.zone)
+
+            # Populate it with stuff
+            if params[:generate_proc]
+                params[:generate_proc].call(zone, params)
             else
-                ZoneContainer.new(name, size, depth)
+                default_generation(zone, params)
             end
-            zone
         end
 
         def default_generation(zone, params)
@@ -100,24 +103,12 @@ end
 
 ZoneTemplate.define(:sanctuary,
     :depth_range     => 2..3,
-    :always_contains => [:haven],
     :may_contain     => [:tavern, :inn],
     :never_contains  => [:dungeon],
-#    :always_spawns   => [:peacekeeper],
-#    :may_spawn       => [NPC::Merchant],
-#    :never_spawns    => [NPC::Monster]
-    :keywords        => [:peaceful]
-)
-
-ZoneTemplate.define(:haven,
-    :depth_range     => 1..2,
-    :always_contains => [:haven],
-    :may_contain     => [:tavern, :inn],
-    :never_contains  => [:dungeon],
-#    :always_spawns   => [:peacekeeper],
-#    :may_spawn       => [NPC::Merchant],
-#    :never_spawns    => [NPC::Monster]
-    :keywords        => [:peaceful]
+    :always_spawns   => [:peacekeeper],
+    :may_spawn       => [:merchant],
+    :never_spawns    => [:monster],
+    :keywords        => [:haven]
 )
 
 ZoneTemplate.define(:meadow,
@@ -135,9 +126,8 @@ ZoneTemplate.define(:castle,
                     )
 
 ZoneTemplate.define(:sewer,
-                    :keywords=>[:dank, :wet],
                     :depth_range=>1..2,
-                    :child_of=>[:castle]
+                    :keywords=>[:dank, :wet]
                     )
 
 ZoneTemplate.define(:dock,

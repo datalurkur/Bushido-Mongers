@@ -1,12 +1,13 @@
 require 'util/basic'
 require 'util/formatting'
 require 'set'
+require 'util/log'
 
 VOCAB_DEBUG = 0
 $vocab_dir = 'vocabulary'
 
 module Words
-    TYPES = :noun, :verb, :adjective, :adverb
+    TYPES = :noun, :name, :verb, :adjective, :adverb
 
     # Receives query hash; returns list of matching families or nil
     def self.find(input = {})
@@ -38,7 +39,7 @@ module Words
         end
 
         if input[:wordtype]
-            results = results.map.send(input[:wordtype])
+            results = results.map { |f| f.send(input[:wordtype]) }
         end
 
         return results.empty? ? nil : results
@@ -56,10 +57,10 @@ module Words
             @keywords = []
             @synonyms = []
 
-            @noun = hash[:noun].to_sym if hash[:noun]
-            @verb = hash[:verb].to_sym if hash[:verb]
-            @adjective = hash[:adjective].to_sym if hash[:adjective]
-            @adverb = hash[:adverb].to_sym if hash[:adverb]
+            Words::TYPES.each do |type|
+                instance_variable_set("@#{type}", hash[type].to_sym) if hash[type]
+            end
+
             @keywords = hash[:keywords].map(&:to_sym) if hash[:keywords]
 
             # FIXME: It's confusing that synonyms aren't read here.
@@ -90,10 +91,7 @@ module Words
         Words::TYPES.each do |type|
             next unless hash[type]
             if families = Words.find(:text => hash[type])
-                if families.size > 1
-                    raise NameError, "#{hash[type]} already defined in #{families.size} families: #{families.inspect}!"
-                end
-                puts "#{hash[type]} already defined in #{families.size} families: #{families.inspect}!" if VOCAB_DEBUG > 0
+                puts "#{hash[type]} already defined in #{families.size} families: #{families.inspect}!" if families.size > 1 && VOCAB_DEBUG > 0
                 old_wf = families.first
                 if hash[:keywords] && old_wf.keywords != hash[:keywords]
                     old_wf.keywords += hash[:keywords].map(&:to_sym)
@@ -170,7 +168,7 @@ module Words
             if props[:keywords].empty?
                 @sentences << Sentence.new(:subject => "You", :action => "see", :target => "boring room")
             else
-                @sentences << Sentence.new(:subject => "You", :action => "see", :target => "boring room", :detail => props[:keywords].rand)
+                @sentences << Sentence.new(:subject => "You", :action => "see", :target => (props[:keywords].rand.to_s + " room"))
             end
 
             if !props[:contents].empty?
@@ -184,6 +182,20 @@ module Words
 
         def to_s
             @sentences.map(&:to_s).join(" ")
+        end
+    end
+
+    # FIXME: Generate a random name using the keywords
+    class AreaName
+        def initialize(zone, props = {})
+            @sentence = Sentence::Noun.new(zone.to_s)
+
+            @sentence.descriptors << "the"
+            @sentence.descriptors << props[:keywords].rand if props[:keywords]
+        end
+
+        def to_s
+            @sentence.full.title
         end
     end
 
@@ -202,12 +214,11 @@ module Words
 
             def full
                 start = ''
+                main = self
                 # catch article
-                main = if m = self.match(/^(the) (.*)/)
+                if m = self.match(/^(the) (.*)/)
                     start = m[1]
-                    m[2]
-                else
-                    self.pluralize
+                    main  = m[2]
                 end
                 [start, @descriptors, main, @phrases].flatten.reject { |s| s.to_s.empty? }.join(" ")
             end
@@ -237,8 +248,12 @@ module Words
         class Noun < SentencePart
             def initialize(str)
                 if Array === str
-                    pop = str.pop
-                    super(str.join(", ") + " and " + str[-1])
+                    if str.size == 1
+                        super(str.pop)
+                    else
+                        pop = str.pop
+                        super(str.join(", ") + " and " + pop)
+                    end
                 elsif str.respond_to?(:name)
                     super(rand(2) == 0 ? "the #{str.class.to_s.downcase}" : str.name)
                 else
@@ -249,7 +264,8 @@ module Words
             def noun?() true; end
         end
 
-        def initialize(descriptor, synonym = nil)
+        def initialize(descriptor, synonym=nil)
+#            puts "Descriptor is #{descriptor.inspect}"
             @tense = :present
             @features = []
 
@@ -283,6 +299,10 @@ module Words
         end
 
         def to_s
+#            if @features.include?(:expletive)
+#                "There #{@subject.plural? ? "are" : "is"}" : '') +
+#                ([@subject, @verb, @dir_obj, @ind_obj].map(&:full).join(" ") + '.').sentence
+
 #            (@features.include?(:expletive) ? "There #{@subject.plural? ? "are" : "is"}" : '') +
             ([@subject, @verb, @dir_obj, @ind_obj].map(&:full).join(" ") + '.').sentence
         end
@@ -328,7 +348,6 @@ end
 Words.load
 
 if $0 == __FILE__
-    require 'util/log'
     Log.setup("Vocabulary Test", "wordtest")
     require 'game/npc'
     class Ninja < NPC; end

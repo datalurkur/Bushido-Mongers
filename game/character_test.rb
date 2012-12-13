@@ -9,7 +9,7 @@ def recreate_test_character(username, clean=true)
         Dir.entries(userdir).reject { |file| file == "." || file == ".." }.each { |file| File.delete(File.join(userdir, file)) }
     end
 
-    c = Character.new(Words.proper_nouns.rand)
+    c = Character.new(Words.find(:keyword => :japanese, :wordtype => :name).map(&:to_s).rand)
 
     Character.save(username, c)
 end
