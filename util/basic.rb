@@ -20,7 +20,16 @@ end
 
 class Range
     def &(other)
-        self.to_a & [other]
+        case other
+        when Array
+            self.to_a & other
+        when Range
+            self.to_a & other.to_a
+        when Fixnum
+            self.to_a & [other]
+        else
+            raise "Unsupported union between Range and #{other.class}"
+        end
     end
 
     def rand_from_intersection(other)
