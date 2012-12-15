@@ -1,9 +1,12 @@
 require 'game/mob'
 require 'ai/basic_behavior'
+require 'raws/db'
 
-class NPC < Mob
-    def initialize(name)
-        super(name)
+class NPC < BushidoObject
+    include Mob
+    def initialize(name, type, db, args={})
+        @name = name
+        super(type, db, args)
 
         @behavior = BehaviorSet.create(:random_attack_and_move)
     end

@@ -1,5 +1,5 @@
 require 'util/basic'
-require 'vocabulary'
+require 'words/words'
 
 # The purpose of the interface modules is to provide an abstraction layer for converting messages to and from whatever form they need to be in to be consumed and processed
 # In the case of the user, this will take on the form of various text formats or commands to a GUI

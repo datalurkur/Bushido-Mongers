@@ -12,7 +12,9 @@ require 'util/log'
     This means we also need a way to identify worlds uniquely (I suggest hashing the name of the world with a timestamp)
 =end
 
-class Character < Mob
+class Character
+    include Mob
+
     class << self
         CHARACTER_DIRECTORY = "data/characters"
 
@@ -84,6 +86,6 @@ class Character < Mob
     end
 
     def initialize(name)
-        super(name)
+        @name = name
     end
 end

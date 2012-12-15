@@ -2,6 +2,7 @@ require 'raws/parser'
 
 class BushidoObject
     def initialize(type, db, args={})
+        Log.debug("Creating #{type} with args #{args.inspect}")
         @db   = db
         @type = type
 
@@ -81,6 +82,13 @@ class ObjectDB
         else
             [type]
         end
+    end
+
+    # Given a list of abstract and concrete types, returns all concrete types that match any input types.
+    def expand_types(list)
+        list.inject([]) do |arr, type|
+            arr + types_of(type)
+        end.flatten.uniq
     end
 
     def random(type)

@@ -1,3 +1,0 @@
-Words.describe_group { :synonyms => [:good], :noun => "ferocity",   :adjective => "fierce", :adverb => "fiercely" }
-Words.describe_group { :synonyms => [ :bad], :noun => "clumsiness", :adjective => "clumsy", :adverb => "clumsily" }
-Words.describe_group { :synonyms => [ :bad], :noun => "ineptness",  :adjective => "inept", :adverb => "ineptly" }

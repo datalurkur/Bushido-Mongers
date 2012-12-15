@@ -1,6 +1,6 @@
 require 'util/math'
 require 'util/log'
-require 'vocabulary'
+require 'words/words'
 
 class Zone
     class << self

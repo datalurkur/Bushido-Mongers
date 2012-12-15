@@ -1,0 +1,22 @@
+inf  tense   1st 2nd 3rd  3pi 3pe
+
+see  present see see sees see see
+see  past    saw saw saw  saw saw
+have present have have has have have
+be   present am  are is   are are
+be   past    was were was were were
+
+sneak past   sneaked
+
+regular
+play present play play plays play play
+
+
+
+do past did done doing
+say past said saying
+eat past ate eaten eating
+write past wrote written writing
+beat past beat beaten beating
+drink past drank drunk drinking
+sing past sang sung singing

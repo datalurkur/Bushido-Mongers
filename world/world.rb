@@ -3,10 +3,6 @@ require 'world/room'
 require 'graphics/png'
 
 class World < Area
-    def initialize(name, size, max_depth)
-        super(name, size, max_depth)
-    end
-
     # Also see the recursive method Area::add_starting_location.
     def starting_locations
         @starting_locations ||= []

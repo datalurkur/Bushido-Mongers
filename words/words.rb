@@ -2,12 +2,13 @@ require 'util/basic'
 require 'util/formatting'
 require 'set'
 require 'util/log'
-
-VOCAB_DEBUG = 0
-$vocab_dir = 'vocabulary'
+require 'words/parser'
 
 module Words
     TYPES = :noun, :name, :verb, :adjective, :adverb
+
+    VOWELS = ['a', 'e', 'i', 'o', 'u']
+    CONSONANTS = ('a'..'z').to_a - VOWELS
 
     # Receives query hash; returns list of matching families or nil
     def self.find(input = {})
@@ -91,12 +92,12 @@ module Words
         Words::TYPES.each do |type|
             next unless hash[type]
             if families = Words.find(:text => hash[type])
-                puts "#{hash[type]} already defined in #{families.size} families: #{families.inspect}!" if families.size > 1 && VOCAB_DEBUG > 0
+                Log.debug("#{hash[type]} already defined in #{families.size} families: #{families.inspect}!") if families.size > 1
                 old_wf = families.first
                 if hash[:keywords] && old_wf.keywords != hash[:keywords]
                     old_wf.keywords += hash[:keywords].map(&:to_sym)
                     old_wf.keywords.flatten
-                    puts "Added keywords #{hash[:keywords]} to #{old_wf.inspect}" if VOCAB_DEBUG > 0
+                    Log.debug("Added keywords #{hash[:keywords]} to #{old_wf.inspect}")
                 end
                 return old_wf
             end
@@ -123,42 +124,6 @@ module Words
         end
     end
 
-    # The de-facto Words initializer.
-    def self.load()
-        @families ||= []
-        Words::TYPES.each do |type|
-            Dir.glob("#{$vocab_dir}/#{type}s_*.txt").each do |file|
-                puts "Reading #{file}" if VOCAB_DEBUG > 0
-                keyword = file.match(/^.*#{type}s_(.*).txt/)[1].to_sym
-                File.readlines(file).each do |line|
-                    self.add_family(type => line.chomp, :keywords => [keyword])
-                end
-            end
-        end
-        Dir.glob("#{$vocab_dir}/synonyms_*.txt").each do |file|
-            puts "Reading #{file}" if VOCAB_DEBUG > 0
-            wordtype = file.match(/^.*synonyms_(.*).txt/)[1]
-            File.readlines(file).each do |line|
-                # Add all the words as word-families, then associate them all.
-                families = []
-                line.split(/\s/).each do |w|
-                    families << self.add_family(wordtype.to_sym => w)
-                end
-                synonymify(families)
-            end
-        end
-        Dir.glob("#{$vocab_dir}/groups_*.txt").each do |file|
-            puts "Reading #{file}" if VOCAB_DEBUG > 0
-            type = file.match(/^.*groups_(.*).txt/)[1]
-            File.readlines(file).each do |line|
-                list = line.split(/\s/)
-                # Add-as-adjective for now.
-                text = list.pop
-                self.add_family(:adjective => text, :generate_from_adj => true, :keywords => list.map(&:to_sym))
-            end
-        end
-    end
-
     #:keywords=>[], :contents=>[], :occupants=>["Test NPC 23683", "Test NPC 35550", "Test Character"], :exits=>[:west], :name=>"b00"
 
     class AreaDescription
@@ -171,13 +136,15 @@ module Words
                 @sentences << Sentence.new(:subject => "You", :action => "see", :target => (props[:keywords].rand.to_s + " room"))
             end
 
-            if !props[:contents].empty?
+            if props[:contents] && !props[:contents].empty?
                 @sentences << Sentence.new(:subject => "You", :action => "see", :target => "boring room")
             end
 
-            if !props[:occupants].empty?
+            if props[:occupants] && !props[:occupants].empty?
                 @sentences << Sentence.new(:subject => "You", :action => "see", :target => props[:occupants])
             end
+
+            props[:exits]
         end
 
         def to_s
@@ -187,36 +154,41 @@ module Words
 
     # FIXME: Generate a random name using the keywords
     class AreaName
-        def initialize(zone, props = {})
-            @sentence = Sentence::Noun.new(zone.to_s)
+        def initialize(props = {})
+            @name = Sentence::Noun.new(props[:template].to_s)
 
-            @sentence.descriptors << "the"
-            @sentence.descriptors << props[:keywords].rand if props[:keywords]
+            @name.descriptors << "the"
+            @name.descriptors << props[:keywords].rand if props[:keywords]
         end
 
         def to_s
-            @sentence.full.title
+            @name.to_s.title
         end
     end
 
     class Sentence
-        class SentencePart < String
+        # http://en.wikipedia.org/wiki/English_verbs#Syntactic_constructions
+        # http://en.wikipedia.org/wiki/English_clause_syntax
+        ASPECTS = [:perfect, :imperfect, :habitual, :stative, :progressive]
+        MOOD    = [:indicative, :subjunctive, :imperative]
+
+        class SentencePart
             # Descriptors can be either adjectives or adverbs attached to the part.
             # The subparts should always be strings.
             attr_accessor :descriptors, :phrases, :plural
 
             def initialize(str)
-                super(str.to_s || '')
+                @main = str.to_s
                 @descriptors = []
                 @phrases = []
                 @plural = false
             end
 
-            def full
+            def to_s
                 start = ''
-                main = self
+                main = @main
                 # catch article
-                if m = self.match(/^(the) (.*)/)
+                if m = main.match(/^(the) (.*)/)
                     start = m[1]
                     main  = m[2]
                 end
@@ -226,13 +198,13 @@ module Words
             def plural?
                 return true if @plural
                 # Otherwise, make a nasty first-guess.
-                self[-1] == 's' || self.match(' and ')
+                @main[-1] == 's' || @main.match(' and ')
             end
 
             def pluralize
                 # Make a nasty first-approximation.
                 if (plural? && noun?) || (!plural? && verb?)
-                    self.gsub!(/s?$/, 's')
+                    @main.gsub!(/s?$/, 's')
                 end
                 self
             end
@@ -241,10 +213,50 @@ module Words
             def noun?() false; end
         end
 
+        # http://en.wikipedia.org/wiki/English_verbs
+        # http://en.wikipedia.org/wiki/List_of_English_irregular_verbs
+        # http://en.wikipedia.org/wiki/Predicate_(grammar)
+        # http://en.wikipedia.org/wiki/Phrasal_verb
+        # Technically, the predicate contains the verb, so this will be expanded upon in the future.
         class Verb < SentencePart
+            def initialize(infinitive)
+                @infinitive = infinitive.to_s
+                super(infinitive)
+            end
+
+            def conjugate(tense, subject = :third_singular)
+                # Words::Conjugations
+                if {}.keys.include?(@infinitive)
+                    nil
+                end
+
+                case tense
+                when :present
+                    @main += sibilant? ? 'es' : 's'
+                when :past
+                    # Double the ending letter, if necessary.
+                    @main.gsub!(/([nbpt])$/, '\1\1')
+                    # drop any ending 'e'
+                    @main.sub!(/e$/, '')
+                    @main += 'ed'
+                end
+                self
+            end
+
+            # However if the base form ends in one of the sibilant sounds
+            # (/s/, /z/, /ʃ/, /ʒ/, /tʃ/, /dʒ/), and its spelling does not end in a
+            # silent e, then -es is added: buzz → buzzes; catch → catches. Verbs
+            # ending in a consonant plus o also typically add -es: veto → vetoes.
+            def sibilant?
+                # First stab.
+                @infinitive[-1].chr == 's' ||
+                (CONSONANTS.include?(@infinitive[-2].chr) && @infinitive[-1].chr == 'o')
+            end
+
             def verb?() true; end
         end
 
+        # TODO - handle gerunds
         class Noun < SentencePart
             def initialize(str)
                 if Array === str
@@ -265,9 +277,11 @@ module Words
         end
 
         def initialize(descriptor, synonym=nil)
-#            puts "Descriptor is #{descriptor.inspect}"
-            @tense = :present
+            Log.debug("Descriptor is #{descriptor.inspect}")
+            @tense = descriptor[:tense] || :present # TODO - implement other tenses
             @features = []
+            @voice = :active # TODO - implement passive
+            @aspect = :stative # TODO - implement aspect
 
             @features << :expletive if rand(2) == 0
 
@@ -283,10 +297,16 @@ module Words
             @ind_obj = Noun.new(descriptor[:tool])
 
             # Synonymify the verb, maybe.
-            verb_syns = Words.find(:text => @verb).first.synonyms.map(&:verb)
-            @verb     = Verb.new(verb_syns.rand) if rand(2) == 0
+            associated_verb_families = Words.find(:text => @verb.to_s)
+            if associated_verb_families && associated_verb_families.size > 1
+                verb_syns = associated_verb_families.first.synonyms.map(&:verb)
+                Log.debug("verb #{@verb} syns #{verb_syns}", 6)
+                if !verb_syns.empty?
+                    @verb = Verb.new(verb_syns.rand)
+                end
+            end
 
-            @verb.plural = true if @subject.plural?
+            @verb.conjugate(@tense)
 
             # action descriptors: The generic ninja generically slices the goat with genericness.
             phrase, adverb = ''
@@ -304,15 +324,15 @@ module Words
 #                ([@subject, @verb, @dir_obj, @ind_obj].map(&:full).join(" ") + '.').sentence
 
 #            (@features.include?(:expletive) ? "There #{@subject.plural? ? "are" : "is"}" : '') +
-            ([@subject, @verb, @dir_obj, @ind_obj].map(&:full).join(" ") + '.').sentence
+            ([@subject, @verb, @dir_obj, @ind_obj].map(&:to_s).join(" ") + '.').sentence
         end
     end
 
 private
-    # Unify all the Word.synonyms entries.
-    def self.synonymify(*families)
+    # Unify all the associated entries.
+    def self.associate(*families)
         families.flatten!
-        puts "synonymify: #{families.inspect}" if VOCAB_DEBUG > 1
+        Log.debug("associate: #{families.inspect}")
 
         # Add already-existing synonyms.
         synonyms = families.inject([]) do |list, f|
@@ -323,38 +343,5 @@ private
             f.synonyms = synonyms
         end
         families
-    end
-end
-
-class Action
-    # {:agent => <Ninja, :name => "Kenji Scrimshank">, :target => <Goat, :name => "Billy Goat Balrog">, :verb => :attack, :tool => :agent_current_weapon}
-    def self.do(descriptor = {})
-        self.send(descriptor[:action], descriptor)
-    end
-
-    def self.attack(descriptor)
-        success_roll = rand(20) + 1
-        keyword = case success_roll
-        when 1..5;   :fail
-        when 6..10;  :miss
-        when 11..15; :neutral
-        when 16..20; :good
-        end
-
-        puts Words::Sentence.new(descriptor, keyword)
-    end
-end
-
-Words.load
-
-if $0 == __FILE__
-    Log.setup("Vocabulary Test", "wordtest")
-    require 'game/npc'
-    class Ninja < NPC; end
-    class Goat  < NPC; end
-    agent = Ninja.new("Kenji Scrimshank")
-    target = Goat.new("Billy Goat Balrog")
-    5.times do
-        Action.do(:agent => agent, :target => target, :action => :attack)
     end
 end
