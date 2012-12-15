@@ -35,6 +35,7 @@ wfs.each do |wf|
     Log.debug(wf.verb)
 end
 Log.debug(Words.find(:text => "see").rand.verb)
+Log.debug(Words.find(:text => "see", :wordtype => :verb).rand)
 
 Log.debug(Words::AreaName.new({:template => :mountain, :keywords => [:beautiful]}).to_s)
 Log.debug(Words::AreaDescription.new({:template => :mountain, :keywords => [:beautiful], :occupants => ["elderly Beaver", "Frank the Ninja Bunny"]}).to_s)

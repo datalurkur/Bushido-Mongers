@@ -2,7 +2,10 @@ require 'world/zone'
 require 'game/npc'
 
 module ZoneWithKeywords
-    attr_accessor :zone
+    def zone
+        raise "Template not defined!" unless @params[:template]
+        @params[:template]
+    end
 
     def keywords
         @params[:keywords] ||= []
@@ -47,7 +50,7 @@ class Room < ZoneLeaf
         @occupants.delete(occupant)
     end
 
-    # Determines how a leaf populates itself in the absence of parent data
+    # Determines how a leaf populates itself
     def populate(core)
         Log.debug("Populating leaf #{name}")
 
@@ -61,27 +64,35 @@ class Room < ZoneLeaf
         may_spawn     = core.db.expand_types(@params[:may_spawn]     || [])
         always_spawns = core.db.expand_types(@params[:always_spawns] || [])
         never_spawns  = core.db.expand_types(@params[:never_spawns]  || [])
+        Log.debug("Creating NPCs for #{self.name} with spawn details #{may_spawn.inspect} #{always_spawns.inspect} #{never_spawns.inspect}", 6)
 
         # Find NPC types suitable to create here.
         npc_types = core.db.types_of(:npc)
         acceptable_types  = always_spawns
         acceptable_types += npc_types.select do |type|
-            may_spawn.include?(type) &&
-            !never_spawns.include?(type)
+            (
+                may_spawn.include?(type) &&
+                !never_spawns.include?(type)
+            ) || (
+                core.db.info_for(type)[:can_spawn_in] &&
+                core.db.info_for(type)[:can_spawn_in].include?(self.zone)
+            )
         end
         acceptable_types.uniq!
 
-        # This number will need serious tweaking.
-        (always_spawns.size + rand(acceptable_types.size)).floor.times do |i|
+        Log.debug("Can create #{acceptable_types.inspect} in #{self.zone}", 6)
+        Log.debug("No acceptable NPC types found for #{self.zone}!") if acceptable_types.empty?
+
+        # This number will need tweaking, probably based on zone params.
+        (always_spawns.size + rand(acceptable_types.size)).floor
+        5.times do |i|
             type = acceptable_types.rand
             unless always_spawns.empty?
                 type = always_spawns.shift
             end
 
             # Add the NPC.
-            npc = NPC.new("#{type} #{rand(100000)}", type, core.db)
-            npc.set_position(self)
-            core.add_npc(npc)
+            npc = NPC.new("#{type} #{rand(100000)}", type, core, :position => self)
         end
     end
 end
@@ -95,7 +106,7 @@ class Area < ZoneContainer
     end
 
     def add_starting_location(location)
-        puts "#{self.name}.add_starting_location(#{location}): #{@parent.inspect}"
+        Log.debug("#{self.name}.add_starting_location(#{location}): #{@parent.inspect}", 6)
         if @parent
             @parent.add_starting_location(location) if @parent
         else

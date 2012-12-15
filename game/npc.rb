@@ -4,11 +4,19 @@ require 'raws/db'
 
 class NPC < BushidoObject
     include Mob
-    def initialize(name, type, db, args={})
+    def initialize(name, type, core, args={})
         @name = name
-        super(type, db, args)
+        @core = core
+
+        set_position(args[:position]) if args[:position]
+        args.delete(:position)
+
+        super(type, core.db, args)
+
 
         @behavior = BehaviorSet.create(:random_attack_and_move)
+
+        core.add_npc(self)
     end
 
     def set_behavior(behavior)

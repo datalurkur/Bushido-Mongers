@@ -12,9 +12,14 @@ abstract npc monster {
     factions enemy;
 }
 
-npc rat {
+monster rat {
     weight 5;
-    can_spawn_in sewer;
+    can_spawn_in sewer dock;
+}
+
+monster mouse {
+    weight 5;
+    can_spawn_in meadow;
 }
 
 abstract npc guard {
@@ -29,6 +34,5 @@ guard peacekeeper {
 
 npc merchant {
     weight 250;
+    factions peaceful;
 }
-
-npc unique {}

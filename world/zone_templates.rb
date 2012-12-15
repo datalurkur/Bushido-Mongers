@@ -45,6 +45,8 @@ class ZoneTemplate
                 ((params[:depth_range] & depth).size > 0)
             end
 
+            Log.debug("eligible_types is #{eligible_types}", 6)
+
             type = nil
             if eligible_types.empty?
                 # This might warrant more discussion about what to do, but for now, just use the parent or a random template.
@@ -57,8 +59,10 @@ class ZoneTemplate
                 type = eligible_types.rand
             end
 
-            params = get_params(type)
+            params = get_params(type).dup
             params[:template] = type
+            params[:depth] = depth
+            params.delete(:depth_range)
             return merge_template_parameters(params, get_params(parent))
         end
 
@@ -81,7 +85,7 @@ class ZoneTemplate
             result
         end
 
-        # Takes a ZoneLeaf or ZoneContainer, and populates it.
+        # Takes a ZoneLeaf or ZoneContainer, and populates it. Currently does nothing.
         def populate_zone(zone, size, depth)
             raise "#{zone.inspect} is not a ZoneWithKeywords!" unless zone.respond_to?(:zone)
 
@@ -103,7 +107,7 @@ class ZoneTemplate
 end
 
 ZoneTemplate.define(:sanctuary,
-    :depth_range     => 2..3,
+    :depth_range     => 1..3,
     :may_contain     => [:tavern, :inn],
     :never_contains  => [:dungeon],
     :always_spawns   => [:peacekeeper],
@@ -113,34 +117,39 @@ ZoneTemplate.define(:sanctuary,
 )
 
 ZoneTemplate.define(:meadow,
-                    :depth_range=>1..3,
-                    :keywords=>[:grassy]
-                    )
+    :depth_range   => 0..3,
+    :keywords      => [:grassy],
+    :always_spawns => [:monster]
+)
 
 ZoneTemplate.define(:castle,
-                    :depth_range     => 1..4,
-                    :always_contains => [:barracks, :portcullis],
-                    :may_contain     => [:sewer, :tower, :dungeon],
-                    :never_contains  => [:mountain],
-                    :keywords        => [:constructed],
-                    :optional_keywords => [:dank, :inhabited]
-                    )
+    :depth_range     => 0..4,
+    :always_contains => [:barracks, :portcullis],
+    :may_contain     => [:sewer, :tower, :dungeon],
+    :never_contains  => [:mountain],
+    :keywords        => [:constructed],
+    :optional_keywords => [:dank, :inhabited],
+    :always_spawns   => [:monster]
+)
 
 ZoneTemplate.define(:sewer,
-                    :depth_range=>1..2,
-                    :keywords=>[:dank, :wet]
-                    )
+    :depth_range    => 0..2,
+    :keywords       => [:dank, :wet],
+    :always_spawns  => [:monster]
+)
 
 ZoneTemplate.define(:dock,
-                    :depth_range => 2..3,
-                    :keywords => []
-                    )
+    :depth_range    => 0..3,
+    :keywords       => [],
+    :always_spawns  => [:monster]
+)
 
 ZoneTemplate.define(:boat,
-                    :depth_range => 1..2,
-                    :req_parents=>[:dock],
-                    :keywords => [:wet]
-                    )
+    :depth_range    => 0..2,
+    :req_parents    => [:dock],
+    :keywords       => [:wet],
+    :always_spawns  => [:monster]
+)
 
 # Soon...
 =begin

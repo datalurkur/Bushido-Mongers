@@ -21,7 +21,7 @@ class GameCore
 
         # Create the world and breathe life into it
 #        @world            = World.test_world_2
-        @world            = WorldFactory.generate(2, 1)
+        @world            = WorldFactory.generate(5, 3)
         populate
     end
 

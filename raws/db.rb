@@ -71,7 +71,7 @@ class ObjectDB
     end
 
     def info_for(type)
-        raise "#{type} not defined" unless @object_hash[type]
+        raise "#{type.inspect} not defined" unless @object_hash[type]
         @object_hash[type]
     end
 
