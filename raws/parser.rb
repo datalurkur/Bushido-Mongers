@@ -17,6 +17,8 @@ Statements are terminated either with a semicolon or a description.
 
 Descriptions are enclosed in curly braces and may contain any number of statements.
 
+Comments are enclosed in /* */.
+
 Each raw file consists of a list of serialzed object statements.
 
 OBJECT STATEMENTS
@@ -91,6 +93,7 @@ module ObjectRawParser
             typed_objects_hash = {}
             raws_list(group).each do |raw_file|
                 raw_data = File.read(raw_file)
+                raw_data.gsub!(/\/\*(.*?)\*\//, '')
                 raw_chunks = separate_lexical_chunks(raw_data)
                 raw_chunks.each do |statement, data|
                     statement_pieces = statement.split(/\s+/)

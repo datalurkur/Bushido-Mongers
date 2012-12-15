@@ -18,7 +18,7 @@ class BushidoObject
         end
 
         type_info[:at_creation].each do |creation_proc|
-            result = creation_proc.call(args)
+            result = instance_exec(args, &creation_proc)
             @properties.merge!(result)
         end
 
