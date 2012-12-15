@@ -1,0 +1,34 @@
+abstract root npc {
+    has float weight;
+    has_many sym factions;
+    has_many sym can_spawn_in;
+    has_many sym never_spawn_in;
+
+    can_spawn_in nothing;
+    never_spawn_in nothing;
+}
+
+abstract npc monster {
+    factions enemy;
+}
+
+npc rat {
+    weight 5;
+    can_spawn_in sewer;
+}
+
+abstract npc guard {
+    has_many sym provocations;
+}
+
+guard peacekeeper {
+    weight 250;
+    factions peaceful_unless_provoked;
+    provocations lie attack steal kill;
+}
+
+npc merchant {
+    weight 250;
+}
+
+npc unique {}

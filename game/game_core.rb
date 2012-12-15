@@ -1,13 +1,23 @@
 require 'world/factories'
+require 'game/tables'
+require 'raws/db.rb'
 
 class GameCore
-    attr_reader :world
+    attr_reader :world, :db
 
     def initialize(args={})
         # TODO - Set this to something much higher once we're out of debug
         @tick_rate        = args[:tick_rate] || (30)
         @ticking          = false
         @ticking_mutex    = Mutex.new
+
+        # Read the raws
+        # TODO: Load raw_group from server config?
+        raw_group = "default"
+        Log.debug("Loading #{raw_group} raws")
+        @db = ObjectDB.new(raw_group)
+
+        WordParser.load('words/dict')
 
         # Create the world and breathe life into it
 #        @world            = World.test_world_2

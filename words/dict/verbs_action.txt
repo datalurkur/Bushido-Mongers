@@ -1,0 +1,7 @@
+eat
+attack
+drink
+look
+speak
+sneak
+run

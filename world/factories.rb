@@ -10,14 +10,14 @@ class << self
         Log.debug("Seeding world with #{seed}")
         srand(seed)
 
-        zone, params = ZoneTemplate.random(nil, size, depth)
-        world_name = Words::AreaName.new(zone, params).to_s
+        params = ZoneTemplate.random(nil, size, depth)
+        world_name = Words::AreaName.new(params).to_s
 
-        world = World.new(world_name, size, depth)
+        world = World.new(world_name, size, depth, params)
         config[:openness]           ||= 0.75 # Larger numbers lead to more rooms overall
         config[:connectedness]      ||= 0.75 # Larger numbers lead to more passageways
         config[:area_size_tendency] ||= 0.35 # Larger numbers move the balance of small/large rooms towards the large end
-        world.zone = zone
+
         populate_area(world, config)
 
         world
@@ -28,21 +28,18 @@ class << self
 
         # Find and add a suitable zone template.
         parent_zone = parent_area.respond_to?(:zone) ? parent_area.zone : nil
-        zone, params = ZoneTemplate.random(parent_zone, size, depth)
 
-        # For now, just create a generic area or room randomly
-        name = "#{Words::AreaName.new(zone, params).to_s}-#{rand(1000)}"
+        params = ZoneTemplate.random(parent_zone, size, depth)
+        Log.debug(params.inspect)
+        name = "#{Words::AreaName.new(params).to_s}-#{rand(1000)}"
+
         area = if (depth < 2) || (rand() < config[:area_size_tendency])
             Log.debug("Generating room #{name}", 5)
-            Room.new(name)
+            Room.new(name, params)
         else
             Log.debug("Generating area #{name} of size #{size} and depth #{depth}", 5)
-            Area.new(name, size, depth)
+            Area.new(name, size, depth, params)
         end
-
-        # Apply the zone.
-        area.zone = zone
-        area.add_keywords(params[:keywords])
 
         # Populate the empty zone.
         ZoneTemplate.populate_zone(area, size, depth)

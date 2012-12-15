@@ -1,13 +1,10 @@
-class Mob
+module Mob
     attr_reader :name, :position
-    
-    def initialize(name)
-        @name = name
-    end
 
     def set_position(position)
+        Log.debug("Setting position of #{name} to #{position.name}")
         unless @position.nil?
-            Log.warning("WARNING: Position begin set more than once for #{@name}; this method is meant to be called during setup and never again")
+            Log.warning("WARNING: Position being set more than once for #{@name}; this method is meant to be called during setup and never again")
         end
         @position = position
         @position.add_occupant(self)

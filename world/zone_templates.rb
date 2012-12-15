@@ -14,7 +14,7 @@ class ZoneTemplate
 
         def filter_types(&block)
             if block_given?
-                @types.select { |type, params| block.call(type, params) }
+                @types.select { |type, params| block.call(type, params) }.map(&:first)
             else
                 @types.keys
             end 
@@ -45,20 +45,21 @@ class ZoneTemplate
                 ((params[:depth_range] & depth).size > 0)
             end
 
+            type = nil
             if eligible_types.empty?
                 # This might warrant more discussion about what to do, but for now, just use the parent or a random template.
-                #raise "Cannot find random template for constraints: " +
-                #    "#{parent.inspect} depth #{depth.inspect} size #{size}"
                 if parent
-                    return parent, get_params(parent)
+                    type = parent
                 else
-                    return filter_types.rand
+                    type = filter_types.rand
                 end
+            else
+                type = eligible_types.rand
             end
 
-            type, params = eligible_types.rand
-            merged_params = merge_template_parameters(params, get_params(parent))
-            return type, merged_params
+            params = get_params(type)
+            params[:template] = type
+            return merge_template_parameters(params, get_params(parent))
         end
 
         # Merge ZoneTemplate parameter sets, respecting the nature of each special parameter
