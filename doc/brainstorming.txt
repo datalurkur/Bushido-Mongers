@@ -1,0 +1,95 @@
+== GENERAL GAMEPLAY MECHANICS ==
+
+day/night cycle
+
+add grouping/allying of PCs, a la Diablo
+
+== SKILLS ==
+
+ninjas with different powers - shapeshifting, venomous, hard as rock, insanely fast, part fucking spider (spin webs), slow time, can summon things.
+naruto - different techniques can learn from each other.
+different attacks
+
+certain special attacks limited per 
+
+It's an open question atm how to handle
+
+skills with special abilities. 
+classes. (maybe bonuses to learn certain skills because of background?)
+death. (permadeath?)
+
+== WOUNDS SYSTEM ==
+
+How does damage work? 
+adjectival descriptions of damage to location/impact
+numbers under the hood. hit points per limb/organ?
+aiming skill? (per weapon?) and dexterity
+
+"I don't understand how the wounds system fits into the amount of effort and time on the player's part, or how it factors into the difficulty of a late-game boss."
+
+== COMBAT SKILLS ==
+
+samurai - judo, archery (hondo? shooting a bow on horseback)
+
+== MISC SKILLS ==
+
+alchemy, fishing, masonry, locks, shops, trading.
+
+Nô drama
+
+== SITES ==
+
+rice farms, other farms
+blacksmiths - weaponsmith and armorsmith
+clothiers
+<>-makers (cobbler, bowyer, mint (coins), furniture, silks, boats, kites, etc)
+camps
+huts
+shrines - Shinto, Buddhist, totems, clickety-clackety water bamboo
+ancestral memorials/graveyards
+bamboo
+forest
+pagodas
+tea houses (chachitsu)
+restaurants
+salt mines, mines
+ponds
+brothels (yukaku - walled off pleasure areas)
+
+== SITE FEATURES ==
+
+paintings, futons/bedrolls, ink, calligraphy scrolls, rice paper walls, lanterns, kites, silk, coins
+plays, performances, instruments
+koi in ponds, lotus, cherry blossoms, snow.
+
+== ITEMS ==
+
+grappling hooks, falconry
+
+green tea, sake
+rickshaws, 4-people carriages
+
+samurai (bushi) regalia - fans, wakazashi and katana, kimonos, top-knots. armor. banners.
+
+Kimonos - kimono, obi (sash), zori (shoes), etc.
+
+== NPC behavior/reactions ==
+
+Based on bushido code? Rectitude, Courage, Benevolence, Respect, Honesty, Honour, Loyalty (filial piety, wisdom, care for the aged)
+
+== NPCs ==
+
+ronin
+geisha
+tanuki
+
+dragons - wish-granting? or aggressive dragons.
+demons - oni and kami - lots more research required here.
+shogun, daimyo (lord), shugo (governor)
+
+== NPC Groups ==
+
+ninjas nearly always belong to zone clan
+clan attributes (crests, names, etc) based on japanese meanings (proper_name_meaning.txt). go through and collate.
+
+NPC gangs? rival gangs? Like clans but not attached to zones. Would be neat to come across a gang war and jump in or sneak past.
