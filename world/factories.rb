@@ -24,7 +24,7 @@ class << self
     end
 
     def generate_area(size, depth, parent_area, config)
-        Log.debug("Generating area of size #{size} in #{parent_area.inspect}")
+        Log.debug("Generating area of size #{size} in #{parent_area.name}")
 
         # Find and add a suitable zone template.
         parent_zone = parent_area.respond_to?(:zone) ? parent_area.zone : nil

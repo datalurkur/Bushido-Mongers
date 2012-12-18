@@ -71,6 +71,7 @@ class GameCore
     def add_player(username, character)
         characters[username] = character
         character.set_position(cached_positions[username] || @world.random_starting_location)
+        character.set_core(self)
         Message.register_listener(self, :core, character)
     end
     def has_active_character?(username)
@@ -82,6 +83,7 @@ class GameCore
     def remove_player(username)
         cached_positions[username] = characters[username].position
         Message.unregister_listener(self, :core, character)
+        character.null_core
         characters.delete(username)
     end
 

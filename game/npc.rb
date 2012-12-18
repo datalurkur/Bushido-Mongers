@@ -7,14 +7,14 @@ class NPC < BushidoObject
 
     attr_reader :name
 
-    def initialize(name, type, core, args={})
+    def initialize(core, name, type, args={})
         @name = name
         @core = core
 
         set_position(args[:position]) if args[:position]
         args.delete(:position)
 
-        super(type, core.db, args)
+        super(core, type, args)
 
 
         @behavior = BehaviorSet.create(:random_attack_and_move)

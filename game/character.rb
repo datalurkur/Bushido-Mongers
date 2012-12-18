@@ -87,10 +87,12 @@ class Character
 
     attr_reader :name
 
-    def initialize(name, core)
+    def initialize(name)
         @name = name
-        @core = core
     end
+
+    def set_core(core)  @core = core end
+    def null_core(core) @core = nil  end
 
     def process_message(message)
         case message

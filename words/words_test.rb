@@ -47,8 +47,8 @@ class NPC
 end
 class Ninja < NPC; end
 class Goat  < NPC; end
-agent = Ninja.new("Kenji Scrimshank")
-target = Goat.new("Billy Goat Balrog")
+agent = Ninja.new(nil, "Kenji Scrimshank")
+target = Goat.new(nil, "Billy Goat Balrog")
 # {:agent => <Ninja, :name => "Kenji Scrimshank">, :target => <Goat, :name => "Billy Goat Balrog">, :verb => :attack, :tool => :agent_current_weapon}
 5.times do
     Action.do(:agent => agent, :target => target, :action => :attack)

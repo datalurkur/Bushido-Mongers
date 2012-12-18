@@ -92,7 +92,7 @@ class Room < ZoneLeaf
             end
 
             # Add the NPC.
-            npc = NPC.new("#{type} #{rand(100000)}", type, core, :position => self)
+            npc = NPC.new(core, "#{type} #{rand(100000)}", type, :position => self)
         end
     end
 end
