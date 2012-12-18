@@ -1,4 +1,6 @@
-abstract root item {
+abstract root object {}
+
+abstract object item {
     has float weight;
     has int value;
 }

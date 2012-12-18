@@ -29,3 +29,8 @@ test_npc = db.create(test_npc_type, {})
 
 Log.debug("Test NPC is a guard? #{test_npc.is_a?(:guard)}")
 Log.debug("Test NPC has provocations #{test_npc.provocations.inspect}")
+
+hb = db.create(:human_body)
+Log.debug(hb.parts)
+hb = db.create(:irken_body)
+Log.debug(hb.parts)

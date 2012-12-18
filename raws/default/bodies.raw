@@ -1,0 +1,21 @@
+abstract object body {
+    has float weight;
+    has_many sym parts;
+    weight 1;
+}
+
+abstract object body_part {
+    has float weight;
+    has_many sym parts;
+}
+
+abstract body humanoid_body {
+    parts head body left_arm right_arm left_leg right_leg;
+}
+
+humanoid_body human_body {
+}
+
+humanoid_body irken_body {
+    parts squeedlyspooch;
+}
