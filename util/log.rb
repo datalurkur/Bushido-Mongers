@@ -9,7 +9,7 @@ class Log
         LOG_DIR    = "logs"
         LOG_CONFIG = "log.cfg"
 
-        def setup(name, logfile_prefix)
+        def setup(name, logfile_prefix, logfile_behavior=:terse)
             @log_mutex = Mutex.new
             @default_thread_name = "Unnamed"
 
@@ -22,6 +22,7 @@ class Log
 
             @verbose_logfile  = File.open(File.join(get_log_directory, "#{logfile_prefix}_verbose.log"), "w")
             @filtered_logfile = File.open(File.join(get_log_directory, "#{logfile_prefix}_output.log"),  "w")
+            @logfile_behavior = logfile_behavior
 
             read_config
 
@@ -78,9 +79,9 @@ class Log
                 to_print.each do |m|
                     if level <= @source_files[file]
                         print_line(m, thread_name, file, line, level, Kernel)
-                        print_line(m, thread_name, file, line, level, @filtered_logfile)
+                        print_line(m, thread_name, file, line, level, @filtered_logfile) unless @logfile_behavior == :none
                     end
-                    print_line(m, thread_name, file, line, level, @verbose_logfile)
+                    print_line(m, thread_name, file, line, level, @verbose_logfile) if @logfile_behavior == :verbose
                 end
             end
         end

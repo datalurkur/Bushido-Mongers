@@ -95,7 +95,7 @@ class Character
     def null_core(core) @core = nil  end
 
     def process_message(message)
-        case message
+        case message.type
         when :unit_attacks
             if self == message.defender
                 Log.debug("Character #{@name} is attacked by #{message.attacker}")

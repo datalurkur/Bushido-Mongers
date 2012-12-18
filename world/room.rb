@@ -64,7 +64,7 @@ class Room < ZoneLeaf
         may_spawn     = core.db.expand_types(@params[:may_spawn]     || [])
         always_spawns = core.db.expand_types(@params[:always_spawns] || [])
         never_spawns  = core.db.expand_types(@params[:never_spawns]  || [])
-        Log.debug("Creating NPCs for #{self.name} with spawn details #{may_spawn.inspect} #{always_spawns.inspect} #{never_spawns.inspect}", 6)
+        Log.debug(["Creating NPCs for #{self.name} with spawn details", may_spawn, always_spawns, never_spawns])
 
         # Find NPC types suitable to create here.
         npc_types = core.db.types_of(:npc)
@@ -106,7 +106,6 @@ class Area < ZoneContainer
     end
 
     def add_starting_location(location)
-        Log.debug("#{self.name}.add_starting_location(#{location}): #{@parent.inspect}", 6)
         if @parent
             @parent.add_starting_location(location) if @parent
         else
