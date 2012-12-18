@@ -159,7 +159,8 @@ module ObjectRawParser
                 raise "Parent object type '#{object_data[:is_a]}' not abstract!" unless parent_object[:abstract]
 
                 [:has, :needs, :at_creation, :default_values].each do |key|
-                    object_data[key] = parent_object[key].dup
+                    # Just dup isn't enough here, because occasionally we have an array within a hash that doesn't get duped properly
+                    object_data[key] = Marshal.load(Marshal.dump(parent_object[key]))
                 end
 
                 parent_object[:subtypes] << next_object
@@ -176,11 +177,15 @@ module ObjectRawParser
                         object_data[:has][field] = {
                             :type => statement_pieces[1].to_sym
                         }
-                        (object_data[:has][field][:multiple] = true) if (statement_pieces[0] == "has_many")
+                        if statement_pieces[0] == "has_many"
+                            object_data[:has][field][:multiple] = true
+                            # Make sure every "has_many" is properly instantiated to an empty array
+                            object_data[:default_values][field] ||= []
+                        end
                     when "needs"
                         object_data[:needs].concat(statement_pieces[1..-1].collect { |piece| piece.to_sym })
                     when "at_creation"
-                        object_data[:at_creation] << Proc.new { |params| eval(data) }
+                        object_data[:at_creation] << data
                     else
                         field = statement_pieces[0].to_sym
                         unless object_data[:has].has_key?(field)
@@ -199,7 +204,6 @@ module ObjectRawParser
                             end
                         end
                         if object_data[:has][field][:multiple]
-                            object_data[:default_values][field] ||= []
                             object_data[:default_values][field].concat(values)
                         else
                             raise "Too many values supplied for field #{field.inspect} in #{next_object.inspect} - #{values.inspect}" if values.size > 1

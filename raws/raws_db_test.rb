@@ -10,6 +10,11 @@ raw_group = "default"
 Log.debug("Loading #{raw_group} raws")
 db = ObjectDB.new(raw_group)
 
+Log.debug("Testing DB Marshal-ability")
+db_data = Marshal.dump(db)
+db = nil
+db = Marshal.load(db_data)
+
 Log.debug(["Types of items:", db.types_of(:item)])
 
 test_item_type = :cap
