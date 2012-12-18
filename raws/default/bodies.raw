@@ -2,6 +2,11 @@ abstract object body {
     has float weight;
     has_many sym parts;
     weight 1;
+    at_creation {
+        require 'game/corporeal'
+        extend Corporeal
+        create_body(@core, @properties[:parts])
+    }
 }
 
 abstract object body_part {
@@ -9,8 +14,20 @@ abstract object body_part {
     has_many sym parts;
 }
 
+body_part head {
+    /* TODO - These weights should be based on body size */
+    weight 1;
+}
+body_part torso {
+    weight 5;
+}
+body_part squeedlyspooch {
+    weight 1;
+}
+
 abstract body humanoid_body {
-    parts head body left_arm right_arm left_leg right_leg;
+    /* TODO - We need to figure out how to have multiple of a body part.  We shouldn't be manually specifying left and right something. */
+    parts head torso; /* left_arm right_arm left_leg right_leg; */
 }
 
 humanoid_body human_body {

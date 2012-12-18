@@ -69,6 +69,7 @@ Message.define(:move_success,  :game, [],        "Moved")                       
 # Messages passed by the game core to the lobby
 Message.define(:tick,          :core)
 Message.define(:unit_moves,    :core, [:unit, :start, :finish])
+Message.define(:unit_attacks,  :core, [:attacker, :defender, :chance_to_hit, :damage])
 
 # Client / Interface Messages
 # Interface Messages

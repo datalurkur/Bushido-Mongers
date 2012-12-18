@@ -1,5 +1,5 @@
 module Mob
-    attr_reader :name, :position
+    attr_reader :position
 
     def set_position(position)
         Log.debug("Setting position of #{name} to #{position.name}", 6)

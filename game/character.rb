@@ -85,7 +85,21 @@ class Character
         end
     end
 
-    def initialize(name)
+    attr_reader :name
+
+    def initialize(name, core)
         @name = name
+        @core = core
+    end
+
+    def process_message(message)
+        case message
+        when :unit_attacks
+            if self == message.defender
+                Log.debug("Character #{@name} is attacked by #{message.attacker}")
+            end
+        else
+            Log.debug("Character #{@name} ignoring #{message.type}")
+        end
     end
 end

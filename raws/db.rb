@@ -1,15 +1,15 @@
 require 'raws/parser'
 
 class BushidoObject
-    def initialize(type, db, params={})
+    def initialize(core, type, params={})
         Log.debug("Creating #{type}")
         Log.debug(["Creation params", params], 9)
-        @db   = db
+        @core = core
         @type = type
 
         @properties = {}
 
-        type_info = @db.info_for(type)
+        type_info = @core.db.info_for(type)
 
         type_info[:needs].each do |k|
             raise "Required argument #{k} missing during creation of #{type}" unless params.has_key?(k)
@@ -21,7 +21,9 @@ class BushidoObject
 
         type_info[:at_creation].each do |creation_proc|
             result = instance_eval(creation_proc)
-            @properties.merge!(result)
+            if Hash === result
+                @properties.merge!(result)
+            end
         end
 
         type_info[:has].keys.each do |required_property|
@@ -37,7 +39,7 @@ class BushidoObject
             if type == current
                 return true
             else
-                current = @db.info_for(current)[:is_a]
+                current = @core.db.info_for(current)[:is_a]
             end
         end
         return false
@@ -96,10 +98,10 @@ class ObjectDB
         types_of(type).rand
     end
 
-    def create(type, params={})
+    def create(core, type, params={})
         raise "#{type} not defined" unless @object_hash[type]
         raise "#{type} is not instantiable" if @object_hash[type][:abstract]
-        BushidoObject.new(type, self, params)
+        BushidoObject.new(core, type, params)
     end
 end
 
