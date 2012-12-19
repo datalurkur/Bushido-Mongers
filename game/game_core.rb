@@ -1,5 +1,6 @@
 require 'world/factories'
 require 'game/tables'
+require 'game/object_extensions'
 require 'raws/db.rb'
 
 class GameCore

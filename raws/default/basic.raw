@@ -1,5 +1,9 @@
 abstract root object {}
 
+abstract object mover {
+    uses mob;
+}
+
 abstract object item {
     has float weight;
     has int value;

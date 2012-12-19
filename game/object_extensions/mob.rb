@@ -1,4 +1,11 @@
 module Mob
+    class << self
+        def at_creation(instance, params)
+            SharedObjectExtensions.check_required_params(params, [:initial_position])
+            instance.set_position(params[:initial_position])
+        end
+    end
+
     attr_reader :position
 
     def set_position(position)

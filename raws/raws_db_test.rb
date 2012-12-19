@@ -2,6 +2,7 @@
 
 require 'raws/db'
 require 'game/tables'
+require 'game/object_extensions'
 
 class FakeCore
     attr_reader :db
@@ -43,7 +44,5 @@ test_npc = db.create(core, test_npc_type, {})
 Log.debug("Test NPC is a guard? #{test_npc.is_a?(:guard)}")
 Log.debug("Test NPC has provocations #{test_npc.provocations.inspect}")
 
-hb = db.create(core, :human_body)
-Log.debug(hb.parts)
-hb = db.create(core, :irken_body)
-Log.debug(hb.parts)
+hb = db.create(core, :humanoid_body, {:size => :large})
+hb = db.create(core, :arachnoid_body, {:size => :tiny})

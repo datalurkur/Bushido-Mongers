@@ -1,4 +1,5 @@
 require 'util/log'
+require 'util/basic'
 
 =begin
 
@@ -23,11 +24,11 @@ Each raw file consists of a list of serialzed object statements.
 
 OBJECT STATEMENTS
 =================
-Format: [abstract] <parent type> <type>
+Format: [abstract] <parent type(s)> <type>
 
 An "abstract" object is an object not to be instantiated, but to provide a means of categorizing a group of common objects and specifying properties and default values for those objects.
 
-An object inherits all the properties, necessary parameters, creation procs, and default values of its parent object (note that this is recursive).
+An object inherits all the properties, necessary parameters, creation procs, and default values of its parent object(s) (note that this is recursive). Multiple parent objects are delimited using commas (note that whitespace is not allowed within the comma-delimited list).
 
 "root" is a reserved object.  Any object with "root" as its parent object is considered not to have a parent object.
 
@@ -37,6 +38,12 @@ Format: <keyword> [keyword-specific parameters]
 
 OBJECT DESCRIPTION KEYWORDS
 ===========================
+"uses"
+    Indicates that the object being described makes use of the module indicated.
+    Certain methods in the module will be called upon during certain events (at_creation, at_message).
+Format: "uses" <module name>
+Description: None
+
 "has", "has_many"
     Indicates that the object being described "has" the property indicated.
     "has_many" indicates that this property can contain multiple values.
@@ -110,7 +117,7 @@ module ObjectRawParser
                     end
                     typed_objects_hash[type.to_sym] = {
                         :abstract => abstract,
-                        :is_a     => parent.to_sym,
+                        :is_a     => parent.split(/,/).collect { |p| p.to_sym },
                         :data     => data,
                     }
                 end
@@ -132,15 +139,18 @@ module ObjectRawParser
             object_metadata = metadata[next_object]
 
             # Ensure parents have already been parsed all the way up to the root object
-            unless object_database.has_key?(object_metadata[:is_a]) || object_metadata[:is_a] == :root
-                unparsed_objects.delete(object_metadata[:is_a])
-                parse_object(object_metadata[:is_a], unparsed_objects, metadata, object_database)
+            object_metadata[:is_a].each do |parent|
+                unless object_database.has_key?(parent) || parent == :root
+                    unparsed_objects.delete(parent)
+                    parse_object(parent, unparsed_objects, metadata, object_database)
+                end
             end
 
             # Begin accumulating object data for the database
             object_data = {
                 :abstract       => object_metadata[:abstract],
-                :is_a           => object_metadata[:is_a],
+                :is_a           => object_metadata[:is_a].dup,
+                :uses           => [],
                 :has            => {},
                 :needs          => [],
                 :at_creation    => [],
@@ -154,16 +164,29 @@ module ObjectRawParser
 
             # Pull in information from the parent(s)
             # Since this happens for every object (including abstract objects) we only need to do it for one level of parents
-            unless object_data[:is_a] == :root
-                parent_object = object_database[object_data[:is_a]]
-                raise "Parent object type '#{object_data[:is_a]}' not abstract!" unless parent_object[:abstract]
+            # Do this backwards to respect parent ordering (most significant first)
+            object_data[:is_a].reverse.each do |parent|
+                #Log.debug("Merging properties of #{parent} into #{next_object}", 8)
+                unless parent == :root
+                    parent_object = object_database[parent]
+                    raise "Parent object type '#{parent}' not abstract!" unless parent_object[:abstract]
 
-                [:has, :needs, :at_creation, :default_values].each do |key|
-                    # Just dup isn't enough here, because occasionally we have an array within a hash that doesn't get duped properly
-                    object_data[key] = Marshal.load(Marshal.dump(parent_object[key]))
+                    [:has, :needs, :at_creation, :default_values].each do |key|
+                        # Just dup isn't enough here, because occasionally we have an array within a hash that doesn't get duped properly
+                        dup_data = Marshal.load(Marshal.dump(parent_object[key]))
+                        #Log.debug(["Dup data is ", dup_data], 8)
+                        case dup_data
+                        when Array
+                            object_data[key].concat(dup_data)
+                        when Hash
+                            object_data[key].merge!(dup_data)
+                        else
+                            raise "Parser doesn't know how to merge attributes of type #{dup_data.class}"
+                        end
+                    end
+
+                    parent_object[:subtypes] << next_object
                 end
-
-                parent_object[:subtypes] << next_object
             end
 
             if object_metadata[:data]
@@ -171,6 +194,9 @@ module ObjectRawParser
                 separate_lexical_chunks(object_metadata[:data]).each do |statement, data|
                     statement_pieces = statement.split(/\s+/)
                     case statement_pieces[0]
+                    when "uses"
+                        raise "Insufficient arguments in #{statement.inspect}" unless statement_pieces.size >= 2
+                        object_data[:uses].concat(statement_pieces[1..-1].collect { |m| m.to_caml.to_const })
                     when "has","has_many"
                         raise "Insufficient arguments in #{statement.inspect}" unless statement_pieces.size >= 2
                         field = statement_pieces[2].to_sym
@@ -183,6 +209,7 @@ module ObjectRawParser
                             object_data[:default_values][field] ||= []
                         end
                     when "needs"
+                        raise "Insufficient arguments in #{statement.inspect}" unless statement_pieces.size >= 2
                         object_data[:needs].concat(statement_pieces[1..-1].collect { |piece| piece.to_sym })
                     when "at_creation"
                         object_data[:at_creation] << data
@@ -213,7 +240,7 @@ module ObjectRawParser
                 end
             end
 
-            Log.debug("Adding object #{next_object.inspect}", 8)
+            #Log.debug(["Adding object #{next_object.inspect}", object_data], 8)
             object_database[next_object] = object_data
         end
 

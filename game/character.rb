@@ -1,4 +1,4 @@
-require 'game/mob'
+require 'game/object_extensions'
 require 'util/log'
 
 =begin
@@ -14,6 +14,7 @@ require 'util/log'
 
 class Character
     include Mob
+    include Corporeal
 
     class << self
         CHARACTER_DIRECTORY = "data/characters"

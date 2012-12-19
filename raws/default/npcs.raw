@@ -1,5 +1,23 @@
-abstract root npc {
+abstract root corporeal {
+    uses corporeal;
+    has sym body_type;
+    has sym size;
     has float weight;
+
+    at_creation {
+        body = @core.db.create(@core, @properties[:body_type], {:size => @properties[:size]})
+        ret = {
+            :body   => body,
+            :weight => body.body_parts.inject(0) { |s,p| s + p.weight }
+        }
+        Log.debug("Body created with weight #{ret[:weight]}")
+        ret
+    }
+}
+
+abstract root npc {
+    uses npc_behavior;
+
     has_many sym factions;
     has_many sym can_spawn_in;
     has_many sym never_spawn_in;
@@ -8,17 +26,19 @@ abstract root npc {
     never_spawn_in nothing;
 }
 
-abstract npc monster {
+abstract npc,mover monster {
     factions enemy;
 }
 
-monster rat {
-    weight 5;
+monster,corporeal rat {
+    size tiny;
+    body_type rodent_body;
     can_spawn_in sewer dock;
 }
 
-monster mouse {
-    weight 5;
+monster,corporeal mouse {
+    size tiny;
+    body_type rodent_body;
     can_spawn_in meadow;
 }
 
@@ -26,13 +46,15 @@ abstract npc guard {
     has_many sym provocations;
 }
 
-guard peacekeeper {
-    weight 250;
+guard,corporeal peacekeeper {
+    size medium;
+    body_type humanoid_body;
     factions peaceful_unless_provoked;
     provocations lie attack steal kill;
 }
 
-npc merchant {
-    weight 250;
+npc,corporeal merchant {
+    size medium;
+    body_type humanoid_body;
     factions peaceful;
 }

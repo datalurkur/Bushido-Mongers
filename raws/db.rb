@@ -8,6 +8,7 @@ class BushidoObject
         @type = type
 
         @properties = {}
+        @extensions = []
 
         type_info = @core.db.info_for(type)
 
@@ -26,6 +27,17 @@ class BushidoObject
             end
         end
 
+        type_info[:uses].each do |mod|
+            @extensions << mod
+            extend mod
+        end
+
+        @extensions.each do |mod|
+            if mod.respond_to?(:at_creation)
+                mod.at_creation(self, @properties)
+            end
+        end
+
         type_info[:has].keys.each do |required_property|
             raise "Property #{required_property} has no value" unless @properties.has_key?(required_property)
         end
@@ -34,12 +46,12 @@ class BushidoObject
     end
 
     def is_a?(type)
-        current = @type
-        while current != :root
-            if type == current
+        current = [@type]
+        until current == [:root]
+            if current.include?(type)
                 return true
             else
-                current = @core.db.info_for(current)[:is_a]
+                current = current.collect { |t| @core.db.info_for(t)[:is_a] }.flatten.uniq
             end
         end
         return false
@@ -47,6 +59,12 @@ class BushidoObject
 
     def method_missing(method_name, *args, &block)
         @properties.has_key?(method_name) ? @properties[method_name] : super(method_name, *args, &block)
+    end
+
+    def process_message(message)
+        @extensions.each do |mod|
+            break if mod.respond_to?(:at_message) && mod.at_message(self, message)
+        end
     end
 end
 

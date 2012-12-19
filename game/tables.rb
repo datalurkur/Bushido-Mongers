@@ -41,3 +41,25 @@ module Chances
         end
     end
 end
+
+module Size
+    class << self
+        def levels
+            [
+                :miniscule,
+                :tiny,
+                :small,
+                :medium,
+                :large,
+                :enormous,
+                :gargantuan
+            ]
+        end
+
+        def value(l)
+            level    = levels.index(l)
+            standard = levels.index(:medium)
+            2 ** (level - standard)
+        end
+    end
+end

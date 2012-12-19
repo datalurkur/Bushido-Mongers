@@ -1,38 +1,67 @@
 abstract object body {
+    has_many sym body_parts;
     has float weight;
-    has_many sym parts;
-    weight 1;
+
+    needs size;
+
+    /* Instantiate the body parts using the size of the body */
     at_creation {
-        require 'game/corporeal'
-        extend Corporeal
-        create_body(@core, @properties[:parts])
+        parts = @properties[:body_parts].collect { |part|
+            @core.db.create(@core, part, {:size => params[:size]})
+        }
+        ret = {
+            :body_parts => parts,
+            :weight     => parts.inject(0) { |s,p| s + p.weight }
+        }
+        Log.debug("Body created with #{ret[:body_parts].size} parts and weight #{ret[:weight]}")
+        ret
     }
+}
+
+body humanoid_body {
+    /* TODO - We need to figure out how to have multiple of a body part.  We shouldn't be manually specifying left and right something. */
+    body_parts head torso;
+}
+
+body arachnoid_body {
+    body_parts carapace spinner;
+}
+
+body rodent_body {
+    body_parts head torso tail;
 }
 
 abstract object body_part {
     has float weight;
-    has_many sym parts;
+    needs size;
+
+    /* Adjust the weight of the body part based on size */
+    at_creation {
+        ret = {
+            :weight => @properties[:weight] * Size.value(params[:size])
+        }
+        Log.debug("Body part created with weight #{ret[:weight]}")
+        ret
+    }
 }
 
 body_part head {
     /* TODO - These weights should be based on body size */
-    weight 1;
+    weight 4;
 }
+
 body_part torso {
-    weight 5;
+    weight 25;
 }
-body_part squeedlyspooch {
+
+body_part carapace {
+    weight 15;
+}
+
+body_part spinner {
     weight 1;
 }
 
-abstract body humanoid_body {
-    /* TODO - We need to figure out how to have multiple of a body part.  We shouldn't be manually specifying left and right something. */
-    parts head torso; /* left_arm right_arm left_leg right_leg; */
-}
-
-humanoid_body human_body {
-}
-
-humanoid_body irken_body {
-    parts squeedlyspooch;
+body_part tail {
+    weight 1;
 }

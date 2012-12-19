@@ -1,3 +1,4 @@
+# FIXME - Make this into a usable module like the rest
 module Ability
     def attempt(difficulty)
         Log.debug("Attempting to perform #{difficulty} task")
