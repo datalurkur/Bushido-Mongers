@@ -13,7 +13,7 @@ class BushidoObject
         type_info = @core.db.info_for(type)
 
         type_info[:needs].each do |k|
-            raise "Required argument #{k} missing during creation of #{type}" unless params.has_key?(k)
+            raise "Required argument #{k.inspect} missing during creation of #{type}" unless params.has_key?(k)
         end
 
         type_info[:default_values].each do |k,v|
@@ -27,6 +27,7 @@ class BushidoObject
             end
         end
 
+        Log.debug("#{type} invoking #{type_info[:uses].size} extensions", 8)
         type_info[:uses].each do |mod|
             @extensions << mod
             extend mod
@@ -34,7 +35,7 @@ class BushidoObject
 
         @extensions.each do |mod|
             if mod.respond_to?(:at_creation)
-                mod.at_creation(self, @properties)
+                mod.at_creation(self, params)
             end
         end
 
@@ -58,7 +59,11 @@ class BushidoObject
     end
 
     def method_missing(method_name, *args, &block)
-        @properties.has_key?(method_name) ? @properties[method_name] : super(method_name, *args, &block)
+        if @properties.has_key?(method_name)
+            @properties[method_name]
+        else
+            raise "Property #{method_name} not found for #{@type}"
+        end
     end
 
     def process_message(message)

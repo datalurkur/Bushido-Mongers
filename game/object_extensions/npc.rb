@@ -2,9 +2,8 @@ require 'ai/basic_behavior'
 
 module NpcBehavior
     class << self
-        def at_create(instance, params)
-            behavior = BehaviorSet.create(params[:behavior] || :random_attack_and_move)
-            instance.set_behavior(behavior)
+        def at_creation(instance, params)
+            instance.set_behavior(params[:behavior] || :random_attack_and_move)
         end
 
         def at_message(instance, message)

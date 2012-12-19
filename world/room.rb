@@ -1,5 +1,4 @@
 require 'world/zone'
-require 'game/npc'
 
 module ZoneWithKeywords
     def zone
@@ -92,7 +91,7 @@ class Room < ZoneLeaf
             end
 
             # Add the NPC.
-            npc = NPC.new(core, "#{type} #{rand(100000)}", type, :position => self)
+            core.add_npc(core.db.create(core, type, {:name => "#{type} #{rand(100000)}", :initial_position => self}))
         end
     end
 end

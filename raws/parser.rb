@@ -171,7 +171,7 @@ module ObjectRawParser
                     parent_object = object_database[parent]
                     raise "Parent object type '#{parent}' not abstract!" unless parent_object[:abstract]
 
-                    [:has, :needs, :at_creation, :default_values].each do |key|
+                    [:uses, :has, :needs, :at_creation, :default_values].each do |key|
                         # Just dup isn't enough here, because occasionally we have an array within a hash that doesn't get duped properly
                         dup_data = Marshal.load(Marshal.dump(parent_object[key]))
                         #Log.debug(["Dup data is ", dup_data], 8)
@@ -195,10 +195,11 @@ module ObjectRawParser
                     statement_pieces = statement.split(/\s+/)
                     case statement_pieces[0]
                     when "uses"
+                        Log.debug("#{next_object} uses #{statement_pieces[1..-1].inspect}",8)
                         raise "Insufficient arguments in #{statement.inspect}" unless statement_pieces.size >= 2
                         object_data[:uses].concat(statement_pieces[1..-1].collect { |m| m.to_caml.to_const })
                     when "has","has_many"
-                        raise "Insufficient arguments in #{statement.inspect}" unless statement_pieces.size >= 2
+                        raise "Insufficient arguments in #{statement.inspect}" unless statement_pieces.size >= 3
                         field = statement_pieces[2].to_sym
                         object_data[:has][field] = {
                             :type => statement_pieces[1].to_sym
@@ -220,6 +221,8 @@ module ObjectRawParser
                         end
                         values = statement_pieces[1..-1].collect do |piece|
                             case object_data[:has][field][:type]
+                            when :string
+                                piece
                             when :sym
                                 piece.to_sym
                             when :int
@@ -240,7 +243,7 @@ module ObjectRawParser
                 end
             end
 
-            #Log.debug(["Adding object #{next_object.inspect}", object_data], 8)
+            Log.debug(["Adding object #{next_object.inspect}", object_data], 6)
             object_database[next_object] = object_data
         end
 

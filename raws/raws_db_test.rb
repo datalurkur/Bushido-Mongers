@@ -11,6 +11,11 @@ class FakeCore
     end
 end
 
+class FakeRoom
+    def name; "Fake Room"; end
+    def add_occupant(o); end
+end
+
 Log.setup("main thread", "test")
 
 raw_group = "default"
@@ -39,7 +44,7 @@ Log.debug(["Types of NPCs:", db.types_of(:npc)])
 
 test_npc_type = :peacekeeper
 Log.debug("Creating a #{test_npc_type}")
-test_npc = db.create(core, test_npc_type, {})
+test_npc = db.create(core, test_npc_type, {:initial_position => FakeRoom.new, :name => "Derpus Maximus"})
 
 Log.debug("Test NPC is a guard? #{test_npc.is_a?(:guard)}")
 Log.debug("Test NPC has provocations #{test_npc.provocations.inspect}")

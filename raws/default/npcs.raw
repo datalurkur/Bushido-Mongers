@@ -15,8 +15,11 @@ abstract root corporeal {
     }
 }
 
-abstract root npc {
+abstract root,mover npc {
     uses npc_behavior;
+
+    has string name;
+    needs name;
 
     has_many sym factions;
     has_many sym can_spawn_in;
@@ -24,9 +27,13 @@ abstract root npc {
 
     can_spawn_in nothing;
     never_spawn_in nothing;
+
+    at_creation {
+        {:name => params[:name]}
+    }
 }
 
-abstract npc,mover monster {
+abstract npc monster {
     factions enemy;
 }
 
