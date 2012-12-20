@@ -2,8 +2,24 @@ require 'util/log'
 
 module MeteredMethods
     class << self
+        def enable
+            @enabled    = true
+            @data_mutex = Mutex.new
+        end
+
+        def disable
+            @data_mutex = nil
+            @enabled = false
+        end
+
+        def enabled?
+            @enabled
+        end
+
         def data
-            @data ||= {}
+            @data_mutex.synchronize {
+                @data ||= {}
+            }
         end
 
         def setup?(method)
@@ -32,10 +48,16 @@ module MeteredMethods
         end
 
         def report
-            total_time = data.keys.sort { |a,b| total(a) <=> total(b) }.collect { |k| [k,total(k)] }
-            Log.debug(["Total time spent in methods:", total_time])
-            avg_time = data.keys.sort { |a,b| avg(a) <=> avg(b) }.collect { |k| [k,avg(k)] }
-            Log.debug(["Average time spent in methods:", avg_time])
+            unless enabled?
+                Log.debug("Method metering is disabled")
+            else
+                num_calls = data.keys.sort { |a,b| data[a][:count] <=> data[b][:count] }.collect { |k| [k,data[k][:count]] }
+                Log.debug(["Total calls to methods:", num_calls])
+                total_time = data.keys.sort { |a,b| total(a) <=> total(b) }.collect { |k| [k,total(k)] }
+                Log.debug(["Total time spent in methods:", total_time])
+                avg_time = data.keys.sort { |a,b| avg(a) <=> avg(b) }.collect { |k| [k,avg(k)] }
+                Log.debug(["Average time spent in methods:", avg_time])
+            end
         end
     end
 end
@@ -43,6 +65,8 @@ end
 class Object
     class << self
         def metered(*method_names)
+            return unless MeteredMethods.enabled?
+
             method_names.each do |method|
                 original = "old_#{method}".to_sym
                 alias_method original, method

@@ -1,6 +1,7 @@
 require 'world/world'
 require 'world/zone_templates'
 require 'math/noisemap'
+require 'util/timer'
 
 class WorldFactory
 class << self
@@ -132,5 +133,7 @@ class << self
             end
         end
     end
+
+    metered :generate, :generate_area, :populate_area
 end
 end

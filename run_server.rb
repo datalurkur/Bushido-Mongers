@@ -4,6 +4,9 @@
 #require 'util/coverage'
 #CodeCoverage.setup
 
+require 'util/timer'
+MeteredMethods.enable
+
 require 'net/game_server'
 
 config = {
