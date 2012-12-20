@@ -1,4 +1,6 @@
-abstract root object {}
+abstract root object {
+    has float weight;
+}
 
 abstract object mover {
     uses mob;
@@ -9,22 +11,56 @@ abstract object item {
     has int value;
 }
 
-abstract item constructable {
-    has sym quality;
-    has_many sym techniques;
-    needs quality materials;
+abstract root corporeal {
+    uses corporeal;
+    has sym body_type;
+    has sym size;
+    has float weight;
 
     at_creation {
+        body = @core.db.create(@core, @properties[:body_type], {:size => @properties[:size]})
+        ret = {
+            :body   => body,
+            :weight => body.body_parts.inject(0) { |s,p| s + p.weight }
+        }
+        Log.debug("Body created with weight #{ret[:weight]}")
+        ret
+    }
+}
+
+abstract root constructed {
+    class_many sym required_components;
+    class sym technique;
+
+    has sym quality;
+    has int value;
+
+    needs components quality;
+
+    at_creation {
+        # FIXME - Remove component items from the world
+
+        # Created object quality depends on the quality of its components as well
+        avg_component_quality = params[:components].inject(0.0) { |s,i|
+            s + Quality.index(i.is_a?(:constructed) ? i.quality : :standard)
+        } / params[:components].size
+        quality = (Quality.index(params[:quality]) + avg_component_quality) / 2.0
+        quality_level = Quality.levels[quality.ceil]
         {
-            :weight => params[:materials].inject(0) { |w,m| w + m.weight },
-            :value  =>
-                Quality.value(params[:quality]) *
-                params[:materials].inject(0) { |v,m| v + m.value },
-            :quality => params[:quality],
+            :quality    => quality_level,
+            :components => params[:components]
         }
     }
 }
 
-abstract constructable equippable {
-    has sym slot;
+post_process {
+    Log.debug("Propagating component information for constructed objects")
+    types_of(:constructed, true).each do |constructed|
+        info_for(constructed, :required_components).each do |component|
+            propagate_recursive(component) do |comp_subtype|
+                Log.debug("#{comp_subtype} is used in #{constructed}")
+                info_for(comp_subtype, :used_in, []) << constructed
+            end
+        end
+    end
 }

@@ -1,0 +1,53 @@
+abstract root verb {
+    has optional sym target;
+    has_many sym components;
+    has optional sym tool;
+    has optional sym location;
+}
+
+abstract verb melee_attack {
+    target corporeal;
+    tool melee_weapon;
+}
+
+abstract verb ranged_attack_bow {
+    target corporeal;
+    tool bow;
+    components arrow;
+}
+
+abstract verb eat {
+    target food;
+}
+
+abstract verb cook {
+}
+
+abstract verb forge {
+    location anvil;
+    tool hammer;
+}
+
+abstract verb assemble {}
+
+post_process {
+    self[:verb][:subtypes].each do |verb|
+        Log.debug("Propagating tool information for #{verb}")
+        propagate_recursive(info_for(verb, :tool)) do |subtype|
+            Log.debug("#{subtype} is a required tool for #{verb}")
+            info_for(subtype, :used_for, []) << verb
+        end
+
+        Log.debug("Propagating target information for #{verb}")
+        propagate_recursive(info_for(verb, :target)) do |subtype|
+            Log.debug("#{subtype} is a target of #{verb}")
+            info_for(subtype, :target_of, []) << verb
+        end
+
+        Log.debug("Propagating location information for #{verb}")
+        propagate_recursive(info_for(verb, :location)) do |subtype|
+            Log.debug("#{subtype} is the location at which #{verb} happens")
+            info_for(subtype, :location_of, []) << verb
+        end
+    end
+}

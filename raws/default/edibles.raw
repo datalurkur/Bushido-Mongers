@@ -1,0 +1,12 @@
+abstract item food {
+}
+
+food carrot {
+    weight 1;
+}
+
+constructed,food cooked_carrot {
+    required_components carrot;
+    technique cook;
+    weight 0.5;
+}

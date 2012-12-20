@@ -22,6 +22,12 @@ Comments are enclosed in /* */.
 
 Each raw file consists of a list of serialzed object statements.
 
+POST PROCESS STATEMENTS
+=======================
+Format: post_process
+
+Defines a block of ruby code to be executed once the database has been completely populated.  The description is evaluated as-is.
+
 OBJECT STATEMENTS
 =================
 Format: [abstract] <parent type(s)> <type>
@@ -44,10 +50,12 @@ OBJECT DESCRIPTION KEYWORDS
 Format: "uses" <module name>
 Description: None
 
-"has", "has_many"
+"has", "has_many", "class", "class_many"
     Indicates that the object being described "has" the property indicated.
     "has_many" indicates that this property can contain multiple values.
-Format: "has" / "has_many" <property type> <property name>
+    The "class" variants indicate that the property is class information only and is not to be propagated into instantiated objects.  Note that property names must still be unique across "has" and "class".
+    The "optional" tag indicates that this property does not necessarily contain a value.
+Format: "has" / "has_many" [optional] <property type> <property name>
 Description: None
 
 "needs"
@@ -73,17 +81,26 @@ module ObjectRawParser
     class << self
         RAWS_LOCATION = "raws"
 
+        class DatabaseBinding
+        end
+
         def load_objects(group)
             object_database = {}
 
-            metadata = collect_raws_metadata(group)
+            metadata, post_processes = collect_raws_metadata(group)
 
             unparsed_objects = metadata.keys
             next_object = nil
             while (next_object = unparsed_objects.shift)
                 parse_object(next_object, unparsed_objects, metadata, object_database)
             end
-            object_database
+
+            Log.debug("Performing #{post_processes.size} post-processing steps on database")
+            db = ObjectDB.new(object_database)
+            post_processes.each do |raw_code|
+                eval(raw_code, db.get_binding, __FILE__, __LINE__)
+            end
+            db
         end
 
         def raws_list(group)
@@ -98,31 +115,37 @@ module ObjectRawParser
 
         def collect_raws_metadata(group)
             typed_objects_hash = {}
+            post_processes     = []
             raws_list(group).each do |raw_file|
+                Log.debug("Parsing file #{raw_file}")
                 raw_data = File.read(raw_file)
                 raw_data.gsub!(/\/\*(.*?)\*\//, '')
                 raw_chunks = separate_lexical_chunks(raw_data)
                 raw_chunks.each do |statement, data|
                     statement_pieces = statement.split(/\s+/)
-                    if statement_pieces[0] == "abstract"
-                        parent, type = statement_pieces[1..2]
-                        abstract = true
+                    if statement_pieces[0] == "post_process"
+                        post_processes << data
                     else
-                        parent, type = statement_pieces[0..1]
-                        abstract = false
+                        if statement_pieces[0] == "abstract"
+                            parent, type = statement_pieces[1..2]
+                            abstract = true
+                        else
+                            parent, type = statement_pieces[0..1]
+                            abstract = false
+                        end
+                        if typed_objects_hash.has_key?(type)
+                            Log.debug(["Ignoring duplicate type #{type}", statement, data])
+                            next
+                        end
+                        typed_objects_hash[type.to_sym] = {
+                            :abstract => abstract,
+                            :is_a     => parent.split(/,/).collect { |p| p.to_sym },
+                            :data     => data,
+                        }
                     end
-                    if typed_objects_hash.has_key?(type)
-                        Log.debug(["Ignoring duplicate type #{type}", statement, data])
-                        next
-                    end
-                    typed_objects_hash[type.to_sym] = {
-                        :abstract => abstract,
-                        :is_a     => parent.split(/,/).collect { |p| p.to_sym },
-                        :data     => data,
-                    }
                 end
             end
-            typed_objects_hash
+            [typed_objects_hash, post_processes]
         end
 
         def parse_object(next_object, unparsed_objects, metadata, object_database)
@@ -154,7 +177,7 @@ module ObjectRawParser
                 :has            => {},
                 :needs          => [],
                 :at_creation    => [],
-                :default_values => {}
+                :class_values => {}
             }
 
             # Set up to accumulate subtypes if this is an abstract type
@@ -171,7 +194,7 @@ module ObjectRawParser
                     parent_object = object_database[parent]
                     raise "Parent object type '#{parent}' not abstract!" unless parent_object[:abstract]
 
-                    [:uses, :has, :needs, :at_creation, :default_values].each do |key|
+                    [:uses, :has, :needs, :at_creation, :class_values].each do |key|
                         # Just dup isn't enough here, because occasionally we have an array within a hash that doesn't get duped properly
                         dup_data = Marshal.load(Marshal.dump(parent_object[key]))
                         #Log.debug(["Dup data is ", dup_data], 8)
@@ -198,17 +221,35 @@ module ObjectRawParser
                         Log.debug("#{next_object} uses #{statement_pieces[1..-1].inspect}",8)
                         raise "Insufficient arguments in #{statement.inspect}" unless statement_pieces.size >= 2
                         object_data[:uses].concat(statement_pieces[1..-1].collect { |m| m.to_caml.to_const })
-                    when "has","has_many"
-                        raise "Insufficient arguments in #{statement.inspect}" unless statement_pieces.size >= 3
-                        field = statement_pieces[2].to_sym
-                        object_data[:has][field] = {
-                            :type => statement_pieces[1].to_sym
-                        }
-                        if statement_pieces[0] == "has_many"
-                            object_data[:has][field][:multiple] = true
-                            # Make sure every "has_many" is properly instantiated to an empty array
-                            object_data[:default_values][field] ||= []
+                    when "has","has_many","class","class_many"
+                        class_only, multiple = case statement_pieces[0]
+                        when "has";        [false, false]
+                        when "has_many";   [false, true]
+                        when "class";      [true,  false]
+                        when "class_many"; [true,  true]
                         end
+                        optional = (statement_pieces[1] == "optional")
+                        min_args = (optional ? 4 : 3)
+                        unless statement_pieces.size >= min_args
+                            raise "Insufficient arguments in #{statement.inspect}" 
+                        end
+                        type, field = if optional
+                            statement_pieces[2..3]
+                        else
+                            statement_pieces[1..2]
+                        end.collect(&:to_sym)
+                        object_data[:has][field] = {
+                            :class_only => class_only,
+                            :type       => type
+                        }
+                        object_data[:has][field][:optional] = true if optional
+
+                        if multiple
+                            object_data[:has][field][:multiple] = true
+                            object_data[:class_values][field] ||= []
+                        end
+
+                        #Log.debug(["Added property #{field}", object_data])
                     when "needs"
                         raise "Insufficient arguments in #{statement.inspect}" unless statement_pieces.size >= 2
                         object_data[:needs].concat(statement_pieces[1..-1].collect { |piece| piece.to_sym })
@@ -233,11 +274,12 @@ module ObjectRawParser
                                 raise "Unsupported property type #{object_data[:has][field][:type].inspect}"
                             end
                         end
+
                         if object_data[:has][field][:multiple]
-                            object_data[:default_values][field].concat(values)
+                            object_data[:class_values][field].concat(values)
                         else
-                            raise "Too many values supplied for field #{field.inspect} in #{next_object.inspect} - #{values.inspect}" if values.size > 1
-                            object_data[:default_values][field] = values[0]
+                            Log.debug(["Ignoring extra values supplied for field #{field.inspect} in #{next_object.inspect}", values]) if values.size > 1
+                            object_data[:class_values][field] = values[0]
                         end
                     end
                 end

@@ -1,6 +1,5 @@
 abstract object body {
     has_many sym body_parts;
-    has float weight;
 
     needs size;
 
@@ -9,12 +8,10 @@ abstract object body {
         parts = @properties[:body_parts].collect { |part|
             @core.db.create(@core, part, {:size => params[:size]})
         }
-        ret = {
+        {
             :body_parts => parts,
             :weight     => parts.inject(0) { |s,p| s + p.weight }
         }
-        Log.debug("Body created with #{ret[:body_parts].size} parts and weight #{ret[:weight]}")
-        ret
     }
 }
 
@@ -32,16 +29,13 @@ body rodent_body {
 }
 
 abstract object body_part {
-    has float weight;
     needs size;
 
     /* Adjust the weight of the body part based on size */
     at_creation {
-        ret = {
+        {
             :weight => @properties[:weight] * Size.value(params[:size])
         }
-        Log.debug("Body part created with weight #{ret[:weight]}")
-        ret
     }
 }
 

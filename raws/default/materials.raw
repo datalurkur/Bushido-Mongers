@@ -4,6 +4,11 @@ abstract material metal {
     has int melting_point;
 }
 
+material leather {
+    weight 2;
+    value 10;
+}
+
 metal iron {
     melting_point 1538;
     value 10;

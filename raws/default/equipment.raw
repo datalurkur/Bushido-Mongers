@@ -1,0 +1,42 @@
+abstract item equipment {
+    has sym slot;
+}
+
+abstract equipment headgear {
+    slot head;
+}
+
+abstract equipment weapon {
+    has sym handedness;
+    has sym type;
+}
+
+abstract weapon melee_weapon {}
+
+abstract weapon ranged_weapon {}
+
+abstract equipment ammunition {}
+
+constructed dagger_blade {
+    required_components metal;
+    technique forge;
+}
+
+constructed,melee_weapon dagger {
+    type piercing;
+    handedness one;
+    required_components dagger_blade leather;
+    technique assemble;
+}
+
+constructed,melee_weapon hammer {
+    type blunt;
+    handedness one;
+}
+
+constructed,ranged_weapon bow {
+    type piercing;
+    handedness two;
+}
+
+constructed,ammunition arrow {}

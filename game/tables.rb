@@ -16,9 +16,13 @@ module Quality
             ]
         end
 
+        def index(l)
+            levels.index(l)
+        end
+
         def value(l)
-            level    = levels.index(l)
-            standard = levels.index(:standard)
+            level    = index(l)
+            standard = index(:standard)
             2 ** (level - standard)
         end
     end

@@ -1,10 +1,6 @@
-abstract equippable headgear {
-    slot head;
-}
-
-headgear cap {
+headgear,constructed helmet {
     value 3;
     weight 1;
-    techniques :forge;
-    techniques :sew;
+    required_components metal;
+    technique forge;
 }

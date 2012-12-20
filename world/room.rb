@@ -60,9 +60,9 @@ class Room < ZoneLeaf
     end
 
     def populate_npcs(core)
-        may_spawn     = core.db.expand_types(@params[:may_spawn]     || [])
-        always_spawns = core.db.expand_types(@params[:always_spawns] || [])
-        never_spawns  = core.db.expand_types(@params[:never_spawns]  || [])
+        may_spawn     = core.db.types_of(@params[:may_spawn]     || [])
+        always_spawns = core.db.types_of(@params[:always_spawns] || [])
+        never_spawns  = core.db.types_of(@params[:never_spawns]  || [])
         Log.debug(["Creating NPCs for #{self.name} with spawn details", may_spawn, always_spawns, never_spawns])
 
         # Find NPC types suitable to create here.
@@ -73,8 +73,8 @@ class Room < ZoneLeaf
                 may_spawn.include?(type) &&
                 !never_spawns.include?(type)
             ) || (
-                core.db.info_for(type)[:can_spawn_in] &&
-                core.db.info_for(type)[:can_spawn_in].include?(self.zone)
+                core.db.info_for(type, :can_spawn_in) &&
+                core.db.info_for(type, :can_spawn_in).include?(self.zone)
             )
         end
         acceptable_types.uniq!
