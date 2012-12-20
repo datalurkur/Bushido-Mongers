@@ -42,12 +42,8 @@ class Behavior
         end
 
         def are_enemies?(actor_a, actor_b)
-            if NPC === actor_a && NPC === actor_b
-                # TODO - Faction stuff goes here
-                return true
-            else
-                return true
-            end
+            # TODO - Faction stuff goes here
+            return true
         end
     end
 end

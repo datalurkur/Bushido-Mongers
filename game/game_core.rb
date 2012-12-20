@@ -16,7 +16,7 @@ class GameCore
         # TODO: Load raw_group from server config?
         raw_group = "default"
         Log.debug("Loading #{raw_group} raws")
-        @db = ObjectDB.new(raw_group)
+        @db = ObjectDB.get(raw_group)
 
         WordParser.load('words/dict')
 
