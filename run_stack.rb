@@ -1,6 +1,7 @@
 #!/usr/bin/ruby
 
 require 'net/stack_client'
+require 'util/timer'
 
 $config = {
     :server_ip => "localhost",
@@ -91,3 +92,5 @@ $client.stack.specify_response_for(:begin_playing) do |stack, message|
 end
 
 $client.start
+
+MeteredMethods.report

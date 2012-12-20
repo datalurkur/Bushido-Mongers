@@ -35,6 +35,8 @@ $server.start
 while $server.is_running?
 end
 
+MeteredMethods.report
+
 # Uncomment to enable code coverage output
 # (be sure to also uncomment the code coverage lines at the top of this file)
 =begin

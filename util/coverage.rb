@@ -51,16 +51,14 @@ class Object
             name_alias = "codecov_#{name}".to_sym
             CodeCoverage.register_method(name, name_alias, self)
 
-            self.class_eval(
-<<METHOD
+            self.class_eval %{
                 alias_method '#{name_alias}', '#{name}'
 
                 def #{name}(*args, &block)
                     CodeCoverage.method_called(:#{name}, #{self})
-                    send('#{name_alias}', *args, &block)
+                    #{name_alias}(*args, &block)
                 end
-METHOD
-            )
+            }
         end
     end
 end

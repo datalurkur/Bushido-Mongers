@@ -1,4 +1,5 @@
 require 'raws/parser'
+require 'util/timer'
 
 class BushidoObject
     def initialize(core, type, params={})
@@ -137,7 +138,9 @@ class ObjectDB
     def types_of_singular(type, instantiable_only)
         info = raw_info_for(type)
         if info[:abstract]
-            subtypes = info[:subtypes].collect { |subtype| types_of(subtype) }.flatten.compact
+            subtypes = info[:subtypes].collect do |subtype|
+                types_of_singular(subtype, instantiable_only)
+            end.flatten.compact
             instantiable_only ? subtypes : [type] + subtypes
         else
             [type]
@@ -149,6 +152,7 @@ class ObjectDB
     end
 
     def random(type)
+        Log.debug("random")
         types_of(type).rand
     end
 
@@ -165,6 +169,7 @@ class ObjectDB
     def find_subtypes(parent_types, criteria={}, instantiable_only=false)
         Log.debug(["Finding #{parent_types.inspect} that meet criteria", criteria])
         check = criteria.reject { |k,v| k == :inclusive }
+        Log.debug("find_subtypes")
         types_of(parent_types, instantiable_only).select do |subtype|
             Log.debug("Checking #{subtype} for adherence to criteria", 9)
             keep = true
@@ -196,9 +201,12 @@ class ObjectDB
     end
 
     def propagate_recursive(type, instantiable_only=false, &block)
+        Log.debug("propagate_recursive")
         types_of(type, instantiable_only).each do |subtype|
             block.call(subtype)
         end
     end
+
+    metered :propagate_recursive, :find_subtypes, :create, :types_of
 end
 
