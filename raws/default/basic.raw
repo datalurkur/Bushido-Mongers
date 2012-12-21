@@ -13,18 +13,33 @@ abstract object item {
 
 abstract root corporeal {
     uses corporeal;
-    has sym body_type;
+
+    class sym body_type;
+
     has sym size;
     has float weight;
 
     at_creation {
-        body = @core.db.create(@core, @properties[:body_type], {:size => @properties[:size]})
+        body_type = @core.db.info_for(@type, :body_type)
+        body = @core.db.create(@core, body_type, {:size => @properties[:size]})
         ret = {
             :body   => body,
             :weight => body.body_parts.inject(0) { |s,p| s + p.weight }
         }
         Log.debug("Body created with weight #{ret[:weight]}")
         ret
+    }
+}
+
+abstract root aligned {
+    has_many sym factions;
+}
+
+abstract root named {
+    has string name;
+    needs name;
+    at_creation {
+        {:name => params[:name]}
     }
 }
 

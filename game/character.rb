@@ -1,4 +1,3 @@
-require 'game/object_extensions'
 require 'util/log'
 
 =begin
@@ -12,10 +11,7 @@ require 'util/log'
     This means we also need a way to identify worlds uniquely (I suggest hashing the name of the world with a timestamp)
 =end
 
-class Character
-    include Mob
-    include Corporeal
-
+module Character
     class << self
         CHARACTER_DIRECTORY = "data/characters"
 
@@ -69,7 +65,29 @@ class Character
             f.close
         end
 
-        def load(username, filename)
+        def attempt_to_load(username, character_name)
+            unless get_characters_for(username).include?(character_name)
+                Log.debug("No character #{character_name} found")
+                return [nil, []]
+            else
+                history        = get_history(username, character_name)
+                failed_choices = []
+                character      = nil
+                history.each do |cdata|
+                    begin
+                        character = Character.load_file(username, cdata[:filename])
+                        break
+                    rescue Exception => e
+                        # This one failed to load, try the next one
+                        Log.debug(["Failed to load character with timestamp #{cdata[:timestamp]}", e.message])
+                        failed_choices << cdata
+                    end
+                end
+                return [character, failed_choices]
+            end
+        end
+
+        def load_file(username, filename)
             Marshal.load(File.read(File.join(get_user_directory(username), filename)))
         end
 
@@ -84,25 +102,25 @@ class Character
             history  = contents.select { |fdata| fdata[:character_name] == character_name }
             history.sort { |x,y| x[:timestamp] <=> y[:timestamp] }
         end
-    end
 
-    attr_reader :name
-
-    def initialize(name)
-        @name = name
-    end
-
-    def set_core(core)  @core = core end
-    def null_core(core) @core = nil  end
-
-    def process_message(message)
-        case message.type
-        when :unit_attacks
-            if self == message.defender
-                Log.debug("Character #{@name} is attacked by #{message.attacker}")
+        def at_message(instance, message)
+            case message.type
+            when :unit_attacks
+                if self == message.defender
+                    Log.debug("Character #{instance.name} is attacked by #{message.attacker}")
+                end
+            else
+                Log.debug("Character #{instance.name} ignoring #{message.type}")
             end
-        else
-            Log.debug("Character #{@name} ignoring #{message.type}")
         end
+    end
+
+    # Since this object is sometimes saved and loaded, we need to recreate it gracefully
+    def set_core(core)
+        @core = core
+    end
+
+    def nil_core
+        @core = nil
     end
 end

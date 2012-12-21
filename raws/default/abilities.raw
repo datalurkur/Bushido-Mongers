@@ -2,16 +2,16 @@ abstract root ability {
     has float skill;
     has float familiarity;
 
-    has float default_skill;
-    has float default_familiarity;
+    class float default_skill;
+    class float default_familiarity;
 
     has int familiarity_loss; /* Familiarity begins to degrade after this many ticks */
 
     at_creation {
         extend Ability
         {
-            :skill       => @properties[:default_skill],
-            :familiarity => @properties[:default_familiarity]
+            :skill       => @core.db.info_for(@type, :default_skill),
+            :familiarity => @core.db.info_for(@type, :default_familiarity)
         }
     }
 }

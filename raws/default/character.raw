@@ -1,0 +1,9 @@
+named,aligned,corporeal,mover character {
+    uses character;
+
+    /* TODO - Make this a parameter so characters can have other body types */
+    body_type humanoid_body;
+    size medium;
+
+    factions player;
+}

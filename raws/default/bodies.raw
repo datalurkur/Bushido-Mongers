@@ -1,5 +1,6 @@
 abstract object body {
     has_many sym body_parts;
+    has sym size;
 
     needs size;
 
@@ -10,7 +11,8 @@ abstract object body {
         }
         {
             :body_parts => parts,
-            :weight     => parts.inject(0) { |s,p| s + p.weight }
+            :weight     => parts.inject(0) { |s,p| s + p.weight },
+            :size       => params[:size]
         }
     }
 }

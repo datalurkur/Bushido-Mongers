@@ -2,6 +2,7 @@ require 'raws/parser'
 require 'util/timer'
 
 class BushidoObject
+    #attr_reader :core, :type
     def initialize(core, type, params={})
         Log.debug("Creating #{type}")
         Log.debug(["Creation params", params], 8)
@@ -15,7 +16,7 @@ class BushidoObject
         Log.debug(["Type info", type_info], 8)
 
         type_info[:needs].each do |k|
-            raise "Required argument #{k.inspect} missing during creation of #{type}" unless params.has_key?(k)
+            raise "Required argument #{k.inspect} missing during creation of #{type}" unless params[k]
         end
 
         type_info[:class_values].each do |k,v|
@@ -50,7 +51,7 @@ class BushidoObject
                     raise "Property #{property} has no values"
                 end
             else
-                unless @properties.has_key?(property)
+                unless @properties[property]
                     if type_info[:has][property][:optional]
                         @properties[property] = nil
                     else
@@ -81,7 +82,7 @@ class BushidoObject
         if @properties.has_key?(method_name)
             @properties[method_name]
         else
-            raise "Property #{method_name} not found for #{@type}"
+            raise "Property #{method_name.inspect} not found for #{@type}"
         end
     end
 
@@ -89,6 +90,10 @@ class BushidoObject
         @extensions.each do |mod|
             break if mod.respond_to?(:at_message) && mod.at_message(self, message)
         end
+    end
+
+    def class_info(key)
+        @core.db.info_for(@type, key)
     end
 end
 
@@ -101,18 +106,32 @@ class ObjectDB
                 #      - Parse the raws and then re-save them as a parsed Marshalled hash with a checksum to validate whether the parsed data is current)
 
                 @object_groups[group] = ObjectRawParser.load_objects(group)
+                verify_class_values(@object_groups[group])
             end
             @object_groups[group]
         end
-    end
 
-    def initialize(db)
-        raise "Incorrect database format"  unless Hash === db
-        @db = db
+        def verify_class_values(db)
+            db.each_type do |type|
+                next if db[type][:abstract]
+                db[type][:has].each do |k,v|
+                    if v[:class_only] && !db[type][:class_values].has_key?(k)
+                        raise "Class value #{k.inspect} missing from #{type.inspect}"
+                    end
+                end
+            end
+        end
     end
 
     def [](type)
         @db[type]
+    end
+
+    def each_type(&block)
+        return unless block_given?
+        @db.keys.each do |type|
+            block.call(type)
+        end
     end
 
     def raw_info_for(type)
@@ -152,7 +171,6 @@ class ObjectDB
     end
 
     def random(type)
-        Log.debug("random")
         types_of(type).rand
     end
 
@@ -201,12 +219,18 @@ class ObjectDB
     end
 
     def propagate_recursive(type, instantiable_only=false, &block)
-        Log.debug("propagate_recursive")
         types_of(type, instantiable_only).each do |subtype|
             block.call(subtype)
         end
     end
 
     metered :propagate_recursive, :find_subtypes, :create, :types_of
+
+    # We don't want users calling this
+    private
+    def initialize(db)
+        raise "Incorrect database format"  unless Hash === db
+        @db = db
+    end
 end
 

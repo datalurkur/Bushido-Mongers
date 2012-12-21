@@ -18,17 +18,20 @@ class GameCore
         Log.debug("Loading #{raw_group} raws")
         @db = ObjectDB.get(raw_group)
 
+        # FIXME - WAT
+        # Why are we loading a static class with data inside an instance creation? I say again WAT
         WordParser.load('words/dict')
 
-        # Create the world and breathe life into it
-#        @world            = World.test_world_2
-        @world            = WorldFactory.generate(3, 3)
-        populate
+        create_world(args)
     end
 
-    def populate
+    def create_world(args)
+        Log.debug("Creating world")
+        world_size  = args[:world_size]  || 3
+        world_depth = args[:world_depth] || 3
+        @world = WorldFactory.generate(world_size, world_depth)
+
         Log.debug("Populating world with NPCs and items")
-        # We're mostly going to rely on the zones themselves to do the population, since the zones have knowledge of their keywords
         @world.populate(self)
     end
 
@@ -69,11 +72,32 @@ class GameCore
     # CHARACTER MAINTENANCE
     def characters;       @characters       ||= {}; end
     def cached_positions; @cached_positions ||= {}; end
-    def add_player(username, character)
-        characters[username] = character
-        character.set_position(cached_positions[username] || @world.random_starting_location)
-        character.set_core(self)
-        Message.register_listener(self, :core, character)
+    def load_character(username, character_name)
+        cached_positions[username]
+
+        character, failures = Character.attempt_to_load(username, character_name)
+        if character
+            character.set_position(cached_positions[username] || @world.random_starting_location)
+            character.set_core(self)
+            characters[username] = character
+            Message.register_listener(self, :core, character)
+        end
+
+        return [character, failures]
+    end
+    def create_character(username, character_details)
+        begin
+            character_details.merge!(:initial_position => @world.random_starting_location)
+            character = @db.create(self, :character, character_details)
+
+            characters[username] = character
+            Message.register_listener(self, :core, character)
+
+            return true
+        rescue Exception => e
+            Log.debug(["Failed to create new character", e.message, e.backtrace])
+            return false
+        end
     end
     def has_active_character?(username)
         characters.has_key?(username)
@@ -81,10 +105,9 @@ class GameCore
     def get_character(username)
         characters[username]
     end
-    def remove_player(username)
+    def remove_character(username)
         cached_positions[username] = characters[username].position
         Message.unregister_listener(self, :core, character)
-        character.null_core
         characters.delete(username)
     end
 

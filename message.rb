@@ -56,7 +56,7 @@ class Message
 
         # TODO - I feel like this could be more intelligent - why pass the core every time if we could generally know which core we're dispatching from?
         def dispatch(core, type, args={})
-            Log.debug("Dispatching #{type} message")
+            Log.debug("Dispatching #{type} message", 6)
             m = Message.new(type, args)
             l = get_listeners_for(core, type)
             Log.debug("Message falling upon deaf ears") if l.empty?

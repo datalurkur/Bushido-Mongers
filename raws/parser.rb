@@ -171,12 +171,12 @@ module ObjectRawParser
 
             # Begin accumulating object data for the database
             object_data = {
-                :abstract       => object_metadata[:abstract],
-                :is_a           => object_metadata[:is_a].dup,
-                :uses           => [],
-                :has            => {},
-                :needs          => [],
-                :at_creation    => [],
+                :abstract     => object_metadata[:abstract],
+                :is_a         => object_metadata[:is_a].dup,
+                :uses         => [],
+                :has          => {},
+                :needs        => [],
+                :at_creation  => [],
                 :class_values => {}
             }
 

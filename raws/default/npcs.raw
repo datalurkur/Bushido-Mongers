@@ -1,35 +1,37 @@
-abstract root,mover npc {
+abstract named,aligned,mover npc {
     uses npc_behavior;
 
-    has string name;
-    needs name;
-
-    has_many sym factions;
-    has_many sym can_spawn_in;
-    has_many sym never_spawn_in;
+    class_many sym can_spawn_in;
+    class_many sym never_spawn_in;
 
     can_spawn_in nothing;
     never_spawn_in nothing;
-
-    at_creation {
-        {:name => params[:name]}
-    }
 }
 
 abstract npc monster {
     factions enemy;
 }
 
-monster,corporeal rat {
+abstract npc animal {
+    factions neutral;
+}
+
+animal,corporeal rat {
     size tiny;
     body_type rodent_body;
     can_spawn_in sewer dock;
 }
 
-monster,corporeal mouse {
+animal,corporeal mouse {
     size tiny;
     body_type rodent_body;
     can_spawn_in meadow;
+}
+
+monster,corporeal oni {
+    size medium;
+    body_type humanoid_body;
+    can_spawn_in mountain;
 }
 
 abstract npc guard {

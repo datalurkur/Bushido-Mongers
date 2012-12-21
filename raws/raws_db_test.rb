@@ -4,17 +4,7 @@ require 'raws/db'
 require 'game/tables'
 require 'game/object_extensions'
 
-class FakeCore
-    attr_reader :db
-    def initialize(db)
-        @db = db
-    end
-end
-
-class FakeRoom
-    def name; "Fake Room"; end
-    def add_occupant(o); end
-end
+require 'test/fake'
 
 Log.setup("main thread", "test")
 

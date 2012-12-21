@@ -28,7 +28,11 @@ abstract verb forge {
     tool hammer;
 }
 
-abstract verb assemble {}
+abstract verb craft {}
+
+abstract verb bowmaking {}
+
+abstract verb fletching {}
 
 post_process {
     self[:verb][:subtypes].each do |verb|

@@ -17,7 +17,11 @@ module Quality
         end
 
         def index(l)
-            levels.index(l)
+            i = levels.index(l)
+            if i.nil?
+                raise "Unknown quality #{l.inspect}"
+            end
+            i
         end
 
         def value(l)
@@ -60,9 +64,17 @@ module Size
             ]
         end
 
+        def index(l)
+            i = levels.index(l)
+            if i.nil?
+                raise "Unknown size #{l.inspect}"
+            end
+            i
+        end
+
         def value(l)
-            level    = levels.index(l)
-            standard = levels.index(:medium)
+            level    = index(l)
+            standard = index(:medium)
             2 ** (level - standard)
         end
     end

@@ -1,7 +1,7 @@
 abstract item material;
 
 abstract material metal {
-    has int melting_point;
+    class int melting_point;
 }
 
 material leather {

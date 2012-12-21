@@ -42,8 +42,8 @@ class Behavior
         end
 
         def are_enemies?(actor_a, actor_b)
-            # TODO - Faction stuff goes here
-            return true
+            # TODO - Make factions more complex
+            (actor_a.factions & actor_b.factions).empty?
         end
     end
 end

@@ -22,7 +22,7 @@ Log.setup("Main Thread", "server")
 
 # DEBUG
 require 'game/character_test'
-recreate_test_character("test_user")
+recreate_test_character("test_user", "default")
 
 signals = ["TERM","INT"]
 signals.each do |signal|

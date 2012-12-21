@@ -104,53 +104,24 @@ class Lobby
         # TODO - Do we want to deal with switching characters mid-game?  Is this allowed?
         raise "User already active" if @game_state == :playing && is_playing?(username)
 
-        # Get a list of the user's saved characters
-        character_list = Character.get_characters_for(username)
-
-        # See if this character is in that list
-        characters = character_list.select { |c| c == character_name }
-        if characters.empty?
-            failure = "No character named #{character_name} exists for #{username}"
-            Log.debug(failure)
-            send_to_user(username, Message.new(:character_not_ready, {:reason=>failure}))
-        else
-            Log.debug("#{username} selects character named #{character_name}")
-
-            # Gather all the saves for this character
-            character_history = Character.get_history(username, character_name)
-
-            # Try to load saves (starting with the latest)
-            character_history.each do |cdata|
-                begin
-                    character = Character.load(username, cdata[:filename])
-                    @users[username][:pending_character] = character
-                    break
-                rescue Exception => e
-                    # This one failed to load, try the next one
-                    Log.debug(["Failed to load character with timestamp #{cdata[:timestamp]}", e.message])
-                end
-            end
-
-            # Send a failure if we couldn't load any of the saves
-            unless @users[username][:pending_character]
-                failure = "No valid saves for character"
-                Log.debug(failure)
-                send_to_user(username, Message.new(:character_not_ready, {:reason=>failure}))
-                return
-            end
-
+        character, failures = @game_core.load_character(username, character_name)
+        if character
             send_to_user(username, Message.new(:character_ready))
-
             if @game_state == :playing
-                commit_character_choice(username)
+                send_to_user(username, Message.new(:begin_playing))
             end
+        else
+            failure = if failures.empty?
+                "Character not found"
+            else
+                "Character failed to load"
+            end
+            # FIXME - Inform users when some of their more recent character saves fail to load
+            send_to_user(username, Message.new(:character_not_ready, {:reason=>failure}))
         end
     end
 
     def commit_character_choice(username) 
-        @game_core.add_player(username, @users[username][:pending_character])
-        @users[username][:pending_character] = nil
-        send_to_user(username, Message.new(:begin_playing))
     end
 
     def generate_game(username)
@@ -191,9 +162,9 @@ class Lobby
             Log.debug("Game started")
             broadcast(Message.new(:start_success))
 
-            @users.each do |username,user|
-                if user[:pending_character]
-                    commit_character_choice(username)
+            @users.keys.each do |username|
+                if @game_core.has_active_character?(username)
+                    send_to_user(username, Message.new(:begin_playing))
                 end
             end
 
