@@ -1,3 +1,5 @@
+require 'digest'
+
 class Array
     def rand()
         self[Kernel.rand(self.size)]
@@ -59,6 +61,10 @@ class String
 
     def to_const
         Object.const_defined?(self) ? Object.const_get(self) : Object.const_missing(self)
+    end
+
+    def md5
+        Digest::MD5.digest(self)
     end
 end
 

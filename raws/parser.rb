@@ -79,10 +79,37 @@ Description: None
 
 module ObjectRawParser
     class << self
-        RAWS_LOCATION = "raws"
+        def fetch(group)
+            db = nil
+            if File.exists?(preparsed_location(group))
+                preparsed_data = File.read(preparsed_location(group))
+                begin
+                    Log.debug("Loading data from pre-parsed database")
+                    preparsed_db = Marshal.load(preparsed_data)
+                    if preparsed_db.hash == group_hash(group)
+                        Log.debug("Using preparsed data")
+                        db = preparsed_db
+                    else
+                        Log.debug("Rejecting preparsed data based on timestamp differences")
+                    end
+                rescue Exception => e
+                    Log.debug(["Failed to load pre-parsed database", e.message, e.backtrace])
+                end
+            end
 
-        class DatabaseBinding
+            if db.nil?
+                Log.debug("Reloading objects")
+                db = load_objects(group)
+                preparsed_handle = File.open(preparsed_location(group), "w")
+                preparsed_handle.write(Marshal.dump(db))
+                preparsed_handle.close
+            end
+
+            db
         end
+
+        private
+        RAWS_LOCATION = "raws"
 
         def load_objects(group)
             object_database = {}
@@ -96,11 +123,19 @@ module ObjectRawParser
             end
 
             Log.debug("Performing #{post_processes.size} post-processing steps on database")
-            db = ObjectDB.new(object_database)
+            db = ObjectDB.new(object_database, group_hash(group))
             post_processes.each do |raw_code|
                 eval(raw_code, db.get_binding, __FILE__, __LINE__)
             end
             db
+        end
+
+        def group_hash(group)
+            raws_list(group).collect { |file| File.mtime(file) }.hash
+        end
+
+        def preparsed_location(group)
+            File.join(RAWS_LOCATION, group, ".preparsed")
         end
 
         def raws_list(group)

@@ -1,4 +1,4 @@
-require 'digest'
+require 'util/basic'
 
 class String
     def xor(other)
@@ -21,6 +21,6 @@ module LameCrypto
     end
 
     def self.md5_and_xor(password, server_md5)
-        Digest::MD5.digest(password || "").xor(server_md5 || "")
+        (password || "").md5.xor(server_md5 || "")
     end
 end
