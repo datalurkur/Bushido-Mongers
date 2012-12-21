@@ -106,8 +106,13 @@ class GameCore
         characters[username]
     end
     def remove_character(username)
-        cached_positions[username] = characters[username].position
+        character = characters[username]
+
         Message.unregister_listener(self, :core, character)
+        cached_positions[username] = character.position
+        character.nil_core
+        Character.save(username, character)
+
         characters.delete(username)
     end
 
