@@ -121,9 +121,6 @@ class Lobby
         end
     end
 
-    def commit_character_choice(username) 
-    end
-
     def generate_game(username)
         unless is_admin?(username)
             send_to_user(username, Message.new(:generation_fail, {:reason => :access_denied}))
