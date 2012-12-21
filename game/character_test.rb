@@ -1,10 +1,7 @@
 #!/usr/bin/ruby
 
-require 'game/character'
 require 'words/words'
-
 require 'raws/db'
-
 require 'test/fake'
 
 def recreate_test_character(username, raw_group, clean=true)
