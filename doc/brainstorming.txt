@@ -10,9 +10,7 @@ ninjas with different powers - shapeshifting, venomous, hard as rock, insanely f
 naruto - different techniques can learn from each other.
 different attacks
 
-certain special attacks limited per 
-
-It's an open question atm how to handle
+certain special attacks limited per combat, every hour, per waking period, etc.
 
 skills with special abilities. 
 classes. (maybe bonuses to learn certain skills because of background?)
@@ -73,6 +71,8 @@ samurai (bushi) regalia - fans, wakazashi and katana, kimonos, top-knots. armor.
 
 Kimonos - kimono, obi (sash), zori (shoes), etc.
 
+Healing - bandages, splint, scalpel, healing magic, etc.
+
 == NPC behavior/reactions ==
 
 Based on bushido code? Rectitude, Courage, Benevolence, Respect, Honesty, Honour, Loyalty (filial piety, wisdom, care for the aged)
@@ -81,15 +81,23 @@ Based on bushido code? Rectitude, Courage, Benevolence, Respect, Honesty, Honour
 
 ronin
 geisha
-tanuki
+peasants
 
+tanuki
 dragons - wish-granting? or aggressive dragons.
 demons - oni and kami - lots more research required here.
 shogun, daimyo (lord), shugo (governor)
+
+== DEMONS ==
+
+oni
+kami
+yokai - nuppeppo (flabby genderless creature)
 
 == NPC Groups ==
 
 ninjas nearly always belong to zone clan
 clan attributes (crests, names, etc) based on japanese meanings (proper_name_meaning.txt). go through and collate.
+Clan houses. Start a clan by defeating a clan head or claiming an empty clan house.
 
 NPC gangs? rival gangs? Like clans but not attached to zones. Would be neat to come across a gang war and jump in or sneak past.

@@ -104,7 +104,7 @@ module VerboseInterface
 
         def properties(message)
             if message.field == :room_info
-                return Words::AreaDescription.new(message.properties)
+                return Words.gen_room_description(message.properties)
             end
 
             message.properties.to_formatted_string("", true)

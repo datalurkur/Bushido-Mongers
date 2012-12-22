@@ -18,9 +18,7 @@ class GameCore
         Log.debug("Loading #{raw_group} raws")
         @db = ObjectDB.get(raw_group)
 
-        # FIXME - WAT
-        # Why are we loading a static class with data inside an instance creation? I say again WAT
-        WordParser.load('words/dict')
+        @words_db = WordParser.load
 
         create_world(args)
     end

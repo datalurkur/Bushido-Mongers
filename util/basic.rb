@@ -1,7 +1,7 @@
 require 'digest'
 
 class Array
-    def rand()
+    def rand
         self[Kernel.rand(self.size)]
     end
 
@@ -15,8 +15,12 @@ class Array
 end
 
 class Hash
-    def rand_key()
-        self.keys.rand
+    def to_sym
+        self.each do |key, value|
+            unless Symbol === value
+                self[key] = value.to_sym
+            end
+        end
     end
 end
 
@@ -40,7 +44,7 @@ class Range
 end
 
 class Set
-    def rand()
+    def rand
         self.to_a.rand
     end
 end

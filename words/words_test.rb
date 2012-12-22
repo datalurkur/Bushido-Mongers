@@ -7,7 +7,7 @@ Log.setup("Vocabulary Test", "wordtest")
 
 require 'words/words'
 
-WordParser.load('words/dict')
+db = WordParser.load
 
 class Action
     def self.do(descriptor = {})
@@ -16,30 +16,33 @@ class Action
 
     def self.attack(descriptor)
         success_roll = rand(20) + 1
-        keyword = case success_roll
-        when 1..5;   :fail
-        when 6..10;  :miss
-        when 11..15; :neutral
-        when 16..20; :good
+        descriptor[:result] = case success_roll
+        when 1..10;  :miss
+        when 11..20; :hit
         end
 
-        puts Words::Sentence.new(descriptor, keyword)
+        puts Words.gen_sentence(descriptor)
     end
 end
 
-Log.debug(Words.find(:keyword => :japanese, :wordtype => :name).inspect)
-Log.debug("Character name: #{Words.find(:keyword => :japanese, :wordtype => :name).map(&:to_s).rand}")
 
-wfs = Words.find(:text => "see")
-wfs.each do |wf|
-    Log.debug(wf.verb)
-end
-Log.debug(Words.find(:text => "see").rand.verb)
-Log.debug(Words.find(:text => "see", :wordtype => :verb).rand)
+Log.debug(Words.gen_sentence(:agent => :John, :action => :see, :target => :Mary))
 
-Log.debug(Words::AreaName.new({:template => :mountain, :keywords => [:beautiful]}).to_s)
-Log.debug(Words::AreaDescription.new({:template => :mountain, :keywords => [:beautiful], :occupants => ["elderly Beaver", "Frank the Ninja Bunny"]}).to_s)
-Log.debug(Words::AreaName.new({:template => :mountain, :keywords => [:beautiful]}).to_s)
+japanese_names = db.get_keyword_words(:japanese, :name)
+
+Log.debug("Japanese names: #{japanese_names.inspect}")
+Log.debug("Character name: #{japanese_names.rand}")
+
+see_synonyms = db.get_related_words(:see)
+
+Log.debug(see_synonyms.inspect)
+Log.debug(see_synonyms.rand)
+
+Log.debug(db.get_related_words(:attack).inspect)
+
+Log.debug(Words.gen_area_name({:template => :mountain, :keywords => [:beautiful]}).to_s)
+Log.debug(Words.gen_room_description({:template => :mountain, :keywords => [:beautiful], :occupants => ["elderly Beaver", "Frank the Ninja Bunny"]}).to_s)
+Log.debug(Words.gen_area_name({:template => :mountain, :keywords => [:beautiful]}).to_s)
 
 class NPC
     attr_reader :name
@@ -47,8 +50,9 @@ class NPC
 end
 class Ninja < NPC; end
 class Goat  < NPC; end
-agent = Ninja.new(nil, "Kenji Scrimshank")
-target = Goat.new(nil, "Billy Goat Balrog")
+
+agent = Ninja.new("Kenji Scrimshank")
+target = Goat.new("Billy Goat Balrog")
 # {:agent => <Ninja, :name => "Kenji Scrimshank">, :target => <Goat, :name => "Billy Goat Balrog">, :verb => :attack, :tool => :agent_current_weapon}
 5.times do
     Action.do(:agent => agent, :target => target, :action => :attack)

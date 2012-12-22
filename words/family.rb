@@ -4,18 +4,17 @@ class WordDB
     def initialize
         @groups       = []
         @associations = {}
+        @keywords     = {}
     end
 
     def add_family(*list_of_words)
+        Log.debug("Adding family #{list_of_words.inspect}")
         list_of_groups = list_of_words.collect do |word|
             if Symbol === word
                 find_group_for(word)
             else
-                # This is a definition
-                matched = find_group_for(word, false)
-
-                # Check if it exists
-                if matched
+                # Check if a definition exists
+                if matched = find_group_for(word, false)
                     matched
                 else
                     @groups << WordGroup.new(word)
@@ -32,6 +31,14 @@ class WordDB
         end
     end
 
+    def add_keyword_family(keyword, *list_of_words)
+        Log.debug("Adding keyword family #{keyword}, #{list_of_words.inspect}")
+        list_of_groups = add_family(*list_of_words)
+
+        @keywords[keyword] ||= []
+        @keywords[keyword].concat(list_of_groups)
+    end
+
     # Get a list of related groups
     def get_related_groups(word_or_group)
         group = find_group_for(word_or_group)
@@ -45,18 +52,27 @@ class WordDB
         @associations[group].select { |g| g.has?(pos) }.collect { |g| g[pos] }
     end
 
+    # Get a list of groups attached to the keyword
+    def get_keyword_groups(keyword)
+        @keywords[keyword]
+    end
+
+    def get_keyword_words(keyword, pos)
+        get_keyword_groups(keyword).select { |g| g.has?(pos) }.collect { |g| g[pos] }
+    end
+
     private
     def find_group_for(word, fail_on_nil=true)
         case word
         when Symbol,String
-            matching = @groups.select { |group| group.contains?(word) }
+            matching = @groups.select { |group| group.contains?(word.to_sym) }
             Log.debug("Warning - #{word} appears in more than one word group") if matching.size > 1
             raise "No reference to #{word} found in #{self.class}" if matching.size <= 0 && fail_on_nil
             matching.first
         when WordGroup, Hash
-            matching = @groups.select { |group| group == word }
+            matching = @groups.select { |group| group == word.to_sym }
             raise "Duplicate word groups found in #{self.class} for #{word.inspect}" unless matching.size < 2
-            raise "No word group #{word.inspect} ground in #{self.class}" if matching.size <= 0 && fail_on_nil
+            raise "No word group #{word.inspect} found in #{self.class}" if matching.size <= 0 && fail_on_nil
             matching.first
         else
             raise "Can't find groups given type #{word.class}"
@@ -66,12 +82,12 @@ end
 
 class WordGroup
     def initialize(args={})
-        @parts_of_speech = args
-        @parts_of_speech.keys.each do |key|
-            unless Symbol === @parts_of_speech[key]
-                @parts_of_speech[key] = @parts_of_speech[key].to_sym
-            end
-        end
+        @parts_of_speech = args.to_sym
+    end
+
+    # Values should all be converted to symbols already
+    def to_sym
+        self
     end
 
     def [](part_of_speech)
