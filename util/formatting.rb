@@ -11,6 +11,8 @@ class String
         word.gsub!(/\s+([\.\?\!])$/, '\1')
         # Capitalize the beginning.
         word.gsub!(/^(\w)/) { $1.upcase }
+        # Add ending punctuation, if it doesn't already exist.
+        word.gsub!(/([\.\!\?])?$/) { $1 || '.' }
     end
 
     def title

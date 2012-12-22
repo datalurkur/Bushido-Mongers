@@ -1,3 +1,5 @@
+require 'words/family'
+
 =begin
 
 NOUNS, VERBS, NAMES, ADJECTIVES, ADVERBS
@@ -14,6 +16,7 @@ CONJUGATIONS
 ===========================
 File format: conjugations.txt
 Line Format: <infinitive> <tense> <first person> <second person> <third sing> <third plural> <first plural>
+I you he we you they
 
 =end
 
@@ -30,28 +33,25 @@ end
 
 module WordParser
     # The de-facto Words initializer.
-    def self.load(dict_dir)
+    def self.load(dict_dir = 'words/dict')
+        raise "Cannot find #{dict_dir}" unless File.exists?(dict_dir) && File.directory?(dict_dir)
+        db = WordDB.new
+
         Words::TYPES.each do |type|
             load_file(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/) do |line, match|
                 keyword = match[1].to_sym
-                Words.add_family(type => line.chomp, :keywords => [keyword])
+
+                db.add_keyword_family(keyword, {type => line.chomp})
             end
         end
         load_file(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/) do |line, match|
-            wordtype = match[1]
-
-            # Add all the words as word-families, then associate them all.
-            families = []
-            line.split(/\s/).each { |w| families << Words.add_family(wordtype.to_sym => w) }
-            Words.associate(families)
+            part_of_speech = match[1].to_sym
+            family = line.split(/\s/).collect { |word| {part_of_speech => word} }
+            db.add_family(*family)
         end
-        load_file(dict_dir, "groups_*.txt", /^.*groups_(.*).txt/) do |line, match|
-            type = match[1]
 
-            list = line.split(/\s/)
-            # Add-as-adjective for now.
-            text = list.pop
-            Words.add_family(:adjective => text, :generate_from_adj => true, :keywords => list.map(&:to_sym))
-        end
+        # FIXME: We currently register the last-loaded db inside of Words, making it the de-facto global. Das nasty.
+        Words.register_db(db)
+        db
     end
 end

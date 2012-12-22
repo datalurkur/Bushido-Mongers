@@ -10,102 +10,16 @@ module Words
     VOWELS = ['a', 'e', 'i', 'o', 'u']
     CONSONANTS = ('a'..'z').to_a - VOWELS
 
-    # Receives query hash; returns list of matching families or nil
-    def self.find(input = {})
-        input[:text] = input[:text].to_sym if input[:text] && String === input[:text]
+    def self.register_db(db)
+        @db = db
+    end
 
-        @families ||= []
-        search_families = @families.dup
-        results = []
-
-        if input[:keyword]
-            search_families = search_families.select { |f| f.keywords && f.keywords.include?(input[:keyword].to_sym) }
-        end
-
-        if input[:synonym]
-            if String === input[:synonym] || Symbol === input[:synonym]
-                input[:synonym] = self.find(:text => input[:synonym].to_sym).first
-            end
-            search_families = search_families.select { |f| f.synonyms && f.synonyms.include?(input[:synonym]) }
-        end
-
-        if input[:text]
-            search_families.each do |family|
-                if family.find(input[:text])
-                    results << family
-                end
-            end
+    def self.db
+        if @db
+            @db
         else
-            results = search_families
+            WordParser.load
         end
-
-        if input[:wordtype]
-            results = results.map { |f| f.send(input[:wordtype]) }
-        end
-
-        return results.empty? ? nil : results
-    end
-
-    def self.proper_nouns
-        Words.find(:keyword => :proper).map(&:noun).map(&:to_s)
-    end
-
-    class WordFamily
-        attr_reader *Words::TYPES
-        attr_accessor :keywords, :synonyms
-
-        def initialize(hash)
-            @keywords = []
-            @synonyms = []
-
-            Words::TYPES.each do |type|
-                instance_variable_set("@#{type}", hash[type].to_sym) if hash[type]
-            end
-
-            @keywords = hash[:keywords].map(&:to_sym) if hash[:keywords]
-
-            # FIXME: It's confusing that synonyms aren't read here.
-
-            if hash[:generate_from_adj]
-                @adverb = Adjective.adv(@adjective).to_sym unless @adverb
-                @noun = Adjective.noun(@adjective).to_sym unless @noun
-            end
-        end
-
-        def list
-            @list = [@noun, @verb, @adjective, @adverb].compact.map(&:to_sym)
-        end
-
-        def find(text)
-            Words::TYPES.each do |type|
-                if self.send(type) == text
-                    return type
-                end
-            end
-            nil
-        end
-    end
-
-    def self.add_family(hash)
-        @families ||= []
-
-        Words::TYPES.each do |type|
-            next unless hash[type]
-            if families = Words.find(:text => hash[type])
-                Log.debug("#{hash[type]} already defined in #{families.size} families: #{families.inspect}!") if families.size > 1
-                old_wf = families.first
-                if hash[:keywords] && old_wf.keywords != hash[:keywords]
-                    old_wf.keywords += hash[:keywords].map(&:to_sym)
-                    old_wf.keywords.flatten
-                    Log.debug("Added keywords #{hash[:keywords]} to #{old_wf.inspect}")
-                end
-                return old_wf
-            end
-        end
-
-        new_wf = WordFamily.new(hash)
-        @families << new_wf
-        return new_wf
     end
 
     class Adjective
@@ -124,83 +38,208 @@ module Words
         end
     end
 
-    #:keywords=>[], :contents=>[], :occupants=>["Test NPC 23683", "Test NPC 35550", "Test Character"], :exits=>[:west], :name=>"b00"
+    # http://en.wikipedia.org/wiki/English_verbs#Syntactic_constructions
+    # http://en.wikipedia.org/wiki/English_clause_syntax
+    module WordState
+        class << self
+            ASPECTS = [:perfect, :imperfect, :habitual, :stative, :progressive]
+            TENSE   = [:present, :past]
+            MOOD    = [:indicative, :subjunctive, :imperative]
+            PERSON  = [:first, :second, :third, :first_plural, :second_plural, :third_plural]
+            VOICE   = [:active, :passive]
 
-    class AreaDescription
-        def initialize(props = {})
-            @sentences = []
+            attr_accessor :aspect, :tense, :mood, :person, :voice
 
-            if props[:keywords].empty?
-                @sentences << Sentence.new(:subject => "You", :action => "see", :target => "boring room")
-            else
-                @sentences << Sentence.new(:subject => "You", :action => "see", :target => (props[:keywords].rand.to_s + " room"))
+            def reset_state
+                @aspect = :stative
+                @tense  = :present
+                @mood   = :indicative
+                @person = :third
+                @voice  = :active
             end
-
-            if props[:contents] && !props[:contents].empty?
-                @sentences << Sentence.new(:subject => "You", :action => "see", :target => "boring room")
-            end
-
-            if props[:occupants] && !props[:occupants].empty?
-                @sentences << Sentence.new(:subject => "You", :action => "see", :target => props[:occupants])
-            end
-
-            props[:exits]
-        end
-
-        def to_s
-            @sentences.map(&:to_s).join(" ")
         end
     end
 
-    # FIXME: Generate a random name using the keywords
-    class AreaName
-        def initialize(props = {})
-            @name = Sentence::Noun.new(props[:template].to_s)
+    # Manipulating sentences:
+    # http://en.wikipedia.org/wiki/Constituent_(linguistics)
 
-            @name.descriptors << "the"
-            @name.descriptors << props[:keywords].rand if props[:keywords]
-        end
+=begin
+    Case:
+    Noun:   The nominative case indicates the subject of a finite verb: We went to the store.
+    Noun:   The accusative case indicates the direct object of a verb: The clerk remembered us.
+    Noun:   The dative case indicates the indirect object of a verb: The clerk gave us a discount. or The clerk gave a discount to us.
+    Noun:   The genitive case, which roughly corresponds to English's possessive case and preposition of, indicates the possessor of another noun: John's book was on the table. and The pages of the book turned yellow.
+    Noun:   The vocative case indicates an addressee: John, are you all right? or simply Hello, John!
+    Phrase: The ablative case indicates movement from something, or cause: The victim went from us to see the doctor. and He was unhappy because of depression.
+    Phrase: The locative case indicates a location: We live in China.
+    Phrase: The instrumental case indicates an object used in performing an action: We wiped the floor with a mop. and Written by hand.
+=end
 
-        def to_s
-            @name.to_s.title
-        end
-    end
+    # Each node in the tree is either a root node, a branch node, or a leaf node.
+    class ParseTree
+        attr_accessor :root
+        class PTNode
+            CASE = [:nominative, :accusative, :dative, :genitive, :vocative, :ablative, :locative, :instrumental]
+            attr_accessor :case
+            TYPE = [:sentence, :noun_phrase, :verb_phrase, :noun, :verb, :determiner]
 
-    class Sentence
-        # http://en.wikipedia.org/wiki/English_verbs#Syntactic_constructions
-        # http://en.wikipedia.org/wiki/English_clause_syntax
-        ASPECTS = [:perfect, :imperfect, :habitual, :stative, :progressive]
-        MOOD    = [:indicative, :subjunctive, :imperative]
+            # Children in PTInternalNodes are other PTInternalNodes or PTLeafs. Children in PTLeaves are strings.
+            attr_accessor :children
 
-        class SentencePart
-            # Descriptors can be either adjectives or adverbs attached to the part.
-            # The subparts should always be strings.
-            attr_accessor :descriptors, :phrases, :plural
-
-            def initialize(str)
-                @main = str.to_s
-                @descriptors = []
-                @phrases = []
-                @plural = false
+            def initialize(*children)
+                raise "Can't instantiate parent class!" if self.class == PTNode
+                @children = children.flatten
             end
 
             def to_s
-                start = ''
-                main = @main
-                # catch article
-                if m = main.match(/^(the) (.*)/)
-                    start = m[1]
-                    main  = m[2]
+                @children.join(" ")
+            end
+        end
+
+        class PTInternalNode < PTNode
+    #        def to_s
+    #            "(" + @children.join(" ") + ")"
+    #        end
+        end
+
+        class PTLeaf < PTNode
+        end
+
+        def initialize(*args)
+            @root = PTInternalNode.new(*args)
+        end
+
+        def to_s
+            @root.to_s
+        end
+    end
+
+    class Sentence < ParseTree
+        module PrintsAsList
+            def to_s
+                case @children.size
+                when 0: ""
+                when 1: @children.first.to_s
+                else
+                    if @print_as_list
+                        strings = @children.map(&:to_s)
+                        pop = strings.pop
+                        strings.join(", ") + " and " + pop
+                    else
+                        super
+                    end
                 end
-                [start, @descriptors, main, @phrases].flatten.reject { |s| s.to_s.empty? }.join(" ")
+            end
+        end
+
+        # Types: prepositional (during), infinitive (to work hard)
+        # FIXME: use
+        class Phrase < ParseTree::PTInternalNode
+        end
+
+        class VerbPhrase < ParseTree::PTInternalNode
+            # modal auxiliary: will, has
+            # modal semi-auxiliary: be going to
+            # FIXME: add modals based on tense/aspect
+            attr_accessor :modal
+            def initialize(verb, args = {})
+                @children = [Verb.new(verb)]
+                @children << NounPhrase.new(args[:dir_obj]) if args[:dir_obj]
+                @children << NounPhrase.new(args[:ind_obj]) if args[:ind_obj]
+            end
+        end
+
+        class NounPhrase < ParseTree::PTInternalNode
+            include PrintsAsList
+            def initialize(nouns)
+                if Array === nouns
+                    # At the bottom level, determiners will be added to NounPhrases.
+                    if Determiner === nouns.first
+                        @children = nouns
+                    else
+                        @children = nouns.map do |noun|
+                            NounPhrase.new(determine(noun))
+                        end
+                        @print_as_list = true
+                    end
+                else
+                    @children = determine(nouns)
+                end
             end
 
+            def determine(noun)
+                if Noun.definite?(noun)
+                    [Determiner.new(noun), Noun === noun ? noun : Noun.new(noun.class.to_s.downcase)]
+                elsif noun.respond_to?(:name)
+                    [Noun.new(noun.name)]
+                else
+                    [Noun.new(noun)]
+                end
+            end
+        end
+
+        # http://en.wikipedia.org/wiki/English_verbs
+        # http://en.wikipedia.org/wiki/List_of_English_irregular_verbs
+        # http://en.wikipedia.org/wiki/Predicate_(grammar)
+        # http://en.wikipedia.org/wiki/Phrasal_verb
+        # http://www.verbix.com/webverbix/English/have.html
+        class Verb < ParseTree::PTLeaf
+            def initialize(*children)
+                @children = children.map { |t| Verb.conjugate(t) }
+            end
+
+            # FIXME: use
+            def self.conjugate(infinitive, tense = WordState.tense, subject = WordState.person)
+                # Words::Conjugations
+                if {}.keys.include?(infinitive)
+                    nil
+                end
+
+                # defaults
+                infinitive = case tense
+                when :present
+                    if subject == :third
+                        sibilant?(infinitive) ? "#{infinitive}es" : "#{infinitive}s"
+                    else
+                        infinitive
+                    end
+                when :past
+                    # Double the ending letter, if necessary.
+                    infinitive.gsub!(/([nbpt])$/, '\1\1')
+                    # drop any ending 'e'
+                    infinitive.sub!(/e$/, '')
+                    infinitive += 'ed'
+                end
+            end
+
+            # However if the base form ends in one of the sibilant sounds
+            # (/s/, /z/, /ʃ/, /ʒ/, /tʃ/, /dʒ/), and its spelling does not end in a
+            # silent e, then -es is added: buzz → buzzes; catch → catches. Verbs
+            # ending in a consonant plus o also typically add -es: veto → vetoes.
+            def self.sibilant?(infinitive)
+                infinitive = infinitive.to_s if Symbol === infinitive
+                # First stab.
+                infinitive[-1].chr == 's' ||
+                (Words::CONSONANTS.include?(infinitive[-2].chr) && infinitive[-1].chr == 'o')
+            end
+        end
+
+        # FIXME: Handle Gerunds
+        class Noun < ParseTree::PTLeaf
+            # FIXME: http://en.wikipedia.org/wiki/Definiteness
+            # FIXME: Base this on noun lookups?
+            def self.definite?(noun)
+                return !(noun.is_a?(String) || noun.is_a?(Symbol))
+            end
+
+            # FIXME: use
             def plural?
                 return true if @plural
                 # Otherwise, make a nasty first-guess.
                 @main[-1] == 's' || @main.match(' and ')
             end
 
+            # FIXME: use
             def pluralize
                 # Make a nasty first-approximation.
                 if (plural? && noun?) || (!plural? && verb?)
@@ -208,107 +247,40 @@ module Words
                 end
                 self
             end
-
-            def verb?() false; end
-            def noun?() false; end
         end
 
-        # http://en.wikipedia.org/wiki/English_verbs
-        # http://en.wikipedia.org/wiki/List_of_English_irregular_verbs
-        # http://en.wikipedia.org/wiki/Predicate_(grammar)
-        # http://en.wikipedia.org/wiki/Phrasal_verb
-        # Technically, the predicate contains the verb, so this will be expanded upon in the future.
-        class Verb < SentencePart
-            def initialize(infinitive)
-                @infinitive = infinitive.to_s
-                super(infinitive)
+        class Determiner < ParseTree::PTLeaf
+            def initialize(noun)
+                @children = ["the"]
             end
-
-            def conjugate(tense, subject = :third_singular)
-                # Words::Conjugations
-                if {}.keys.include?(@infinitive)
-                    nil
-                end
-
-                case tense
-                when :present
-                    @main += sibilant? ? 'es' : 's'
-                when :past
-                    # Double the ending letter, if necessary.
-                    @main.gsub!(/([nbpt])$/, '\1\1')
-                    # drop any ending 'e'
-                    @main.sub!(/e$/, '')
-                    @main += 'ed'
-                end
-                self
-            end
-
-            # However if the base form ends in one of the sibilant sounds
-            # (/s/, /z/, /ʃ/, /ʒ/, /tʃ/, /dʒ/), and its spelling does not end in a
-            # silent e, then -es is added: buzz → buzzes; catch → catches. Verbs
-            # ending in a consonant plus o also typically add -es: veto → vetoes.
-            def sibilant?
-                # First stab.
-                @infinitive[-1].chr == 's' ||
-                (CONSONANTS.include?(@infinitive[-2].chr) && @infinitive[-1].chr == 'o')
-            end
-
-            def verb?() true; end
         end
 
-        # TODO - handle gerunds
-        class Noun < SentencePart
-            def initialize(str)
-                if Array === str
-                    if str.size == 1
-                        super(str.pop)
-                    else
-                        pop = str.pop
-                        super(str.join(", ") + " and " + pop)
-                    end
-                elsif str.respond_to?(:name)
-                    super(rand(2) == 0 ? "the #{str.class.to_s.downcase}" : str.name)
-                else
-                    super(str)
-                end
-            end
+        def to_s
+            super.sentence
+        end
+    end
 
-            def noun?() true; end
+    # FIXME: action descriptors: The generic ninja generically slices the goat with genericness.
+    def self.gen_sentence(args = {})
+        subject = args[:subject] || args[:agent]
+        verb    = args[:verb] || args[:action]
+        dir_obj = args[:target]
+        ind_obj = args[:tool]
+
+        raise unless verb
+
+        # Use an associated verb, if any exist.
+        associated_verbs = Words.db.get_related_words(verb.to_sym)
+        if associated_verbs && associated_verbs.size > 1
+            verb = associated_verbs.rand
         end
 
-        def initialize(descriptor, synonym=nil)
-            Log.debug("Descriptor is #{descriptor.inspect}")
-            @tense = descriptor[:tense] || :present # TODO - implement other tenses
-            @features = []
-            @voice = :active # TODO - implement passive
-            @aspect = :stative # TODO - implement aspect
+        # FIXME: expletive more often for second person
+        # FIXME: Use expletive
+        features = []
+        features << :expletive if rand(2) == 0
 
-            @features << :expletive if rand(2) == 0
-
-            @subject = if descriptor[:subject]
-                descriptor[:subject]
-            elsif descriptor[:agent]
-                (rand(2) == 0 ? "the #{descriptor[:agent].class.to_s.downcase}" : descriptor[:agent].name)
-            end
-
-            @subject = Noun.new(@subject)
-            @verb    = Verb.new(descriptor[:verb] || descriptor[:action])
-            @dir_obj = Noun.new(descriptor[:target])
-            @ind_obj = Noun.new(descriptor[:tool])
-
-            # Synonymify the verb, maybe.
-            associated_verb_families = Words.find(:text => @verb.to_s)
-            if associated_verb_families && associated_verb_families.size > 1
-                verb_syns = associated_verb_families.first.synonyms.map(&:verb)
-                Log.debug("verb #{@verb} syns #{verb_syns}", 6)
-                if !verb_syns.empty?
-                    @verb = Verb.new(verb_syns.rand)
-                end
-            end
-
-            @verb.conjugate(@tense)
-
-            # action descriptors: The generic ninja generically slices the goat with genericness.
+=begin
             phrase, adverb = ''
             if synonym && matches = Words.find(:keyword => synonym)
                 describer = matches.rand
@@ -316,32 +288,47 @@ module Words
                 @verb.descriptors << describer.adverb
                 @verb.phrases << "with #{describer.noun}"
             end
-        end
+=end
 
-        def to_s
-#            if @features.include?(:expletive)
-#                "There #{@subject.plural? ? "are" : "is"}" : '') +
-#                ([@subject, @verb, @dir_obj, @ind_obj].map(&:full).join(" ") + '.').sentence
+        subject_np = Sentence::NounPhrase.new(subject)
+        verb_np    = Sentence::VerbPhrase.new(verb, :dir_obj => dir_obj, :ind_obj => ind_obj)
 
-#            (@features.include?(:expletive) ? "There #{@subject.plural? ? "are" : "is"}" : '') +
-            ([@subject, @verb, @dir_obj, @ind_obj].map(&:to_s).join(" ") + '.').sentence
-        end
+        Sentence.new(subject_np, verb_np)
     end
 
-private
-    # Unify all the associated entries.
-    def self.associate(*families)
-        families.flatten!
-        Log.debug("associate: #{families.inspect}")
+    #:keywords=>[], :contents=>[], :occupants=>["Test NPC 23683", "Test NPC 35550", "Test Character"], :exits=>[:west], :name=>"b00"
 
-        # Add already-existing synonyms.
-        synonyms = families.inject([]) do |list, f|
-            list + [f] + [f.synonyms]
-        end.flatten!
+    def self.gen_room_description(args = {})
+        WordState.person = :second
+        
+        @sentences = []
 
-        families.each do |f|
-            f.synonyms = synonyms
+        if args[:keywords].empty?
+            @sentences << Words.gen_sentence(:subject => "You", :action => "see", :target => "boring room")
+        else
+            @sentences << Words.gen_sentence(:subject => "You", :action => "see", :target => (args[:keywords].rand.to_s + " room"))
         end
-        families
+
+        if args[:contents] && !args[:contents].empty?
+            @sentences << Words.gen_sentence(:subject => "You", :action => "see", :target => "boring room")
+        end
+
+        if args[:occupants] && !args[:occupants].empty?
+            @sentences << Words.gen_sentence(:subject => "You", :action => "see", :target => args[:occupants])
+        end
+
+        args[:exits]
+
+        WordState.reset_state
+        @sentences.join(" ")
     end
+
+    def self.gen_area_name(args = {})
+        name = Sentence::NounPhrase.new(args[:template])
+        name.children = [args[:keywords].rand, *name.children] if args[:keywords]
+        name.children = ["the", *name.children]
+        name.to_s.title
+    end
+
+    WordState.reset_state
 end

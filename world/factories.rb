@@ -32,7 +32,7 @@ class << self
 
         params = ZoneTemplate.random(parent_zone, size, depth)
         Log.debug(params.inspect)
-        name = "#{Words::AreaName.new(params).to_s}-#{rand(1000)}"
+        name = "#{Words.gen_area_name(params).to_s}-#{rand(1000)}"
 
         area = if (depth < 2) || (rand() < config[:area_size_tendency])
             Log.debug("Generating room #{name}", 5)

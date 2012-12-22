@@ -50,7 +50,7 @@ class ZoneTemplate
             type = nil
             if eligible_types.empty?
                 # This might warrant more discussion about what to do, but for now, just use the parent or a random template.
-                if parent
+                if parent && rand(2) == 0
                     type = parent
                 else
                     type = filter_types.rand
