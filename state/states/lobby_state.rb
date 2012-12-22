@@ -39,7 +39,7 @@ class LobbyState < State
              :user_joins
             pass_to_client(message)
         when :game_params
-            @client.send_to_client(Message.new(:list, {:title=>"Game Parameters", :items=>message.params}))
+            @client.send_to_client(Message.new(:list, {:field=>:game_parameters, :items=>message.params}))
             begin_exchange(@lobby_menu_exchange)
             return
         when :generation_success,

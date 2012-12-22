@@ -12,7 +12,7 @@ class << self
         srand(seed)
 
         params = ZoneTemplate.random(nil, size, depth)
-        world_name = Words::AreaName.new(params).to_s
+        world_name = Words.gen_area_name(params).to_s
 
         world = World.new(world_name, size, depth, params)
         config[:openness]           ||= 0.75 # Larger numbers lead to more rooms overall
