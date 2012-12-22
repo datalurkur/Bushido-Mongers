@@ -46,7 +46,7 @@ hb = db.create(core, :humanoid_body, {:size => :large})
 hb = db.create(core, :arachnoid_body, {:size => :tiny})
 
 # FIXME
-# Recipe and verb tests
+# Recipe and command tests
 Log.debug("How do I produce a dagger?")
 Log.debug(db.info_for(:dagger, :technique))
 
@@ -54,11 +54,11 @@ Log.debug("What can I produce with iron?")
 Log.debug(db.info_for(:iron, :used_in))
 
 Log.debug("What can I produce at an anvil?")
-anvil_verbs = db.info_for(:anvil, :location_of)
-Log.debug(["Verbs that happen at an anvil:", anvil_verbs])
-selected_verb = anvil_verbs.first
-anvil_products = db.find_subtypes(:constructed, {:technique => selected_verb})
-Log.debug(["Things produced at an anvil by means of #{selected_verb}", anvil_products])
+anvil_commands = db.info_for(:anvil, :location_of)
+Log.debug(["Verbs that happen at an anvil:", anvil_commands])
+selected_command = anvil_commands.first
+anvil_products = db.find_subtypes(:constructed, {:technique => selected_command})
+Log.debug(["Things produced at an anvil by means of #{selected_command}", anvil_products])
 
 Log.debug("What can I do with a hammer?")
 Log.debug(db.info_for(:hammer, :used_for))

@@ -2,7 +2,6 @@ class BushidoObject
     #attr_reader :core, :type
     def initialize(core, type, params={})
         Log.debug("Creating #{type}", 6)
-        Log.debug(["Creation params", params], 8)
         @core = core
         @type = type
 
@@ -10,7 +9,6 @@ class BushidoObject
         @extensions = []
 
         type_info = @core.db.raw_info_for(type)
-        Log.debug(["Type info", type_info], 8)
 
         type_info[:needs].each do |k|
             raise "Required argument #{k.inspect} missing during creation of #{type}" unless params[k]
@@ -29,7 +27,6 @@ class BushidoObject
             end
         end
 
-        Log.debug("#{type} invoking #{type_info[:uses].size} extensions", 8)
         type_info[:uses].each do |mod|
             @extensions << mod
             extend mod

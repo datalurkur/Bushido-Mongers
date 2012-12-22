@@ -5,7 +5,7 @@
 #CodeCoverage.setup
 
 require 'util/timer'
-MeteredMethods.enable
+#MeteredMethods.enable
 
 require 'net/game_server'
 

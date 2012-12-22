@@ -87,7 +87,7 @@ class Lobby
         if is_playing?(username)
             # Save the character
             Character.save(username, @game_core.get_character(username))
-            @game_core.remove_player(username)
+            @game_core.remove_character(username)
         end
         @users.delete(username)
         Log.debug("#{username} has left #{name}")
@@ -210,6 +210,23 @@ class Lobby
                 send_to_user(username, Message.new(:move_success))
             else
                 send_to_user(username, Message.new(:move_fail, {:reason => result}))
+            end
+        when :act
+            Log.debug("Parsing action message")
+            action = nil
+            begin
+                Log.debug("Creating command object")
+                action = @game_core.db.create(@game_core, message.command, message.args)
+            rescue Exception => e
+                Log.debug(["Failed to create command object", e.message, e.backtrace])
+                send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
+            rescue
+                Log.debug("How the fuck did we get here?")
+            end
+            if action
+                Log.debug("Successfully created command object")
+                action.on_command(action)
+                send_to_user(username, Message.new(:act_success, {:result => "Woot!"}))
             end
         else
             Log.debug("Unhandled game message type #{message.type} received from client")

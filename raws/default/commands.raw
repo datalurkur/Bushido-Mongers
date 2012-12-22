@@ -1,0 +1,61 @@
+abstract root command {
+    has optional sym target;
+    has_many optional sym components;
+    has optional sym tool;
+    has optional sym location;
+
+    uses command;
+}
+
+command attack {
+    target corporeal;
+    tool weapon;
+
+    uses attack;
+}
+
+command eat {
+    target food;
+
+    uses eating;
+}
+
+abstract command construct {
+    uses construction;
+}
+
+construct cook {
+}
+
+construct forge {
+    location anvil;
+    tool hammer;
+}
+
+construct craft {}
+
+construct make_bow {}
+
+construct fletch {}
+
+post_process {
+    self[:command][:subtypes].each do |command|
+        Log.debug("Propagating tool information for #{command}")
+        propagate_recursive(info_for(command, :tool)) do |subtype|
+            Log.debug("#{subtype} is a required tool for #{command}")
+            info_for(subtype, :used_for, []) << command
+        end
+
+        Log.debug("Propagating target information for #{command}")
+        propagate_recursive(info_for(command, :target)) do |subtype|
+            Log.debug("#{subtype} is a target of #{command}")
+            info_for(subtype, :target_of, []) << command
+        end
+
+        Log.debug("Propagating location information for #{command}")
+        propagate_recursive(info_for(command, :location)) do |subtype|
+            Log.debug("#{subtype} is the location at which #{command} happens")
+            info_for(subtype, :location_of, []) << command
+        end
+    end
+}

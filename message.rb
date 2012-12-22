@@ -54,9 +54,7 @@ class Message
             listeners(core, message_class).delete(listener)
         end
 
-        # TODO - I feel like this could be more intelligent - why pass the core every time if we could generally know which core we're dispatching from?
         def dispatch(core, type, args={})
-            Log.debug("Dispatching #{type} message", 6)
             m = Message.new(type, args)
             l = get_listeners_for(core, type)
             Log.debug("Message falling upon deaf ears") if l.empty?
@@ -83,7 +81,6 @@ class Message
     end
 
     def initialize(type, args={})
-        Log.debug(["Creating a message of type #{type}", args], 6)
         Message.check_message(type, args)
         @type = type
         @args = Message.default_args(type).merge(args)

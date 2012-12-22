@@ -46,7 +46,7 @@ class ServerMenuState < State
             begin_exchange(@server_menu_exchange)
             return
         when :lobby_list
-            @client.send_to_client(Message.new(:list, {:title=>"Available Game Lobbies", :items=>message.lobbies}))
+            @client.send_to_client(Message.new(:list, {:field=>:available_lobbies, :items=>message.lobbies}))
             begin_exchange(@server_menu_exchange)
             return
         when :join_success,

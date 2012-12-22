@@ -109,8 +109,6 @@ module Character
                 if self == message.defender
                     Log.debug("Character #{instance.name} is attacked by #{message.attacker}")
                 end
-            else
-                Log.debug("Character #{instance.name} ignoring #{message.type}")
             end
         end
     end

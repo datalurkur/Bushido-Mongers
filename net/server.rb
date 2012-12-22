@@ -88,9 +88,11 @@ class Server
     def terminate_client(socket)
         Log.debug("Terminating client socket")
         @sockets_mutex.synchronize {
-            @client_sockets[socket][:listen_thread].kill
-            socket.close
-            @client_sockets.delete(socket)
+            unless @client_sockets[socket].nil?
+                @client_sockets[socket][:listen_thread].kill
+                socket.close
+                @client_sockets.delete(socket)
+            end
         }
     end
 
