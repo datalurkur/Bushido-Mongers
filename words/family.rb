@@ -8,7 +8,7 @@ class WordDB
     end
 
     def add_family(*list_of_words)
-        Log.debug("Adding family #{list_of_words.inspect}")
+        Log.debug("Adding family #{list_of_words.inspect}", 6)
         list_of_groups = list_of_words.collect do |word|
             if Symbol === word
                 find_group_for(word)
@@ -32,7 +32,7 @@ class WordDB
     end
 
     def add_keyword_family(keyword, *list_of_words)
-        Log.debug("Adding keyword family #{keyword}, #{list_of_words.inspect}")
+        Log.debug("Adding keyword family #{keyword}, #{list_of_words.inspect}", 6)
         list_of_groups = add_family(*list_of_words)
 
         @keywords[keyword] ||= []

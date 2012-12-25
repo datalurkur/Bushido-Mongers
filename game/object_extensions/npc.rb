@@ -22,13 +22,13 @@ module NpcBehavior
         @behavior = BehaviorSet.create(behavior)
     end
 
-    def attack(target)
-        Log.debug("#{name} attacking #{target.name}")
-        Message.dispatch(@core, :unit_attacks, {
-            :attacker      => self,
-            :defender      => target,
-            :chance_to_hit => "FIXME",
-            :damage        => "FIXME"
-        })
+    def do_command(command, args)
+        begin
+            cmd_obj = @core.db.create(command, args)
+        rescue Exception => e
+            Log.debug(["NPC failed to create command object of type #{command}", args, e.message])
+        end
+
+        cmd_obj.on_command unless cmd_obj.nil?
     end
 end

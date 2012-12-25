@@ -10,6 +10,8 @@ class Log
         LOG_CONFIG = "log.cfg"
 
         def setup(name, logfile_prefix, logfile_behavior=:terse)
+            $stdout.sync = true
+
             @log_mutex = Mutex.new
             @default_thread_name = "Unnamed"
 

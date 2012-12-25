@@ -36,8 +36,10 @@ class Array
                     element.to_formatted_string(prefix + inner_indent, omit_braces)
                 when String
                     prefix + inner_indent + element
-                else
+                when Symbol
                     prefix + inner_indent + element.inspect
+                else
+                    prefix + inner_indent + element.class
                 end
             end
         end)
@@ -65,7 +67,11 @@ class Hash
                 value_printed = false
 
                 unless (Array === value) || (Hash === value)
-                    output += value.inspect
+                    if (String === value) || (Symbol === value)
+                        output += value.inspect
+                    else
+                        output += value.class.to_s
+                    end
                     value_printed = true
                 end
 
