@@ -203,7 +203,7 @@ module Words
 #                Log.debug("Creating NounPhrase with #{nouns.inspect}")
                 if Array === nouns
                     # At the bottom level, determiners will be added to NounPhrases.
-                    if Determiner === nouns.first
+                    if Article === nouns.first
                         @children = nouns
                     else
                         @children = nouns.map do |noun|
@@ -221,7 +221,7 @@ module Words
                 if NounPhrase === noun || Noun === noun
                     noun
                 elsif !Noun.pronoun?(noun) && !Noun.proper?(noun)
-                    NounPhrase.new([Determiner.new(noun), create_noun(noun)])
+                    NounPhrase.new([Article.new(noun), create_noun(noun)])
                 else
                     create_noun(noun)
                 end
@@ -343,7 +343,7 @@ module Words
             end
         end
 
-        class Determiner < ParseTree::PTLeaf
+        class Article < ParseTree::PTLeaf
             def initialize(noun)
                 if Noun.definite?(noun)
                     super("the")
@@ -372,8 +372,8 @@ module Words
             verb = associated_verbs.rand
         end
 
-        # FIXME: expletive more often for second person
-        # FIXME: Use expletive
+        # TODO - Use expletive
+        # TODO - expletive more often for second person
         features = []
         features << :expletive if rand(2) == 0
 
@@ -387,7 +387,7 @@ module Words
 
     def self.gen_room_description(args = {})
         WordState.person = :second
-        
+
         @sentences = []
 
         if args[:keywords].empty?
@@ -417,7 +417,7 @@ module Words
 =begin
         if args[:keywords]
             Log.debug(name.children.inspect)
-            if Sentence::Determiner === name.children.first
+            if Sentence::Article === name.children.first
                 determiner = name.children.shift
                 name.children = [determiner, args[:keywords].rand, *name.children]
             else

@@ -1,3 +1,4 @@
+require 'game/tables'
 require 'world/zone'
 
 module ZoneWithKeywords
@@ -54,7 +55,7 @@ class Room < ZoneLeaf
         Log.debug("Populating leaf #{name}")
 
         # FIXME: This should be somewhere else, and not so inclusive.
-        @parent.add_starting_location(self)# if rand(2) == 0
+        @parent.add_starting_location(self)# if Chance.take(:coin_toss)
 
         populate_npcs(core)
     end
@@ -82,17 +83,20 @@ class Room < ZoneLeaf
         Log.debug("Can create #{acceptable_types.inspect} in #{self.zone}", 6)
         Log.debug("No acceptable NPC types found for #{self.zone}!") if acceptable_types.empty?
 
-        # This number will need tweaking, probably based on zone params.
-        (always_spawns.size + rand(acceptable_types.size)).floor
-        5.times do |i|
-            type = acceptable_types.rand
-            unless always_spawns.empty?
-                type = always_spawns.shift
-            end
-
-            # Add the NPC.
-            core.add_npc(core.db.create(core, type, {:name => "#{type} #{rand(100000)}", :initial_position => self}))
+        always_spawns.each do |type|
+            add_npc(core, type)
         end
+
+        acceptable_types.each do |type|
+            spawn_chance = core.db.info_for(type, :spawn_chance)
+            add_npc(core, type) if spawn_chance && Chance.take(spawn_chance)
+        end
+
+    end
+    private
+    def add_npc(core, type)
+        # FIXME: Generate better names?
+        core.add_npc(core.db.create(core, type, {:name => "#{type} #{rand(100000)}", :initial_position => self}))
     end
 end
 

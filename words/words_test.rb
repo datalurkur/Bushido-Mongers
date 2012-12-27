@@ -39,8 +39,7 @@ Log.debug(see_synonyms.rand)
 Log.debug(db.get_related_words(:attack).inspect)
 
 Log.debug(Words.gen_area_name({:template => :mountain, :keywords => [:beautiful]}).to_s)
-Log.debug(Words.gen_room_description({:template => :mountain, :keywords => [:beautiful], :occupants => ["elderly Beaver", "Frank the Ninja Bunny"]}).to_s)
-Log.debug(Words.gen_area_name({:template => :mountain, :keywords => [:beautiful]}).to_s)
+Log.debug(Words.gen_room_description({:template => :mountain, :keywords => [:beautiful], :occupants => ["elderly beaver", "Frank the Ninja Bunny"]}).to_s)
 
 Log.debug(Words.gen_sentence(:agent => :John, :action => :see, :target => :Mary).to_s)
 

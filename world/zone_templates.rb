@@ -49,12 +49,8 @@ class ZoneTemplate
 
             type = nil
             if eligible_types.empty?
-                # This might warrant more discussion about what to do, but for now, just use the parent or a random template.
-                if parent && rand(2) == 0
-                    type = parent
-                else
-                    type = filter_types.rand
-                end
+                # Just use the parent, if it exists, or a random template.
+                type = (parent && Chance.take(:coin_toss)) ? parent : filter_types.rand
             else
                 type = eligible_types.rand
             end
@@ -139,9 +135,11 @@ ZoneTemplate.define(:sewer,
 )
 
 ZoneTemplate.define(:dock,
-    :depth_range    => 0..3,
-    :keywords       => [],
-    :always_spawns  => [:monster]
+    :depth_range     => 1..1,
+    :always_contains => [:pier],
+    :may_contain     => [:boat],
+    :keywords        => [],
+    :always_spawns   => [:monster]
 )
 
 ZoneTemplate.define(:boat,
