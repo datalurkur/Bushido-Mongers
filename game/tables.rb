@@ -32,7 +32,7 @@ module Quality
     end
 end
 
-module Chances
+module Chance
     class << self
         def levels
             {
@@ -46,6 +46,11 @@ module Chances
                 :certain    => 0.999,
                 :guaranteed => 0.99999
             }
+        end
+
+        def take(level)
+            raise "Level #{level.inspect} is not a Chance!" unless levels.keys.include?(level)
+            return (Kernel.rand < levels[level])
         end
     end
 end

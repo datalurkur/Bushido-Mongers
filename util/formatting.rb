@@ -18,6 +18,10 @@ class String
     def title
         self.split(' ').map(&:capitalize).join(' ')
     end
+
+    def capitalized?
+        !!(self.to_s[0].chr.match(/[A-Z]/))
+    end
 end
 
 class Array
