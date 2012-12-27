@@ -26,8 +26,6 @@ class Action
 end
 
 
-Log.debug(Words.gen_sentence(:agent => :John, :action => :see, :target => :Mary))
-
 japanese_names = db.get_keyword_words(:japanese, :name)
 
 Log.debug("Japanese names: #{japanese_names.inspect}")
@@ -44,6 +42,11 @@ Log.debug(Words.gen_area_name({:template => :mountain, :keywords => [:beautiful]
 Log.debug(Words.gen_room_description({:template => :mountain, :keywords => [:beautiful], :occupants => ["elderly Beaver", "Frank the Ninja Bunny"]}).to_s)
 Log.debug(Words.gen_area_name({:template => :mountain, :keywords => [:beautiful]}).to_s)
 
+Log.debug(Words.gen_sentence(:agent => :John, :action => :see, :target => :Mary).to_s)
+
+Log.debug(Words::Sentence::NounPhrase.new(:dagger).to_s)
+
+
 class NPC
     attr_reader :name
     def initialize(name) @name = name; end
@@ -55,5 +58,5 @@ agent = Ninja.new("Kenji Scrimshank")
 target = Goat.new("Billy Goat Balrog")
 # {:agent => <Ninja, :name => "Kenji Scrimshank">, :target => <Goat, :name => "Billy Goat Balrog">, :verb => :attack, :tool => :agent_current_weapon}
 5.times do
-    Action.do(:agent => agent, :target => target, :action => :attack)
+    Action.do(:agent => agent, :target => target, :action => :attack, :tool => :dagger)
 end

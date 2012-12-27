@@ -4,6 +4,8 @@ require 'set'
 require 'util/log'
 require 'words/parser'
 
+# TODO - add info on acceptable/used arguments to generators
+
 module Words
     TYPES = :noun, :name, :verb, :adjective, :adverb
 
@@ -87,19 +89,23 @@ module Words
             attr_accessor :children
 
             def initialize(*children)
-                raise "Can't instantiate parent class!" if self.class == PTNode
+                raise "Can't instantiate PTNode class!" if self.class == PTNode
                 @children = children.flatten
             end
 
             def to_s
                 @children.join(" ")
             end
+
+            def to_sym
+                self.to_s.to_sym
+            end
         end
 
         class PTInternalNode < PTNode
-    #        def to_s
-    #            "(" + @children.join(" ") + ")"
-    #        end
+#           def to_s
+#               "(" + @children.join(" ") + ")"
+#           end
         end
 
         class PTLeaf < PTNode
@@ -132,48 +138,102 @@ module Words
             end
         end
 
+        # http://en.wikipedia.org/wiki/Subordinate_clause
+        # TODO
+        class RelativeClause < ParseTree::PTInternalNode
+        end
+
         # Types: prepositional (during), infinitive (to work hard)
-        # FIXME: use
-        class Phrase < ParseTree::PTInternalNode
+        # adpositions: preposition (by jove), circumpositions (from then on).
+        class AdverbPhrase < ParseTree::PTInternalNode
+            USED_ARGS = [:target, :tool]
+
+            # The type is the part of the args being used to generate an adverb phrase.
+            # args must be defined.
+            def initialize(type, args)
+                @children = []
+                handled = false
+
+                # Based on noun and argument information, decide which preposition to use, if any.
+                case type
+                when :target
+                    # Insert a direct preposition, if it exists for the attached verb.
+                    if args[:attached_verb]
+                        preposition = Words.db.get_preposition(args[:attached_verb])
+                        @children << preposition if preposition
+                    end
+
+                    @children << NounPhrase.new(args[type])
+                    handled = true
+                when :tool
+                    @children = [:with, NounPhrase.new(args[type])]
+                    handled = true
+                end
+
+                # We don't want to generate this again for other verbs and so forth.
+                args.delete(type) if handled
+            end
+        end
+
+        class AdjectivePhrase < ParseTree::PTInternalNode
         end
 
         class VerbPhrase < ParseTree::PTInternalNode
+            # TODO - use PrintsAsList here
+            include PrintsAsList
             # modal auxiliary: will, has
             # modal semi-auxiliary: be going to
             # FIXME: add modals based on tense/aspect
             attr_accessor :modal
             def initialize(verb, args = {})
                 @children = [Verb.new(verb)]
-                @children << NounPhrase.new(args[:dir_obj]) if args[:dir_obj]
-                @children << NounPhrase.new(args[:ind_obj]) if args[:ind_obj]
+                args[:attached_verb] = verb
+                AdverbPhrase::USED_ARGS.select { |arg| args.has_key?(arg) }.each do |arg|
+                    @children << AdverbPhrase.new(arg, args)
+                end
+                @children << AdverbPhrase.new(:target, args) if args[:target]
+                @children << AdverbPhrase.new(:tool, args) if args[:tool]
+                @children.flatten
             end
         end
 
         class NounPhrase < ParseTree::PTInternalNode
             include PrintsAsList
             def initialize(nouns)
+#                Log.debug("Creating NounPhrase with #{nouns.inspect}")
                 if Array === nouns
                     # At the bottom level, determiners will be added to NounPhrases.
                     if Determiner === nouns.first
                         @children = nouns
                     else
                         @children = nouns.map do |noun|
-                            NounPhrase.new(determine(noun))
+                            noun_with_determiner(noun)
                         end
                         @print_as_list = true
                     end
                 else
-                    @children = determine(nouns)
+                    @children = [noun_with_determiner(nouns)]
                 end
             end
 
-            def determine(noun)
-                if Noun.definite?(noun)
-                    [Determiner.new(noun), Noun === noun ? noun : Noun.new(noun.class.to_s.downcase)]
-                elsif noun.respond_to?(:name)
-                    [Noun.new(noun.name)]
+            private
+            def noun_with_determiner(noun)
+                if NounPhrase === noun || Noun === noun
+                    noun
+                elsif !Noun.pronoun?(noun) && !Noun.proper?(noun)
+                    NounPhrase.new([Determiner.new(noun), create_noun(noun)])
                 else
-                    [Noun.new(noun)]
+                    create_noun(noun)
+                end
+            end
+
+            def create_noun(noun)
+                if noun.respond_to?(:name)
+                    Noun.new(noun.name)
+                elsif !noun.is_a?(String) && !noun.is_a?(Symbol)
+                    Noun.new(noun.class.to_s.downcase)
+                else
+                    Noun.new(noun)
                 end
             end
         end
@@ -188,9 +248,8 @@ module Words
                 @children = children.map { |t| Verb.conjugate(t) }
             end
 
-            # FIXME: use
             def self.conjugate(infinitive, tense = WordState.tense, subject = WordState.person)
-                # Words::Conjugations
+                # Words::Conjugations for 'special' conjugations
                 if {}.keys.include?(infinitive)
                     nil
                 end
@@ -226,20 +285,55 @@ module Words
 
         # FIXME: Handle Gerunds
         class Noun < ParseTree::PTLeaf
-            # FIXME: http://en.wikipedia.org/wiki/Definiteness
+            # Determine whether noun is definite (e.g. uses 'the') or indefinite (e.g. a/an)
+            # http://en.wikipedia.org/wiki/Definiteness
             # FIXME: Base this on noun lookups?
             def self.definite?(noun)
                 return !(noun.is_a?(String) || noun.is_a?(Symbol))
             end
 
-            # FIXME: use
+            def self.proper?(noun)
+                if noun.is_a?(String) || noun.is_a?(Symbol)
+                    noun.to_s.capitalized?
+                elsif noun.is_a?(Noun)
+                    noun.children.last.to_s.capitalized?
+                else
+                    false
+                end
+            end
+
+            # http://en.wikipedia.org/wiki/Pro-form
+            # TODO: We'll want to stand in pronouns for certain words (based
+            # on previous usage) to avoid repetition. Maybe. Not even DF does this.
+            def self.pronoun?(noun)
+                # If it's e.g. a BushidoObject then it's not a pronoun.
+                return false unless noun.respond_to?(:to_sym)
+                case noun.to_sym
+                # Subject person pronouns.
+                when :I, :we, :you, :he, :she, :it, :they, :who
+                    true
+                # Object person pronouns.
+                when :me, :us, :you, :him, :her, :it, :them, :whom
+                    true
+                # Existentials.
+                when :someone, :somebody, :one, :some
+                    true
+                # Demonstratives: http://en.wikipedia.org/wiki/Demonstrative
+                when :this, :that, :these, :those, :this_one, :that_one
+                    true
+                else
+                    false
+                end
+            end
+
+            # TODO - use
             def plural?
                 return true if @plural
                 # Otherwise, make a nasty first-guess.
                 @main[-1] == 's' || @main.match(' and ')
             end
 
-            # FIXME: use
+            # TODO - use
             def pluralize
                 # Make a nasty first-approximation.
                 if (plural? && noun?) || (!plural? && verb?)
@@ -251,7 +345,12 @@ module Words
 
         class Determiner < ParseTree::PTLeaf
             def initialize(noun)
-                @children = ["the"]
+                if Noun.definite?(noun)
+                    super("the")
+                else
+                    # TODO - check for 'an' case - starts with a vowel or silent H
+                    super("a")
+                end
             end
         end
 
@@ -260,12 +359,10 @@ module Words
         end
     end
 
-    # FIXME: action descriptors: The generic ninja generically slices the goat with genericness.
+    # TODO - action descriptors: The generic ninja generically slices the goat with genericness.
     def self.gen_sentence(args = {})
         subject = args[:subject] || args[:agent]
         verb    = args[:verb] || args[:action]
-        dir_obj = args[:target]
-        ind_obj = args[:tool]
 
         raise unless verb
 
@@ -280,18 +377,8 @@ module Words
         features = []
         features << :expletive if rand(2) == 0
 
-=begin
-            phrase, adverb = ''
-            if synonym && matches = Words.find(:keyword => synonym)
-                describer = matches.rand
-                @subject.descriptors << describer.adjective
-                @verb.descriptors << describer.adverb
-                @verb.phrases << "with #{describer.noun}"
-            end
-=end
-
         subject_np = Sentence::NounPhrase.new(subject)
-        verb_np    = Sentence::VerbPhrase.new(verb, :dir_obj => dir_obj, :ind_obj => ind_obj)
+        verb_np    = Sentence::VerbPhrase.new(verb, args)
 
         Sentence.new(subject_np, verb_np)
     end
@@ -304,17 +391,17 @@ module Words
         @sentences = []
 
         if args[:keywords].empty?
-            @sentences << Words.gen_sentence(:subject => "You", :action => "see", :target => "boring room")
+            @sentences << Words.gen_sentence(:subject => :you, :action => "see", :target => "boring room")
         else
-            @sentences << Words.gen_sentence(:subject => "You", :action => "see", :target => (args[:keywords].rand.to_s + " room"))
+            @sentences << Words.gen_sentence(:subject => :you, :action => "see", :target => (args[:keywords].rand.to_s + " room"))
         end
 
         if args[:contents] && !args[:contents].empty?
-            @sentences << Words.gen_sentence(:subject => "You", :action => "see", :target => "boring room")
+            @sentences << Words.gen_sentence(:subject => :you, :action => "see", :target => "boring room")
         end
 
         if args[:occupants] && !args[:occupants].empty?
-            @sentences << Words.gen_sentence(:subject => "You", :action => "see", :target => args[:occupants])
+            @sentences << Words.gen_sentence(:subject => :you, :action => "see", :target => args[:occupants])
         end
 
         args[:exits]
@@ -325,8 +412,19 @@ module Words
 
     def self.gen_area_name(args = {})
         name = Sentence::NounPhrase.new(args[:template])
-        name.children = [args[:keywords].rand, *name.children] if args[:keywords]
-        name.children = ["the", *name.children]
+        # TODO - Adjective insertion should happen somewhere else, probably
+        # within the noun phrase itself, based on the db properties of the noun.
+=begin
+        if args[:keywords]
+            Log.debug(name.children.inspect)
+            if Sentence::Determiner === name.children.first
+                determiner = name.children.shift
+                name.children = [determiner, args[:keywords].rand, *name.children]
+            else
+                name.children = [args[:keywords].rand] + name.children
+            end
+        end
+=end
         name.to_s.title
     end
 

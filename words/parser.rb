@@ -20,11 +20,11 @@ I you he we you they
 
 =end
 
-def load_file(dir, glob_str, regex, &block)
+def load_file(dir, glob_str, regex = //, &block)
     Dir.glob("#{dir}/#{glob_str}").each do |file|
         Log.debug("Reading #{file}")
         match = file.match(regex)
-        
+
         File.readlines(file).each do |line|
             block.call(line, match)
         end
@@ -48,6 +48,13 @@ module WordParser
             part_of_speech = match[1].to_sym
             family = line.split(/\s/).collect { |word| {part_of_speech => word} }
             db.add_family(*family)
+        end
+
+        load_file(dict_dir, "direct_prepositions.txt") do |line, match|
+            words = line.split(/\s/)
+            preposition = words.shift
+            family = words.collect { |word| {:verb => word} }
+            db.add_preposition(preposition, *family)
         end
 
         # FIXME: We currently register the last-loaded db inside of Words, making it the de-facto global. Das nasty.

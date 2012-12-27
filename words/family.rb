@@ -5,11 +5,11 @@ class WordDB
         @groups       = []
         @associations = {}
         @keywords     = {}
+        @prepositions = {}
     end
 
-    def add_family(*list_of_words)
-        Log.debug("Adding family #{list_of_words.inspect}", 6)
-        list_of_groups = list_of_words.collect do |word|
+    def collect_groups(*list_of_words)
+        list_of_words.collect do |word|
             if Symbol === word
                 find_group_for(word)
             else
@@ -22,7 +22,9 @@ class WordDB
                 end
             end
         end
+    end
 
+    def associate_groups(*list_of_groups)
         list_of_groups.each do |group|
             to_associate = list_of_groups - [group]
             # Add associations for this reference
@@ -31,12 +33,28 @@ class WordDB
         end
     end
 
+    def add_family(*list_of_words)
+        Log.debug("Adding family #{list_of_words.inspect}", 6)
+        list_of_groups = collect_groups(*list_of_words)
+        associate_groups(*list_of_groups)
+    end
+
     def add_keyword_family(keyword, *list_of_words)
         Log.debug("Adding keyword family #{keyword}, #{list_of_words.inspect}", 6)
         list_of_groups = add_family(*list_of_words)
 
         @keywords[keyword] ||= []
         @keywords[keyword].concat(list_of_groups)
+    end
+
+    # Similar to add_keyword_family, but associate_groups is not called, because
+    # we don't want all associated groups to be connected to the preposition as well.
+    def add_preposition(preposition, *list_of_words)
+        Log.debug("Adding preposition family #{preposition}, #{list_of_words.inspect}")
+        list_of_groups = collect_groups(*list_of_words)
+
+        @prepositions[preposition] ||= []
+        @prepositions[preposition].concat(list_of_groups)
     end
 
     # Get a list of related groups
@@ -59,6 +77,18 @@ class WordDB
 
     def get_keyword_words(keyword, pos)
         get_keyword_groups(keyword).select { |g| g.has?(pos) }.collect { |g| g[pos] }
+    end
+
+    # Check whether a word is associated with a preposition
+    def get_preposition(word)
+        @prepositions.each do |prep, list_of_groups|
+            list_of_groups.each do |group|
+                if group.contains?(word)
+                    return prep
+                end
+            end
+        end
+        nil
     end
 
     private
