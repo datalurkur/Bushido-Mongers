@@ -43,6 +43,7 @@ module Words
     # http://en.wikipedia.org/wiki/English_verbs#Syntactic_constructions
     # http://en.wikipedia.org/wiki/English_clause_syntax
 
+    # TODO - distinguish between patient (action receiver) and direct object (part of sentence), esp. useful for passive case.
     class State
         ASPECTS = [:perfect, :imperfect, :habitual, :stative, :progressive]
         TENSE   = [:present, :past]
@@ -126,6 +127,7 @@ module Words
     class Sentence < ParseTree
         # Most of the time, we only want to print spaces between words.
         # Sometimes we want commas, spaces, and ands.
+        # TODO - make coordination more generic: http://en.wikipedia.org/wiki/Coordination_(linguistics)
         module Listable
             def to_s
                 if @children.size > 1 && @list
@@ -163,7 +165,15 @@ module Words
                     @children = [:with, NounPhrase.new(args[type])]
                     handled = true
                 when :result
-                    
+                    # Eventually this will be more complex, and describe either
+                    # how the blow was evaded (parry, blocked, hit armor, etc)
+                    # or how and where the blow hit.
+                    case args[type]
+                    when :hit
+                        @children = [:",", :hitting]
+                    when :miss
+                        @children = [:",", :missing]
+                    end
                 end
 
                 # We don't want to generate this again for other verbs and so forth.
@@ -171,8 +181,15 @@ module Words
             end
         end
 
-        class AdjectivePhrase < ParseTree::PTInternalNode
-        end
+        # Four kinds of adjectives:
+        # attributive: part of the NP. "happy people". Could be a premodifier (adj) or postmodifier (usually adj phrase)
+        # predicative: uses linking copula (usually noun) to attach to noun.
+        # absolute: separate from noun; typically modifies subject or closest noun.
+        # nominal: act almost as nouns; when noun is elided or replaces noun; "the meek shall inherit"
+
+        # TODO - handle premodifiers and postmodifiers
+        # TODO - handle participles
+        class AdjectivePhrase < ParseTree::PTInternalNode; end
 
         class VerbPhrase < ParseTree::PTInternalNode
             include Listable
@@ -198,22 +215,34 @@ module Words
             include Listable
             def initialize(nouns)
                 nouns = Array(nouns)
-                # At the bottom level, articles will be added to NounPhrases.
-                if nouns.first.is_a?(ParseTree::PTNode)
-                    # Noun already created; just attach it.
+
+                if nouns.all? { |n| n.is_a?(ParseTree::PTNode) }
+                    # Nouns already created; just attach it.
                     @children = nouns
-                else
-                    @list = (nouns.size > 1)
-                    @children = nouns.map do |noun|
-                        noun_with_article(noun)
-                    end
+                    return
+                end
+
+                @list = (nouns.size > 1)
+                @children = nouns.map do |noun|
+                    noun_with_article(noun)
                 end
                 @children.flatten!
             end
 
+            def add_adjectives(*adjectives)
+                raise "Don't know which noun to adjectivize of #{self.inspect}!" if @list
+                # Insert adjectives between (potential) article but before the noun
+                adjectives.each do |adj|
+                    adj = Adjective.new(adj) unless adj.is_a?(Adjective)
+                    @children.insert(-2, adj)
+                end
+            end
+
             private
             def noun_with_article(noun)
-                if Noun.needs_article?(noun)
+                if noun.is_a?(ParseTree::PTNode)
+                    noun
+                elsif Noun.needs_article?(noun)
                     children = [Article.new(noun), Noun.new(noun)]
                     # If it's a list, stuff the article-plus-noun into a sub-NP.
                     # Otherwise, just return the child array, which will be flattened out.
@@ -227,6 +256,8 @@ module Words
                 end
             end
         end
+
+        class Adjective < ParseTree::PTLeaf; end
 
         # http://en.wikipedia.org/wiki/English_verbs
         # http://en.wikipedia.org/wiki/List_of_English_irregular_verbs
@@ -361,11 +392,23 @@ module Words
 
         class Article < ParseTree::PTLeaf
             def initialize(noun)
-                if Noun.definite?(noun)
+                if Article.article?(noun)
+                    super(noun)
+                elsif Noun.definite?(noun)
                     super("the")
                 else
                     # TODO - check for 'an' case - starts with a vowel or silent H
+                    # TODO - 'some' for plural nouns
                     super("a")
+                end
+            end
+
+            def self.article?(art)
+                case art.to_sym
+                when :the, :a, :an, :some
+                    true
+                else
+                    false
                 end
             end
         end
@@ -435,20 +478,14 @@ module Words
     end
 
     def self.gen_area_name(args = {})
-        name = Sentence::NounPhrase.new(args[:template])
-        # TODO - Adjective insertion should happen somewhere else, probably
-        # within the noun phrase itself, based on the db properties of the noun.
-=begin
-        if args[:keywords]
-            Log.debug(name.children.inspect)
-            if Sentence::Article === name.children.first
-                determiner = name.children.shift
-                name.children = [determiner, args[:keywords].rand, *name.children]
-            else
-                name.children = [args[:keywords].rand] + name.children
-            end
-        end
-=end
+        article = Sentence::Article.new(:the)
+        noun    = Sentence::Noun.new(args[:template])
+        name    = Sentence::NounPhrase.new([article, noun])
+
+        name.add_adjectives(args[:keywords].rand)
+
+        descriptor = db.get_keyword_words(:abstract, :noun).rand
+
         name.to_s.title
     end
 end
