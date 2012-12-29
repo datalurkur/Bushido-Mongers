@@ -50,7 +50,7 @@ class WordDB
     # Similar to add_keyword_family, but associate_groups is not called, because
     # we don't want all associated groups to be connected to the preposition as well.
     def add_preposition(preposition, *list_of_words)
-        Log.debug("Adding preposition family #{preposition}, #{list_of_words.inspect}")
+        Log.debug("Adding preposition family #{preposition}, #{list_of_words.inspect}", 6)
         list_of_groups = collect_groups(*list_of_words)
 
         @prepositions[preposition] ||= []

@@ -42,23 +42,26 @@ module Words
 
     # http://en.wikipedia.org/wiki/English_verbs#Syntactic_constructions
     # http://en.wikipedia.org/wiki/English_clause_syntax
-    module WordState
-        class << self
-            ASPECTS = [:perfect, :imperfect, :habitual, :stative, :progressive]
-            TENSE   = [:present, :past]
-            MOOD    = [:indicative, :subjunctive, :imperative]
-            PERSON  = [:first, :second, :third, :first_plural, :second_plural, :third_plural]
-            VOICE   = [:active, :passive]
 
-            attr_accessor :aspect, :tense, :mood, :person, :voice
+    class State
+        ASPECTS = [:perfect, :imperfect, :habitual, :stative, :progressive]
+        TENSE   = [:present, :past]
+        MOOD    = [:indicative, :subjunctive, :imperative]
+        PERSON  = [:first, :second, :third, :first_plural, :second_plural, :third_plural]
+        VOICE   = [:active, :passive]
 
-            def reset_state
-                @aspect = :stative
-                @tense  = :present
-                @mood   = :indicative
-                @person = :third
-                @voice  = :active
-            end
+        attr_accessor :aspect, :tense, :mood, :person, :voice
+
+        def initialize
+            set_default_state
+        end
+
+        def set_default_state
+            @aspect = :stative
+            @tense  = :present
+            @mood   = :indicative
+            @person = :third
+            @voice  = :active
         end
     end
 
@@ -121,19 +124,16 @@ module Words
     end
 
     class Sentence < ParseTree
-        module PrintsAsList
+        # Most of the time, we only want to print spaces between words.
+        # Sometimes we want commas, spaces, and ands.
+        module Listable
             def to_s
-                case @children.size
-                when 0: ""
-                when 1: @children.first.to_s
+                if @children.size > 1 && @list
+                    strings = @children.map(&:to_s)
+                    last = strings.pop
+                    strings.join(", ") + " and " + last
                 else
-                    if @print_as_list
-                        strings = @children.map(&:to_s)
-                        pop = strings.pop
-                        strings.join(", ") + " and " + pop
-                    else
-                        super
-                    end
+                    super
                 end
             end
         end
@@ -146,7 +146,7 @@ module Words
         # Types: prepositional (during), infinitive (to work hard)
         # adpositions: preposition (by jove), circumpositions (from then on).
         class AdverbPhrase < ParseTree::PTInternalNode
-            USED_ARGS = [:target, :tool]
+            USED_ARGS = [:target, :tool, :result]
 
             # The type is the part of the args being used to generate an adverb phrase.
             # args must be defined.
@@ -157,17 +157,13 @@ module Words
                 # Based on noun and argument information, decide which preposition to use, if any.
                 case type
                 when :target
-                    # Insert a direct preposition, if it exists for the attached verb.
-                    if args[:attached_verb]
-                        preposition = Words.db.get_preposition(args[:attached_verb])
-                        @children << preposition if preposition
-                    end
-
                     @children << NounPhrase.new(args[type])
                     handled = true
                 when :tool
                     @children = [:with, NounPhrase.new(args[type])]
                     handled = true
+                when :result
+                    
                 end
 
                 # We don't want to generate this again for other verbs and so forth.
@@ -179,59 +175,53 @@ module Words
         end
 
         class VerbPhrase < ParseTree::PTInternalNode
-            # TODO - use PrintsAsList here
-            include PrintsAsList
+            include Listable
             # modal auxiliary: will, has
             # modal semi-auxiliary: be going to
-            # FIXME: add modals based on tense/aspect
+            # TODO - add modals based on tense/aspect
             attr_accessor :modal
-            def initialize(verb, args = {})
-                @children = [Verb.new(verb)]
-                args[:attached_verb] = verb
-                AdverbPhrase::USED_ARGS.select { |arg| args.has_key?(arg) }.each do |arg|
-                    @children << AdverbPhrase.new(arg, args)
+            def initialize(verbs, args = {})
+                verbs = Array(verbs)
+                @children = verbs.map do |verb|
+                    Verb.new(verb, args)
                 end
-                @children << AdverbPhrase.new(:target, args) if args[:target]
-                @children << AdverbPhrase.new(:tool, args) if args[:tool]
-                @children.flatten
+
+                @children += AdverbPhrase::USED_ARGS.select { |arg| args.has_key?(arg) }.collect do |arg|
+                    AdverbPhrase.new(arg, args)
+                end
+
+                @list = (verbs.size > 1)
             end
         end
 
         class NounPhrase < ParseTree::PTInternalNode
-            include PrintsAsList
+            include Listable
             def initialize(nouns)
-#                Log.debug("Creating NounPhrase with #{nouns.inspect}")
-                if Array === nouns
-                    # At the bottom level, determiners will be added to NounPhrases.
-                    if Article === nouns.first
-                        @children = nouns
-                    else
-                        @children = nouns.map do |noun|
-                            noun_with_determiner(noun)
-                        end
-                        @print_as_list = true
-                    end
+                nouns = Array(nouns)
+                # At the bottom level, articles will be added to NounPhrases.
+                if nouns.first.is_a?(ParseTree::PTNode)
+                    # Noun already created; just attach it.
+                    @children = nouns
                 else
-                    @children = [noun_with_determiner(nouns)]
+                    @list = (nouns.size > 1)
+                    @children = nouns.map do |noun|
+                        noun_with_article(noun)
+                    end
                 end
+                @children.flatten!
             end
 
             private
-            def noun_with_determiner(noun)
-                if NounPhrase === noun || Noun === noun
-                    noun
-                elsif !Noun.pronoun?(noun) && !Noun.proper?(noun)
-                    NounPhrase.new([Article.new(noun), create_noun(noun)])
-                else
-                    create_noun(noun)
-                end
-            end
-
-            def create_noun(noun)
-                if noun.respond_to?(:name)
-                    Noun.new(noun.name)
-                elsif !noun.is_a?(String) && !noun.is_a?(Symbol)
-                    Noun.new(noun.class.to_s.downcase)
+            def noun_with_article(noun)
+                if Noun.needs_article?(noun)
+                    children = [Article.new(noun), Noun.new(noun)]
+                    # If it's a list, stuff the article-plus-noun into a sub-NP.
+                    # Otherwise, just return the child array, which will be flattened out.
+                    if @list
+                        NounPhrase.new(children)
+                    else
+                        children
+                    end
                 else
                     Noun.new(noun)
                 end
@@ -244,20 +234,27 @@ module Words
         # http://en.wikipedia.org/wiki/Phrasal_verb
         # http://www.verbix.com/webverbix/English/have.html
         class Verb < ParseTree::PTLeaf
-            def initialize(*children)
-                @children = children.map { |t| Verb.conjugate(t) }
+            def initialize(verb, args = {})
+                state = args[:state] || State.new
+                @children = [Verb.conjugate(verb, state)]
+
+                # Insert a direct preposition, if it exists for the verb.
+                if args[:target]
+                    preposition = Words.db.get_preposition(verb)
+                    @children << preposition if preposition
+                end
             end
 
-            def self.conjugate(infinitive, tense = WordState.tense, subject = WordState.person)
+            def self.conjugate(infinitive, state = State.new)
                 # Words::Conjugations for 'special' conjugations
                 if {}.keys.include?(infinitive)
                     nil
                 end
 
                 # defaults
-                infinitive = case tense
+                infinitive = case state.tense
                 when :present
-                    if subject == :third
+                    if state.person == :third
                         sibilant?(infinitive) ? "#{infinitive}es" : "#{infinitive}s"
                     else
                         infinitive
@@ -285,6 +282,20 @@ module Words
 
         # FIXME: Handle Gerunds
         class Noun < ParseTree::PTLeaf
+            def initialize(noun)
+                @children = [Noun.gen_noun_text(noun)]
+            end
+
+            def self.gen_noun_text(noun)
+                if noun.respond_to?(:name)
+                    noun.name
+                elsif !noun.is_a?(String) && !noun.is_a?(Symbol)
+                    noun.class.to_s.downcase
+                else
+                    noun
+                end
+            end
+
             # Determine whether noun is definite (e.g. uses 'the') or indefinite (e.g. a/an)
             # http://en.wikipedia.org/wiki/Definiteness
             # FIXME: Base this on noun lookups?
@@ -292,11 +303,16 @@ module Words
                 return !(noun.is_a?(String) || noun.is_a?(Symbol))
             end
 
+            def self.needs_article?(noun)
+                !Noun.proper?(noun) && !Noun.pronoun?(noun)
+            end
+
             def self.proper?(noun)
-                if noun.is_a?(String) || noun.is_a?(Symbol)
-                    noun.to_s.capitalized?
-                elsif noun.is_a?(Noun)
+                noun = gen_noun_text(noun)
+                if noun.is_a?(Noun)
                     noun.children.last.to_s.capitalized?
+                elsif noun.respond_to?(:to_s)
+                    noun.to_s.capitalized?
                 else
                     false
                 end
@@ -364,6 +380,11 @@ module Words
         subject = args[:subject] || args[:agent]
         verb    = args[:verb] || args[:action]
 
+        # Subject is you in second person
+        if !subject && args[:state] && args[:state].person == :second
+            subject = :you
+        end
+
         raise unless verb
 
         # Use an associated verb, if any exist.
@@ -374,8 +395,8 @@ module Words
 
         # TODO - Use expletive
         # TODO - expletive more often for second person
-        features = []
-        features << :expletive if rand(2) == 0
+        #features = []
+        #features << :expletive if Chance.take(:coin_toss)
 
         subject_np = Sentence::NounPhrase.new(subject)
         verb_np    = Sentence::VerbPhrase.new(verb, args)
@@ -385,28 +406,31 @@ module Words
 
     #:keywords=>[], :contents=>[], :occupants=>["Test NPC 23683", "Test NPC 35550", "Test Character"], :exits=>[:west], :name=>"b00"
 
+    # Required/expected arg values: keywords contents occupants exits
     def self.gen_room_description(args = {})
-        WordState.person = :second
-
         @sentences = []
 
+        args = args.merge(:action => :see)
+
+        args[:state] = State.new
+        args[:state].person = :second
+
         if args[:keywords].empty?
-            @sentences << Words.gen_sentence(:subject => :you, :action => "see", :target => "boring room")
+            @sentences << Words.gen_sentence(args.merge(:target => "boring room"))
         else
-            @sentences << Words.gen_sentence(:subject => :you, :action => "see", :target => (args[:keywords].rand.to_s + " room"))
+            @sentences << Words.gen_sentence(args.merge(:target => (args[:keywords].rand.to_s + " room")))
         end
 
         if args[:contents] && !args[:contents].empty?
-            @sentences << Words.gen_sentence(:subject => :you, :action => "see", :target => "boring room")
+            @sentences << Words.gen_sentence(args.merge(:target => args[:contents]))
         end
 
         if args[:occupants] && !args[:occupants].empty?
-            @sentences << Words.gen_sentence(:subject => :you, :action => "see", :target => args[:occupants])
+            @sentences << Words.gen_sentence(args.merge(:target => args[:occupants]))
         end
 
         args[:exits]
 
-        WordState.reset_state
         @sentences.join(" ")
     end
 
@@ -427,6 +451,4 @@ module Words
 =end
         name.to_s.title
     end
-
-    WordState.reset_state
 end

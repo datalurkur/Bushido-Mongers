@@ -6,13 +6,15 @@ end
 
 class String
     def sentence
-        # Whitespace cleanup.
-        word = self.gsub(/^\s+/, '')
-        word.gsub!(/\s+([\.\?\!])$/, '\1')
         # Capitalize the beginning.
-        word.gsub!(/^(\w)/) { $1.upcase }
+        word = self.gsub(/^(\w)/) { $1.upcase }
         # Add ending punctuation, if it doesn't already exist.
         word.gsub!(/([\.\!\?])?$/) { $1 || '.' }
+        # Whitespace cleanup.
+        word.gsub!(/^\s+/, '')
+        # Drop whitespace before punctuation.
+        word.gsub!(/\s+([\,\.\?\!])/, '\1')
+        word
     end
 
     def title
