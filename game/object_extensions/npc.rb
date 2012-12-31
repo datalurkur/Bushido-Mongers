@@ -24,7 +24,7 @@ module NpcBehavior
 
     def do_command(command, args)
         begin
-            cmd_obj = @core.db.create(command, args)
+            cmd_obj = @core.db.create(@core, command, args)
         rescue Exception => e
             Log.debug(["NPC failed to create command object of type #{command}", args, e.message])
         end
