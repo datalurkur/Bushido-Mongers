@@ -1,7 +1,9 @@
 #!/usr/bin/ruby
 
-require 'net/stack_client'
 require 'util/timer'
+#MeteredMethods.enable
+
+require 'net/stack_client'
 
 $config = {
     :server_ip => "localhost",

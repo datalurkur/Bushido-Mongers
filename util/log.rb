@@ -9,9 +9,7 @@ class Log
         LOG_DIR    = "logs"
         LOG_CONFIG = "log.cfg"
 
-        def setup(name, logfile_prefix, logfile_behavior=:terse)
-            $stdout.sync = true
-
+        def setup(name, logfile_prefix, logfile_behavior=:none)
             @log_mutex = Mutex.new
             @default_thread_name = "Unnamed"
 
@@ -72,36 +70,40 @@ class Log
 
         def debug(msg, level=1)
             raise "Logging system never initialized" unless @logging_setup
-            @log_mutex.synchronize do
-                file,line = caller[2].split(/:/)
-                @source_files[file] ||= @max_log_level
-                thread_name = @source_threads[Thread.current] || @default_thread_name
 
-                to_print = (Array === msg) ? msg : [msg]
-                to_print.each do |m|
-                    if level <= @source_files[file]
-                        print_line(m, thread_name, file, line, level, Kernel)
-                        print_line(m, thread_name, file, line, level, @filtered_logfile) unless @logfile_behavior == :none
-                    end
-                    print_line(m, thread_name, file, line, level, @verbose_logfile) if @logfile_behavior == :verbose
+            file,line = caller[1].split(/:/)
+            @source_files[file] ||= @max_log_level
+            return unless level <= @source_files[file] || @logfile_behavior == :verbose
+
+            thread_name = @source_threads[Thread.current] || @default_thread_name
+
+            to_print = (Array === msg) ? msg : [msg]
+            printable_data = to_print.collect do |m|
+                format_line(m, thread_name, file, line, level)
+            end.join("\n")
+
+            @log_mutex.synchronize do
+                if level <= @source_files[file]
+                    Kernel.puts printable_data
+                    #(@filtered_logfile.puts printable_data) unless @logfile_behavior == :none
                 end
+                #(@verbose_logfile.puts printable_data) if @logfile_behavior == :verbose
             end
         end
 
         private
-        # NOT THREADSAFE
-        def print_line(msg, thread_name, file, line, level, handle, prefix=nil)
+        def format_line(msg, thread_name, file, line, level)
             @longest_file = [@longest_file, file.to_s.length].max
 
-            msg_prefix = prefix || "[#{thread_name.ljust(@longest_thread_name)}] #{file.to_s.ljust(@longest_file)}:#{line.to_s.ljust(3)} (#{level.to_s.ljust(@max_log_level.to_s.length)}) | "
+            msg_prefix = "[#{thread_name.ljust(@longest_thread_name)}] #{file.to_s.ljust(@longest_file)}:#{line.to_s.ljust(3)} (#{level.to_s.ljust(@max_log_level.to_s.length)}) | "
 
             case msg
             when Array, Hash
-                handle.puts msg.to_formatted_string(msg_prefix)
+                msg.to_formatted_string(msg_prefix)
             when String
-                handle.puts(msg_prefix + msg)
+                (msg_prefix + msg)
             else
-                handle.puts(msg_prefix + msg.inspect)
+                (msg_prefix + msg.inspect)
             end
         end
     end
