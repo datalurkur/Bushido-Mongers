@@ -1,3 +1,4 @@
+/* Must be of type npc to spawn */
 abstract named,aligned,mover npc {
     uses npc_behavior;
 

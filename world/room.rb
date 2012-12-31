@@ -10,21 +10,6 @@ module ZoneWithKeywords
     def keywords
         @params[:keywords] ||= []
     end
-
-=begin
-    def add_keywords(keywords)
-        keywords.each { |kw| add_keyword(kw) }
-    end
-
-    def add_keyword(keyword)
-        keywords << keyword
-        keywords.uniq!
-    end
-
-    def remove_keyword(keyword)
-        keywords.delete(keyword)
-    end
-=end
 end
 
 class Room < ZoneLeaf
@@ -66,10 +51,9 @@ class Room < ZoneLeaf
         never_spawns  = core.db.types_of(@params[:never_spawns]  || [])
         Log.debug(["Creating NPCs for #{self.name} with spawn details", may_spawn, always_spawns, never_spawns])
 
-        # Find NPC types suitable to create here.
+        # Find NPC types suitable to create here, based on NPC info.
         npc_types = core.db.types_of(:npc)
-        acceptable_types  = always_spawns
-        acceptable_types += npc_types.select do |type|
+        acceptable_types = npc_types.select do |type|
             (
                 may_spawn.include?(type) &&
                 !never_spawns.include?(type)
@@ -80,19 +64,17 @@ class Room < ZoneLeaf
         end
         acceptable_types.uniq!
 
-        Log.debug("Can create #{acceptable_types.inspect} in #{self.zone}", 6)
-        Log.debug("No acceptable NPC types found for #{self.zone}!") if acceptable_types.empty?
+        Log.debug("Can create #{(always_spawns + acceptable_types).inspect} in #{self.zone}", 6)
+        Log.debug("No acceptable NPC types found for #{self.zone}!") if always_spawns.empty? && acceptable_types.empty?
 
-        always_spawns.each do |type|
-            add_npc(core, type)
-        end
+        # Actually spawn the NPCs.
+        always_spawns.each { |type| add_npc(core, type) }
 
         acceptable_types.each do |type|
-            spawn_chance = core.db.info_for(type, :spawn_chance)
-            add_npc(core, type) if spawn_chance && Chance.take(spawn_chance)
+            add_npc(core, type) if Chance.take(core.db.info_for(type, :spawn_chance))
         end
-
     end
+
     private
     def add_npc(core, type)
         # FIXME: Generate better names?
@@ -102,7 +84,7 @@ end
 
 class Area < ZoneContainer
     include ZoneWithKeywords
-    
+
     def initialize(name, size, depth, params={})
         @params = params
         super(name, size, depth)

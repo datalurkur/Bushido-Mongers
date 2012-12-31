@@ -45,7 +45,7 @@ class ZoneTemplate
                 ((params[:depth_range] & depth).size > 0)
             end
 
-            Log.debug("eligible_types is #{eligible_types}", 6)
+            Log.debug("eligible_types is #{eligible_types.inspect}", 6)
 
             type = nil
             if eligible_types.empty?

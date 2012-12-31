@@ -22,6 +22,7 @@ signals.each do |signal|
         $client.stop if $client
     }
 end
+
 $client.stack.set_state(:join_lobby)
 $client.stack.specify_response_for(:choose_from_list, {:field => :server_menu}) do |stack, message|
     if stack.get_state == :join_lobby

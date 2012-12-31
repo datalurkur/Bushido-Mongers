@@ -1,10 +1,3 @@
-require 'game/object_extensions/ability'
-require 'game/object_extensions/attack'
-require 'game/object_extensions/character'
-require 'game/object_extensions/command'
-require 'game/object_extensions/construction'
-require 'game/object_extensions/corporeal'
-require 'game/object_extensions/eating'
-require 'game/object_extensions/mob'
-require 'game/object_extensions/npc'
-require 'game/object_extensions/shared'
+Dir.glob("game/object_extensions/*") do |file|
+    require file
+end
