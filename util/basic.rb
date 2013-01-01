@@ -63,12 +63,27 @@ class String
         gsub(/\/(.?)/) { "::#{$1.upcase}" }.gsub(/(?:^|_)(.)/) { $1.upcase }
     end
 
-    def to_const
-        Object.const_defined?(self) ? Object.const_get(self) : Object.const_missing(self)
+    def to_const(root=Object)
+        root.const_defined?(self) ? root.const_get(self) : root.const_missing(self)
     end
 
     def md5
         Digest::MD5.digest(self)
+    end
+
+    def color(c)
+        case c
+        when :white
+            self
+        when :red
+            "\e[1;31m#{self}\e[0m"
+        when :green
+            "\e[1;32m#{self}\e[0m"
+        when :yellow
+            "\e[1;33m#{self}\e[0m"
+        else
+            raise "Unhandled color #{c}"
+        end
     end
 end
 
@@ -77,7 +92,7 @@ class Symbol
         to_s.to_caml
     end
 
-    def to_const
-        to_s.to_const
+    def to_const(root=Object)
+        to_s.to_const(root)
     end
 end

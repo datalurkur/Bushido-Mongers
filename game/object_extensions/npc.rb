@@ -1,4 +1,5 @@
 require 'ai/basic_behavior'
+require 'game/commands'
 
 module NpcBehavior
     class << self
@@ -24,10 +25,9 @@ module NpcBehavior
 
     def do_command(command, args)
         begin
-            cmd_obj = @core.db.create(@core, command, args)
-            cmd_obj.on_command
+            Commands.do(@core, command, args)
         rescue Exception => e
-            Log.debug(["NPC failed to create command object of type #{command}", args, e.message, e.backtrace])
+            Log.error(["NPC failed to perform command #{command}", args, e.message, e.backtrace])
         end
     end
 end

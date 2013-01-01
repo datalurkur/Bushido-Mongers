@@ -63,15 +63,22 @@ class Log
         end
 
         # THREADSAFE
+        def error(msg, level=1)
+            log_internal(msg, level, :red)
+        end
+
         def warning(msg, level=1)
-            # FIXME - Make this look different from a debug message - color perhaps?
-            debug(msg, level)
+            log_internal(msg, level, :yellow)
         end
 
         def debug(msg, level=1)
+            log_internal(msg, level, :white)
+        end
+
+        def log_internal(msg, level, color=:white)
             raise "Logging system never initialized" unless @logging_setup
 
-            file,line = caller[0].split(/:/)
+            file,line = caller[1].split(/:/)
             @source_files[file] ||= @max_log_level
             return unless level <= @source_files[file] || @logfile_behavior == :verbose
 
@@ -79,20 +86,20 @@ class Log
 
             to_print = (Array === msg) ? msg : [msg]
             printable_data = to_print.collect do |m|
-                format_line(m, thread_name, file, line, level)
+                format_line(m, thread_name, file, line, level, color)
             end.join("\n")
 
             @log_mutex.synchronize do
                 if level <= @source_files[file]
                     Kernel.puts printable_data
-                    #(@filtered_logfile.puts printable_data) unless @logfile_behavior == :none
+                    (@filtered_logfile.puts printable_data) unless @logfile_behavior == :none
                 end
-                #(@verbose_logfile.puts printable_data) if @logfile_behavior == :verbose
+                (@verbose_logfile.puts printable_data) if @logfile_behavior == :verbose
             end
         end
 
         private
-        def format_line(msg, thread_name, file, line, level)
+        def format_line(msg, thread_name, file, line, level, color)
             @longest_file = [@longest_file, file.to_s.length].max
 
             msg_prefix = "[#{thread_name.ljust(@longest_thread_name)}] #{file.to_s.ljust(@longest_file)}:#{line.to_s.ljust(3)} (#{level.to_s.ljust(@max_log_level.to_s.length)}) | "
@@ -104,7 +111,7 @@ class Log
                 (msg_prefix + msg)
             else
                 (msg_prefix + msg.inspect)
-            end
+            end.color(color)
         end
     end
 end

@@ -4,39 +4,39 @@ abstract root command {
     has optional sym tool;
     has optional sym location;
 
-    uses command;
+    has sym invocation;
 }
 
-command attack {
+abstract command attack {
     target corporeal;
     tool weapon;
 
-    uses attack;
+    invocation attack;
 }
 
-command eat {
+abstract command eat {
     target food;
 
-    uses eating;
+    invocation eat;
 }
 
 abstract command construct {
-    uses construction;
+    invocation construct;
 }
 
-construct cook {
+abstract construct cook {
 }
 
-construct forge {
+abstract construct forge {
     location anvil;
     tool hammer;
 }
 
-construct craft {}
+abstract construct craft {}
 
-construct make_bow {}
+abstract construct make_bow {}
 
-construct fletch {}
+abstract construct fletch {}
 
 post_process {
     self[:command][:subtypes].each do |command|
