@@ -45,7 +45,7 @@ class Array
                 when Symbol
                     prefix + inner_indent + element.inspect
                 else
-                    prefix + inner_indent + element.class
+                    prefix + inner_indent + element.class.to_s
                 end
             end
         end)

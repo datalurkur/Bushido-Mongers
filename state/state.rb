@@ -3,7 +3,6 @@ require 'message'
 # Provides a set of tools for maintaining a state stack and state variables
 module StateMaintainer
     def setup_state
-        @internal_config = {}
         @var_mutex       = Mutex.new
     end
 
@@ -25,8 +24,8 @@ module StateMaintainer
         @state_stack.pop
     end
 
-    def get_internal_config;      @internal_config;       end
-    def set_internal_config(val); @internal_config = val; end
+    def get_internal_config;      @internal_config ||= {}; end
+    def set_internal_config(val); @internal_config = val;  end
 
     def set(var,value)
         @var_mutex.synchronize { get_internal_config[var] = value }
@@ -138,7 +137,7 @@ class State
             end
             Message.new(:choose_from_list, {:field => params[:field], :choices => choices})
         when :server_query
-            Log.debug(["Querying server with params", params])
+            Log.debug(["Querying server with params", params], 5)
             Message.new(params[:query_method], params[:query_params] || {})
         else
             raise "Unhandled exchange type #{params[:type]}"
@@ -183,7 +182,7 @@ class State
         else
             if context.has_param?(:field) && message.has_param?(context.field)
                 result = message.send(context.field)
-                Log.debug("Setting client field #{context.field} to #{result} based on server input")
+                Log.debug("Setting client field #{context.field} to #{result} based on server input", 5)
                 @client.set(context.field, result)
                 @previous_result = result
             else
@@ -207,7 +206,7 @@ class State
             return false
         else
             if context.has_param?(:field)
-                Log.debug("Setting client field #{context.field} to #{message.input} based on client input")
+                Log.debug("Setting client field #{context.field} to #{message.input} based on client input", 5)
                 @client.set(context.field, message.input)
                 @previous_result = message.input
             end

@@ -80,6 +80,10 @@ class BushidoObject
         end
     end
 
+    def set_property(key, value)
+        @properties[key] = value
+    end
+
     def process_message(message)
         @extensions.each do |mod|
             break if mod.respond_to?(:at_message) && mod.at_message(self, message)
@@ -88,5 +92,9 @@ class BushidoObject
 
     def class_info(key)
         @core.db.info_for(@type, key)
+    end
+
+    def debug_info
+        ["Properties", @properties, "Extensions", @extensions, "Class Info", @core.db.raw_info_for(@type)]
     end
 end

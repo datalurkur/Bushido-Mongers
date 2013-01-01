@@ -12,7 +12,7 @@ end
 
 Behavior.define(:attack, :are_enemies_present?) do |actor|
     attackee = Behavior.enemies_present(actor).rand
-    actor.do_command(:attack, {:target => attackee})
+    actor.do_command(:attack, {:attacker => actor, :defender => attackee})
 end
 
 BehaviorSet.define(:random_attack_and_move, {0 => [:attack], 1 => [:random_movement]})
