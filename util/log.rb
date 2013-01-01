@@ -71,7 +71,7 @@ class Log
         def debug(msg, level=1)
             raise "Logging system never initialized" unless @logging_setup
 
-            file,line = caller[1].split(/:/)
+            file,line = caller[0].split(/:/)
             @source_files[file] ||= @max_log_level
             return unless level <= @source_files[file] || @logfile_behavior == :verbose
 
