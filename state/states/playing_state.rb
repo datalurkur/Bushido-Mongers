@@ -46,7 +46,7 @@ class PlayingState < State
             if message.type == :raw_command
                 # Parse the command into an action
                 # FIXME - Hey zphobic!  Make this more grammatical!
-                Log.debug("Parsing command #{message.command}")
+                Log.debug("Parsing command #{message.command.inspect}")
                 pieces = message.command.split(/\s+/).collect { |i| i.to_sym }
 
                 # Join any conjunctions together
@@ -81,7 +81,6 @@ class PlayingState < State
                     Log.debug(["Ignoring potentially important syntactic pieces", pieces])
                 end
 
-                Log.debug("Acting!")
                 @client.send_to_server(Message.new(:act, {:command => command, :args => {
                     :tool      => tool,
                     :location  => location,
