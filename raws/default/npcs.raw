@@ -33,6 +33,13 @@ animal,corporeal mouse {
     spawn_chance likely;
 }
 
+monster,corporeal giant_spider {
+    size medium;
+    body_type arachnoid_body;
+    can_spawn_in sewer;
+    spawn_chance likely;
+}
+
 monster,corporeal oni {
     size medium;
     body_type humanoid_body;

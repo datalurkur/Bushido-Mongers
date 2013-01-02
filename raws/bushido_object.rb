@@ -84,6 +84,10 @@ class BushidoObject
         @properties[key] = value
     end
 
+    def has_property?(prop)
+        @properties.has_key?(prop)
+    end
+
     def process_message(message)
         @extensions.each do |mod|
             break if mod.respond_to?(:at_message) && mod.at_message(self, message)
@@ -99,6 +103,6 @@ class BushidoObject
     end
 
     def inspect
-        "#<#{@type} #{@properties.inspect} uses #{@extensions.inspect}>"
+        "#<#{@type} #{@properties.inspect}" + (!@extensions.empty? ? " uses #{@extensions.inspect}>" : ">")
     end
 end

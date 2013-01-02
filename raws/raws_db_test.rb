@@ -18,7 +18,7 @@ Log.debug("Testing DB Marshal-ability")
 db_data = Marshal.dump(db)
 db = nil
 db = Marshal.load(db_data)
-core = FakeCore.new(db)
+$core = FakeCore.new(db)
 
 # Basic DB listing tests
 Log.debug(["Types of items:", db.types_of(:item)])
@@ -26,24 +26,33 @@ Log.debug(["Types of items:", db.types_of(:item)])
 # Basic item creation tests
 test_item_type = :helmet
 Log.debug("Creating a #{test_item_type}")
-test_item_args = {:quality => :fine, :components => [db.create(core, :iron)]}
-test_item = db.create(core, test_item_type, test_item_args)
+test_item_args = {:quality => :fine, :components => [db.create($core, :iron)]}
+test_item = db.create($core, test_item_type, test_item_args)
 Log.debug("Test item is a metal? #{test_item.is_a?(:metal)}")
 Log.debug("Test item is a constructable? #{test_item.is_a?(:constructed)}")
 Log.debug("Test item is a headgear? #{test_item.is_a?(:headgear)}")
 
 # NPC tests
 Log.debug(["Types of NPCs:", db.types_of(:npc)])
-test_npc_type = :peacekeeper
-Log.debug("Creating a #{test_npc_type}")
-test_npc = db.create(core, test_npc_type, {:initial_position => FakeRoom.new, :name => "Derpus Maximus"})
 
-Log.debug("Test NPC is a guard? #{test_npc.is_a?(:guard)}")
-Log.debug("Test NPC has provocations #{test_npc.provocations.inspect}")
+def test_npc(db, test_npc_type, name)
+    Log.debug("Creating a #{test_npc_type} with raw info #{db.raw_info_for(test_npc_type).inspect}")
+    test_npc = db.create($core, test_npc_type, {:initial_position => FakeRoom.new, :name => name})
+
+    Log.debug("Test NPC is a guard? #{test_npc.is_a?(:guard)}")
+    Log.debug("Test NPC has parts: #{test_npc.body.body_parts.inspect}")
+    if test_npc.has_property?(:provocations)
+        Log.debug("Test NPC has provocations #{test_npc.provocations.inspect}")
+    end
+    Log.debug("Test NPC inspection: #{test_npc.inspect}")
+end
+
+test_npc(db, :peacekeeper, "Derpus Maximus")
+test_npc(db, :giant_spider, "Leggus Maximus")
 
 # Body / Corporeal tests
-hb = db.create(core, :humanoid_body, {:size => :large})
-hb = db.create(core, :arachnoid_body, {:size => :tiny})
+hb = db.create($core, :humanoid_body, {:size => :large})
+hb = db.create($core, :arachnoid_body, {:size => :tiny})
 
 # FIXME
 # Recipe and command tests
