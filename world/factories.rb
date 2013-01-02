@@ -25,13 +25,13 @@ class << self
     end
 
     def generate_area(size, depth, parent_area, config)
-        Log.debug("Generating area of size #{size} in #{parent_area.name}")
+        Log.debug("Generating area of size #{size} in #{parent_area.name}", 6)
 
         # Find and add a suitable zone template.
         parent_zone = parent_area.respond_to?(:zone) ? parent_area.zone : nil
 
         params = ZoneTemplate.random(parent_zone, size, depth)
-        Log.debug(params.inspect)
+        Log.debug(params.inspect, 6)
         name = "#{Words.gen_area_name(params).to_s}-#{rand(1000)}"
 
         area = if (depth < 2) || (rand() < config[:area_size_tendency])

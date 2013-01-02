@@ -7,7 +7,12 @@ Log.setup("Vocabulary Test", "wordtest")
 
 require 'words/words'
 
-db = WordParser.load
+require 'raws/db'
+require 'game/object_extensions'
+
+require 'game/game_core'
+
+core = GameCore.new(:world_size => 1, :world_depth => 1)
 
 class Action
     def self.do(descriptor = {})
@@ -25,18 +30,17 @@ class Action
     end
 end
 
-
-japanese_names = db.get_keyword_words(:japanese, :name)
+japanese_names = Words.db.get_keyword_words(:japanese, :name)
 
 Log.debug("Japanese names: #{japanese_names.inspect}")
 Log.debug("Character name: #{japanese_names.rand}")
 
-see_synonyms = db.get_related_words(:see)
+see_synonyms = Words.db.get_related_words(:see)
 
 Log.debug(see_synonyms.inspect)
 Log.debug(see_synonyms.rand)
 
-Log.debug(db.get_related_words(:attack).inspect)
+Log.debug(Words.db.get_related_words(:attack).inspect)
 
 Log.debug(Words.gen_area_name({:template => :mountain, :keywords => [:beautiful]}).to_s)
 Log.debug(Words.gen_room_description({:template => :mountain, :keywords => [:beautiful], :occupants => ["elderly beaver", "Frank the Ninja Bunny"]}).to_s)
@@ -44,7 +48,6 @@ Log.debug(Words.gen_room_description({:template => :mountain, :keywords => [:bea
 Log.debug(Words.gen_sentence(:agent => :John, :action => :see, :target => :Mary).to_s)
 
 Log.debug(Words::Sentence::NounPhrase.new(:dagger).to_s)
-
 
 class NPC
     attr_reader :name

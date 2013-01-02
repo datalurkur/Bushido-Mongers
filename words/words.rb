@@ -107,6 +107,7 @@ module Words
         end
 
         class PTInternalNode < PTNode
+            # Uncomment this to display parens around each parent node.
 #           def to_s
 #               "(" + @children.join(" ") + ")"
 #           end

@@ -9,6 +9,11 @@ material leather {
     value 10;
 }
 
+material paper {
+    weight 0.1;
+    value 20;
+}
+
 metal iron {
     melting_point 1538;
     value 10;

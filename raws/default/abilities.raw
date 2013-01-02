@@ -21,3 +21,9 @@ ability hide {
     default_familiarity 0.0;
     familiarity_loss 100;
 }
+
+ability attack {
+    default_skill 0.2;
+    default_familiarity 0.0;
+    familiarity_loss 100;
+}

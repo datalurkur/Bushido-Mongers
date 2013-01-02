@@ -49,7 +49,7 @@ class Room < ZoneLeaf
         may_spawn     = core.db.types_of(@params[:may_spawn]     || [])
         always_spawns = core.db.types_of(@params[:always_spawns] || [])
         never_spawns  = core.db.types_of(@params[:never_spawns]  || [])
-        Log.debug(["Creating NPCs for #{self.name} with spawn details", may_spawn, always_spawns, never_spawns])
+        Log.debug(["Creating NPCs for #{self.name} with spawn details", may_spawn, always_spawns, never_spawns], 6)
 
         # Find NPC types suitable to create here, based on NPC info.
         npc_types = core.db.types_of(:npc)
