@@ -10,12 +10,6 @@ ZoneTemplate.define(:sanctuary,
     :keywords        => [:peaceful, :outside]
 )
 
-ZoneTemplate.define(:tavern
-)
-
-ZoneTemplate.define(:inn
-)
-
 ZoneTemplate.define(:meadow,
     :depth_range   => 0..3,
     :keywords      => [:grassy, :outside],
@@ -64,6 +58,10 @@ ZoneTemplate.define(:boat,
 # Soon...
 =begin
 ZoneTemplate.define(:temple_that_serves_as_the_final_bastion_of_light_in_an_otherwise_evil_forest, {:keywords=>[], :depth_range=>1..3})
+ZoneTemplate.define(:tavern)
+ZoneTemplate.define(:inn)
+ZoneTemplate.define(:forest)
+ZoneTemplate.define(:orchard)
 ZoneTemplate.define(:temple)
 ZoneTemplate.define(:barracks)
 ZoneTemplate.define(:portcullis)
