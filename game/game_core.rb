@@ -26,9 +26,7 @@ class GameCore
 
     def create_world(args)
         Log.debug("Creating world")
-        world_size  = args[:world_size]  || 3
-        world_depth = args[:world_depth] || 3
-        @world = WorldFactory.generate(world_size, world_depth)
+        @world = WorldFactory.generate(args)
 
         Log.debug("Populating world with NPCs and items")
         @world.populate(self)

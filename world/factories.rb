@@ -5,7 +5,15 @@ require 'util/timer'
 
 class WorldFactory
 class << self
-    def generate(size, depth, config={})
+    def generate(config={})
+        config[:world_size]         ||= 3
+        config[:world_depth]        ||= 3
+        config[:openness]           ||= 0.75 # Larger numbers lead to more rooms overall
+        config[:connectedness]      ||= 0.75 # Larger numbers lead to more passageways
+        config[:area_size_tendency] ||= 0.35 # Larger numbers move the balance of small/large rooms towards the large end
+
+        size, depth = config[:world_size], config[:world_depth]
+
         # TODO - Make the seeding a bit more intelligent
         seed = Time.now.to_i
         Log.debug("Seeding world with #{seed}")
@@ -15,9 +23,6 @@ class << self
         world_name = Words.gen_area_name(params).to_s
 
         world = World.new(world_name, size, depth, params)
-        config[:openness]           ||= 0.75 # Larger numbers lead to more rooms overall
-        config[:connectedness]      ||= 0.75 # Larger numbers lead to more passageways
-        config[:area_size_tendency] ||= 0.35 # Larger numbers move the balance of small/large rooms towards the large end
 
         populate_area(world, config)
 
@@ -31,6 +36,7 @@ class << self
         parent_zone = parent_area.respond_to?(:zone) ? parent_area.zone : nil
 
         params = ZoneTemplate.random(parent_zone, size, depth)
+
         Log.debug(params.inspect, 6)
         name = "#{Words.gen_area_name(params).to_s}-#{rand(1000)}"
 
