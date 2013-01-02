@@ -7,14 +7,14 @@ abstract root command {
     has sym invocation;
 }
 
-abstract command attack {
+command attack {
     target corporeal;
     tool weapon;
 
     invocation attack;
 }
 
-abstract command eat {
+command eat {
     target food;
 
     invocation eat;
@@ -24,22 +24,22 @@ abstract command construct {
     invocation construct;
 }
 
-abstract construct cook {
+construct cook {
 }
 
-abstract construct forge {
+construct forge {
     location anvil;
     tool hammer;
 }
 
-abstract construct craft {}
+construct craft {}
 
-abstract construct make_bow {}
+construct make_bow {}
 
-abstract construct fletch {}
+construct fletch {}
 
 post_process {
-    self[:command][:subtypes].each do |command|
+    self.find_subtypes(:command, {}, true).each do |command|
         Log.debug("Propagating tool information for #{command}")
         propagate_recursive(info_for(command, :tool)) do |subtype|
             Log.debug("#{subtype} is a required tool for #{command}")
