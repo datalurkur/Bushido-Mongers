@@ -16,7 +16,7 @@ class BushidoObject
 
         type_info[:class_values].each do |k,v|
             unless type_info[:has].has_key?(k) && type_info[:has][k][:class_only]
-                (@properties[k] = v) 
+                @properties[k] = v
             end
         end
 
@@ -96,5 +96,9 @@ class BushidoObject
 
     def debug_info
         ["Properties", @properties, "Extensions", @extensions, "Class Info", @core.db.raw_info_for(@type)]
+    end
+
+    def inspect
+        "#<#{@type} #{@properties.inspect} uses #{@extensions.inspect}>"
     end
 end
