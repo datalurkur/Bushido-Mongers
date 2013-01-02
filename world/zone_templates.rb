@@ -45,8 +45,6 @@ class ZoneTemplate
                 ((params[:depth_range] & depth).size > 0)
             end
 
-            Log.debug("eligible_types is #{eligible_types.inspect}", 6)
-
             type = nil
             if eligible_types.empty?
                 # Just use the parent, if it exists, or a random template.
