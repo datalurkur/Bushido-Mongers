@@ -39,7 +39,7 @@ abstract body bilateral_body {
 
 bilateral_body humanoid_body {
     body_parts head torso;
-    bilateral_parts arm leg;
+    bilateral_parts arm hand leg foot;
 }
 
 bilateral_body arachnoid_body {
@@ -81,12 +81,27 @@ abstract body_part arm {
 arm  left_arm {}
 arm right_arm {}
 
-body_part leg {
-    weight 5;
+abstract body_part hand {
+    /* TODO - make hands able to grasp somehow */
+    weight 2;
+}
+
+hand  left_hand {}
+hand right_hand {}
+
+abstract body_part leg {
+    weight 10;
 }
 
 arm  left_leg {}
 arm right_leg {}
+
+abstract body_part foot {
+    weight 4;
+}
+
+foot  left_foot {}
+foot right_foot {}
 
 body_part carapace {
     weight 15;
