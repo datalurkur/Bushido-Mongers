@@ -215,18 +215,13 @@ class Lobby
             Log.debug("Parsing action message")
             action = nil
             begin
-                Log.debug("Creating command object")
-                cmd_obj = @game_core.db.create(@game_core, message.command, message.args)
-            rescue Exception => e
-                Log.debug(["Failed to create command object", e.message, e.backtrace])
-                send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
-            rescue
-                Log.debug("How the fuck did we get here?")
-            end
-            if cmd_object
-                Log.debug("Successfully created command object")
-                cmd_object.on_command
+                Log.debug("Performing command")
+                character = @game_core.get_character(username)
+                Commands.do(@game_core, message.command, message.args.merge(:agent => character))
                 send_to_user(username, Message.new(:act_success, {:result => "Woot!"}))
+            rescue Exception => e
+                Log.debug(["Failed to perform command #{message.command}", e.message, e.backtrace])
+                send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
             end
         else
             Log.debug("Unhandled game message type #{message.type} received from client")
