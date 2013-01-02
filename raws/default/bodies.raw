@@ -11,6 +11,7 @@ abstract object body {
         }
         {
             :body_parts => parts,
+            :hp         => parts.inject(0) { |s,p| s + p.hp },
             :weight     => parts.inject(0) { |s,p| s + p.weight },
             :size       => params[:size]
         }
@@ -32,11 +33,13 @@ body rodent_body {
 
 abstract object body_part {
     needs size;
+    has int hp;
 
-    /* Adjust the weight of the body part based on size */
+    /* Adjust the weight and hp of the body part based on size */
     at_creation {
         {
-            :weight => @properties[:weight] * Size.value(params[:size])
+            :weight => @properties[:weight] * Size.value(params[:size]),
+            :hp     => 2**Size.index(params[:size])
         }
     }
 }
@@ -48,6 +51,14 @@ body_part head {
 
 body_part torso {
     weight 25;
+}
+
+body_part arm {
+    weight 5;
+}
+
+body_part leg {
+    weight 5;
 }
 
 body_part carapace {
