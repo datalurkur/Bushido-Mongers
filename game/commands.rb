@@ -11,7 +11,10 @@ module Commands
                 Log.debug("Performing intelligent parameter lookup on param #{k} with value #{v}")
                 case k
                 when :target
-                    params[:target] = find_object(core, command, params[:agent], params[:target], :target)
+                    case invocation
+                    when :move; params[:target] = v
+                    else        params[:target] = find_object(core, command, params[:agent], params[:target], :target)
+                    end
                 when :tool
                     # The tool is likely in the agent's inventory, but possibly in the location
                     # FIXME
@@ -52,7 +55,7 @@ module Commands
                 occupant.is_a?(klass) && occupant.name.match(/#{name}/i)
             end
 
-            # Handle contingencies
+            # FIXME: Handle contingencies
             raise "No object #{name} found" if potentials.empty?
             raise "Be more specific" if potentials.size > 1
 
@@ -63,6 +66,14 @@ module Commands
     module Eat
         def self.do(core, params)
             Log.debug("Eating something!")
+        end
+    end
+
+    module Move
+        def self.do(core, params)
+            Log.debug(params)
+            SharedObjectExtensions.check_required_params(params, [:agent, :target])
+            params[:agent].move(params[:target])
         end
     end
 

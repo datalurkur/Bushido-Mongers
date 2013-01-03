@@ -14,6 +14,10 @@ command attack {
     invocation attack;
 }
 
+command move {
+    invocation move;
+}
+
 command eat {
     target food;
 
