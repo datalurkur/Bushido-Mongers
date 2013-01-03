@@ -69,6 +69,7 @@ zone,monster_spawner boat {
     keywords wet;
 }
 
+/*
 inside_zone tavern {}
 inside_zone inn {}
 zone forest {}
@@ -84,6 +85,7 @@ zone mountain {}
 zone portcullis {}
 inside_zone tower {}
 inside_zone dungeon {}
+*/
 
 post_process {
     self.find_subtypes(:zone, {}, true).each do |zone|
