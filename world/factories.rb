@@ -1,5 +1,4 @@
 require 'world/world'
-require 'world/zone_templates'
 require 'math/noisemap'
 require 'util/timer'
 
