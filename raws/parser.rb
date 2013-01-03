@@ -154,7 +154,7 @@ module ObjectRawParser
             raws_list(group).each do |raw_file|
                 Log.debug("Parsing file #{raw_file}")
                 raw_data = File.read(raw_file)
-                raw_data.gsub!(/\/\*(.*?)\*\//, '')
+                raw_data.gsub!(/\/\*(.*?)\*\//m, '')
                 raw_chunks = separate_lexical_chunks(raw_data)
                 raw_chunks.each do |statement, data|
                     statement_pieces = statement.split(/\s+/)
