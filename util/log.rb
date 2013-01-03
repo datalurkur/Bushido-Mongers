@@ -104,10 +104,9 @@ class Log
 
             msg_prefix = "[#{thread_name.ljust(@longest_thread_name)}] #{file.to_s.ljust(@longest_file)}:#{line.to_s.ljust(3)} (#{level.to_s.ljust(@max_log_level.to_s.length)}) | "
 
-            case msg
-            when Array, Hash
+            if msg.respond_to?(:to_formatted_string)
                 msg.to_formatted_string(msg_prefix)
-            when String
+            elsif String === msg
                 (msg_prefix + msg)
             else
                 (msg_prefix + msg.inspect)

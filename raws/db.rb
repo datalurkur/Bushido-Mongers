@@ -20,8 +20,9 @@ class ObjectDB
             db.each_type do |type|
                 next if db[type][:abstract]
                 db[type][:has].each do |k,v|
-                    if v[:class_only] && !db[type][:class_values].has_key?(k)
-                        raise "Class value #{k.inspect} missing from #{type.inspect}"
+                    if v[:class_only]
+                        has_value = v[:multiple] ? !db[type][:class_values].empty? : db[type][:class_values].has_key?(k)
+                        raise "Class value #{k.inspect} missing from #{type.inspect}" unless has_value
                     end
                 end
             end

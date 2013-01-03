@@ -98,11 +98,11 @@ class BushidoObject
         @core.db.info_for(@type, key)
     end
 
-    def debug_info
-        ["Properties", @properties, "Extensions", @extensions, "Class Info", @core.db.raw_info_for(@type)]
+    def inspect
+        raise "Don't call this.  Ever.  Seriously"
     end
 
-    def inspect
-        "#<#{@type} #{@properties.inspect}" + (!@extensions.empty? ? " uses #{@extensions.inspect}>" : ">")
+    def to_formatted_string(prefix, omit_braces=false)
+        [@type, [@properties]].to_formatted_string(prefix, true)
     end
 end

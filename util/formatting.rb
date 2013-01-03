@@ -44,6 +44,8 @@ class Array
                     prefix + inner_indent + element
                 when Symbol
                     prefix + inner_indent + element.inspect
+                when BushidoObject
+                    element.to_formatted_string(prefix + inner_indent, omit_braces)
                 else
                     prefix + inner_indent + element.class.to_s
                 end
@@ -72,13 +74,15 @@ class Hash
                 output        = key.inspect.ljust(longest_key) + " => "
                 value_printed = false
 
-                unless (Array === value) || (Hash === value)
-                    if (String === value) || (Symbol === value)
-                        output += value.inspect
-                    else
-                        output += value.class.to_s
-                    end
+                output += case value
+                when String,Symbol
                     value_printed = true
+                    value.inspect
+                when Array,Hash,BushidoObject
+                    ""
+                else
+                    value_printed = true
+                    value.class.to_s
                 end
 
                 string << prefix + inner_indent + output
