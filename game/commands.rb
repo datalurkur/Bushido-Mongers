@@ -26,6 +26,9 @@ module Commands
 
             mod        = invocation.to_caml.to_const(Commands)
             mod.do(core, params)
+
+            # Return the parsed parameters
+            params
         end
 
         def find_object(core, command, agent, name, type)

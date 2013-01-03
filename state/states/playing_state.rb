@@ -33,8 +33,12 @@ class PlayingState < State
 
     def from_server(message)
         case message.type
-        when :move_fail, :move_success, :act_fail, :act_success
+        when :move_fail, :move_success, :act_fail
             pass_to_client(message)
+            begin_exchange(@playing_menu_exchange)
+            return
+        when :act_success
+            @client.send_to_client(Message.new(:properties, {:field => "Action results", :properties => message.description}))
             begin_exchange(@playing_menu_exchange)
             return
         end

@@ -1,4 +1,5 @@
 require 'game/game_core'
+require 'game/descriptors'
 require 'util/log'
 
 # Lobbies group players together with a Game and facilitate communications between the game and the client sockets
@@ -217,8 +218,11 @@ class Lobby
             begin
                 Log.debug("Performing command")
                 character = @game_core.get_character(username)
-                Commands.do(@game_core, message.command, message.args.merge(:agent => character))
-                send_to_user(username, Message.new(:act_success, {:result => "Woot!"}))
+
+                results = Commands.do(@game_core, message.command, message.args.merge(:agent => character))
+                described_results = Descriptor.describe(results.merge(:command => message.command), character)
+
+                send_to_user(username, Message.new(:act_success, {:description => described_results}))
             rescue Exception => e
                 Log.debug(["Failed to perform command #{message.command}", e.message, e.backtrace])
                 send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
