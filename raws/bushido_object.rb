@@ -99,7 +99,7 @@ class BushidoObject
     end
 
     def inspect
-        raise "Don't call this.  Ever.  Seriously"
+        "#<#{@type} #{@properties.inspect}>"
     end
 
     def to_formatted_string(prefix, omit_braces=false)
