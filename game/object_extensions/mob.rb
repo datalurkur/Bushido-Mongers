@@ -21,7 +21,7 @@ module Mob
         raise Exception, "Position uninitialized" if @position.nil?
         new_position = @position.connected_leaf(direction)
         if new_position
-            Log.debug("#{@name} moves from #{@position.name} to #{new_position.name}")
+            Log.debug("#{self.name} moves from #{@position.name} to #{new_position.name}")
             @position.remove_occupant(self)
             @position = new_position
             @position.add_occupant(self)

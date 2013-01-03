@@ -80,8 +80,8 @@ class ObjectDB
     end
 
     def create(core, type, params={})
-        raise "#{type} not defined" unless @db[type]
-        raise "#{type} is not instantiable" if @db[type][:abstract]
+        raise "#{type.inspect} not defined" unless @db[type]
+        raise "#{type.inspect} is not instantiable" if @db[type][:abstract]
         BushidoObject.new(core, type, params)
     end
 

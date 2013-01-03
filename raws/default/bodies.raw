@@ -18,17 +18,38 @@ abstract object body {
     }
 }
 
-body humanoid_body {
-    /* TODO - We need to figure out how to have multiple of a body part.  We shouldn't be manually specifying left and right something. */
+abstract body bilateral_body {
+    class_many sym bilateral_parts;
+
+    /* Instantiate the body parts using the size of the body */
+    /* Assumes body_parts has already been filled out with BOs by body's at_creation */
+    at_creation {
+        parts  = @properties[:body_parts] + @core.db.info_for(@type, :bilateral_parts).collect { |part|
+            [@core.db.create(@core,  "left_#{part}".to_sym, {:size => params[:size]}),
+             @core.db.create(@core, "right_#{part}".to_sym, {:size => params[:size]})]
+        }.flatten
+        {
+            :body_parts => parts,
+            :hp         => parts.inject(0) { |s,p| s + p.hp },
+            :weight     => parts.inject(0) { |s,p| s + p.weight },
+            :size       => params[:size]
+        }
+    }
+}
+
+bilateral_body humanoid_body {
     body_parts head torso;
+    bilateral_parts arm hand leg foot;
 }
 
-body arachnoid_body {
+bilateral_body arachnoid_body {
     body_parts carapace spinner;
+    bilateral_parts leg leg leg leg;
 }
 
-body rodent_body {
+bilateral_body rodent_body {
     body_parts head torso tail;
+    bilateral_parts leg leg;
 }
 
 abstract object body_part {
@@ -53,13 +74,34 @@ body_part torso {
     weight 25;
 }
 
-body_part arm {
+abstract body_part arm {
     weight 5;
 }
 
-body_part leg {
-    weight 5;
+arm  left_arm {}
+arm right_arm {}
+
+abstract body_part hand {
+    /* TODO - make hands able to grasp somehow */
+    weight 2;
 }
+
+hand  left_hand {}
+hand right_hand {}
+
+abstract body_part leg {
+    weight 10;
+}
+
+arm  left_leg {}
+arm right_leg {}
+
+abstract body_part foot {
+    weight 4;
+}
+
+foot  left_foot {}
+foot right_foot {}
 
 body_part carapace {
     weight 15;
