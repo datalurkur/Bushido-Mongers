@@ -40,11 +40,11 @@ def test_npc(db, test_npc_type, name)
     test_npc = db.create($core, test_npc_type, {:initial_position => FakeRoom.new, :name => name})
 
     Log.debug("Test NPC is a guard? #{test_npc.is_a?(:guard)}")
-    Log.debug("Test NPC has parts: #{test_npc.body.body_parts.inspect}")
+    Log.debug(["Test NPC has parts", test_npc.body.body_parts])
     if test_npc.has_property?(:provocations)
-        Log.debug("Test NPC has provocations #{test_npc.provocations.inspect}")
+        Log.debug(["Test NPC has provocations", test_npc.provocations])
     end
-    Log.debug("Test NPC inspection: #{test_npc.inspect}")
+    Log.debug(["Test NPC", test_npc])
 end
 
 test_npc(db, :peacekeeper, "Derpus Maximus")
