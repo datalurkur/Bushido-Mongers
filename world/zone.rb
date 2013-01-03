@@ -31,7 +31,6 @@ class Zone
         end
 
         def find_child(db, parent, depth)
-            Log.debug(parent.inspect)
             potential_zones = zones_of_depth(db, depth, db.info_for(parent.type, :child_zones))
 
             if potential_zones.empty?
