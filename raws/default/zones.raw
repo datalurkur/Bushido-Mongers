@@ -1,0 +1,105 @@
+abstract root zone {
+    class_many int depth_range;
+    class_many sym keywords;
+    class_many optional sym optional_keywords;
+    class_many optional sym child_zones;
+    class_many optional sym can_spawn;
+    class sym sideness;
+
+    depth_range 0;
+    sideness outside;
+    
+    at_creation {
+        base_keywords = @core.db.info_for(@type, :keywords)
+        params[:inherited_keywords] ||= []
+        # TODO - Insert some optional_keywords here.
+        keywords = base_keywords + params[:inherited_keywords]
+        {
+            :keywords => keywords
+        }
+    }
+}
+
+zone haven {
+    depth_range 1 2 3;
+    keywords peaceful;
+    child_zones tavern inn;
+    can_spawn peacekeeper merchant;
+}
+
+zone meadow {
+    depth_range 0 1 2 3;
+    keywords grassy;
+    can_spawn monster;
+}
+
+abstract zone inside_zone {
+    sideness inside;
+}
+
+abstract zone monster_spawner {
+    can_spawn monster;
+}
+
+inside_zone,monster_spawner castle {
+    depth_range 0 1 2 3 4;
+    keywords constructed;
+    child_zones barracks portcullis sewer tower dungeon;
+}
+
+inside_zone,monster_spawner barracks {
+    depth_range 0 1;
+    keywords constructed;
+    child_zones sewer tower dungeon;
+}
+
+inside_zone,monster_spawner sewer {
+    depth_range 0 1 2
+    keywords dank wet;
+}
+
+zone,monster_spawner dock {
+    depth_range 1;
+    keywords wooden;
+    child_zones pier boat;
+}
+
+zone,monster_spawner boat {
+    depth_range 0 1;
+    keywords wet;
+}
+
+inside_zone tavern {}
+inside_zone inn {}
+zone forest {}
+zone orchard {}
+inside_zone temple {}
+
+zone temple_that_serves_as_the_final_bastion_of_light_in_an_otherwise_evil_forest {
+    depth_range 0 1;
+    keywords shiny;
+}
+
+zone mountain {}
+zone portcullis {}
+inside_zone tower {}
+inside_zone dungeon {}
+
+post_process {
+    self.find_subtypes(:zone, {}, true).each do |zone|
+        unless info_for(zone, :can_spawn).empty?
+            list = info_for(zone, :can_spawn).dup
+            info_for(zone, :can_spawn).clear
+            info_for(zone, :can_spawn) << list.inject([]) { |arr, can_spawn| arr + types_of(can_spawn) }
+            info_for(zone, :can_spawn).flatten!
+        end
+    end
+    self.find_subtypes(:npc, {}, true).each do |npc|
+        if can_spawn_in = info_for(npc, :can_spawn_in)
+            can_spawn_in.each do |zone|
+                info_for(zone, :can_spawn) << npc
+                info_for(zone, :can_spawn).uniq!
+            end
+        end
+    end
+}

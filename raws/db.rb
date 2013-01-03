@@ -40,7 +40,7 @@ class ObjectDB
     end
 
     def raw_info_for(type)
-        raise "#{type.inspect} not defined" unless @db[type]
+        raise "#{type.inspect} not defined as db type" unless @db[type]
         @db[type]
     end
 
@@ -80,7 +80,7 @@ class ObjectDB
     end
 
     def create(core, type, params={})
-        raise "#{type.inspect} not defined" unless @db[type]
+        raise "#{type.inspect} not defined as db type" unless @db[type]
         raise "#{type.inspect} is not instantiable" if @db[type][:abstract]
         BushidoObject.new(core, type, params)
     end

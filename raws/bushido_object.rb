@@ -1,7 +1,7 @@
 class BushidoObject
-    #attr_reader :core, :type
+    attr_reader :type
     def initialize(core, type, params={})
-        Log.debug("Creating #{type}", 6)
+        Log.debug("Creating #{type}", 1)
         @core = core
         @type = type
 

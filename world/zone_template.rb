@@ -2,6 +2,52 @@ require 'world/zone'
 require 'util/basic'
 require 'util/formatting'
 
+class Zone
+    class << self
+        # Returns args used to populate gen_area_name, Area.new and Room.new.
+        def create(core, parent, depth)
+            args = if parent
+                # Inherit a keyword from the parent.
+                { :template => find_child(core.db, parent, depth),
+                  :inherited_keywords => ([core.db.info_for(parent.type, :keywords).rand] || [])
+                }
+            else
+                { :template => find_random(core.db, depth) }
+            end
+
+            args[:depth] = depth
+            args[:zone]  = core.db.create(core, args[:template], args)
+
+            args.delete(:inherited_keywords) # Shouldn't need this again.
+            return args
+        end
+
+        private
+        def zones_of_depth(db, depth, list = db.types_of(:zone))
+            list.select do |zone|
+                db.info_for(zone, :depth_range).include?(depth)
+            end
+        end
+
+        def find_child(db, parent, depth)
+            Log.debug(parent.inspect)
+            potential_zones = zones_of_depth(db, depth, db.info_for(parent.type, :child_zones))
+
+            if potential_zones.empty?
+                potential_zones = zones_of_depth(db, depth)
+            end
+
+            type = potential_zones.rand
+            raise "Found invalid child zone type #{type} in #{parent.type}!\n" unless db[type]
+            return type
+        end
+
+        def find_random(db, depth)
+            return zones_of_depth(db, depth).rand
+        end
+    end
+end
+
 class ZoneTemplate
     class << self
         def types; @types ||= {}; end

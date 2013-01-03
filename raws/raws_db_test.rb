@@ -54,7 +54,6 @@ test_npc(db, :giant_spider, "Leggus Maximus")
 hb = db.create($core, :humanoid_body, {:size => :large})
 hb = db.create($core, :arachnoid_body, {:size => :tiny})
 
-# FIXME
 # Recipe and command tests
 Log.debug("How do I produce a dagger?")
 Log.debug(db.info_for(:dagger, :technique))
@@ -74,3 +73,16 @@ Log.debug(db.info_for(:hammer, :used_for))
 
 Log.debug("What sorts of things can I eat?")
 Log.debug(db.find_subtypes(:item, {:target_of => :eat}))
+
+# Zone tests
+begin
+    require 'world/zone_template'
+
+    Log.debug(["types_of(:zone):", db.types_of(:zone)])
+    Log.debug("Meadow has keywords: #{db.info_for(:meadow, :keywords)}")
+
+    zone_params = Zone.create($core, nil, 3)
+    Log.debug(zone_params)
+    zone2 = Zone.create($core, zone_params[:zone], 2)
+    Log.debug(zone2)
+end

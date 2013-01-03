@@ -3,11 +3,11 @@ abstract named,aligned,mover npc {
     uses npc_behavior;
 
     class_many sym can_spawn_in;
-    class_many sym never_spawn_in;
-    class sym spawn_chance;
 
-    can_spawn_in nothing;
-    never_spawn_in nothing;
+    /* Maybe use eventually? */
+    /* class_many sym never_spawn_in; */
+
+    class sym spawn_chance;
     spawn_chance coin_toss;
 }
 

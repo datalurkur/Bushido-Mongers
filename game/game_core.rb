@@ -14,14 +14,14 @@ class GameCore
         @ticking_mutex    = Mutex.new
 
         # Read the raws
-        # TODO: Load raw_group from server config?
+        # TODO - Load raw_group from server config?
         raw_group = "default"
         Log.debug("Loading #{raw_group} raws")
         @db = ObjectDB.get(raw_group)
 
         @words_db = WordParser.load
 
-        create_world(args)
+        create_world(args.merge(:core => self))
     end
 
     def create_world(args)

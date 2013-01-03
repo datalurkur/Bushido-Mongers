@@ -452,6 +452,7 @@ module Words
 
     # Required/expected arg values: keywords contents occupants exits
     def self.gen_room_description(args = {})
+        Log.debug(args)
         @sentences = []
 
         args = args.merge(:action => :see)
@@ -480,10 +481,10 @@ module Words
 
     def self.gen_area_name(args = {})
         article = Sentence::Article.new(:the)
-        noun    = Sentence::Noun.new(args[:template])
+        noun    = Sentence::Noun.new(args[:zone].type)
         name    = Sentence::NounPhrase.new([article, noun])
 
-        name.add_adjectives(args[:keywords].rand)
+        name.add_adjectives(args[:zone].keywords.rand)
 
         descriptor = db.get_keyword_words(:abstract, :noun).rand
 

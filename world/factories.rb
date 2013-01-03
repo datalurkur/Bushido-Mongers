@@ -6,6 +6,9 @@ require 'util/timer'
 class WorldFactory
 class << self
     def generate(config={})
+        # core and db are necessary for zone creation and info.
+        SharedObjectExtensions.check_required_params(config, [:core])
+
         config[:world_size]         ||= 3
         config[:world_depth]        ||= 3
         config[:openness]           ||= 0.75 # Larger numbers lead to more rooms overall
@@ -19,7 +22,8 @@ class << self
         Log.debug("Seeding world with #{seed}")
         srand(seed)
 
-        params = ZoneTemplate.random(nil, size, depth)
+        params = Zone.create(config[:core], nil, depth)
+
         world_name = Words.gen_area_name(params).to_s
 
         world = World.new(world_name, size, depth, params)
@@ -35,7 +39,7 @@ class << self
         # Find and add a suitable zone template.
         parent_zone = parent_area.respond_to?(:zone) ? parent_area.zone : nil
 
-        params = ZoneTemplate.random(parent_zone, size, depth)
+        params = Zone.create(config[:core], parent_zone, depth)
 
         Log.debug(params.inspect, 6)
         name = "#{Words.gen_area_name(params).to_s}-#{rand(1000)}"
@@ -49,7 +53,7 @@ class << self
         end
 
         # Populate the empty zone.
-        ZoneTemplate.populate_zone(area, size, depth)
+        # ZoneTemplate.populate_zone(area, size, depth)
 
         if Area === area
             # The config will almost certainly be modified by the zone template

@@ -2,13 +2,14 @@ require 'game/tables'
 require 'world/zone'
 
 module ZoneWithKeywords
+    # The instantiated zone, a BushidoObject.
     def zone
-        raise "Template not defined!" unless @params[:template]
-        @params[:template]
+        raise "Zone not defined!" unless @params[:zone]
+        @params[:zone]
     end
 
     def keywords
-        @params[:keywords] ||= []
+        @params[:zone].keywords
     end
 end
 
@@ -46,31 +47,12 @@ class Room < ZoneLeaf
     end
 
     def populate_npcs(core)
-        may_spawn     = core.db.types_of(@params[:may_spawn]     || [])
-        always_spawns = core.db.types_of(@params[:always_spawns] || [])
-        never_spawns  = core.db.types_of(@params[:never_spawns]  || [])
-        Log.debug(["Creating NPCs for #{self.name} with spawn details", may_spawn, always_spawns, never_spawns], 6)
+        can_spawn = core.db.info_for(self.zone.type, :can_spawn)
 
-        # Find NPC types suitable to create here, based on NPC info.
-        npc_types = core.db.types_of(:npc)
-        acceptable_types = npc_types.select do |type|
-            (
-                may_spawn.include?(type) &&
-                !never_spawns.include?(type)
-            ) || (
-                core.db.info_for(type, :can_spawn_in) &&
-                core.db.info_for(type, :can_spawn_in).include?(self.zone)
-            )
-        end
-        acceptable_types.uniq!
-
-        Log.debug("Can create #{(always_spawns + acceptable_types).inspect} in #{self.zone}", 6)
-        Log.debug("No acceptable NPC types found for #{self.zone}!") if always_spawns.empty? && acceptable_types.empty?
+        Log.debug("No acceptable NPC types found for #{self.zone.type}!") if can_spawn.empty?
 
         # Actually spawn the NPCs.
-        always_spawns.each { |type| add_npc(core, type) }
-
-        acceptable_types.each do |type|
+        can_spawn.each do |type|
             add_npc(core, type) if Chance.take(core.db.info_for(type, :spawn_chance))
         end
     end
