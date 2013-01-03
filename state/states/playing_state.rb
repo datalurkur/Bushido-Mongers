@@ -51,7 +51,7 @@ class PlayingState < State
                 # Parse the command into an action
                 # FIXME - Hey zphobic!  Make this more grammatical!
                 Log.debug("Parsing command #{message.command.inspect}")
-                pieces = message.command.split(/\s+/).collect { |i| i.to_sym }
+                pieces = message.command.split(/\s+/).collect(&:to_sym)
 
                 # Join any conjunctions together
                 while (i = pieces.index(:and))
