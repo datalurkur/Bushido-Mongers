@@ -66,7 +66,7 @@ Message.define(:move_fail,     :game, [:reason], "Failed to move")              
 Message.define(:move_success,  :game, [],        "Moved")                                   # S->C
 Message.define(:act,           :game, [:command, :args])
 Message.define(:act_fail,      :game, [:reason], "Failed to perform action")
-Message.define(:act_success,   :game, [:result], "Performed action")
+Message.define(:act_success,   :game, [:description])
 
 # Core Game Information
 # Messages passed by the game core to the lobby
