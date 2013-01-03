@@ -84,7 +84,7 @@ class ClientBase
     def start_processing_server_messages
         @server_listen_thread  = Thread.new do
             begin
-                Log.name_thread("server_polling")
+                Log.name_thread("Comm")
                 data_buffer = ""
                 while(true)
                     lines = []
@@ -114,7 +114,7 @@ class ClientBase
         Log.debug("Polling for client messages", 8)
         @client_listen_thread  = Thread.new do
             begin
-                Log.name_thread("client_polling")
+                Log.name_thread("I/O")
                 while(true)
                     if @setup && input = get_from_client
                         raise RuntimeError, "Received non-message #{input.inspect} from client!" unless Message === input

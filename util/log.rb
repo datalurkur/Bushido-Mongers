@@ -11,9 +11,10 @@ class Log
 
         def setup(name, logfile_prefix, logfile_behavior=:none)
             @log_mutex = Mutex.new
-            @default_thread_name = "Unnamed"
+            @default_thread_name = "?"
 
             @max_log_level       = 9
+            @max_filename_length = 20
             @longest_file        = 0
             @longest_thread_name = @default_thread_name.length
 
@@ -55,6 +56,7 @@ class Log
 
         # THREADSAFE
         def name_thread(name)
+            puts "Naming thread #{name}"
             raise "Logging system never initialized" unless @logging_setup
             @log_mutex.synchronize do
                 @source_threads[Thread.current] = name
@@ -85,8 +87,9 @@ class Log
             thread_name = @source_threads[Thread.current] || @default_thread_name
 
             to_print = (Array === msg) ? msg : [msg]
+            formatted_filename = clean_filename(file)
             printable_data = to_print.collect do |m|
-                format_line(m, thread_name, file, line, level, color)
+                format_line(m, thread_name, formatted_filename, line, level, color)
             end.join("\n")
 
             @log_mutex.synchronize do
@@ -111,6 +114,15 @@ class Log
             else
                 (msg_prefix + msg.inspect)
             end.color(color)
+        end
+
+        def clean_filename(filename)
+            cleaned = filename.gsub(/(?:^\.\/|\.rb)/, '')
+            if cleaned.length > @max_filename_length
+                "..." + cleaned[-(@max_filename_length-3)..-1]
+            else
+                cleaned
+            end
         end
     end
 end

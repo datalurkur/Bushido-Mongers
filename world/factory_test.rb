@@ -2,7 +2,7 @@
 
 require 'world/factories'
 
-Log.setup("main thread", "factory_test")
+Log.setup("Main", "factory_test")
 
 world = WorldFactory.generate(5, 3)
 world.print_map("generated_world.png")

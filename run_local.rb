@@ -22,7 +22,7 @@ $client_config = {
     :lobby_password => "test",
 }
 
-Log.setup("Main Thread", "local")
+Log.setup("Main", "local")
 
 # DEBUG
 require 'game/character_test'

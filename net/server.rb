@@ -47,7 +47,7 @@ class Server
 
         @accept_socket = TCPServer.new(@config[:listen_port]) 
         @accept_thread = Thread.new do
-            Log.name_thread("accept_thread")
+            Log.name_thread("Accept")
             while(true)
                 begin
                     # Accept the new connection
@@ -123,7 +123,7 @@ class Server
         @threadcount           ||= {}
         @threadcount[sockaddr] ||= 0
         @threadcount[sockaddr]  += 1
-        thread_name = "#{sockaddr} (#{@threadcount[sockaddr]})"
+        thread_name = "Cli #{@threadcount[sockaddr]}"
         Log.debug("Listening for client input from #{sockaddr}")
         Thread.new do
             mutex = get_client_info(socket)[:mutex]

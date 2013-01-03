@@ -12,7 +12,7 @@ $config = {
     :server_menu_autocmd => :create_lobby
 }
 
-Log.setup("Main Thread", "client")
+Log.setup("Main", "client")
 
 $client = RemoteClient.new($config)
 

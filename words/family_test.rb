@@ -2,7 +2,7 @@
 
 require 'words/words'
 
-Log.setup("Main thread", "family_test")
+Log.setup("Main", "family_test")
 
 db = WordParser.load
 

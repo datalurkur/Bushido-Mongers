@@ -83,7 +83,7 @@ class IRCConduit
 
                 @listen_thread = Thread.new do
                     begin
-                        Log.name_thread("irc_listen")
+                        Log.name_thread("IRC")
                         while true
                             read_buffer = @primary_socket.gets
                             if read_buffer.length > 0

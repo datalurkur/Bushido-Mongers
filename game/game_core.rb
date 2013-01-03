@@ -41,7 +41,7 @@ class GameCore
         }
         raise "Already ticking" if already_ticking
         Thread.new do
-            Log.name_thread("Tick Thread")
+            Log.name_thread("Tick")
             begin
                 keep_ticking = true
                 while keep_ticking

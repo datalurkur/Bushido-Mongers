@@ -2,7 +2,7 @@
 require 'util/basic'
 require 'world/zone'
 
-Log.setup("Zone Test", "zonetest")
+Log.setup("Zone", "zonetest")
 
 =begin
 

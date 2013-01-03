@@ -6,7 +6,7 @@ require 'game/object_extensions'
 
 require 'test/fake'
 
-Log.setup("main thread", "test")
+Log.setup("Main", "test")
 
 # Basic DB parsing tests
 raw_group = "default"

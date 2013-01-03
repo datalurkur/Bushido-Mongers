@@ -11,7 +11,7 @@ $config = {
     :lobby_password => "test",
 }
 
-Log.setup("Main Thread", "client")
+Log.setup("Main", "client")
 $client = PairedAutoClient.new($config)
 
 signals = ["TERM","INT"]
