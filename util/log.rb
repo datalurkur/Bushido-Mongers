@@ -56,7 +56,6 @@ class Log
 
         # THREADSAFE
         def name_thread(name)
-            puts "Naming thread #{name}"
             raise "Logging system never initialized" unless @logging_setup
             @log_mutex.synchronize do
                 @source_threads[Thread.current] = name
