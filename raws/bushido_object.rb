@@ -102,7 +102,7 @@ class BushidoObject
         "#<#{@type} #{@properties.inspect}>"
     end
 
-    def to_formatted_string(prefix, omit_braces=false)
-        [@type, [@properties]].to_formatted_string(prefix, true)
+    def to_formatted_string(prefix, nest_prefix=true)
+        [@type, [@properties]].to_formatted_string(prefix, nest_prefix)
     end
 end

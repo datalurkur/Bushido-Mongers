@@ -27,72 +27,77 @@ class String
 end
 
 class Array
-    def to_formatted_string(prefix="", omit_braces=false)
-        string = []
-
-        inner_indent = omit_braces ? "" : "\t"
-
-        string << (prefix + "[") unless omit_braces
-        string.concat(if empty?
-            [prefix + inner_indent + "<EMPTY>"]
+    def to_formatted_string(prefix="", nest_prefix=true)
+        if empty?
+            (nest_prefix ? prefix : "") + "[ <EMPTY> ]"
         else
-            collect do |element|
-                case element
-                when Array,Hash
-                    element.to_formatted_string(prefix + inner_indent, omit_braces)
-                when String
-                    prefix + inner_indent + element
-                when Symbol
-                    prefix + inner_indent + element.inspect
-                when BushidoObject
-                    element.to_formatted_string(prefix + inner_indent, omit_braces)
-                else
-                    prefix + inner_indent + element.class.to_s
-                end
-            end
-        end)
-        string << (prefix + "]") unless omit_braces
+            string = []
 
-        string.join("\n")
+            each_with_index do |element,i|
+                data = if element.respond_to?(:to_formatted_string)
+                    element.to_formatted_string(prefix + "  ", false)
+                else
+                    case element
+                    when String
+                        element
+                    when Symbol
+                        element.inspect
+                    when Fixnum
+                        element.to_s
+                    else
+                        element.class.to_s
+                    end
+                end
+
+                header = (i == 0) ? "[ " : "  "
+                footer = (i == (size - 1)) ? " ]" : ""
+
+                (header = prefix + header) if (nest_prefix || i != 0)
+                string << (header + data + footer)
+            end
+
+            string.join("\n")
+        end
     end
 end
 
 class Hash
-    def to_formatted_string(prefix="", omit_braces=false)
-        string = []
-
-        inner_indent = omit_braces ? "" : "\t"
-
-        string << (prefix + "{") unless omit_braces
+    def to_formatted_string(prefix="", nest_prefix=true)
         if empty?
-            string << (prefix + inner_indent + "<EMPTY>")
+            (nest_prefix ? prefix : "") + "{ <EMPTY> }"
         else
+            string = []
+
             longest_key = keys.inject(0) { |longest,key|
                 [key.inspect.length, longest].max
             }
-            each do |key, value|
-                output        = key.inspect.ljust(longest_key) + " => "
-                value_printed = false
-
-                output += case value
-                when String,Symbol
-                    value_printed = true
-                    value.inspect
-                when Array,Hash,BushidoObject
-                    ""
+            each_with_index do |pair, i|
+                key, value    = pair
+                key_output    = key.inspect.ljust(longest_key) + " => "
+                value_output  = if value.respond_to?(:to_formatted_string)
+                    value.to_formatted_string(prefix + "    ", false)
                 else
-                    value_printed = true
-                    value.class.to_s
+                    case value
+                    when String,Symbol,Fixnum
+                        value.inspect
+                    else
+                        value.class.to_s
+                    end
                 end
 
-                string << prefix + inner_indent + output
-                unless value_printed
-                    string << value.to_formatted_string(prefix + inner_indent + "\t", omit_braces)
+                header     = (i == 0) ? "{ " : "  "
+                footer     = (i == (size - 1)) ? " }" : ""
+                pre_header = (nest_prefix || i != 0) ? prefix : ""
+
+                if value_output.match(/\n/)
+                    string << pre_header + header + key_output
+                    string << prefix + "    " + value_output + footer
+                else
+                    string << pre_header + header + key_output + value_output + footer
                 end
             end
-        end
-        string << (prefix + "}") unless omit_braces
 
-        string.join("\n")
+            string.join("\n")
+        end
     end
 end
