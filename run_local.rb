@@ -29,9 +29,19 @@ require 'game/character_test'
 recreate_test_character("test_user", "default")
 
 $server = GameServer.new($server_config)
-$server.start
-
 $client = StackClient.new($client_config)
+
+signals = ["TERM","INT"]
+signals.each do |signal|
+    Signal.trap(signal) {
+        # TODO - Save the game here so that we don't lose progress
+        Log.debug("Caught signal #{signal}")
+        $server.stop if $server
+        $client.stop if $client
+    }
+end
+
+$server.start
 
 $client.stack.set_state(:join_lobby)
 $client.stack.specify_response_for(:choose_from_list, {:field => :server_menu}) do |stack, message|
@@ -103,15 +113,5 @@ $client.stack.specify_response_for(:begin_playing) do |stack, message|
 end
 
 $client.start
-
-signals = ["TERM","INT"]
-signals.each do |signal|
-    Signal.trap(signal) {
-        # TODO - Save the game here so that we don't lose progress
-        Log.debug("Caught signal #{signal}")
-        $server.stop if $server
-        $client.stop if $client
-    }
-end
 
 MeteredMethods.report

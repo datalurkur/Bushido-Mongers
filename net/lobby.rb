@@ -212,7 +212,7 @@ class Lobby
 
                 send_to_user(username, Message.new(:act_success, {:description => described_results}))
             rescue Exception => e
-                Log.error(["Failed to perform command #{message.command}", e.message, e.backtrace])
+                Log.debug(["Failed to perform command #{message.command}", e.message])
                 send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
             end
         else
