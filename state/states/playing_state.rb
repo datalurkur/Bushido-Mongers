@@ -15,7 +15,6 @@ class PlayingState < State
             pass_to_client(message)
             return
         when :act_success
-            # FIXME - Use a sentence to describe the result
             @client.send_to_client(Message.new(:properties, {:field => :action_results, :properties => message.description}))
             return
         end

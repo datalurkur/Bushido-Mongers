@@ -30,7 +30,6 @@ class Descriptor
 
     class RoomDescriptor
         def self.describe(room, observer)
-            # FIXME - Zphobic almost certainly wants to unify this with the current model
             {
                 :type      => :room,
                 :name      => room.name,
