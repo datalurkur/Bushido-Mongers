@@ -206,12 +206,14 @@ class Lobby
             }))
         when :move
             character = @game_core.get_character(username)
-            result    = Commands.do(@game_core, :move, :agent => character, :target => message.direction)
-            if result.nil?
+            # Username is for message sending
+            params    = Commands.do(@game_core, :move, :agent => character, :target => message.direction)
+            if params[:result].nil?
                 send_to_user(username, Message.new(:move_success))
             else
                 send_to_user(username, Message.new(:move_fail, {:reason => result}))
             end
+
         when :act
             Log.debug("Parsing action message")
             action = nil

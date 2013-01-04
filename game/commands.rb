@@ -27,8 +27,8 @@ module Commands
                 end
             end
 
-            mod        = invocation.to_caml.to_const(Commands)
-            mod.do(core, params)
+            mod             = invocation.to_caml.to_const(Commands)
+            params[:result] = mod.do(core, params)
 
             # Return the parsed parameters
             params
