@@ -25,6 +25,12 @@ class Log
             @filtered_logfile = File.open(File.join(get_log_directory, "#{logfile_prefix}_output.log"),  "w")
             @logfile_behavior = logfile_behavior
 
+            @channels = {
+                :debug   => true,
+                :warning => true,
+                :error   => true
+            }
+
             read_config
 
             @logging_setup = true
@@ -32,6 +38,9 @@ class Log
             name_thread(name)
             debug("Logging begins")
         end
+
+        def disable_channel(channel); @channels[channel] = false; end
+        def enable_channel(channel);  @channels[channel] = true;  end
 
         def read_config
             if File.exists?(LOG_CONFIG)
@@ -65,14 +74,17 @@ class Log
 
         # THREADSAFE
         def error(msg, level=1)
+            return unless @channels[:error]
             log_internal(msg, level, :red)
         end
 
         def warning(msg, level=1)
+            return unless @channels[:warning]
             log_internal(msg, level, :yellow)
         end
 
         def debug(msg, level=1)
+            return unless @channels[:debug]
             log_internal(msg, level, :white)
         end
 
