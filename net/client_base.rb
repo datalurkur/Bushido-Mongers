@@ -58,7 +58,7 @@ class ClientBase
 
     def send_to_server(message)
         if @socket.nil?
-            Log.debug("No connection")
+            Log.error("No connection")
             return
         end
 
@@ -66,18 +66,15 @@ class ClientBase
         begin
             Log.debug("Packing message #{message.type} for server", 8)
             packed_data = pack_message(message)
-            Log.debug("Fetching socket mutex", 8)
             @socket_mutex.synchronize {
-                Log.debug("Message going out to socket", 8)
                 begin
                     @socket.write_nonblock(packed_data)
                 rescue Exception => e
-                    Log.debug(["Failed to write to server socket", e.message, e.backtrace])
+                    Log.error(["Failed to write to server socket", e.message, e.backtrace])
                 end
             }
-            Log.debug("Message sent and mutex released", 8)
         rescue Exception => e
-            Log.debug(["Failed to send data to server", e.message, e.backtrace])
+            Log.error(["Failed to send data to server", e.message, e.backtrace])
         end
     end
 
@@ -87,21 +84,28 @@ class ClientBase
                 Log.name_thread("Comm")
                 data_buffer = ""
                 while(true)
-                    lines = []
-                    Log.debug("Buffering input from server", 8)
-                    while lines.empty?
-                        new_lines = buffer_socket_input(@socket, @socket_mutex, data_buffer)
-                        lines.concat(new_lines)
+                    messages = []
+                    while messages.empty?
+                        new_messages = buffer_socket_input(@socket, @socket_mutex, data_buffer)
+                        new_messages.reject! do |message|
+                            if message.type == :heartbeat
+                                Log.debug("Heartbeat", 8)
+                                send_to_server(Message.new(:heartbeat))
+                            else
+                                false
+                            end
+                        end
+                        messages.concat(new_messages)
                     end
-                    Log.debug("Received #{lines.size} lines of input from server", 8)
-                    @server_mutex.synchronize { @server_message_buffer.concat(lines) }
+                
+                    @server_mutex.synchronize { @server_message_buffer.concat(messages) }
                 end
             rescue Errno::ECONNRESET
                 # Pass a fake server message informing the client that the connection was reset
                 reset_message = Message.new(:connection_reset)
                 @server_mutex.synchronize { @server_message_buffer << reset_message }
             rescue Exception => e
-                Log.debug(["Thread exited abnormally",e.message,e.backtrace])
+                Log.error(["Thread exited abnormally",e.message,e.backtrace])
             end
         end
     end
@@ -123,7 +127,7 @@ class ClientBase
                     end
                 end
             rescue Exception => e
-                Log.debug(["Thread exited abnormally",e.message,e.backtrace])
+                Log.error(["Thread exited abnormally",e.message,e.backtrace])
             end
         end
     end

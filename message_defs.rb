@@ -2,6 +2,7 @@
 # This is more of an internal tool used by the low-level socket code to inform the state management when a connection with the server dies
 Message.define(:connection_reset, :socket, [],        "The connection was reset")
 Message.define(:invalid_packet,   :socket, [:reason], "Unexpected message")
+Message.define(:heartbeat,        :socket)
 
 # Login phase
 Message.define(:login_request, :login, [:username])

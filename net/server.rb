@@ -13,6 +13,8 @@ class Server
     def initialize(config={})
         @config  = config
         @running = false
+        @config[:heartbeat_interval] ||= 5
+        @config[:heartbeat_timeout]  ||= 5 
     end
 
     def start
@@ -129,16 +131,34 @@ class Server
             mutex = get_client_info(socket)[:mutex]
             begin
                 Log.name_thread(thread_name)
-                data_buffer = ""
+
+                data_buffer           = ""
+                last_heartbeat        = Time.now
+                waiting_for_heartbeat = false
+                next_interval         = last_heartbeat + @config[:heartbeat_interval]
+
                 while(true)
-                    lines = []
-                    Log.debug("Buffering input from client", 8)
-                    while lines.empty?
-                        new_lines = buffer_socket_input(socket, mutex, data_buffer)
-                        lines.concat(new_lines)
+                    while Time.now < next_interval
+                        new_messages = buffer_socket_input(socket, mutex, data_buffer)
+                        new_messages.each do |message|
+                            if message.type == :heartbeat
+                                waiting_for_heartbeat = false
+                                next_interval = Time.now + @config[:heartbeat_interval]
+                            else
+                                process_client_message(message, socket)
+                            end
+                        end
                     end
-                    Log.debug("Processing #{lines.size} lines of input from client", 8)
-                    lines.each { |line| process_client_message(line, socket) }
+
+                    if waiting_for_heartbeat
+                        Log.warning("Client failed to respond to heartbeat")
+                        raise Errno::ECONNRESET
+                    else
+                        Log.debug("Heartbeat", 8)
+                        waiting_for_heartbeat = true
+                        send_to_client(socket, Message.new(:heartbeat))
+                        next_interval = Time.now + @config[:heartbeat_timeout]
+                    end
                 end
             rescue Errno::ECONNRESET
                 Log.debug("Client disconnected")
@@ -152,15 +172,12 @@ class Server
     def send_to_client(socket, message)
         # This really doesn't need to be in a begin / rescue block, but until we find this thread concurrency bug, I need all the logging I can get
         begin
-            Log.debug("Packing message #{message.type} for client", 8)
+            #Log.debug("Packing message #{message.type} for client", 8)
             packed_data = pack_message(message)
             begin
-                Log.debug("Fetching client mutex", 8)
                 get_client_info(socket)[:mutex].synchronize {
-                    Log.debug("Message going out to socket", 8)
                     socket.write_nonblock(packed_data)
                 }
-                Log.debug("Message sent and mutex released", 8)
             rescue Errno::ECONNRESET
                 Log.debug("Client connection reset")
                 clear_client_info(socket)
