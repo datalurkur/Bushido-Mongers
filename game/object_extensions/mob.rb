@@ -22,6 +22,7 @@ module Mob
         # This should only be called on a character object prior to saving
         # This is to avoid storing any instance-specific data in a saved character which may be ported to other instances
         raise "See comment at game/object_extensions/mob.rb:22" unless is_a?(:character)
+        @position.remove_occupant(self)
         @position = nil
     end
 
