@@ -1,65 +1,64 @@
 module Commands
     class << self
         def do(core, command, params)
-            invocation = core.db.info_for(command, :invocation)
-
-            # In the case of player commands, these values might not be filled in but will be symbols we have to search for
-            params.each do |k,v|
-                next if v.nil?
-                next if BushidoObject === v
-
-                Log.debug("Performing intelligent parameter lookup on param #{k} with value #{v}")
-                case k
-                when :target
-                    case invocation
-                    when :move; params[:target] = v
-                    else        params[:target] = find_object(core, command, params[:agent], params[:target], :target)
-                    end
-                when :tool
-                    # The tool is likely in the agent's inventory, but possibly in the location
-                    # FIXME
-                when :material
-                    # The material is likely in the agent's inventory, but possibly in the location
-                    # FIXME
-                when :location
-                    # The location is an object within a place, so search this room for objects that match
-                    # FIXME
-                end
+            unless core.db.has_type?(command)
+                raise "I don't know how to #{command}"
             end
 
-            mod             = invocation.to_caml.to_const(Commands)
-            params[:result] = mod.do(core, params)
+            invocation = core.db.info_for(command, :invocation)
+            mod        = invocation.to_caml.to_const(Commands)
 
-            # Return the parsed parameters
+            SharedObjectExtensions.check_required_params(params, [:agent])
+            mod.do(core, params)
+
+            # Return the resolved parameters
             params
         end
 
-        def find_object(core, command, agent, name, type)
-            klass = core.db.info_for(command, type)
-            unless klass
-                Log.warning("Parameter specified for a command that has no type for that parameter (#{type})")
-                return nil
+        def resolve(params, types, core, command)
+            types.each do |type|
+                params[type] = lookup_object(params[type], params[:agent], core.db.info_for(command, type))
+            end
+        end
+
+        def lookup_object(object, agent, type_class)
+            return object if (BushidoObject === object)
+
+            unless type_class
+                Log.error("Parameter specified for a command that has no type for that parameter")
+                raise "Command error for parameter #{object}"
             end
 
-            potentials = case klass
+            potentials = case type_class
             when :corporeal
                 # Types that are occupants in the location (targets of attacks, conversation, etc)
                 # FIXME - With ranged attacks, the object can be in adjacent locations
                 agent.position.occupants
             else
-                raise "Unhandled object type #{klass}"
+                raise "Unhandled object type #{type_class}"
             end
 
             # Sort through the potentials and find out which ones match the query
             potentials = potentials.select do |occupant|
-                occupant.is_a?(klass) && occupant.name.match(/#{name}/i)
+                occupant.is_a?(type_class) && occupant.name.match(/#{object}/i)
             end
 
             # FIXME: Handle contingencies
-            raise "No object #{name} found" if potentials.empty?
-            raise "Be more specific" if potentials.size > 1
+            raise "No object #{object} found" if potentials.empty?
+            raise "Multiple \"#{object}\'s\" found, be more specific" if potentials.size > 1
 
-            potentials.first
+            return potentials.first
+        end
+    end
+
+    module Inspect
+        def self.do(core, params)
+            if params[:target]
+                Commands.resolve(params, [:target], core, :inspect)
+            else
+                # Assume the player wants a broad overview of what he can see, describe the room
+                params[:target] = params[:agent].position
+            end
         end
     end
 
@@ -71,15 +70,20 @@ module Commands
 
     module Move
         def self.do(core, params)
-            Log.debug(params)
-            SharedObjectExtensions.check_required_params(params, [:agent, :target])
+            SharedObjectExtensions.check_required_params(params, [:target])
+
+            # The target is a location direction and doesn't need to be looked up
             params[:agent].move(params[:target])
         end
     end
 
     module Attack
         def self.do(core, params)
-            SharedObjectExtensions.check_required_params(params, [:agent, :target])
+            SharedObjectExtensions.check_required_params(params, [:target])
+
+            # The target is an object and needs to be resolved
+            Commands.resolve(params, [:target], core, :attack)
+
             Log.debug("#{params[:agent].name} attacks #{params[:target].name}")
             Message.dispatch(core, :unit_attacks, {
                 :attacker      => params[:agent],

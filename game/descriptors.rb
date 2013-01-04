@@ -19,7 +19,9 @@ class Descriptor
     class BushidoObjectDescriptor
         def self.describe(object, observer)
             # FIXME - Take the observer into account
-            d = {}
+            d = {
+                :type => :object
+            }
 
             d[:name] = object.name if object.is_a?(:named)
             # FIXME - Add more things
@@ -28,6 +30,15 @@ class Descriptor
 
     class RoomDescriptor
         def self.describe(room, observer)
+            # FIXME - Zphobic almost certainly wants to unify this with the current model
+            {
+                :type      => :room,
+                :name      => room.name,
+                :keywords  => room.keywords,
+                :contents  => room.contents.collect(&:name),
+                :occupants => room.occupants.collect(&:name),
+                :exits     => room.connected_directions,
+            }
         end
     end
 end

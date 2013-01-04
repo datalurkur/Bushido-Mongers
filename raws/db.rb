@@ -33,6 +33,10 @@ class ObjectDB
         @db[type]
     end
 
+    def has_type?(name)
+        @db.has_key?(name)
+    end
+
     def each_type(&block)
         return unless block_given?
         @db.keys.each do |type|
@@ -41,7 +45,7 @@ class ObjectDB
     end
 
     def raw_info_for(type)
-        raise "#{type.inspect} not defined as db type" unless @db[type]
+        raise "#{type.inspect} not defined as db type" unless @db.has_key?(type)
         @db[type]
     end
 

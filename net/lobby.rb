@@ -194,36 +194,17 @@ class Lobby
     def process_core_message(message)
         case message.type
         when :tick
-            Log.debug("Lobby tick")
+            Log.debug("Lobby tick", 6)
         end
     end
 
     def process_game_message(message, username)
         case message.type
-        when :inspect_room
-            room = @game_core.get_character(username).position
-            send_to_user(username, Message.new(:room_info, {
-                :name      => room.name,
-                :keywords  => room.keywords,
-                :contents  => room.contents.collect(&:name),  # Don't pass actual objects here, just names
-                :occupants => room.occupants.collect(&:name), # The lobby will re-translate the names into objects upon their return
-                :exits     => room.connected_directions,
-            }))
-        when :move
-            character = @game_core.get_character(username)
-            # Username is for message sending
-            params    = Commands.do(@game_core, :move, :agent => character, :target => message.direction)
-            if params[:result].nil?
-                send_to_user(username, Message.new(:move_success))
-            else
-                send_to_user(username, Message.new(:move_fail, {:reason => result}))
-            end
-
         when :act
-            Log.debug("Parsing action message")
+            Log.debug("Parsing action message", 8)
             action = nil
             begin
-                Log.debug("Performing command")
+                Log.debug("Performing command", 8)
                 character = @game_core.get_character(username)
 
                 results = Commands.do(@game_core, message.command, message.args.merge(:agent => character))
@@ -231,11 +212,11 @@ class Lobby
 
                 send_to_user(username, Message.new(:act_success, {:description => described_results}))
             rescue Exception => e
-                Log.debug(["Failed to perform command #{message.command}", e.message, e.backtrace])
+                Log.error(["Failed to perform command #{message.command}", e.message, e.backtrace])
                 send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
             end
         else
-            Log.debug("Unhandled game message type #{message.type} received from client")
+            Log.warning("Unhandled game message type #{message.type} received from client")
         end
     end
 
@@ -243,14 +224,14 @@ class Lobby
         case message.type
         when :get_game_params
             # Eventually there will actually *be* game params, at which point we'll want to send them here
-            Log.debug("PARTIALLY IMPLEMENTED")
+            Log.warning("PARTIALLY IMPLEMENTED")
             send_to_user(username, Message.new(:game_params, {:params=>{}}))
         when :generate_game
             generate_game(username)
         when :create_character
             # Basically, this is the event that triggers the character to be saved and used
             # The server isn't involved in the character creation dialog at all, only the committing of that data
-            Log.debug("UNIMPLEMENTED")
+            Log.warning("UNIMPLEMENTED")
             send_to_user(username, Message.new(:character_not_ready, {:reason => "Feature unimplemented"}))
         when :list_characters
             if @game_state == :genesis
@@ -268,9 +249,9 @@ class Lobby
         when :start_game
             start_game(username)
         when :toggle_pause
-            Log.debug("UNIMPLEMENTED")
+            Log.warning("UNIMPLEMENTED")
         else
-            Log.debug("Unhandled lobby message type #{message.type} received from client")
+            Log.error("Unhandled lobby message type #{message.type} received from client")
         end
     end
 end

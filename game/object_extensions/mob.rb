@@ -28,15 +28,13 @@ module Mob
 
     def move(direction)
         raise Exception, "Position uninitialized" if @position.nil?
+
+        # This method raises an exception if the direction is invalid, so no need to check it
         new_position = @position.connected_leaf(direction)
-        if new_position
-            Log.debug("#{self.name} moves from #{@position.name} to #{new_position.name}")
-            @position.remove_occupant(self)
-            @position = new_position
-            @position.add_occupant(self)
-            return nil
-        else
-            return :path_blocked
-        end
+
+        Log.debug("#{self.name} moves from #{@position.name} to #{new_position.name}")
+        @position.remove_occupant(self)
+        @position = new_position
+        @position.add_occupant(self)
     end
 end

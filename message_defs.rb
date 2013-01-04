@@ -61,11 +61,6 @@ Message.define(:admin_change,        :lobby, [:result], "Admin changed")        
 
 # Gameplay Protocol
 # Interactions between a client and the game lobby
-Message.define(:inspect_room,  :game)                                                       # C->S
-Message.define(:room_info,     :game, [:name, :keywords, :contents, :occupants, :exits])    # S->C
-Message.define(:move,          :game, [:direction])                                         # S->C
-Message.define(:move_fail,     :game, [:reason], "Failed to move")                          # S->C
-Message.define(:move_success,  :game, [],        "Moved")                                   # S->C
 Message.define(:act,           :game, [:command, :args])
 Message.define(:act_fail,      :game, [:reason], "Failed to perform action")
 Message.define(:act_success,   :game, [:description])

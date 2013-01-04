@@ -103,11 +103,24 @@ module VerboseInterface
         end
 
         def properties(message)
-            if message.field == :room_info
-                return Words.gen_room_description(message.properties)
+            if message.field == :action_results
+                case message.properties[:command]
+                when :inspect
+                    target = message.properties[:target]
+                    type   = target[:type]
+                    target.delete(:type)
+                    case type
+                    when :room
+                        return Words.gen_room_description(target)
+                    else
+                        return "I don't know how to describe a #{target[:type]}, bother zphobic to fix this"
+                    end
+                else
+                    return "I don't know how to express the results of a(n) #{message.properties[:command]}, pester zphobic to work on this"
+                end
+            else
+                return message.properties.to_formatted_string("", true)
             end
-
-            message.properties.to_formatted_string("", true)
         end
 
         def get_choice(context, text)
