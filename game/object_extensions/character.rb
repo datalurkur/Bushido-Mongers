@@ -58,6 +58,10 @@ module Character
         end
 
         def save(username, character)
+            # Clean up instance-specific data
+            character.nil_core
+            character.nil_position
+
             filename = to_filename(character.name)
             full_filename = File.join(get_user_directory(username), filename)
             f = File.open(full_filename, 'w')

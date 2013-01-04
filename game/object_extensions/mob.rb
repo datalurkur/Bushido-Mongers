@@ -17,6 +17,14 @@ module Mob
         @position.add_occupant(self)
     end
 
+    def nil_position
+        Log.debug("Clearing position of #{name}", 6)
+        # This should only be called on a character object prior to saving
+        # This is to avoid storing any instance-specific data in a saved character which may be ported to other instances
+        raise "See comment at game/object_extensions/mob.rb:22" unless is_a?(:character)
+        @position = nil
+    end
+
     def move(direction)
         raise Exception, "Position uninitialized" if @position.nil?
         new_position = @position.connected_leaf(direction)

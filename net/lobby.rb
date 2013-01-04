@@ -86,8 +86,6 @@ class Lobby
         end
 
         if is_playing?(username)
-            # Save the character
-            Character.save(username, @game_core.get_character(username))
             @game_core.remove_character(username)
         end
         @users.delete(username)
@@ -96,7 +94,7 @@ class Lobby
     end
 
     def get_user_characters(username)
-        character_list = Character.get_characters_for(username)
+        character_list = @game_core.get_user_characters(username)
         # TODO - Eventually, we'll want to do some kind of filtering on what sorts of characters are acceptable for this lobby (maximum level, etc)
         character_list
     end

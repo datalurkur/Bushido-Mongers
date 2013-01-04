@@ -9,7 +9,7 @@ class Log
         LOG_DIR    = "logs"
         LOG_CONFIG = "log.cfg"
 
-        def setup(name, logfile_prefix, logfile_behavior=:none)
+        def setup(name, logfile_prefix, logfile_behavior=:terse)
             @log_mutex = Mutex.new
             @default_thread_name = "?"
 
@@ -21,9 +21,9 @@ class Log
             @source_files   = {}
             @source_threads = {}
 
-            @verbose_logfile  = File.open(File.join(get_log_directory, "#{logfile_prefix}_verbose.log"), "w")
-            @filtered_logfile = File.open(File.join(get_log_directory, "#{logfile_prefix}_output.log"),  "w")
             @logfile_behavior = logfile_behavior
+            @verbose_logfile  = File.open(File.join(get_log_directory, "#{logfile_prefix}_verbose.log"), "w") if @logfile_behavior == :verbose
+            @filtered_logfile = File.open(File.join(get_log_directory, "#{logfile_prefix}_output.log"),  "w") unless @logfile_behavior == :none
 
             @channels = {
                 :debug   => true,

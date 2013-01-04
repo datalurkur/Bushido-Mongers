@@ -96,6 +96,9 @@ class GameCore
             return false
         end
     end
+    def get_user_characters(username)
+        Character.get_characters_for(username)
+    end
     def has_active_character?(username)
         characters.has_key?(username)
     end
@@ -106,10 +109,11 @@ class GameCore
         character = characters[username]
 
         Message.unregister_listener(self, :core, character)
-        cached_positions[username] = character.position
-        character.nil_core
-        Character.save(username, character)
 
+        # Cache the character's position within the game server so that it can be placed back where it exited when logging back in
+        cached_positions[username] = character.position
+
+        Character.save(username, character)
         characters.delete(username)
     end
 
