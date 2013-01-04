@@ -40,6 +40,7 @@ Message.define(:generation_fail,     :lobby, [:reason], "World failed to generat
 # Character creation / selection
 Message.define(:create_character,    :lobby, [:attributes])                                 # C->S
 Message.define(:list_characters,     :lobby)                                                # C->S
+Message.define(:no_characters,       :lobby, [:reason], "No characters available")          # S->C
 Message.define(:character_list,      :lobby, [:characters])                                 # S->C
 Message.define(:select_character,    :lobby, [:character_name])                             # C->S
 Message.define(:character_ready,     :lobby, [],        "Character ready")                  # S->C

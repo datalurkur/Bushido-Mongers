@@ -47,7 +47,8 @@ class LobbyState < State
              :start_success,
              :start_fail,
              :character_ready,
-             :character_not_ready
+             :character_not_ready,
+             :no_characters
             pass_to_client(message)
             begin_exchange(@lobby_menu_exchange)
             return

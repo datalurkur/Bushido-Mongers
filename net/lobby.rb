@@ -100,8 +100,15 @@ class Lobby
     end
 
     def set_user_character(username, character_name)
-        # TODO - Do we want to deal with switching characters mid-game?  Is this allowed?
-        raise "User already active" if @game_state == :playing && is_playing?(username)
+        if @game_state == :genesis
+            send_to_user(username, Message.new(:character_not_ready, {:reason => "Game has not been generated"}))
+            return
+        end
+
+        if @game_state == :playing && is_playing?(username)
+            send_to_user(username, Message.new(:character_not_ready, {:reason => "Character already loaded"}))
+            return
+        end
 
         character, failures = @game_core.load_character(username, character_name)
         if character
@@ -244,9 +251,18 @@ class Lobby
             # Basically, this is the event that triggers the character to be saved and used
             # The server isn't involved in the character creation dialog at all, only the committing of that data
             Log.debug("UNIMPLEMENTED")
-            send_to_user(username, Message.new(:character_not_ready, {:reason=>"Feature unimplemented"}))
+            send_to_user(username, Message.new(:character_not_ready, {:reason => "Feature unimplemented"}))
         when :list_characters
-            send_to_user(username, Message.new(:character_list, {:characters=>get_user_characters(username)}))
+            if @game_state == :genesis
+                send_to_user(username, Message.new(:no_characters, {:reason => "Game not yet generated"}))
+            else
+                characters = get_user_characters(username)
+                if characters.empty?
+                    send_to_user(username, Message.new(:no_characters, {:reason => "None found"}))
+                else
+                    send_to_user(username, Message.new(:character_list, {:characters => characters}))
+                end
+            end
         when :select_character
             set_user_character(username, message.character_name)
         when :start_game

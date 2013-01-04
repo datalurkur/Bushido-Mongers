@@ -33,7 +33,7 @@ class PlayingState < State
 
     def from_server(message)
         case message.type
-        when :move_fail, :move_success, :act_fail
+        when :move_fail, :move_success, :act_fail, :user_joins, :user_leaves, :admin_change
             pass_to_client(message)
             begin_exchange(@playing_menu_exchange)
             return
