@@ -14,7 +14,7 @@ $config = {
     :lobby_password => "test",
 }
 
-Log.setup("Main", "client")
+Log.setup("Main", "stack")
 $client = StackClient.new($config)
 
 signals = ["TERM","INT"]

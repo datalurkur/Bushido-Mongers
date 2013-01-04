@@ -93,7 +93,7 @@ class Message
     def message_class; Message.message_class_of(@type); end
 
     def report
-        "#{@type}: #{@args.inspect}"
+        [@type, @args]
     end
 
     def has_param?(name)
