@@ -1,5 +1,6 @@
 class BushidoObject
-    attr_reader :type
+    attr_reader :type, :core
+
     def initialize(core, type, params={})
         Log.debug("Creating #{type}", 1) unless core.db.types_of(:body_part).include?(type)
         @core = core
@@ -20,21 +21,19 @@ class BushidoObject
             end
         end
 
-        type_info[:at_creation].each do |creation_proc|
-            result = eval(creation_proc, nil, __FILE__, __LINE__)
-            if Hash === result
-                @properties.merge!(result)
-            end
-        end
-
         type_info[:uses].each do |mod|
             @extensions << mod
             extend mod
         end
 
         @extensions.each do |mod|
-            if mod.respond_to?(:at_creation)
-                mod.at_creation(self, params)
+            mod.at_creation(self, params) if mod.respond_to?(:at_creation)
+        end
+
+        type_info[:at_creation].each do |creation_proc|
+            result = eval(creation_proc, nil, __FILE__, __LINE__)
+            if Hash === result
+                @properties.merge!(result)
             end
         end
 
@@ -56,6 +55,16 @@ class BushidoObject
         end
 
         self
+    end
+
+    def destroy
+        @core.db.raw_info_for(@type)[:at_destruction].each do |destruction_proc|
+            eval(destruction_proc, nil, __FILE__, __LINE__)
+        end
+
+        @extensions.each do |mod|
+            mod.at_destruction(self) if mod.respond_to?(:at_destruction)
+        end
     end
 
     def is_a?(type)

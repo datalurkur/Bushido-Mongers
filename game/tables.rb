@@ -79,8 +79,20 @@ module Size
 
         def value(l)
             level    = index(l)
-            standard = index(:medium)
+            standard = index(standard_size)
             2 ** (level - standard)
+        end
+
+        def standard_size
+            :medium
+        end
+
+        def adjust(l, relative)
+            offset = index(relative) - index(standard_size)
+            level  = index(l)
+
+            new_level = [[level + offset, 0].max, levels.size].min
+            levels[new_level]
         end
     end
 end

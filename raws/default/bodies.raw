@@ -1,116 +1,101 @@
-abstract object body {
-    has_many sym body_parts;
-    has sym size;
-
-    needs size;
-
-    /* Instantiate the body parts using the size of the body */
-    at_creation {
-        parts = @properties[:body_parts].collect { |part|
-            @core.db.create(@core, part, {:size => params[:size]})
-        }
-        {
-            :body_parts => parts,
-            :hp         => parts.inject(0) { |s,p| s + p.hp },
-            :weight     => parts.inject(0) { |s,p| s + p.weight },
-            :size       => params[:size]
-        }
-    }
-}
-
-abstract body bilateral_body {
-    class_many sym bilateral_parts;
-
-    /* Instantiate the body parts using the size of the body */
-    /* Assumes body_parts has already been filled out with BOs by body's at_creation */
-    at_creation {
-        parts  = @properties[:body_parts] + @core.db.info_for(@type, :bilateral_parts).collect { |part|
-            [@core.db.create(@core,  "left_#{part}".to_sym, {:size => params[:size]}),
-             @core.db.create(@core, "right_#{part}".to_sym, {:size => params[:size]})]
-        }.flatten
-        {
-            :body_parts => parts,
-            :hp         => parts.inject(0) { |s,p| s + p.hp },
-            :weight     => parts.inject(0) { |s,p| s + p.weight },
-            :size       => params[:size]
-        }
-    }
-}
-
-bilateral_body humanoid_body {
-    body_parts head torso;
-    bilateral_parts arm hand leg foot;
-}
-
-bilateral_body arachnoid_body {
-    body_parts carapace spinner;
-    bilateral_parts leg leg leg leg;
-}
-
-bilateral_body rodent_body {
-    body_parts head torso tail;
-    bilateral_parts leg leg;
-}
-
-abstract object body_part {
-    needs size;
+abstract composition body_part {
+    needs relative_size;
+    class sym typical_size;
     has int hp;
 
     /* Adjust the weight and hp of the body part based on size */
     at_creation {
+        typical_size = @core.db.info_for(@type, :typical_size)
+        actual_size = Size.adjust(typical_size, params[:relative_size])
         {
-            :weight => @properties[:weight] * Size.value(params[:size]),
-            :hp     => 2**Size.index(params[:size])
+            :size   => actual_size,
+            :weight => @properties[:weight] * Size.value(actual_size),
+            :hp     => 2**Size.index(actual_size)
         }
     }
 }
 
+abstract body_part body;
+
+/* FIXME - Sorry zphobic, the new composition system kinda screwed the bilateral thing */
+abstract body biped {
+    external_components leg;
+}
+
+abstract body quadriped {
+    external_components leg;
+}
+
+abstract body octiped {
+    external_components leg;
+}
+
+/* Basically, this is the equivalent of a torso */
+biped humanoid_body {
+    weight 15;
+    typical_size medium;
+    internal_components liver;
+    external_components head arm;
+}
+
+octiped arachnoid_body {
+    weight 10;
+    typical_size medium;
+    internal_components spinner;
+    external_components carapace;
+}
+
+quadriped rodent_body {
+    weight 2;
+    typical_size small;
+    external_components head tail;
+}
+
+
 body_part head {
-    /* TODO - These weights should be based on body size */
     weight 4;
+    typical_size small;
 }
 
-body_part torso {
-    weight 25;
-}
-
-abstract body_part arm {
+body_part arm {
     weight 5;
+    typical_size small;
+    external_components hand;
 }
 
-arm  left_arm {}
-arm right_arm {}
-
-abstract body_part hand {
+body_part hand {
     /* TODO - make hands able to grasp somehow */
     weight 2;
+    typical_size small;
 }
 
-hand  left_hand {}
-hand right_hand {}
-
-abstract body_part leg {
+body_part leg {
     weight 10;
+    typical_size small;
+    external_components foot;
 }
 
-arm  left_leg {}
-arm right_leg {}
-
-abstract body_part foot {
+body_part foot {
     weight 4;
+    typical_size small;
 }
-
-foot  left_foot {}
-foot right_foot {}
 
 body_part carapace {
     weight 15;
+    typical_size small;
 }
 
 body_part spinner {
     weight 1;
+    typical_size tiny;
 }
 
 body_part tail {
     weight 1;
+    typical_size tiny;
+}
+
+body_part liver {
+    weight 3;
+    typical_size small;
 }

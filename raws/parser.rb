@@ -46,7 +46,7 @@ OBJECT DESCRIPTION KEYWORDS
 ===========================
 "uses"
     Indicates that the object being described makes use of the module indicated.
-    Certain methods in the module will be called upon during certain events (at_creation, at_message).
+    Certain methods in the module will be called upon during certain events (at_creation, at_message, at_destruction).
 Format: "uses" <module name>
 Description: None
 
@@ -68,6 +68,12 @@ Description: None
     The block is assumed to receive a hash of object parameters and return a hash of property modifications.
 Format: "at_creation"
 Description: A block of raw Ruby code to be evaluated.
+
+"at_destruction"
+    Provides a block of Ruby code to be evaluated during object teardown.
+    The block is assumed to receive no parameters and return nothing in particular.
+Format: "at_destruction"
+Description: A block of raw Ruby code to be evaluated
 
 Any other keyword
     Any other keyword is assumed to be a default property value, and will be treated as such.
@@ -206,13 +212,14 @@ module ObjectRawParser
 
             # Begin accumulating object data for the database
             object_data = {
-                :abstract     => object_metadata[:abstract],
-                :is_a         => object_metadata[:is_a].dup,
-                :uses         => [],
-                :has          => {},
-                :needs        => [],
-                :at_creation  => [],
-                :class_values => {}
+                :abstract       => object_metadata[:abstract],
+                :is_a           => object_metadata[:is_a].dup,
+                :uses           => [],
+                :has            => {},
+                :needs          => [],
+                :at_creation    => [],
+                :at_destruction => [],
+                :class_values   => {}
             }
 
             # Set up to accumulate subtypes if this is an abstract type
@@ -229,7 +236,7 @@ module ObjectRawParser
                     parent_object = object_database[parent]
                     raise "Parent object type '#{parent}' not abstract!" unless parent_object[:abstract]
 
-                    [:uses, :has, :needs, :at_creation, :class_values].each do |key|
+                    [:uses, :has, :needs, :at_creation, :at_destruction, :class_values].each do |key|
                         # Just dup isn't enough here, because occasionally we have an array within a hash that doesn't get duped properly
                         dup_data = Marshal.load(Marshal.dump(parent_object[key]))
                         #Log.debug(["Dup data is ", dup_data], 8)
@@ -290,6 +297,8 @@ module ObjectRawParser
                         object_data[:needs].concat(statement_pieces[1..-1].collect { |piece| piece.to_sym })
                     when "at_creation"
                         object_data[:at_creation] << data
+                    when "at_destruction"
+                        object_data[:at_destruction] << data
                     else
                         field = statement_pieces[0].to_sym
                         unless object_data[:has].has_key?(field)
@@ -305,6 +314,9 @@ module ObjectRawParser
                                 piece.to_i
                             when :float
                                 piece.to_f
+                            when :bool
+                                Log.debug("Setting boolean value #{piece}")
+                                (piece == "true")
                             else
                                 raise "Unsupported property type #{object_data[:has][field][:type].inspect}"
                             end

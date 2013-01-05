@@ -18,17 +18,6 @@ abstract root corporeal {
 
     has sym size;
     has float weight;
-
-    at_creation {
-        body_type = @core.db.info_for(@type, :body_type)
-        body = @core.db.create(@core, body_type, {:size => @properties[:size]})
-        ret = {
-            :body   => body,
-            :weight => body.body_parts.inject(0) { |s,p| s + p.weight }
-        }
-        Log.debug("Body created with weight #{ret[:weight]}")
-        ret
-    }
 }
 
 abstract root aligned {

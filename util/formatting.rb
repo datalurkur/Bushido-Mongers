@@ -42,7 +42,7 @@ class Array
                         element
                     when Symbol
                         element.inspect
-                    when Fixnum
+                    when Fixnum,Float
                         element.to_s
                     else
                         element.class.to_s
@@ -78,7 +78,7 @@ class Hash
                     value.to_formatted_string(prefix + "    ", false)
                 else
                     case value
-                    when String,Symbol,Fixnum
+                    when String,Symbol,Fixnum,Float
                         value.inspect
                     else
                         value.class.to_s

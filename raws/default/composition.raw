@@ -1,0 +1,13 @@
+abstract object composition {
+    has_many optional sym internal_components;
+    has_many optional sym external_components;
+
+    /* Determines which components are destroyed if this item is destroyed */
+    class bool preserve_internal;
+    class bool preserve_external;
+
+    preserve_internal false;
+    preserve_external true;
+
+    uses composition;
+}

@@ -3,9 +3,7 @@
 require 'raws/db'
 require 'game/tables'
 require 'game/object_extensions'
-
 require 'test/fake'
-
 Log.setup("Main", "test")
 
 # Basic DB parsing tests
@@ -40,7 +38,7 @@ def test_npc(db, test_npc_type, name)
     test_npc = db.create($core, test_npc_type, {:initial_position => FakeRoom.new, :name => name})
 
     Log.debug("Test NPC is a guard? #{test_npc.is_a?(:guard)}")
-    Log.debug(["Test NPC has parts", test_npc.body.body_parts])
+    Log.debug(["Test NPC has parts", test_npc.body.internal_components, test_npc.body.external_components])
     if test_npc.has_property?(:provocations)
         Log.debug(["Test NPC has provocations", test_npc.provocations])
     end
@@ -51,8 +49,8 @@ test_npc(db, :peacekeeper, "Derpus Maximus")
 test_npc(db, :giant_spider, "Leggus Maximus")
 
 # Body / Corporeal tests
-hb = db.create($core, :humanoid_body, {:size => :large})
-hb = db.create($core, :arachnoid_body, {:size => :tiny})
+hb = db.create($core, :humanoid_body, {:relative_size => :large})
+hb = db.create($core, :arachnoid_body, {:relative_size => :tiny})
 
 # Recipe and command tests
 Log.debug("How do I produce a dagger?")
