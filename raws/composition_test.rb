@@ -9,6 +9,8 @@ raw_group = "default"
 db = ObjectDB.get(raw_group)
 core = FakeCore.new(db)
 
-test_body = db.create(core, :humanoid_body, {:relative_size => :medium})
-Log.debug(test_body)
-test_body.destroy
+db.types_of(:body).each do |body|
+    test_body = db.create(core, body, {:relative_size => :medium})
+    Log.debug(test_body)
+    test_body.destroy
+end

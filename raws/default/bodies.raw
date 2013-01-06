@@ -14,20 +14,59 @@ abstract composition body_part {
         }
     }
 }
-
 abstract body_part body;
 
-/* FIXME - Sorry zphobic, the new composition system kinda screwed the bilateral thing */
-abstract body biped {
-    external_components leg;
-}
+abstract body biped {}
+abstract body quadriped {}
+abstract body octiped {}
 
-abstract body quadriped {
-    external_components leg;
-}
+post_process {
+    duplicate_object(:leg, :left_leg)
+    duplicate_object(:leg, :right_leg)
+    duplicate_object(:arm, :left_arm)
+    duplicate_object(:arm, :right_arm)
+    types_of(:biped).each do |biped|
+        info_for(biped, :external_components).concat([
+            :left_leg,
+            :right_leg,
+            :left_arm,
+            :right_arm
+        ])
+    end
 
-abstract body octiped {
-    external_components leg;
+    duplicate_object(:leg, :left_front_leg)
+    duplicate_object(:leg, :left_rear_leg)
+    duplicate_object(:leg, :right_front_leg)
+    duplicate_object(:leg, :right_rear_leg)
+    types_of(:quadriped).each do |qp|
+        info_for(qp, :external_components).concat([
+            :left_front_leg,
+            :left_rear_leg,
+            :right_front_leg,
+            :right_rear_leg
+        ])
+    end
+
+    duplicate_object(:leg, :left_front_anterior_leg)
+    duplicate_object(:leg, :left_front_posterior_leg)
+    duplicate_object(:leg, :left_rear_anterior_leg)
+    duplicate_object(:leg, :left_rear_posterior_leg)
+    duplicate_object(:leg, :right_front_anterior_leg)
+    duplicate_object(:leg, :right_front_posterior_leg)
+    duplicate_object(:leg, :right_rear_anterior_leg)
+    duplicate_object(:leg, :right_rear_posterior_leg)
+    types_of(:octiped).each do |op|
+        info_for(op, :external_components).concat([
+            :left_front_anterior_leg,
+            :left_front_posterior_leg,
+            :left_rear_anterior_leg,
+            :left_rear_posterior_leg,
+            :right_front_anterior_leg,
+            :right_front_posterior_leg,
+            :right_rear_anterior_leg,
+            :right_rear_posterior_leg
+        ])
+    end
 }
 
 /* Basically, this is the equivalent of a torso */
@@ -35,7 +74,7 @@ biped humanoid_body {
     weight 15;
     typical_size medium;
     internal_components liver;
-    external_components head arm;
+    external_components head;
 }
 
 octiped arachnoid_body {

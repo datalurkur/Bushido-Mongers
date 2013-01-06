@@ -145,5 +145,23 @@ class ObjectDB
         @db   = db
         @hash = hash
     end
+
+    def duplicate_object(original_type, new_type, new_params={})
+        new_object = Marshal.load(Marshal.dump(@db[original_type]))
+        new_params.each do |k,v|
+            case v
+            when Array
+                new_object[k].concat(v)
+            when Hash
+                new_object[k].merge!(v)
+            else
+                raise "DB doesn't know how to merge attributes of type #{v.class}"
+            end
+        end
+        new_object[:is_a].each do |parent_type|
+            @db[parent_type][:subtypes] << new_type
+        end
+        @db[new_type] = new_object
+    end
 end
 
