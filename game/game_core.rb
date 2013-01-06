@@ -84,7 +84,7 @@ class GameCore
     end
     def create_character(username, character_details)
         begin
-            character_details.merge!(:initial_position => @world.random_starting_location)
+            character_details.merge!(:position => @world.random_starting_location)
             character = @db.create(self, :character, character_details)
 
             characters[username] = character

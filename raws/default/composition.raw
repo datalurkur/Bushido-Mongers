@@ -1,13 +1,20 @@
 abstract object composition {
-    has_many optional sym internal_components;
-    has_many optional sym external_components;
+    has_many optional sym internal;
+    has_many optional sym external;
 
     /* Determines which components are destroyed if this item is destroyed */
     class bool preserve_internal;
     class bool preserve_external;
+    class bool is_container;
 
     preserve_internal false;
     preserve_external true;
+    is_container false;
 
     uses composition;
+}
+
+composition backpack {
+    is_container true;
+    preserve_internal true;
 }

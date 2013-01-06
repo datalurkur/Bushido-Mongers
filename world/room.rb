@@ -53,14 +53,8 @@ class Room < ZoneLeaf
 
         # Actually spawn the NPCs.
         can_spawn.each do |type|
-            add_npc(core, type) if Chance.take(core.db.info_for(type, :spawn_chance))
+            npc = core.db.create(core, type, {:name => "#{type} #{rand(100000)}", :position => self}) if Chance.take(core.db.info_for(type, :spawn_chance))
         end
-    end
-
-    private
-    def add_npc(core, type)
-        # FIXME: Generate better names?
-        core.add_npc(core.db.create(core, type, {:name => "#{type} #{rand(100000)}", :initial_position => self}))
     end
 end
 

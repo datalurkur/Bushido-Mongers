@@ -1,8 +1,8 @@
-module Mob
+module Position
     class << self
         def at_creation(instance, params)
-            SharedObjectExtensions.check_required_params(params, [:initial_position])
-            instance.set_position(params[:initial_position])
+            SharedObjectExtensions.check_required_params(params, [:position])
+            instance.set_position(params[:position])
         end
     end
 
@@ -10,9 +10,7 @@ module Mob
 
     def set_position(position)
         Log.debug("Setting position of #{@name || @type} to #{position.name}", 6)
-        unless @position.nil?
-            Log.warning("WARNING: Position being set more than once for #{@name}; this method is meant to be called during setup and never again")
-        end
+        Log.warning("WARNING: Position being set more than once for #{@name}; this method is meant to be called during setup and never again; call \"move\" instead") unless @position.nil?
         @position = position
         @position.add_occupant(self)
     end

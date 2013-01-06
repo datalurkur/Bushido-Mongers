@@ -26,7 +26,7 @@ post_process {
     duplicate_object(:arm, :left_arm)
     duplicate_object(:arm, :right_arm)
     types_of(:biped).each do |biped|
-        info_for(biped, :external_components).concat([
+        info_for(biped, :external).concat([
             :left_leg,
             :right_leg,
             :left_arm,
@@ -39,7 +39,7 @@ post_process {
     duplicate_object(:leg, :right_front_leg)
     duplicate_object(:leg, :right_rear_leg)
     types_of(:quadriped).each do |qp|
-        info_for(qp, :external_components).concat([
+        info_for(qp, :external).concat([
             :left_front_leg,
             :left_rear_leg,
             :right_front_leg,
@@ -56,7 +56,7 @@ post_process {
     duplicate_object(:leg, :right_rear_anterior_leg)
     duplicate_object(:leg, :right_rear_posterior_leg)
     types_of(:octiped).each do |op|
-        info_for(op, :external_components).concat([
+        info_for(op, :external).concat([
             :left_front_anterior_leg,
             :left_front_posterior_leg,
             :left_rear_anterior_leg,
@@ -73,21 +73,21 @@ post_process {
 biped humanoid_body {
     weight 15;
     typical_size medium;
-    internal_components liver;
-    external_components head;
+    internal liver;
+    external head;
 }
 
 octiped arachnoid_body {
     weight 10;
     typical_size medium;
-    internal_components spinner;
-    external_components carapace;
+    internal spinner;
+    external carapace;
 }
 
 quadriped rodent_body {
     weight 2;
     typical_size small;
-    external_components head tail;
+    external head tail;
 }
 
 
@@ -99,7 +99,7 @@ body_part head {
 body_part arm {
     weight 5;
     typical_size small;
-    external_components hand;
+    external hand;
 }
 
 body_part hand {
@@ -111,7 +111,7 @@ body_part hand {
 body_part leg {
     weight 10;
     typical_size small;
-    external_components foot;
+    external foot;
 }
 
 body_part foot {

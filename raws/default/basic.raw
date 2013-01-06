@@ -3,7 +3,7 @@ abstract root object {
 }
 
 abstract object mover {
-    uses mob;
+    uses position;
 }
 
 abstract object item {

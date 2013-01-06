@@ -35,10 +35,10 @@ Log.debug(["Types of NPCs:", db.types_of(:npc)])
 
 def test_npc(db, test_npc_type, name)
     Log.debug(["Creating a #{test_npc_type} with raw info", db.raw_info_for(test_npc_type)])
-    test_npc = db.create($core, test_npc_type, {:initial_position => FakeRoom.new, :name => name})
+    test_npc = db.create($core, test_npc_type, {:position => FakeRoom.new, :name => name})
 
     Log.debug("Test NPC is a guard? #{test_npc.is_a?(:guard)}")
-    Log.debug(["Test NPC has parts", test_npc.body.internal_components, test_npc.body.external_components])
+    Log.debug(["Test NPC has parts", test_npc.body.internal, test_npc.body.external])
     if test_npc.has_property?(:provocations)
         Log.debug(["Test NPC has provocations", test_npc.provocations])
     end

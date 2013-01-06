@@ -2,7 +2,7 @@ module Composition
     class << self
         def at_creation(instance, params)
             instance.instance_exec do
-                [:internal_components, :external_components].each do |comp_type|
+                [:internal, :external].each do |comp_type|
                     components = @properties[comp_type].collect do |component|
                         @core.db.create(@core, component, params)
                     end
@@ -15,7 +15,7 @@ module Composition
         def at_destruction(instance)
             instance.instance_exec do
                 Log.debug("Destroying #{@type}")
-                [[:preserve_external, :external_components], [:preserve_internal, :internal_components]].each do |switch, key|
+                [[:preserve_external, :external], [:preserve_internal, :internal]].each do |switch, key|
                     if class_info(switch)
                         # FIXME - Items need locations, apparently
                         # Drop these components at the location where this object is
@@ -25,6 +25,28 @@ module Composition
                     end
                 end
             end
+        end
+    end
+
+    def add_object(object)
+        raise "#{@name || @type} is not a container" unless @properties[:is_container]
+        Log.debug("Inserting #{object.name || object.type} into #{@name || @type}")
+        @properties[:internal] << object
+    end
+
+    def attach_object(object)
+        Log.debug("Attaching #{object.name || object.type} to #{@name || @type}")
+        @properties[:external] << object
+    end
+
+    def remove_object(object)
+        Log.debug("Removing #{object.name || object.type} from #{@name || @type}")
+        if @properties[:internal].include?(object)
+            @properties[:internal].delete(object)
+        elsif @properties[:external].include?(object)
+            @properties[:external].delete(object)
+        else
+            raise "No matching object found inside #{@name || @type}"
         end
     end
 end
