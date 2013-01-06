@@ -1,13 +1,21 @@
 module Corporeal
     class << self
         def at_message(instance, message)
-            case message.type
-            when :unit_attacks
-                if message.defender == instance
-                    Log.debug("#{instance.name} is being attacked!")
-                    # This unit is being attacked and needs to be damaged or something
+            instance.instance_exec {
+                case message.type
+                when :unit_attacks
+                    if message.defender == self
+                        Log.debug("#{monicker} is being attacked!")
+                        # This unit is being attacked and needs to be damaged or something
+                        # FIXME - Actually do damage rather than just destroying the thing
+                        context = {
+                            :position => @position,
+                            :agent    => message.attacker
+                        }
+                        Message.dispatch(@core, :object_destroyed, {:object => self, :context => context})
+                    end
                 end
-            end
+            }
         end
 
         def at_creation(instance, params)
@@ -22,7 +30,7 @@ module Corporeal
         def at_destruction(instance, context)
             # Drop the body
             instance.instance_exec {
-                context[:position].contents << @properties[:body]
+                context[:position].add_object(@properties[:body])
             }
         end
     end

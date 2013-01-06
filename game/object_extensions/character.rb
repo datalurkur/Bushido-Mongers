@@ -106,15 +106,6 @@ module Character
             history  = contents.select { |fdata| fdata[:character_name] == character_name }
             history.sort { |x,y| x[:timestamp] <=> y[:timestamp] }
         end
-
-        def at_message(instance, message)
-            case message.type
-            when :unit_attacks
-                if self == message.defender
-                    Log.debug("Character #{instance.name} is attacked by #{message.attacker}")
-                end
-            end
-        end
     end
 
     # Since this object is sometimes saved and loaded, we need to recreate it gracefully

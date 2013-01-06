@@ -28,7 +28,8 @@ class Log
             @channels = {
                 :debug   => true,
                 :warning => true,
-                :error   => true
+                :error   => true,
+                :info    => true
             }
 
             read_config
@@ -88,6 +89,12 @@ class Log
             log_internal(msg, level, :white)
         end
 
+        def info(msg, level=1)
+            return unless @channels[:info]
+            log_internal(msg, level, :green)
+        end
+
+        private
         def log_internal(msg, level, color=:white)
             raise "Logging system never initialized" unless @logging_setup
 
@@ -112,7 +119,6 @@ class Log
             end
         end
 
-        private
         def format_line(msg, thread_name, file, line, level, color)
             @longest_file = [@longest_file, file.to_s.length].max
 

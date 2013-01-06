@@ -17,10 +17,9 @@ module Composition
                 Log.debug("Destroying #{@type}")
                 [[:preserve_external, :external], [:preserve_internal, :internal]].each do |switch, key|
                     if class_info(switch)
-                        # FIXME - Items need locations, apparently
                         # Drop these components at the location where this object is
                         @properties[key].each do |component|
-                            context[:position].contents << component
+                            context[:position].add_object(component)
                         end
                     end
                 end
@@ -29,24 +28,24 @@ module Composition
     end
 
     def add_object(object)
-        raise "#{@name || @type} is not a container" unless @properties[:is_container]
-        Log.debug("Inserting #{object.name || object.type} into #{@name || @type}")
+        raise "#{monicker} is not a container" unless @properties[:is_container]
+        Log.debug("Inserting #{object.monicker} into #{monicker}")
         @properties[:internal] << object
     end
 
     def attach_object(object)
-        Log.debug("Attaching #{object.name || object.type} to #{@name || @type}")
+        Log.debug("Attaching #{object.monicker} to #{monicker}")
         @properties[:external] << object
     end
 
     def remove_object(object)
-        Log.debug("Removing #{object.name || object.type} from #{@name || @type}")
+        Log.debug("Removing #{object.monicker} from #{monicker}")
         if @properties[:internal].include?(object)
             @properties[:internal].delete(object)
         elsif @properties[:external].include?(object)
             @properties[:external].delete(object)
         else
-            raise "No matching object found inside #{@name || @type}"
+            raise "No matching object found"
         end
     end
 end

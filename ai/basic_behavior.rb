@@ -12,6 +12,7 @@ end
 
 Behavior.define(:attack, :are_enemies_present?) do |actor|
     attackee = Behavior.enemies_present(actor).rand
+    Log.debug("#{actor.monicker} is attacking #{attackee.monicker}", 5)
     actor.do_command(:attack, {:agent => actor, :target => attackee})
 end
 

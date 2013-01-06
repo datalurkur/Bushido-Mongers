@@ -7,29 +7,44 @@ require 'message'
 class GameCore
     attr_reader :world, :db
 
-    def initialize(args={})
-        # TODO - Set this to something much higher once we're out of debug
-        @tick_rate        = args[:tick_rate] || (30)
-        @ticking          = false
-        @ticking_mutex    = Mutex.new
-
-        # Read the raws
-        # TODO - Load raw_group from server config?
-        raw_group = "default"
-        Log.debug("Loading #{raw_group} raws")
-        @db = ObjectDB.get(raw_group)
-
-        @words_db = WordParser.load
-
-        create_world(args.merge(:core => self))
+    def initialize
     end
 
-    def create_world(args)
+    # TODO - Write save / load methods
+
+    def setup(args)
+        @tick_rate     = args[:tick_rate] || (30)
+        @ticking       = false
+        @ticking_mutex = Mutex.new
+
+        # Read the raws
+        raw_group = args[:raw_group] || "default"
+        @db       = ObjectDB.get(raw_group)
+        @words_db = WordParser.load
+
+        setup_world(args.merge(:core => self))
+        Message.register_listener(self, :internal, self)
+    end
+
+    def teardown
+        Message.unregister_listener(self, :internal, self)
+        teardown_world
+        @db            = nil
+        @words_db      = nil
+        @ticking       = false
+        @ticking_mutex = nil
+    end
+
+    def setup_world(args)
         Log.debug("Creating world")
         @world = WorldFactory.generate(args)
 
         Log.debug("Populating world with NPCs and items")
         @world.populate(self)
+    end
+
+    def teardown_world
+        @world = nil
     end
 
     # TICK MAINTENANCE
@@ -105,6 +120,12 @@ class GameCore
     def get_character(username)
         characters[username]
     end
+    def get_character_user(character)
+        characters.each do |k,v|
+            return k if v == character
+        end
+        return nil
+    end
     def remove_character(username)
         character = characters[username]
 
@@ -130,5 +151,33 @@ class GameCore
     def remove_npc(npc)
         Message.unregister_listener(self, :core, npc)
         npcs.delete(npc)
+    end
+
+    # MESSAGE HANDLING
+    # Handle callbacks from within objects that require the attention of the game core
+    # Mostly, this is for destruction and creation
+    def process_message(message)
+        case message.type
+        when :object_destroyed
+            Log.debug("#{message.object.monicker} destroyed!")
+            message.object.destroy(message.context)
+            # Remove this object from wherever it resides
+            case message.context[:position]
+            when Room
+                # This object is loose inside a room
+                message.context[:position].remove_object(message.object)
+            when BushidoObject
+                # This object is inside another object
+                Log.error("NOT IMPLEMENTED")
+            else
+                Log.error("Unknown position type #{message.context[:position].class}")
+            end
+            if message.object.is_a?(:character)
+                Log.info("Player #{get_character_user(message.object)} has been killed")
+                # FIXME - Send lobby message and all that jazz
+            end
+        else
+            Log.error("Game core doesn't know how to handle message type #{message.type}")
+        end
     end
 end

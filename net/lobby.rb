@@ -67,14 +67,14 @@ class Lobby
             return
         end
 
-        Log.debug("#{username} joining #{name}")
+        Log.info("#{username} joining #{name}")
         broadcast(Message.new(:user_joins, {:result => username}), [username])
         @users[username] = {}
 
         # TODO - Add a privelege set so that other users can be granted admin
         if @default_admin == username
             @users[username][:admin] = true
-            Log.debug("#{username} reclaiming admin priveleges")
+            Log.info("#{username} reclaiming admin priveleges")
             broadcast(Message.new(:admin_change, {:result => username}))
         end
     end
@@ -89,7 +89,7 @@ class Lobby
             @game_core.remove_character(username)
         end
         @users.delete(username)
-        Log.debug("#{username} has left #{name}")
+        Log.info("#{username} has left #{name}")
         broadcast(Message.new(:user_leaves, {:result => username}))
     end
 
@@ -135,19 +135,20 @@ class Lobby
 
         if @game_state == :genesis
             # Create the new game core
-            @game_core = GameCore.new(@game_args)
+            @game_core = GameCore.new
+            @game_core.setup(@game_args)
             # Start listening for messages from this core
             Message.register_listener(@game_core, :core, self)
 
             @game_state = :ready
-            Log.debug("Game created")
+            Log.info("Game created")
             broadcast(Message.new(:generation_success))
             true
         elsif @game_state == :playing || @game_state == :ready
             send_to_user(username, Message.new(:generation_fail, {:reason => :already_generated}))
             false
         else
-            Log.debug("Funky - unknown game state here")
+            Log.error("Unknown game state")
             send_to_user(username, Message.new(:generation_fail, {:reason => :unknown}))
             false
         end
@@ -162,7 +163,7 @@ class Lobby
         if @game_state == :ready
             @game_state = :playing
 
-            Log.debug("Game started")
+            Log.info("Game started")
             broadcast(Message.new(:start_success))
 
             @users.keys.each do |username|
@@ -187,7 +188,7 @@ class Lobby
         when :game;  process_game_message(message, username)
         when :core;  process_core_message(message)
         else 
-            Log.debug("Unhandled class of client message: #{message.message_class}")
+            Log.error("Lobby doesn't know how to handle message class #{message.message_class}")
         end
     end
 
@@ -212,7 +213,7 @@ class Lobby
 
                 send_to_user(username, Message.new(:act_success, {:description => described_results}))
             rescue Exception => e
-                Log.debug(["Failed to perform command #{message.command}", e.message])
+                Log.debug(["Failed to perform command #{message.command}", e.message, e.backtrace])
                 send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
             end
         else

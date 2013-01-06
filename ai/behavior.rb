@@ -37,7 +37,7 @@ class Behavior
         end
 
         def enemies_present(actor)
-            others  = actor.position.occupants - [actor]
+            others  = (actor.position.objects - [actor]).select { |o| o.is_a?(:aligned) }
             enemies = others.select { |other| are_enemies?(actor, other) }
         end
 

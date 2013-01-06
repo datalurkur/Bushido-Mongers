@@ -9,10 +9,10 @@ module Position
     attr_reader :position
 
     def set_position(position)
-        Log.debug("Setting position of #{@name || @type} to #{position.name}", 6)
+        Log.debug("Setting position of #{monicker} to #{position.name}", 6)
         Log.warning("WARNING: Position being set more than once for #{@name}; this method is meant to be called during setup and never again; call \"move\" instead") unless @position.nil?
         @position = position
-        @position.add_occupant(self)
+        @position.add_object(self)
     end
 
     def nil_position
@@ -20,7 +20,7 @@ module Position
         # This should only be called on a character object prior to saving
         # This is to avoid storing any instance-specific data in a saved character which may be ported to other instances
         raise "See comment at game/object_extensions/mob.rb:22" unless is_a?(:character)
-        @position.remove_occupant(self)
+        @position.remove_object(self)
         @position = nil
     end
 
@@ -30,9 +30,9 @@ module Position
         # This method raises an exception if the direction is invalid, so no need to check it
         new_position = @position.connected_leaf(direction)
 
-        Log.debug("#{self.name} moves from #{@position.name} to #{new_position.name}")
-        @position.remove_occupant(self)
+        Log.debug("#{monicker} moves from #{@position.name} to #{new_position.name}")
+        @position.remove_object(self)
         @position = new_position
-        @position.add_occupant(self)
+        @position.add_object(self)
     end
 end

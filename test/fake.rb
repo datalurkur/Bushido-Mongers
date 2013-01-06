@@ -7,8 +7,7 @@ end
 
 class FakeRoom
     def name; "Fake Room"; end
-    def add_occupant(o); end
-    def remove_occupant(o); end
-    def contents; @contents ||= []; end
+    def add_object(o); end
+    def remove_object(o); end
 end
 

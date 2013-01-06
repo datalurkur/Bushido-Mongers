@@ -34,8 +34,7 @@ class Descriptor
                 :type      => :room,
                 :name      => room.name,
                 :keywords  => room.keywords,
-                :contents  => room.contents.collect(&:name),
-                :occupants => room.occupants.collect(&:name),
+                :objects   => room.objects.collect(&:monicker),
                 :exits     => room.connected_directions,
             }
         end

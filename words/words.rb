@@ -448,9 +448,9 @@ module Words
         Sentence.new(subject_np, verb_np)
     end
 
-    #:keywords=>[], :contents=>[], :occupants=>["Test NPC 23683", "Test NPC 35550", "Test Character"], :exits=>[:west], :name=>"b00"
+    #:keywords=>[], :objects=>["Test NPC 23683", "Test NPC 35550", "Test Character"], :exits=>[:west], :name=>"b00"
 
-    # Required/expected arg values: keywords contents occupants exits
+    # Required/expected arg values: keywords objects exits
     def self.gen_room_description(args = {})
         Log.debug(args)
         @sentences = []
@@ -466,12 +466,8 @@ module Words
             @sentences << Words.gen_sentence(args.merge(:target => (args[:keywords].rand.to_s + " room")))
         end
 
-        if args[:contents] && !args[:contents].empty?
-            @sentences << Words.gen_sentence(args.merge(:target => args[:contents]))
-        end
-
-        if args[:occupants] && !args[:occupants].empty?
-            @sentences << Words.gen_sentence(args.merge(:target => args[:occupants]))
+        if args[:objects] && !args[:objects].empty?
+            @sentences << Words.gen_sentence(args.merge(:target => args[:objects]))
         end
 
         args[:exits]

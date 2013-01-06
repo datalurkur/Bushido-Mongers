@@ -16,24 +16,22 @@ end
 class Room < ZoneLeaf
     include ZoneWithKeywords
 
-    attr_reader :contents
-    attr_reader :occupants
+    attr_reader :objects
 
     def initialize(name, params={})
         super(name)
 
-        @params = params
-
-        @contents  = []
-        @occupants = []
+        @params  = params
+        @objects = []
     end
 
-    def add_occupant(occupant)
-        @occupants << occupant
+    def add_object(object)
+        @objects << object
     end
 
-    def remove_occupant(occupant)
-        @occupants.delete(occupant)
+    def remove_object(object)
+        Log.warning("Object not found in #{@name}") unless @objects.include?(object)
+        @objects.delete(object)
     end
 
     # Determines how a leaf populates itself
@@ -53,7 +51,11 @@ class Room < ZoneLeaf
 
         # Actually spawn the NPCs.
         can_spawn.each do |type|
-            npc = core.db.create(core, type, {:name => "#{type} #{rand(100000)}", :position => self}) if Chance.take(core.db.info_for(type, :spawn_chance))
+            if Chance.take(core.db.info_for(type, :spawn_chance))
+                name = "#{type} #{rand(100000)}"
+                npc = core.db.create(core, type, {:name => name, :position => self})
+                core.add_npc(npc)
+            end
         end
     end
 end

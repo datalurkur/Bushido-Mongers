@@ -71,6 +71,9 @@ Message.define(:tick,          :core)
 Message.define(:unit_moves,    :core, [:unit, :start, :finish])
 Message.define(:unit_attacks,  :core, [:attacker, :defender, :chance_to_hit, :damage])
 
+# Messages passed between objects and the game core
+Message.define(:object_destroyed, :internal, [:object, :context])
+
 # Client / Interface Messages
 # Interface Messages
 # This group is a special class of messages which are used by the state to perform interactions
