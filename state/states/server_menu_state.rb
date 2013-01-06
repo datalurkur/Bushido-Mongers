@@ -10,7 +10,7 @@ class ServerMenuState < State
             when :list_lobbies; @client.send_to_server(Message.new(:list_lobbies))
             when :create_lobby; @entry_type = :create_lobby; begin_exchange(@lobby_name_exchange)
             when :join_lobby;   @entry_type = :join_lobby;   begin_exchange(@lobby_name_exchange)
-            when :disconnect;   LoginState.new(@client, :set)
+            when :disconnect;   LoginState.new(@client)
             end
         end
 
@@ -52,7 +52,7 @@ class ServerMenuState < State
         when :join_success,
              :create_success
             pass_to_client(message)
-            LobbyState.new(@client, :set)
+            LobbyState.new(@client)
             return
         when :join_fail,
              :create_fail

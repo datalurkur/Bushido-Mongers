@@ -38,8 +38,13 @@ class Lobby
         @game_core && @game_core.has_active_character?(username)
     end
 
-    def send_to_user(user, message)
-        @send_callback.call(user, message)
+    def send_to_user(username, message)
+        # Sanitize the message
+        character = is_playing?(username) ? @game_core.get_character(username) : nil
+        message.alter_params do |params|
+            Descriptor.describe(params, character)
+        end
+        @send_callback.call(username, message)
     end
 
     def send_to_users(list, message)
@@ -112,9 +117,10 @@ class Lobby
 
         character, failures = @game_core.load_character(username, character_name)
         if character
-            send_to_user(username, Message.new(:character_ready))
             if @game_state == :playing
                 send_to_user(username, Message.new(:begin_playing))
+            else
+                send_to_user(username, Message.new(:character_ready))
             end
         else
             failure = if failures.empty?
@@ -196,10 +202,33 @@ class Lobby
         case message.type
         when :tick
             Log.debug("Lobby tick", 6)
+        when :object_destroyed
+            @users.keys.each do |username|
+                character = @game_core.get_character(username)
+                next if character.nil?
+
+                if message.context[:position] == character.position
+                    event_properties = {
+                        :event_type => :object_destroyed,
+                        :target     => message.object
+                    }
+                    send_to_user(username, Message.new(:game_event, {:description => event_properties}))
+                end
+
+                if message.object == character
+                    Log.info("Character #{character.name} dies!")
+                    @game_core.remove_character(username, true)
+                    broadcast(Message.new(:user_dies, {:result => username}))
+                end
+            end
         end
     end
 
     def process_game_message(message, username)
+        unless is_playing?(username)
+            Log.error("Can't parse game message for #{username} - user isn't playing yet")
+        end
+
         case message.type
         when :act
             Log.debug("Parsing action message", 8)
@@ -209,9 +238,8 @@ class Lobby
                 character = @game_core.get_character(username)
 
                 results = Commands.do(@game_core, message.command, message.args.merge(:agent => character))
-                described_results = Descriptor.describe(results.merge(:command => message.command), character)
-
-                send_to_user(username, Message.new(:act_success, {:description => described_results}))
+                results.merge!(:command => message.command)
+                send_to_user(username, Message.new(:act_success, {:description => results}))
             rescue Exception => e
                 Log.debug(["Failed to perform command #{message.command}", e.message, e.backtrace])
                 send_to_user(username, Message.new(:act_fail, {:reason => e.message}))

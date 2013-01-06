@@ -23,7 +23,8 @@ class Descriptor
                 :type => :object
             }
 
-            d[:name] = object.name if object.is_a?(:named)
+            d[:name]     = object.name if object.is_a?(:named)
+            d[:monicker] = (d[:name] || d[:type])
             # FIXME - Add more things
         end
     end

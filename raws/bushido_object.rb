@@ -72,7 +72,7 @@ class BushidoObject
     end
 
     def is_a?(type)
-        (return false) if (@type == :root)
+        (return true) if (@type == :root)
         current = [@type]
         until current.empty?
             if current.include?(type)

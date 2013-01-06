@@ -104,6 +104,11 @@ class Message
         @args
     end
 
+    def alter_params(&block)
+        return unless block_given?
+        @args = block.call(@args)
+    end
+
     def method_missing(name, *args)
         unless @args[name]
             raise "No parameter #{name} for message type #{type}"

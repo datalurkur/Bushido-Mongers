@@ -64,15 +64,15 @@ Message.define(:admin_change,        :lobby, [:result], "Admin changed")        
 Message.define(:act,           :game, [:command, :args])
 Message.define(:act_fail,      :game, [:reason], "Failed to perform action")
 Message.define(:act_success,   :game, [:description])
+Message.define(:game_event,    :game, [:description])
+Message.define(:user_dies,     :game, [:result], "User dies")
 
 # Core Game Information
-# Messages passed by the game core to the lobby
-Message.define(:tick,          :core)
-Message.define(:unit_moves,    :core, [:unit, :start, :finish])
-Message.define(:unit_attacks,  :core, [:attacker, :defender, :chance_to_hit, :damage])
-
-# Messages passed between objects and the game core
-Message.define(:object_destroyed, :internal, [:object, :context])
+# Messages passed between the game lobby / game objects / lobby
+Message.define(:tick,             :core)
+Message.define(:unit_moves,       :core, [:unit, :start, :finish])
+Message.define(:unit_attacks,     :core, [:attacker, :defender, :chance_to_hit, :damage])
+Message.define(:object_destroyed, :core, [:object, :context])
 
 # Client / Interface Messages
 # Interface Messages

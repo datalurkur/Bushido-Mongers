@@ -23,11 +23,11 @@ class GameCore
         @words_db = WordParser.load
 
         setup_world(args.merge(:core => self))
-        Message.register_listener(self, :internal, self)
+        Message.register_listener(self, :core, self)
     end
 
     def teardown
-        Message.unregister_listener(self, :internal, self)
+        Message.unregister_listener(self, :core, self)
         teardown_world
         @db            = nil
         @words_db      = nil
@@ -92,6 +92,7 @@ class GameCore
             character.set_position(cached_positions[username] || @world.random_starting_location)
             character.set_core(self)
             characters[username] = character
+            Log.info("Character #{character.name} loaded for #{username}")
             Message.register_listener(self, :core, character)
         end
 
@@ -103,6 +104,7 @@ class GameCore
             character = @db.create(self, :character, character_details)
 
             characters[username] = character
+            Log.info("Character #{character.name} created for #{username}")
             Message.register_listener(self, :core, character)
 
             return true
@@ -126,15 +128,19 @@ class GameCore
         end
         return nil
     end
-    def remove_character(username)
+    def remove_character(username, character_dies=false)
         character = characters[username]
 
         Message.unregister_listener(self, :core, character)
 
-        # Cache the character's position within the game server so that it can be placed back where it exited when logging back in
-        cached_positions[username] = character.position
-
-        Character.save(username, character)
+        if character_dies
+            cached_positions[username] = nil
+            # TODO - We should determine what happens when a character is killed - can he reload his last save, or must he start a new character?
+        else
+            # Cache the character's position within the game server so that it can be placed back where it exited when logging back in
+            cached_positions[username] = character.position
+            Character.save(username, character)
+        end
         characters.delete(username)
     end
 
@@ -146,23 +152,9 @@ class GameCore
         when :object_destroyed
             Log.debug("#{message.object.monicker} destroyed!")
             message.object.destroy(message.context)
+
             # Remove this object from wherever it resides
-            case message.context[:position]
-            when Room
-                # This object is loose inside a room
-                message.context[:position].remove_object(message.object)
-            when BushidoObject
-                # This object is inside another object
-                Log.error("NOT IMPLEMENTED")
-            else
-                Log.error("Unknown position type #{message.context[:position].class}")
-            end
-            if message.object.is_a?(:character)
-                Log.info("Player #{get_character_user(message.object)} has been killed")
-                # FIXME - Send lobby message and all that jazz
-            end
-        else
-            Log.error("Game core doesn't know how to handle message type #{message.type}")
+            message.context[:position].remove_object(message.object)
         end
     end
 end

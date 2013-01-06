@@ -2,8 +2,8 @@ require 'state/state'
 require 'state/states/playing_state'
 
 class LobbyState < State
-    def initialize(client, method)
-        super(client, method)
+    def initialize(client)
+        super(client)
 
         @select_character_exchange = define_exchange_chain([
             [:server_query,     {:query_method => :list_characters}],

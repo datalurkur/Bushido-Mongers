@@ -17,6 +17,13 @@ class PlayingState < State
         when :act_success
             @client.send_to_client(Message.new(:properties, {:field => :action_results, :properties => message.description}))
             return
+        when :game_event
+            @client.send_to_client(Message.new(:properties, {:field => :game_event, :properties => message.description}))
+            return
+        when :user_dies
+            pass_to_client(message)
+            @client.set_state(LobbyState.new(@client)) if message.result == @client.get(:username)
+            return
         end
         super(message)
     end

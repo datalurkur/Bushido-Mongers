@@ -118,6 +118,17 @@ module VerboseInterface
                 else
                     return "I don't know how to express the results of a(n) #{message.properties[:command]}, pester zphobic to work on this"
                 end
+            elsif message.field == :game_event
+                case message.properties[:event_type]
+                when :object_destroyed
+                    # FIXME
+                    d = message.properties
+                    t = d[:target]
+                    m = t[:monicker]
+                    "#{m} was destroyed - FORMAT ME"
+                else
+                    return "I don't know how to express a game event of type #{message.event_type}"
+                end
             else
                 return message.properties.to_formatted_string("", true)
             end

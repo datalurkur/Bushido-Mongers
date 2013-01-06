@@ -41,7 +41,7 @@ end
 # Parent class for classes which will control Client behavior
 # Function stubs to be defined by state subclasses
 class State
-    def initialize(client, method=nil)
+    def initialize(client, method=:set)
         @client    = client
         @exchanges = {}
         @eids      = 0
@@ -76,7 +76,7 @@ class State
             ConnectState.new(@client, :set)
         else
             unless process_exchange(message, :server)
-                Log.debug(["Unhandled message #{message.type} encountered during server processing for #{self.class}", caller])
+                Log.warning("Unhandled message #{message.type} encountered during server processing for #{self.class}")
             end
         end
     end

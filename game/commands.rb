@@ -24,23 +24,9 @@ module Commands
         def lookup_object(object, agent, type_class)
             return object if (BushidoObject === object)
 
-            unless type_class
-                Log.error("Parameter specified for a command that has no type for that parameter")
-                raise "Command error for parameter #{object}"
-            end
-
-            potentials = case type_class
-            when :corporeal
-                # Types that are objects in the location (targets of attacks, conversation, etc)
-                # FIXME - With ranged attacks, the object can be in adjacent locations
-                agent.position.objects
-            else
-                raise "Unhandled object type #{type_class}"
-            end
-
             # Sort through the potentials and find out which ones match the query
-            potentials = potentials.select do |p|
-                p.is_a?(type_class) && p.name.match(/#{object}/i)
+            potentials = agent.position.objects.select do |p|
+                p.is_a?(type_class || :root) && p.name.match(/#{object}/i)
             end
 
             # FIXME: Handle contingencies
