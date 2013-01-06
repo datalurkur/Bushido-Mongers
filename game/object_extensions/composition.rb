@@ -12,7 +12,7 @@ module Composition
             end
         end
 
-        def at_destruction(instance)
+        def at_destruction(instance, context)
             instance.instance_exec do
                 Log.debug("Destroying #{@type}")
                 [[:preserve_external, :external], [:preserve_internal, :internal]].each do |switch, key|
@@ -20,7 +20,7 @@ module Composition
                         # FIXME - Items need locations, apparently
                         # Drop these components at the location where this object is
                         @properties[key].each do |component|
-                            Log.debug("Dropping #{component.type}")
+                            context[:position].contents << component
                         end
                     end
                 end

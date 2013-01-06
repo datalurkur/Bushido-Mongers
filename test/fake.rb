@@ -9,5 +9,6 @@ class FakeRoom
     def name; "Fake Room"; end
     def add_occupant(o); end
     def remove_occupant(o); end
+    def contents; @contents ||= []; end
 end
 

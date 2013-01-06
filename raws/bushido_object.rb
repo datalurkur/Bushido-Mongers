@@ -57,13 +57,13 @@ class BushidoObject
         self
     end
 
-    def destroy
+    def destroy(context)
         @core.db.raw_info_for(@type)[:at_destruction].each do |destruction_proc|
             eval(destruction_proc, nil, __FILE__, __LINE__)
         end
 
         @extensions.each do |mod|
-            mod.at_destruction(self) if mod.respond_to?(:at_destruction)
+            mod.at_destruction(self, context) if mod.respond_to?(:at_destruction)
         end
     end
 

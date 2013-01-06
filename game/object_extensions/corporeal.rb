@@ -19,7 +19,11 @@ module Corporeal
             }
         end
 
-        def at_destruction(instance)
+        def at_destruction(instance, context)
+            # Drop the body
+            instance.instance_exec {
+                context[:position].contents << @properties[:body]
+            }
         end
     end
 end
