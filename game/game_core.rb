@@ -138,21 +138,6 @@ class GameCore
         characters.delete(username)
     end
 
-    # NPC MAINTENANCE
-    # This is mostly here for the message registration and unregistration
-    # Without the need to pass messages to NPCs, we probably would not store references to them here at all
-    def npcs
-        @npcs ||= []
-    end
-    def add_npc(npc)
-        npcs << npc
-        Message.register_listener(self, :core, npc)
-    end
-    def remove_npc(npc)
-        Message.unregister_listener(self, :core, npc)
-        npcs.delete(npc)
-    end
-
     # MESSAGE HANDLING
     # Handle callbacks from within objects that require the attention of the game core
     # Mostly, this is for destruction and creation

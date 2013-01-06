@@ -54,7 +54,6 @@ class Room < ZoneLeaf
             if Chance.take(core.db.info_for(type, :spawn_chance))
                 name = "#{type} #{rand(100000)}"
                 npc = core.db.create(core, type, {:name => name, :position => self})
-                core.add_npc(npc)
             end
         end
     end
