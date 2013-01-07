@@ -14,6 +14,6 @@ def recreate_test_character(username, raw_group, clean=true)
     fake_room = FakeRoom.new
     fake_core = FakeCore.new(db)
     Log.debug("Creating test character using fake state")
-    c = db.create(fake_core, :character, {:name => "Test Character", :position => fake_room})
+    c = db.create(fake_core, :character, {:position => fake_room}, {:name => "Test Character"})
     Character.save(username, c)
 end

@@ -1,7 +1,7 @@
 class BushidoObject
     attr_reader :type, :core
 
-    def initialize(core, type, params={})
+    def initialize(core, type, context, params={})
         Log.debug("Creating #{type}", 1) unless core.db.types_of(:body_part).include?(type)
         @core = core
         @type = type
@@ -9,10 +9,10 @@ class BushidoObject
         @properties = {}
         @extensions = []
 
-        type_info = @core.db.raw_info_for(type)
+        type_info = @core.db.raw_info_for(@type)
 
         type_info[:needs].each do |k|
-            raise "Required argument #{k.inspect} missing during creation of #{type}" unless params[k]
+            raise "Required argument #{k.inspect} missing during creation of #{@type}" unless params[k]
         end
 
         type_info[:class_values].each do |k,v|
@@ -27,7 +27,7 @@ class BushidoObject
         end
 
         @extensions.each do |mod|
-            mod.at_creation(self, params) if mod.respond_to?(:at_creation)
+            mod.at_creation(self, context, params) if mod.respond_to?(:at_creation)
         end
 
         type_info[:at_creation].each do |creation_proc|
@@ -41,14 +41,14 @@ class BushidoObject
             next if type_info[:has][property][:class_only]
             if type_info[:has][property][:multiple]
                 if @properties[property].empty? && !type_info[:has][property][:optional]
-                    raise "Property #{property} has no values"
+                    raise "Property #{property.inspect} has no values for #{@type}"
                 end
             else
                 unless @properties[property]
                     if type_info[:has][property][:optional]
                         @properties[property] = nil
                     else
-                        raise "Property #{property} has no value"
+                        raise "Property #{property.inspect} has no value for #{@type}"
                     end
                 end
             end

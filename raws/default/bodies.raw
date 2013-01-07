@@ -1,7 +1,10 @@
 abstract composition body_part {
-    needs relative_size;
-    class sym typical_size;
     has int hp;
+    class sym typical_size;
+    needs relative_size;
+
+    /* Make body parts worthless by default */
+    value 0;
 
     /* Adjust the weight and hp of the body part based on size */
     at_creation {

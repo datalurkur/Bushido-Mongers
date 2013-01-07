@@ -1,0 +1,61 @@
+abstract object item {
+    has int value;
+}
+
+abstract item composition {
+    has_many optional sym internal;
+    has_many optional sym external;
+
+    /* Determines which components are destroyed if this item is destroyed */
+    class bool preserve_internal;
+    class bool preserve_external;
+    class bool is_container;
+
+    preserve_internal false;
+    preserve_external true;
+
+    /* Determines whether objects can be placed inside this item */
+    is_container false;
+
+    uses composition;
+}
+
+abstract item constructed {
+    class_many sym required_components;
+    class sym technique;
+
+    has sym quality;
+
+    needs components quality;
+
+    at_creation {
+        # Remove component items from the world
+        params[:components].each do |component|
+            context[:position].remove_object(component)
+        end
+
+        # Created object quality depends on the quality of its components as well
+        avg_component_quality = params[:components].inject(0.0) { |s,i|
+            s + Quality.index(i.is_a?(:constructed) ? i.quality : :standard)
+        } / params[:components].size
+        quality = (Quality.index(params[:quality]) + avg_component_quality) / 2.0
+        quality_level = Quality.levels[quality.ceil]
+
+        {
+            :quality    => quality_level,
+            :components => params[:components]
+        }
+    }
+}
+
+post_process {
+    Log.debug("Propagating component information for constructed objects")
+    types_of(:constructed, true).each do |constructed|
+        info_for(constructed, :required_components).each do |component|
+            propagate_recursive(component) do |comp_subtype|
+                Log.debug("#{comp_subtype} is used in #{constructed}")
+                info_for(comp_subtype, :used_in, []) << constructed
+            end
+        end
+    end
+}

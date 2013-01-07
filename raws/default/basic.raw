@@ -1,23 +1,12 @@
 abstract root object {
     has float weight;
-}
-
-abstract object mover {
-    uses position;
-}
-
-abstract object item {
-    has float weight;
-    has int value;
+    has sym size;
 }
 
 abstract root corporeal {
-    uses corporeal;
-
-    class sym body_type;
-
     has sym size;
-    has float weight;
+    class sym body_type;
+    uses corporeal;
 }
 
 abstract root aligned {
@@ -32,39 +21,6 @@ abstract root named {
     }
 }
 
-abstract root constructed {
-    class_many sym required_components;
-    class sym technique;
-
-    has sym quality;
-    has int value;
-
-    needs components quality;
-
-    at_creation {
-        # FIXME - Remove component items from the world
-
-        # Created object quality depends on the quality of its components as well
-        avg_component_quality = params[:components].inject(0.0) { |s,i|
-            s + Quality.index(i.is_a?(:constructed) ? i.quality : :standard)
-        } / params[:components].size
-        quality = (Quality.index(params[:quality]) + avg_component_quality) / 2.0
-        quality_level = Quality.levels[quality.ceil]
-        {
-            :quality    => quality_level,
-            :components => params[:components]
-        }
-    }
-}
-
-post_process {
-    Log.debug("Propagating component information for constructed objects")
-    types_of(:constructed, true).each do |constructed|
-        info_for(constructed, :required_components).each do |component|
-            propagate_recursive(component) do |comp_subtype|
-                Log.debug("#{comp_subtype} is used in #{constructed}")
-                info_for(comp_subtype, :used_in, []) << constructed
-            end
-        end
-    end
+abstract root mover {
+    uses position;
 }

@@ -100,8 +100,8 @@ class GameCore
     end
     def create_character(username, character_details)
         begin
-            character_details.merge!(:position => @world.random_starting_location)
-            character = @db.create(self, :character, character_details)
+            context = {:position => @world.random_starting_location}
+            character = @db.create(self, :character, context, character_details)
 
             characters[username] = character
             Log.info("Character #{character.name} created for #{username}")

@@ -24,8 +24,8 @@ Log.debug(["Types of items:", db.types_of(:item)])
 # Basic item creation tests
 test_item_type = :helmet
 Log.debug("Creating a #{test_item_type}")
-test_item_args = {:quality => :fine, :components => [db.create($core, :iron)]}
-test_item = db.create($core, test_item_type, test_item_args)
+test_item_args = {:quality => :fine, :components => [db.create($core, :iron_ingot)]}
+test_item = db.create($core, test_item_type, {:position => FakeRoom.new}, test_item_args)
 Log.debug("Test item is a metal? #{test_item.is_a?(:metal)}")
 Log.debug("Test item is a constructable? #{test_item.is_a?(:constructed)}")
 Log.debug("Test item is a headgear? #{test_item.is_a?(:headgear)}")
@@ -35,7 +35,7 @@ Log.debug(["Types of NPCs:", db.types_of(:npc)])
 
 def test_npc(db, test_npc_type, name)
     Log.debug(["Creating a #{test_npc_type} with raw info", db.raw_info_for(test_npc_type)])
-    test_npc = db.create($core, test_npc_type, {:position => FakeRoom.new, :name => name})
+    test_npc = db.create($core, test_npc_type, {:position => FakeRoom.new}, {:name => name})
 
     Log.debug("Test NPC is a guard? #{test_npc.is_a?(:guard)}")
     Log.debug(["Test NPC has parts", test_npc.body.internal, test_npc.body.external])
@@ -49,8 +49,8 @@ test_npc(db, :peacekeeper, "Derpus Maximus")
 test_npc(db, :giant_spider, "Leggus Maximus")
 
 # Body / Corporeal tests
-hb = db.create($core, :humanoid_body, {:relative_size => :large})
-hb = db.create($core, :arachnoid_body, {:relative_size => :tiny})
+hb = db.create($core, :humanoid_body, {}, {:relative_size => :large})
+hb = db.create($core, :arachnoid_body, {}, {:relative_size => :tiny})
 
 # Recipe and command tests
 Log.debug("How do I produce a dagger?")

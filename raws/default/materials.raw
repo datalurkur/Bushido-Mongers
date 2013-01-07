@@ -4,18 +4,26 @@ abstract material metal {
     class int melting_point;
 }
 
-material leather {
-    weight 2;
-    value 10;
+abstract material leather {}
+
+abstract metal iron {
+    melting_point 1538;
 }
 
 material paper {
     weight 0.1;
-    value 20;
+    value 1;
+    size tiny;
 }
 
-metal iron {
-    melting_point 1538;
+leather leather_scrap {
+    weight 2;
+    value 10;
+    size tiny;
+}
+
+iron iron_ingot {
     value 10;
     weight 5;
+    size small;
 }

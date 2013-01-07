@@ -1,0 +1,4 @@
+composition backpack {
+    is_container true;
+    preserve_internal true;
+}

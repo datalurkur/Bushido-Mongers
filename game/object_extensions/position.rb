@@ -1,8 +1,7 @@
 module Position
     class << self
-        def at_creation(instance, params)
-            SharedObjectExtensions.check_required_params(params, [:position])
-            instance.set_position(params[:position])
+        def at_creation(instance, context, params)
+            instance.set_position(context[:position])
         end
     end
 

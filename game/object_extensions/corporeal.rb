@@ -18,10 +18,10 @@ module Corporeal
             }
         end
 
-        def at_creation(instance, params)
+        def at_creation(instance, context, params)
             instance.instance_exec {
                 body_type = @core.db.info_for(@type, :body_type)
-                body      = @core.db.create(@core, body_type, {:relative_size => @properties[:size]})
+                body      = @core.db.create(@core, body_type, context, {:relative_size => @properties[:size]})
                 @properties[:body]   = body
                 @properties[:weight] = body.weight
             }

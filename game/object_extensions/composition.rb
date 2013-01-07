@@ -1,10 +1,10 @@
 module Composition
     class << self
-        def at_creation(instance, params)
+        def at_creation(instance, context, params)
             instance.instance_exec do
                 [:internal, :external].each do |comp_type|
                     components = @properties[comp_type].collect do |component|
-                        @core.db.create(@core, component, params)
+                        @core.db.create(@core, component, context, params)
                     end
                     @properties[comp_type] = components
                     @properties[:weight] += @properties[comp_type].inject(0) { |s,p| s + p.weight }
