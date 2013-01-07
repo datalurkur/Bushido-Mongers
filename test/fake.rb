@@ -11,9 +11,11 @@ class FakeRoom
     def remove_object(o); end
 end
 
-class Message
-    class << self
-        def register_listener(core, klass, obj); end
-        def unregister_listener(core, klass, obj); end
+unless Object.const_defined?("Message")
+    class Message
+        class << self
+            def register_listener(core, klass, obj); end
+            def unregister_listener(core, klass, obj); end
+        end
     end
 end
