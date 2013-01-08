@@ -49,12 +49,14 @@ class ObjectDB
         @db[type]
     end
 
-    def info_for(type, datapoint, initialize_to=nil)
+    def info_for(type, datapoint=nil, initialize_to=nil)
         type_hash = raw_info_for(type)
-        unless type_hash[:class_values].has_key?(datapoint) || initialize_to.nil?
+        return type_hash[:class_values] if datapoint.nil?
+
+        unless initialize_to.nil? || type_hash[:class_values].has_key?(datapoint)
             type_hash[:class_values][datapoint] = initialize_to
         end
-        type_hash[:class_values][datapoint]
+        return type_hash[:class_values][datapoint]
     end
 
     def types_of(types, instantiable_only=true)

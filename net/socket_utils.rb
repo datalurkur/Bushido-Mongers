@@ -2,7 +2,7 @@ require 'thread'
 
 # Miscellaneous shared code and utilities
 module SocketUtils
-    STATIC_SOCKET_READ_SIZE = 1024
+    STATIC_SOCKET_READ_SIZE = 5096
     DEFAULT_LISTEN_PORT = 9999
 
     # For a given socket protected by a mutex, take a partial buffer and poll for new messages
@@ -52,7 +52,7 @@ module SocketUtils
 
     # Take a message and pack it into network format
     def pack_message(message)
-        Log.debug(message.report, 6)
+        Log.debug(["Packing message", message.report], 6)
         packed_data = Marshal.dump(message)
         length      = packed_data.size
         [length].pack("N") + packed_data
