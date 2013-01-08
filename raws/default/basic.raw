@@ -6,6 +6,8 @@ abstract root object {
 abstract root corporeal {
     has sym size;
     class sym body_type;
+    class optional sym consumes;
+    class optional proc on_consume;
     uses corporeal;
 }
 

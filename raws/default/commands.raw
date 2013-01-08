@@ -22,10 +22,10 @@ command move {
     invocation move;
 }
 
-command eat {
-    target food;
+command consume {
+    target consumable;
 
-    invocation eat;
+    invocation consume;
 }
 
 abstract command construct {

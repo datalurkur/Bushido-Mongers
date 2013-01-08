@@ -38,7 +38,6 @@ class BehaviorSet
         acted = false
         priorities.sort.each do |priority|
             @behavior_set[priority].each do |behavior|
-                next unless Behavior.criteria_met?(behavior, actor)
                 if Behavior.act(behavior, actor)
                     acted = true
                     break

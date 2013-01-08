@@ -1,5 +1,7 @@
 /* Must be of type npc to spawn */
 abstract named,aligned,mover npc {
+    has optional sym behavior;
+
     uses npc_behavior;
 
     class_many sym can_spawn_in;
@@ -45,6 +47,19 @@ monster,corporeal oni {
     body_type humanoid_body;
     can_spawn_in mountain;
     spawn_chance unusual;
+}
+
+monster,corporeal corpse_eater {
+    size small;
+    body_type humanoid_body;
+    can_spawn_in mountain sewer meadow dock;
+
+    behavior roam_and_consume;
+
+    consumes body_part;
+    on_consume {
+        Log.info("#{params[:agent].monicker}" is eating a body part!")
+    }
 }
 
 abstract npc guard {

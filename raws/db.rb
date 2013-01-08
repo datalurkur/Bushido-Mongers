@@ -22,7 +22,7 @@ class ObjectDB
                 db[type][:has].each do |k,v|
                     if v[:class_only]
                         has_value = v[:multiple] ? !db[type][:class_values].empty? : db[type][:class_values].has_key?(k)
-                        raise "Class value #{k.inspect} missing from #{type.inspect}" unless has_value
+                        raise "Class value #{k.inspect} missing from #{type.inspect}" unless has_value || v[:optional]
                     end
                 end
             end

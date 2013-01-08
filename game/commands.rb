@@ -15,23 +15,32 @@ module Commands
             params
         end
 
-        def resolve(params, types, core, command)
-            types.each do |type|
-                params[type] = lookup_object(params[type], params[:agent], core.db.info_for(command, type))
+        def filter_objects(agent, location, type=nil, name=nil)
+            case location
+            when :position
+                agent.position.objects.select do |p|
+                    (type ? p.is_a?(type) : true) &&
+                    (name ? p.name.match(/#{name}/i) : true)
+                end
+            # when :inventory
+            else
+                Log.warning("#{location} lookups not implemented")
             end
         end
 
-        def lookup_object(object, agent, type_class)
+        def lookup_object(agent, type_class, object, locations)
             return object if (BushidoObject === object)
 
             # Sort through the potentials and find out which ones match the query
-            potentials = agent.position.objects.select do |p|
-                p.is_a?(type_class || :root) && p.name.match(/#{object}/i)
+            potentials = []
+            locations.each do |location|
+                results = filter_objects(agent, location, type_class, object)
+                potentials.concat(results) unless results.nil?
+                break unless potentials.empty?
             end
 
             # FIXME: Handle contingencies
             raise "No object #{object} found" if potentials.empty?
-            raise "Multiple \"#{object}\'s\" found, be more specific" if potentials.size > 1
 
             return potentials.first
         end
@@ -40,7 +49,12 @@ module Commands
     module Inspect
         def self.do(core, params)
             if params[:target]
-                Commands.resolve(params, [:target], core, :inspect)
+                params[:target] = Commands.lookup_object(
+                    params[:agent],
+                    core.db.info_for(:inspect, :target),
+                    params[:target],
+                    [:position, :inventory]
+                )
             else
                 # Assume the player wants a broad overview of what he can see, describe the room
                 params[:target] = params[:agent].position
@@ -48,9 +62,22 @@ module Commands
         end
     end
 
-    module Eat
+    module Consume
         def self.do(core, params)
-            Log.debug("Eating something!")
+            SharedObjectExtensions.check_required_params(params, [:target])
+
+            agent        = params[:agent]
+            edible_types = (agent.class_info(:consumes) || :consumable)
+            params[:target] = Commands.lookup_object(agent, edible_types, params[:target], [:inventory, :position])
+
+            if agent.has_property(:on_consume)
+                eval agent.on_consume
+            elsif params[:target].is_a?(:consumable)
+                # Do normal consumption
+                Log.info("#{agent.monicker} eats #{params[:target].monicker} like a normal person.")
+            else
+                raise "#{agent.monicker} doesn't know how to eat a #{params[:target].type}"
+            end
         end
     end
 
@@ -68,7 +95,12 @@ module Commands
             SharedObjectExtensions.check_required_params(params, [:target])
 
             # The target is an object and needs to be resolved
-            Commands.resolve(params, [:target], core, :attack)
+            params[:target] = Commands.lookup_object(
+                params[:agent],
+                core.db.info_for(:attack, :target),
+                params[:target],
+                [:position]
+            )
 
             Log.debug("#{params[:agent].name} attacks #{params[:target].name}")
             Message.dispatch(core, :unit_attacks, {

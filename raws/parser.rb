@@ -306,7 +306,7 @@ module ObjectRawParser
                         end
                         values = statement_pieces[1..-1].collect do |piece|
                             case object_data[:has][field][:type]
-                            when :string
+                            when :string, :proc
                                 piece
                             when :sym
                                 piece.to_sym

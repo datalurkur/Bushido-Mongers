@@ -1,11 +1,11 @@
-abstract item food {
+abstract item consumable {
 }
 
-food carrot {
+consumable carrot {
     weight 1;
 }
 
-constructed,food cooked_carrot {
+constructed,consumable cooked_carrot {
     required_components carrot;
     technique cook;
     weight 0.5;
