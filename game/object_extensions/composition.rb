@@ -2,7 +2,7 @@ module Composition
     class << self
         def at_creation(instance, context, params)
             instance.instance_exec do
-                [:internal, :external].each do |comp_type|
+                [:internal, :incidental, :external].each do |comp_type|
                     components = @properties[comp_type].collect do |component|
                         @core.db.create(@core, component, context, params)
                     end
@@ -15,7 +15,8 @@ module Composition
         def at_destruction(instance, context)
             instance.instance_exec do
                 Log.debug("Destroying #{@type}")
-                [[:preserve_external, :external], [:preserve_internal, :internal]].each do |switch, key|
+                [:internal, :incidental, :external].each do |switch, key|
+                    switch = "preserve_#{key}".to_sym
                     if class_info(switch)
                         # Drop these components at the location where this object is
                         @properties[key].each do |component|

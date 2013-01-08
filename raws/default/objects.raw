@@ -4,15 +4,18 @@ abstract object item {
 
 abstract item composition {
     has_many optional sym internal;
+    has_many optional sym incidental;
     has_many optional sym external;
 
     /* Determines which components are destroyed if this item is destroyed */
     class bool preserve_internal;
+    class bool preserve_incidental;
     class bool preserve_external;
     class bool is_container;
 
-    preserve_internal false;
-    preserve_external true;
+    preserve_internal   false;
+    preserve_incidental false;
+    preserve_external   true;
 
     /* Determines whether objects can be placed inside this item */
     is_container false;
@@ -20,7 +23,7 @@ abstract item composition {
     uses composition;
 }
 
-abstract item constructed {
+abstract composition constructed {
     class_many sym required_components;
     class sym technique;
 
@@ -43,7 +46,7 @@ abstract item constructed {
 
         {
             :quality    => quality_level,
-            :components => params[:components]
+            :incidental => params[:components]
         }
     }
 }
