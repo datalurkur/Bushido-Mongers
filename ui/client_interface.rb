@@ -111,7 +111,7 @@ module VerboseInterface
                     when :room
                         return Words.gen_room_description(target)
                     else
-                        return "I don't know how to describe a #{type.inspect}, bother zphobic to fix this"
+                        return "I don't know how to describe a #{target[:type].inspect}, bother zphobic to fix this"
                     end
                 when :move
                     Log.debug(message)
