@@ -1,19 +1,19 @@
 abstract root zone {
     class_many int depth_range;
-    class_many sym keywords;
     class_many optional sym optional_keywords;
     class_many optional sym child_zones;
     class_many optional sym can_spawn;
     class sym sideness;
 
+    has_many sym keywords;
+
     depth_range 0;
     sideness outside;
-    
+
     at_creation {
-        base_keywords = @core.db.info_for(@type, :keywords)
-        params[:inherited_keywords] ||= []
-        # TODO - Insert some optional_keywords here.
-        keywords = base_keywords + params[:inherited_keywords]
+        # TODO - Insert some of the optional_keywords here.
+        keywords = self.keywords + (params[:inherited_keywords] || [])
+        Log.debug(keywords)
         {
             :keywords => keywords
         }
@@ -54,7 +54,7 @@ inside_zone,monster_spawner barracks {
 }
 
 inside_zone,monster_spawner sewer {
-    depth_range 0 1 2
+    depth_range 0 1 2;
     keywords dank wet;
 }
 

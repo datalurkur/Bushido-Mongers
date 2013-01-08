@@ -49,7 +49,7 @@ monster,corporeal oni {
     spawn_chance unusual;
 }
 
-monster,corporeal corpse_eater {
+monster,corporeal jikininki {
     size small;
     body_type humanoid_body;
     can_spawn_in mountain sewer meadow dock;
