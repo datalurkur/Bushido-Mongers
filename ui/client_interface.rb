@@ -107,14 +107,15 @@ module VerboseInterface
                 case message.properties[:command]
                 when :inspect
                     target = message.properties[:target]
-                    type   = target[:type]
-                    target.delete(:type)
-                    case type
+                    case target[:type]
                     when :room
                         return Words.gen_room_description(target)
                     else
                         return "I don't know how to describe a #{type.inspect}, bother zphobic to fix this"
                     end
+                when :move
+                    Log.debug(message)
+                    return Words.gen_sentence(message.properties).to_s
                 else
                     return "I don't know how to express the results of a(n) #{message.properties[:command]}, pester zphobic to work on this"
                 end

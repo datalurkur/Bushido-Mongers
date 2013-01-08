@@ -218,7 +218,7 @@ module Words
                 nouns = Array(nouns)
 
                 if nouns.all? { |n| n.is_a?(ParseTree::PTNode) }
-                    # Nouns already created; just attach it.
+                    # Nouns already created; just attach them.
                     @children = nouns
                     return
                 end
@@ -332,7 +332,13 @@ module Words
             # http://en.wikipedia.org/wiki/Definiteness
             # FIXME: Base this on noun lookups?
             def self.definite?(noun)
-                return !(noun.is_a?(String) || noun.is_a?(Symbol))
+                return false unless noun.respond_to?(:to_sym)
+                case noun.to_sym
+                when :east, :west, :north, :south
+                    true
+                else
+                    false
+                end
             end
 
             def self.needs_article?(noun)
@@ -422,7 +428,7 @@ module Words
     # TODO - action descriptors: The generic ninja generically slices the goat with genericness.
     def self.gen_sentence(args = {})
         subject = args[:subject] || args[:agent]
-        verb    = args[:verb] || args[:action]
+        verb    = args[:verb] || args[:action] || args[:command]
 
         # Subject is you in second person
         if !subject && args[:state] && args[:state].person == :second
@@ -452,7 +458,6 @@ module Words
 
     # Required/expected arg values: keywords objects exits
     def self.gen_room_description(args = {})
-        Log.debug(args)
         @sentences = []
 
         args = args.merge(:action => :see)
@@ -477,12 +482,15 @@ module Words
 
     def self.gen_area_name(args = {})
         article = Sentence::Article.new(:the)
-        noun    = Sentence::Noun.new(args[:zone].type)
+        noun    = Sentence::Noun.new(args[:type])
         name    = Sentence::NounPhrase.new([article, noun])
+        keywords = args[:keywords]
 
-        name.add_adjectives(args[:zone].keywords.rand)
+        if keywords && !keywords.empty?
+            name.add_adjectives(keywords.rand)
+        end
 
-        descriptor = db.get_keyword_words(:abstract, :noun).rand
+#        descriptor = db.get_keyword_words(:abstract, :noun).rand
 
         name.to_s.title
     end

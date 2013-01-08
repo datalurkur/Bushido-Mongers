@@ -79,7 +79,7 @@ class Lobby
         # TODO - Add a privelege set so that other users can be granted admin
         if @default_admin == username
             @users[username][:admin] = true
-            Log.info("#{username} reclaiming admin priveleges")
+            Log.info("#{username} reclaiming admin privileges")
             broadcast(Message.new(:admin_change, {:result => username}))
         end
     end

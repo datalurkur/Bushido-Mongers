@@ -9,15 +9,21 @@ class Zone
         def create(core, parent, depth)
             args = if parent
                 # Inherit a keyword from the parent.
-                { :template => find_child(core.db, parent, depth),
-                  :inherited_keywords => ([core.db.info_for(parent.type, :keywords).rand] || [])
+                #Log.debug(parent.type)
+                #parent_list = core.db.info_for(parent.type, :keywords)
+                #Log.debug(["Zone.create", parent.type, parent_list])
+
+                { :type => find_child(core.db, parent, depth),
+                  :inherited_keywords => []
                 }
             else
-                { :template => find_random(core.db, depth) }
+                { :type => find_random(core.db, depth) }
             end
+            #Log.debug("found #{args[:inherited_keywords].inspect}!") if args[:inherited_keywords]
 
-            args[:depth] = depth
-            args[:zone]  = core.db.create(core, args[:template], args)
+            args[:depth]    = depth
+            args[:zone]     = core.db.create(core, args[:type], args)
+            args[:keywords] = core.db.info_for(args[:type], :keywords)
 
             args.delete(:inherited_keywords) # Shouldn't need this again.
             return args

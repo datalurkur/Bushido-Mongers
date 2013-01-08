@@ -8,12 +8,14 @@ class String
     def sentence
         # Capitalize the beginning.
         word = self.gsub(/^(\w)/) { $1.upcase }
+        # Clobber underscores.
+        word.gsub!(/_/, ' ')
         # Add ending punctuation, if it doesn't already exist.
         word.gsub!(/([\.\!\?])?$/) { $1 || '.' }
-        # Whitespace cleanup.
-        word.gsub!(/^\s+/, '')
         # Drop whitespace before punctuation.
         word.gsub!(/\s+([\,\.\?\!])/, '\1')
+        # Whitespace cleanup.
+        word.gsub!(/^\s+/, '')
         word
     end
 
