@@ -28,11 +28,11 @@ class Descriptor
                 :type => object.type
             }
 
-            d[:name]             = object.name if object.is_a?(:named)
+            d[:name]             = object.name if object.is_type?(:karmic)
             d[:monicker]         = (d[:name] || d[:type])
 
             # Collect parent type information
-            d[:is_a]             = object.type_ancestry
+            d[:is_type]          = object.type_ancestry
 
             # Collect property information
             d[:properties]       = Descriptor.describe(object.properties, observer)

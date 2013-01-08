@@ -72,7 +72,7 @@ class BushidoObject
         @name || @type.to_s
     end
 
-    def is_a?(type)
+    def is_type?(type)
         (return true) if (@type == :root)
         current = [@type]
         until current.empty?

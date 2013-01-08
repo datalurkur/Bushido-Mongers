@@ -26,9 +26,9 @@ test_item_type = :helmet
 Log.debug("Creating a #{test_item_type}")
 test_item_args = {:quality => :fine, :components => [db.create($core, :iron_ingot)]}
 test_item = db.create($core, test_item_type, {:position => FakeRoom.new}, test_item_args)
-Log.debug("Test item is a metal? #{test_item.is_a?(:metal)}")
-Log.debug("Test item is a constructable? #{test_item.is_a?(:constructed)}")
-Log.debug("Test item is a headgear? #{test_item.is_a?(:headgear)}")
+Log.debug("Test item is a metal? #{test_item.is_type?(:metal)}")
+Log.debug("Test item is a constructable? #{test_item.is_type?(:constructed)}")
+Log.debug("Test item is a headgear? #{test_item.is_type?(:headgear)}")
 
 # NPC tests
 Log.debug(["Types of NPCs:", db.types_of(:npc)])
@@ -37,7 +37,7 @@ def test_npc(db, test_npc_type, name)
     Log.debug(["Creating a #{test_npc_type} with raw info", db.raw_info_for(test_npc_type)])
     test_npc = db.create($core, test_npc_type, {:position => FakeRoom.new}, {:name => name})
 
-    Log.debug("Test NPC is a guard? #{test_npc.is_a?(:guard)}")
+    Log.debug("Test NPC is a guard? #{test_npc.is_type?(:guard)}")
     Log.debug(["Test NPC has parts", test_npc.body.internal, test_npc.body.external])
     if test_npc.has_property?(:provocations)
         Log.debug(["Test NPC has provocations", test_npc.provocations])

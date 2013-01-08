@@ -15,12 +15,17 @@ abstract root aligned {
     has_many sym factions;
 }
 
-abstract root named {
+abstract root karmic {
     has string name;
-    needs name;
-    at_creation {
-        {:name => params[:name]}
-    }
+
+    has_many optional complex kills;
+    has_many optional complex deeds;
+    has_many optional string titles;
+
+    has sym notoriety;
+    notoriety unknown;
+
+    uses karmic;
 }
 
 abstract root mover {

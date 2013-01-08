@@ -19,7 +19,7 @@ module Commands
             case location
             when :position
                 agent.position.objects.select do |p|
-                    (type ? p.is_a?(type) : true) &&
+                    (type ? p.is_type?(type) : true) &&
                     (name ? p.monicker.match(/#{name}/i) : true)
                 end
             # when :inventory
@@ -73,7 +73,7 @@ module Commands
 
             if agent.class_info(:on_consume)
                 eval agent.class_info(:on_consume)
-            elsif params[:target].is_a?(:consumable)
+            elsif params[:target].is_type?(:consumable)
                 # Do normal consumption
                 Log.info("#{agent.monicker} eats #{params[:target].monicker} like a normal person.")
             else

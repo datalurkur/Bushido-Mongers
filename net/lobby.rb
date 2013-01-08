@@ -202,18 +202,23 @@ class Lobby
         case message.type
         when :tick
             Log.debug("Lobby tick", 6)
+        when :unit_acts
+            @users.keys.each do |username|
+                character = @game_core.get_character(username)
+                next if character.nil?
+                next unless message.context[:position] == character.position
+
+                event_properties = message.params.merge(:event_type => action)
+                send_to_user(username, Message.new(:game_event, {:description => event_properties}))
+            end
         when :object_destroyed
             @users.keys.each do |username|
                 character = @game_core.get_character(username)
                 next if character.nil?
+                next unless message.position == character.position
 
-                if message.context[:position] == character.position
-                    event_properties = {
-                        :event_type => :object_destroyed,
-                        :target     => message.object
-                    }
-                    send_to_user(username, Message.new(:game_event, {:description => event_properties}))
-                end
+                event_properties = message.params.merge(:event_type => :object_destroyed)
+                send_to_user(username, Message.new(:game_event, {:description => event_properties}))
 
                 if message.object == character
                     Log.info("Character #{character.name} dies!")

@@ -150,11 +150,11 @@ class GameCore
     def process_message(message)
         case message.type
         when :object_destroyed
-            Log.debug("#{message.object.monicker} destroyed!")
-            message.object.destroy(message.context)
+            Log.debug("#{message.target.monicker} destroyed!")
+            message.target.destroy(message.params)
 
             # Remove this object from wherever it resides
-            message.context[:position].remove_object(message.object)
+            message.position.remove_object(message.target)
         end
     end
 end

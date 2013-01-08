@@ -8,11 +8,7 @@ module Corporeal
                         Log.debug("#{monicker} is being attacked!")
                         # This unit is being attacked and needs to be damaged or something
                         # FIXME - Actually do damage rather than just destroying the thing
-                        context = {
-                            :position => @position,
-                            :agent    => message.attacker
-                        }
-                        Message.dispatch(@core, :object_destroyed, {:object => self, :context => context})
+                        Message.dispatch(@core, :object_destroyed, {:agent => message.attacker, :position => @position, :target => self})
                     end
                 end
             }
