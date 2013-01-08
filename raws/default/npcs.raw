@@ -58,7 +58,7 @@ monster,corporeal corpse_eater {
 
     consumes body_part;
     on_consume {
-        Log.info("#{params[:agent].monicker}" is eating a body part!")
+        Log.info("#{params[:agent].monicker} is eating a body part!")
     }
 }
 

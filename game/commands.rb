@@ -25,6 +25,7 @@ module Commands
             # when :inventory
             else
                 Log.warning("#{location} lookups not implemented")
+                []
             end
         end
 
@@ -70,14 +71,16 @@ module Commands
             edible_types = (agent.class_info(:consumes) || :consumable)
             params[:target] = Commands.lookup_object(agent, edible_types, params[:target], [:inventory, :position])
 
-            if agent.has_property(:on_consume)
-                eval agent.on_consume
+            if agent.class_info(:on_consume)
+                eval agent.class_info(:on_consume)
             elsif params[:target].is_a?(:consumable)
                 # Do normal consumption
                 Log.info("#{agent.monicker} eats #{params[:target].monicker} like a normal person.")
             else
                 raise "#{agent.monicker} doesn't know how to eat a #{params[:target].type}"
             end
+
+            agent.position.remove_object(params[:target])
         end
     end
 

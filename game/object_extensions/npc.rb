@@ -7,7 +7,7 @@ module NpcBehavior
     class << self
         def at_creation(instance, context, params)
             instance.instance_exec {
-                set_behavior(params[:behavior] || :random_attack_and_move)
+                set_behavior(class_info(:behavior) || :random_attack_and_move)
                 Message.register_listener(@core, :core, self)
             }
         end

@@ -92,6 +92,7 @@ module ObjectRawParser
                 begin
                     Log.debug("Loading data from pre-parsed database")
                     preparsed_db = Marshal.load(preparsed_data)
+
                     if preparsed_db.hash == group_hash(group)
                         Log.debug("Using preparsed data")
                         db = preparsed_db
@@ -137,7 +138,8 @@ module ObjectRawParser
         end
 
         def group_hash(group)
-            raws_list(group).collect { |file| File.mtime(file) }.hash
+            pertinent_files = [__FILE__].concat(raws_list(group))
+            pertinent_files.collect { |file| File.mtime(file) }.hash
         end
 
         def preparsed_location(group)
@@ -304,9 +306,15 @@ module ObjectRawParser
                         unless object_data[:has].has_key?(field)
                             raise "Property #{field.inspect} not found for object #{next_object.inspect}"
                         end
-                        values = statement_pieces[1..-1].collect do |piece|
-                            case object_data[:has][field][:type]
-                            when :string, :proc
+
+                        field_type = object_data[:has][field][:type]
+                        raw_values = case field_type
+                        when :proc; [data]
+                        else;       statement_pieces[1..-1]
+                        end
+                        values     = raw_values.collect do |piece|
+                            case field_type
+                            when :string,:proc
                                 piece
                             when :sym
                                 piece.to_sym
@@ -315,7 +323,6 @@ module ObjectRawParser
                             when :float
                                 piece.to_f
                             when :bool
-                                Log.debug("Setting boolean value #{piece}")
                                 (piece == "true")
                             else
                                 raise "Unsupported property type #{object_data[:has][field][:type].inspect}"
