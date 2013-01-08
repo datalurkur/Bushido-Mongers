@@ -20,7 +20,7 @@ module Commands
             when :position
                 agent.position.objects.select do |p|
                     (type ? p.is_a?(type) : true) &&
-                    (name ? p.name.match(/#{name}/i) : true)
+                    (name ? p.monicker.match(/#{name}/i) : true)
                 end
             # when :inventory
             else

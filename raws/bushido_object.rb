@@ -1,5 +1,5 @@
 class BushidoObject
-    attr_reader :type, :core
+    attr_reader :type, :properties
 
     def initialize(core, type, context, params={})
         Log.debug("Creating #{type}", 1) unless core.db.types_of(:body_part).include?(type)
@@ -68,7 +68,8 @@ class BushidoObject
     end
 
     def monicker
-        @name || @type
+        # FIXME - Format the type (:corpse_eater => "Corpse Eater")
+        @name || @type.to_s
     end
 
     def is_a?(type)
@@ -83,6 +84,17 @@ class BushidoObject
             current.reject! { |t| t == :root }
         end
         return false
+    end
+
+    def type_ancestry
+        types   = []
+        current = [@type]
+        until current.empty?
+            types.concat(current)
+            current = current.collect { |t| @core.db.raw_info_for(t)[:is_a] }.flatten.uniq
+            current.reject! { |t| t == :root }
+        end
+        types
     end
 
     def method_missing(method_name, *args, &block)
@@ -109,6 +121,10 @@ class BushidoObject
 
     def class_info(key)
         @core.db.info_for(@type, key)
+    end
+
+    def class_properties
+        @core.db.info_for(@type)
     end
 
     def inspect

@@ -1,10 +1,15 @@
+# Note the the coder: Be *very* careful when dealing with hashes and arrays
+# In particular, if a BushidoObject sneaks through in such a fashion, it will rain
+#  destruction down on you as the message packers / unpackers attempt to infinitely 
+#  pack and unpack the core contained within
+
 class Descriptor
     def self.describe(object, observer)
         case object
         when BushidoObject; BushidoObjectDescriptor.describe(object, observer)
         when Room;          RoomDescriptor.describe(object, observer)
         when Array;         object.compact.collect { |o| Descriptor.describe(o, observer) }
-        when Symbol,String; object
+        when Symbol,String,Fixnum,Float,TrueClass,FalseClass,NilClass; object
         when Hash
             h = {}
             object.each do |k,v|
@@ -23,9 +28,20 @@ class Descriptor
                 :type => :object
             }
 
-            d[:name]     = object.name if object.is_a?(:named)
-            d[:monicker] = (d[:name] || d[:type])
+            d[:name]             = object.name if object.is_a?(:named)
+            d[:monicker]         = (d[:name] || d[:type])
+
+            # Collect parent type information
+            d[:is_a]             = object.type_ancestry
+
+            # Collect property information
+            d[:properties]       = Descriptor.describe(object.properties, observer)
+            # Undecided as to whether these are useful to have - lots of duplication
+            #d[:class_properties] = Descriptor.describe(object.class_properties, observer)
+            
             # FIXME - Add more things
+
+            d
         end
     end
 
