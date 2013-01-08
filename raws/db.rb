@@ -97,9 +97,8 @@ class ObjectDB
     end
 
     def find_subtypes(parent_types, criteria={}, instantiable_only=false)
-        Log.debug(["Finding #{parent_types.inspect} that meet criteria", criteria])
+        Log.debug(["Finding #{parent_types.inspect} that meet criteria", criteria], 9)
         check = criteria.reject { |k,v| k == :inclusive }
-        Log.debug("find_subtypes")
         types_of(parent_types, instantiable_only).select do |subtype|
             Log.debug("Checking #{subtype} for adherence to criteria", 9)
             keep = true

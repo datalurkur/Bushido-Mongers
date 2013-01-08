@@ -215,6 +215,11 @@ module Words
         class NounPhrase < ParseTree::PTInternalNode
             include Listable
             def initialize(nouns)
+                # Descriptor composition
+                if Hash === nouns
+                    nouns = nouns[:monicker]
+                end
+
                 nouns = Array(nouns)
 
                 if nouns.all? { |n| n.is_a?(ParseTree::PTNode) }
@@ -346,6 +351,7 @@ module Words
             end
 
             def self.proper?(noun)
+                # TODO - if the descriptor has a :name, it's probably a proper noun.
                 noun = gen_noun_text(noun)
                 if noun.is_a?(Noun)
                     noun.children.last.to_s.capitalized?

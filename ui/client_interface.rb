@@ -114,7 +114,6 @@ module VerboseInterface
                         return "I don't know how to describe a #{target[:type].inspect}, bother zphobic to fix this"
                     end
                 when :move
-                    Log.debug(message)
                     return Words.gen_sentence(message.properties).to_s
                 else
                     return "I don't know how to express the results of a(n) #{message.properties[:command]}, pester zphobic to work on this"
