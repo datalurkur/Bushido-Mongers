@@ -5,10 +5,11 @@ Destruction
 Fear
 Focus
 Love
-Meditation
 Peace
 Peril
 Pondering
 Senselessness
 Serenity
 Death
+Evil
+Good

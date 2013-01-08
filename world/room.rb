@@ -19,10 +19,9 @@ class Room < ZoneLeaf
     attr_reader :objects
 
     def initialize(name, params={})
-        super(name)
-
         @params  = params
         @objects = []
+        super(name)
     end
 
     def add_object(object)
@@ -63,6 +62,7 @@ class Area < ZoneContainer
     include ZoneWithKeywords
 
     def initialize(name, size, depth, params={})
+        Log.debug("Creating #{name} room with #{params.inspect}")
         @params = params
         super(name, size, depth)
     end

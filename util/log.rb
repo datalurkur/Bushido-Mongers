@@ -1,7 +1,7 @@
 require 'thread'
 require 'util/formatting'
 
-# Threadsafe logging that logs the name of the thread, the file and line number, log level, and log message
+# Threadsafe logging that logs the name of the thread, the file and line number, log level (less than or equal to that set in log.cfg), and log message
 # Requires setup
 # Functions as a singleton
 class Log

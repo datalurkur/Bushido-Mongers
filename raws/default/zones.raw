@@ -69,6 +69,7 @@ zone,monster_spawner boat {
     keywords wet;
 }
 
+zone pier {}
 zone jungle {}
 zone forest {}
 zone orchard {}
