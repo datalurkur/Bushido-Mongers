@@ -45,7 +45,7 @@ Log.debug(Words.db.get_related_words(:attack).inspect)
 
 Log.debug(Words.gen_area_name({:type => :mountain, :keywords => [:beautiful]}).to_s)
 Log.debug(Words.gen_area_name({:type => :sewer,    :keywords => [:dank]}).to_s)
-Log.debug(Words.gen_room_description({:type => :mountain, :keywords => [:beautiful], :objects => ["elderly beaver", "Frank the Ninja Bunny"]}).to_s)
+Log.debug(Words.gen_room_description(:type => :mountain, :keywords => [:beautiful], :objects => ["elderly beaver", "Frank the Ninja Bunny"], :exits => [:east, :north]).to_s)
 
 Log.debug(Words.gen_sentence(:agent=>"Test Character", :target=>:west, :command=>:move).to_s)
 Log.debug(Words.gen_sentence(:agent => :John, :action => :see, :target => :Mary).to_s)

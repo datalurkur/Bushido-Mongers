@@ -475,7 +475,9 @@ module Words
             @sentences << Words.gen_sentence(args.merge(:target => args[:objects]))
         end
 
-        args[:exits]
+        if args[:exits] && !args[:exits].empty?
+            @sentences << Words.gen_sentence(args.merge(:target => Sentence::Noun.new("exits to #{Sentence::NounPhrase.new(args[:exits])}")))
+        end
 
         @sentences.join(" ")
     end
