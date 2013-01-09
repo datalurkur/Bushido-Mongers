@@ -28,7 +28,7 @@ class Descriptor
                 :type => object.type
             }
 
-            d[:name]             = object.name if object.is_type?(:karmic)
+            d[:name]             = object.name if object.has_property?(:name)
             d[:monicker]         = (d[:name] || d[:type])
 
             # Collect parent type information
