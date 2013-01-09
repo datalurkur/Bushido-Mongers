@@ -6,6 +6,7 @@ abstract root zone {
     class sym sideness;
 
     has_many sym keywords;
+/*    needs keywords; */
 
     depth_range 0;
     sideness outside;
@@ -13,7 +14,6 @@ abstract root zone {
     at_creation {
         # TODO - Insert some of the optional_keywords here.
         keywords = self.keywords + (params[:inherited_keywords] || [])
-        Log.debug(keywords)
         {
             :keywords => keywords
         }

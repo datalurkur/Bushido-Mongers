@@ -84,3 +84,13 @@ begin
     zone2 = Zone.create($core, zone_params[:zone], 2)
     Log.debug(zone2)
 end
+
+# item composition tests
+begin
+    bp = db.create($core, :leather_backpack, {}, {})
+    Log.debug(bp)
+    carrot = db.create($core, :carrot, {}, {:size=>:medium})
+    Log.debug(carrot)
+    bp.add_object(carrot)
+    Log.debug(bp)
+end

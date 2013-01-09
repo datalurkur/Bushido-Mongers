@@ -1,4 +1,9 @@
-composition backpack {
+abstract composition backpack {
     is_container true;
     preserve_internal true;
+    size medium;
+}
+
+backpack leather_backpack {
+    incidental leather_scrap;
 }
