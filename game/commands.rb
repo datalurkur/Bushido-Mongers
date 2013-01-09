@@ -105,7 +105,7 @@ module Commands
                 [:position]
             )
 
-            Log.debug("#{params[:agent].name} attacks #{params[:target].name}")
+            Log.debug("#{params[:agent].monicker} attacks #{params[:target].monicker}")
             Message.dispatch(core, :unit_attacks, {
                 :attacker      => params[:agent],
                 :defender      => params[:target],

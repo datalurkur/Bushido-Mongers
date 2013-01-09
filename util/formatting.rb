@@ -1,5 +1,5 @@
 class Symbol
-    def to_title
+    def title
         self.to_s.gsub(/_/, ' ').gsub(/(^| )(.)/) { "#{$1}#{$2.upcase}" }
     end
 end

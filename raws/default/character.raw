@@ -1,6 +1,8 @@
 karmic,aligned,corporeal,mover character {
     uses character;
 
+    needs name;
+
     /* TODO - Make this a parameter so characters can have other body types */
     body_type humanoid_body;
     size medium;

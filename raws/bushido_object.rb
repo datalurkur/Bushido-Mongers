@@ -68,8 +68,7 @@ class BushidoObject
     end
 
     def monicker
-        # FIXME - Format the type (:corpse_eater => "Corpse Eater")
-        @name || @type.to_s
+        @properties[:name] || @type.title
     end
 
     def is_type?(type)

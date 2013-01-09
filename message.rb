@@ -56,10 +56,10 @@ class Message
 
         def dispatch(core, type, args={})
             m = Message.new(type, args)
-            l = get_listeners_for(core, type)
-            Log.debug("Message falling upon deaf ears") if l.empty?
-            l.each do |listener|
-                listener.process_message(m)
+            sent_to = []
+            while (next_listener = (get_listeners_for(core, type) - sent_to).first)
+                next_listener.process_message(m)
+                sent_to << next_listener
             end
         end
 
