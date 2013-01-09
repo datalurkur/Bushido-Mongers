@@ -23,11 +23,9 @@ class GameCore
         @words_db = WordParser.load
 
         setup_world(args.merge(:core => self))
-        Message.register_listener(self, :core, self)
     end
 
     def teardown
-        Message.unregister_listener(self, :core, self)
         teardown_world
         @db            = nil
         @words_db      = nil
@@ -98,10 +96,10 @@ class GameCore
 
         return [character, failures]
     end
-    def create_character(username, character_details)
+    def create_character(username, details)
         begin
-            context = {:position => @world.random_starting_location}
-            character = @db.create(self, :character, context, character_details)
+            position  = @world.random_starting_location
+            character = @db.create(self, :character, details.merge(:position => position))
 
             characters[username] = character
             Log.info("Character #{character.name} created for #{username}")
@@ -142,19 +140,5 @@ class GameCore
             Character.save(username, character)
         end
         characters.delete(username)
-    end
-
-    # MESSAGE HANDLING
-    # Handle callbacks from within objects that require the attention of the game core
-    # Mostly, this is for destruction and creation
-    def process_message(message)
-        case message.type
-        when :object_destroyed
-            Log.debug("#{message.target.monicker} destroyed!")
-            message.target.destroy(message.params)
-
-            # Remove this object from wherever it resides
-            message.position.remove_object(message.target)
-        end
     end
 end

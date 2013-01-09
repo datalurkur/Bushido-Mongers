@@ -5,7 +5,7 @@ require 'game/commands'
 
 module NpcBehavior
     class << self
-        def at_creation(instance, context, params)
+        def at_creation(instance, params)
             instance.instance_exec {
                 set_behavior(class_info(:behavior) || :random_attack_and_move)
                 Message.register_listener(@core, :core, self)
@@ -21,7 +21,7 @@ module NpcBehavior
             return false
         end
 
-        def at_destruction(instance, context)
+        def at_destruction(instance)
             instance.instance_exec {
                 Message.unregister_listener(@core, :core, self)
             }

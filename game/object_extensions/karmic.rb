@@ -1,6 +1,6 @@
 module Karmic
     class << self
-        def at_creation(instance, context, params)
+        def at_creation(instance, params)
             instance.set_property(:name, params[:name])
         end
 
@@ -17,7 +17,7 @@ module Karmic
             end
         end
 
-        def at_destruction(instance, context)
+        def at_destruction(instance)
             # FIXME - Create a notoriety table
             #if instance.notoriety >= :well_known
                 Log.info("The great #{instance.monicker} has been slain!")

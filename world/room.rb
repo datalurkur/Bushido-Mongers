@@ -28,12 +28,19 @@ class Room < ZoneLeaf
         super(name)
     end
 
-    def add_object(object)
+    def insert_object(object)
+        Log.debug("Inserting #{object.monicker} into #{@name}", 6)
         @objects << object
     end
-
+    def add_object(object)
+        Log.debug("Adding #{object.monicker} into #{@name}", 6)
+        @objects << object
+    end
     def remove_object(object)
-        Log.warning("Object not found in #{@name}") unless @objects.include?(object)
+        unless @objects.include?(object)
+            Log.error("#{object.monicker} not found in #{@name}") 
+        end
+        Log.debug("Removing #{object.monicker} from #{@name}", 6)
         @objects.delete(object)
     end
 

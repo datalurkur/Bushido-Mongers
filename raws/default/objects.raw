@@ -40,7 +40,7 @@ abstract composition constructed {
     at_creation {
         # Remove component items from the world
         params[:components].each do |component|
-            context[:position].remove_object(component)
+            component.position.remove_object(component)
         end
 
         # Created object quality depends on the quality of its components as well

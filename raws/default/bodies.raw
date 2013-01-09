@@ -17,10 +17,8 @@ abstract composition body_part {
         }
     }
 }
-abstract body_part body {
-    is_container true;
-}
 
+abstract body_part body {}
 abstract body biped {}
 abstract body quadriped {}
 abstract body octiped {}

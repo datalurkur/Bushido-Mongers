@@ -91,6 +91,6 @@ begin
     Log.debug(bp)
     carrot = db.create($core, :carrot, {}, {:size=>:medium})
     Log.debug(carrot)
-    bp.add_object(carrot)
+    bp.insert_object(carrot)
     Log.debug(bp)
 end

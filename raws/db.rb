@@ -104,10 +104,10 @@ class ObjectDB
         types_of(type).rand
     end
 
-    def create(core, type, context={}, params={})
+    def create(core, type, params={})
         raise "#{type.inspect} not defined as db type" unless @db[type]
         raise "#{type.inspect} is not instantiable" if @db[type][:abstract]
-        BushidoObject.new(core, type, context, params)
+        BushidoObject.new(core, type, params)
     end
 
     def get_binding

@@ -1,9 +1,11 @@
 module Position
     class << self
-        def at_creation(instance, context, params)
-            if context[:position]
-                instance.set_position(context[:position])
-            end
+        def at_creation(instance, params)
+            instance.set_position(params[:position]) unless params[:position].nil?
+        end
+
+        def at_destruction(instance)
+            instance.position.remove_object(instance) unless instance.position.nil?
         end
     end
 
@@ -26,7 +28,7 @@ module Position
     end
 
     def move(direction)
-        raise Exception, "Position uninitialized; is #{self.name} positionable?" if @position.nil?
+        raise Exception, "Position uninitialized for #{monicker}" if @position.nil?
 
         # This method raises an exception if the direction is invalid, so no need to check it
         new_position = @position.connected_leaf(direction)

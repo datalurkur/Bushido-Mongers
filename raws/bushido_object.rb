@@ -1,7 +1,7 @@
 class BushidoObject
     attr_reader :type, :properties
 
-    def initialize(core, type, context, params={})
+    def initialize(core, type, params={})
         Log.debug("Creating #{type}", 6) unless core.db.types_of(:body_part).include?(type)
         @core = core
         @type = type
@@ -27,7 +27,7 @@ class BushidoObject
         end
 
         @extensions.each do |mod|
-            mod.at_creation(self, context, params) if mod.respond_to?(:at_creation)
+            mod.at_creation(self, params) if mod.respond_to?(:at_creation)
         end
 
         type_info[:at_creation].each do |creation_proc|
@@ -57,13 +57,13 @@ class BushidoObject
         self
     end
 
-    def destroy(context)
+    def destroy
         @core.db.raw_info_for(@type)[:at_destruction].each do |destruction_proc|
             eval(destruction_proc, nil, __FILE__, __LINE__)
         end
 
         @extensions.each do |mod|
-            mod.at_destruction(self, context) if mod.respond_to?(:at_destruction)
+            mod.at_destruction(self) if mod.respond_to?(:at_destruction)
         end
     end
 

@@ -76,10 +76,10 @@ module Commands
             elsif params[:target].is_type?(:consumable)
                 # Do normal consumption
                 Log.info("#{agent.monicker} eats #{params[:target].monicker} like a normal person.")
-                agent.position.remove_object(params[:target])
             else
                 raise "#{agent.monicker} doesn't know how to eat a #{params[:target].type}"
             end
+            params[:target].destroy
         end
     end
 
