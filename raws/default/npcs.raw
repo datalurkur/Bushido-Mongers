@@ -1,5 +1,5 @@
 /* Must be of type npc to spawn */
-abstract karmic,aligned,mover npc {
+abstract karmic,aligned,position npc {
     has optional sym behavior;
 
     uses npc_behavior;

@@ -1,4 +1,4 @@
-karmic,aligned,corporeal,mover character {
+karmic,aligned,corporeal,position character {
     uses character;
 
     needs name;

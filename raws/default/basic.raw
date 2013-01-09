@@ -28,11 +28,6 @@ abstract root karmic {
     uses karmic;
 }
 
-abstract root mover {
-    uses position;
-    uses move;
-}
-
-abstract root placeable {
+abstract root position {
     uses position;
 }
