@@ -220,7 +220,7 @@ class Lobby
                 event_properties = message.params.merge(:event_type => :object_destroyed)
                 send_to_user(username, Message.new(:game_event, {:description => event_properties}))
 
-                if message.object == character
+                if message.target == character
                     Log.info("Character #{character.name} dies!")
                     @game_core.remove_character(username, true)
                     broadcast(Message.new(:user_dies, {:result => username}))
