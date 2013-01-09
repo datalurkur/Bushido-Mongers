@@ -38,7 +38,7 @@ class Descriptor
             d[:properties]       = Descriptor.describe(object.properties, observer)
             # Undecided as to whether these are useful to have - lots of duplication
             #d[:class_properties] = Descriptor.describe(object.class_properties, observer)
-            
+
             # FIXME - Add more things
 
             d
@@ -51,7 +51,7 @@ class Descriptor
                 :type      => :room,
                 :name      => room.name,
                 :keywords  => room.keywords,
-                :objects   => room.objects.collect(&:monicker),
+                :objects   => room.objects.collect(&:monicker) - [observer.monicker],
                 :exits     => room.connected_directions,
             }
         end
