@@ -72,17 +72,7 @@ class BushidoObject
     end
 
     def is_type?(type)
-        (return true) if (@type == :root)
-        current = [@type]
-        until current.empty?
-            if current.include?(type)
-                return true
-            else
-                current = current.collect { |t| @core.db.raw_info_for(t)[:is_a] }.flatten.uniq
-            end
-            current.reject! { |t| t == :root }
-        end
-        return false
+        @core.db.is_type?(@type, type)
     end
 
     def type_ancestry
@@ -90,7 +80,7 @@ class BushidoObject
         current = [@type]
         until current.empty?
             types.concat(current)
-            current = current.collect { |t| @core.db.raw_info_for(t)[:is_a] }.flatten.uniq
+            current = current.collect { |t| @core.db.raw_info_for(t)[:is_type] }.flatten.uniq
             current.reject! { |t| t == :root }
         end
         types

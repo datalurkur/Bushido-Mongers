@@ -1,10 +1,10 @@
 abstract root command {
-    has optional sym target;
-    has_many optional sym components;
-    has optional sym tool;
-    has optional sym location;
+    class optional sym target;
+    class_many optional sym components;
+    class optional sym tool;
+    class optional sym location;
 
-    has sym invocation;
+    class sym invocation;
 }
 
 command attack {

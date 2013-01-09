@@ -182,7 +182,7 @@ module ObjectRawParser
                         end
                         typed_objects_hash[type.to_sym] = {
                             :abstract => abstract,
-                            :is_a     => parent.split(/,/).collect { |p| p.to_sym },
+                            :is_type  => parent.split(/,/).collect { |p| p.to_sym },
                             :data     => data,
                         }
                     end
@@ -205,7 +205,7 @@ module ObjectRawParser
             object_metadata = metadata[next_object]
 
             # Ensure parents have already been parsed all the way up to the root object
-            object_metadata[:is_a].each do |parent|
+            object_metadata[:is_type].each do |parent|
                 unless object_database.has_key?(parent) || parent == :root
                     unparsed_objects.delete(parent)
                     parse_object(parent, unparsed_objects, metadata, object_database)
@@ -215,7 +215,7 @@ module ObjectRawParser
             # Begin accumulating object data for the database
             object_data = {
                 :abstract       => object_metadata[:abstract],
-                :is_a           => object_metadata[:is_a].dup,
+                :is_type        => object_metadata[:is_type].dup,
                 :uses           => [],
                 :has            => {},
                 :needs          => [],
@@ -232,7 +232,7 @@ module ObjectRawParser
             # Pull in information from the parent(s)
             # Since this happens for every object (including abstract objects) we only need to do it for one level of parents
             # Do this backwards to respect parent ordering (most significant first)
-            object_data[:is_a].reverse.each do |parent|
+            object_data[:is_type].reverse.each do |parent|
                 #Log.debug("Merging properties of #{parent} into #{next_object}", 8)
                 unless parent == :root
                     parent_object = object_database[parent]

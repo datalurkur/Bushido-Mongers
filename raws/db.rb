@@ -82,6 +82,24 @@ class ObjectDB
         raw_info_for(type)[:abstract]
     end
 
+    def is_type?(type, parent_type)
+        Log.debug("Is #{type.inspect} a #{parent_type.inspect}? (from #{caller[0]})", 8)
+        (return true)  if (parent_type == :root)
+        (return false) if (type == :root)
+        current = [type]
+        until current.empty?
+            if current.include?(parent_type)
+                Log.debug("Yes!", 8)
+                return true
+            else
+                current = current.collect { |t| raw_info_for(t)[:is_type] }.flatten.uniq
+            end
+            current.reject! { |t| t == :root }
+        end
+        Log.debug("No!", 8)
+        return false
+    end
+
     def random(type)
         types_of(type).rand
     end
@@ -159,7 +177,7 @@ class ObjectDB
                 raise "DB doesn't know how to merge attributes of type #{v.class}"
             end
         end
-        new_object[:is_a].each do |parent_type|
+        new_object[:is_type].each do |parent_type|
             @db[parent_type][:subtypes] << new_type
         end
         @db[new_type] = new_object
