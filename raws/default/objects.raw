@@ -4,6 +4,8 @@ abstract object item {
     /* These values are filled out automatically for compositional objects */
     weight 0;
     value 0;
+
+    uses position;
 }
 
 abstract item composition {
@@ -23,6 +25,8 @@ abstract item composition {
     /* Determines whether objects can be placed inside this item */
     class bool is_container;
     is_container false;
+
+    /* TODO - store particular types or number of items only */
 
     uses composition;
 }

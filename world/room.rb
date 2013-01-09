@@ -11,6 +11,10 @@ module ZoneWithKeywords
     def keywords
         @params[:zone].keywords
     end
+
+    def monicker
+        @params[:zone].monicker
+    end
 end
 
 class Room < ZoneLeaf
@@ -41,18 +45,28 @@ class Room < ZoneLeaf
         @parent.add_starting_location(self)# if Chance.take(:coin_toss)
 
         populate_npcs(core)
+        populate_items(core)
     end
 
     def populate_npcs(core)
-        can_spawn = core.db.info_for(self.zone.type, :can_spawn)
+        npc_types = core.db.info_for(self.zone.type, :spawn_npcs)
 
-        Log.debug("No acceptable NPC types found for #{self.zone.type}!") if can_spawn.empty?
+        Log.debug("No acceptable NPC types found for #{self.zone.type}!") if npc_types.empty?
 
-        # Actually spawn the NPCs.
-        can_spawn.each do |type|
+        # Actually spawn the NPCs; just one of each type for now.
+        npc_types.each do |type|
             if Chance.take(core.db.info_for(type, :spawn_chance))
-                npc = core.db.create(core, type, {:position => self })
+                core.db.create(core, type, {:position => self })
             end
+        end
+    end
+
+    def populate_items(core)
+        item_types = core.db.info_for(self.zone.type, :spawn_items)
+
+        # Actually spawn the items.
+        item_types.each do |type|
+            core.db.create(core, type, {:position => self })
         end
     end
 end

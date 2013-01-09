@@ -4,7 +4,7 @@ abstract karmic,aligned,mover npc {
 
     uses npc_behavior;
 
-    class_many sym can_spawn_in;
+    class_many sym spawns_in;
 
     /* Maybe use eventually? */
     /* class_many sym never_spawn_in; */
@@ -24,35 +24,35 @@ abstract npc animal {
 animal,corporeal rat {
     size tiny;
     body_type rodent_body;
-    can_spawn_in sewer dock;
+    spawns_in sewer dock;
     spawn_chance likely;
 }
 
 animal,corporeal mouse {
     size tiny;
     body_type rodent_body;
-    can_spawn_in meadow;
+    spawns_in meadow;
     spawn_chance likely;
 }
 
 monster,corporeal giant_spider {
     size medium;
     body_type arachnoid_body;
-    can_spawn_in sewer;
+    spawns_in sewer;
     spawn_chance likely;
 }
 
 monster,corporeal oni {
     size medium;
     body_type humanoid_body;
-    can_spawn_in mountain;
+    spawns_in mountain;
     spawn_chance unusual;
 }
 
 monster,corporeal jikininki {
     size small;
     body_type humanoid_body;
-    can_spawn_in mountain sewer meadow dock;
+    spawns_in mountain sewer meadow dock;
 
     behavior roam_and_consume;
 

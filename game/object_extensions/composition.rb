@@ -1,6 +1,10 @@
 module Composition
     class << self
         def at_creation(instance, context, params)
+            # Need to delete position here, otherwise incidentals and externals
+            # will attach themselves internally.
+            context = context.dup
+            context.delete(:position)
             instance.instance_exec do
                 [:internal, :incidental, :external].each do |comp_type|
                     components = @properties[comp_type].collect do |component|
@@ -9,6 +13,7 @@ module Composition
                     @properties[comp_type] = components
                     @properties[:weight] += @properties[comp_type].inject(0) { |s,p| s + p.weight }
                 end
+
                 @properties[:value] += @properties[:incidental].inject(0) { |s,p| s + p.value }
             end
         end

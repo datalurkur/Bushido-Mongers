@@ -1,14 +1,24 @@
 abstract root zone {
+    /* How deep in the world hierarchy the zone can be created. */
     class_many int depth_range;
-    class_many optional sym optional_keywords;
+    depth_range 0;
+
+    /* Acceptable sub-zones */
     class_many optional sym child_zones;
-    class_many optional sym can_spawn;
-    class sym sideness;
 
     has_many sym keywords;
 /*    needs keywords; */
 
-    depth_range 0;
+    class_many optional sym optional_keywords;
+
+    /* Can spawn NPCs */
+    class_many optional sym spawn_npcs;
+
+    /* Can spawn items */
+    class_many optional sym spawn_items;
+    spawn_items rock;
+
+    class sym sideness;
     sideness outside;
 
     at_creation {
@@ -24,13 +34,13 @@ zone haven {
     depth_range 1 2 3;
     keywords peaceful;
     child_zones tavern inn;
-    can_spawn peacekeeper merchant;
+    spawn_npcs peacekeeper merchant;
 }
 
 zone meadow {
     depth_range 0 1 2 3;
     keywords grassy;
-    can_spawn monster;
+    spawn_npcs monster;
 }
 
 abstract zone inside_zone {
@@ -38,7 +48,7 @@ abstract zone inside_zone {
 }
 
 abstract zone monster_spawner {
-    can_spawn monster;
+    spawn_npcs monster;
 }
 
 inside_zone,monster_spawner castle {
@@ -92,18 +102,18 @@ zone temple_that_serves_as_the_final_bastion_of_light_in_an_otherwise_evil_fores
 
 post_process {
     self.find_subtypes(:zone, {}, true).each do |zone|
-        unless info_for(zone, :can_spawn).empty?
-            list = info_for(zone, :can_spawn).dup
-            info_for(zone, :can_spawn).clear
-            info_for(zone, :can_spawn) << list.inject([]) { |arr, can_spawn| arr + types_of(can_spawn) }
-            info_for(zone, :can_spawn).flatten!
+        unless info_for(zone, :spawn_npcs).empty?
+            list = info_for(zone, :spawn_npcs).dup
+            info_for(zone, :spawn_npcs).clear
+            info_for(zone, :spawn_npcs) << list.inject([]) { |arr, spawn_npcs| arr + types_of(spawn_npcs) }
+            info_for(zone, :spawn_npcs).flatten!
         end
     end
     self.find_subtypes(:npc, {}, true).each do |npc|
-        if can_spawn_in = info_for(npc, :can_spawn_in)
-            can_spawn_in.each do |zone|
-                info_for(zone, :can_spawn) << npc
-                info_for(zone, :can_spawn).uniq!
+        if spawns_in = info_for(npc, :spawns_in)
+            spawns_in.each do |zone|
+                info_for(zone, :spawn_npcs) << npc
+                info_for(zone, :spawn_npcs).uniq!
             end
         end
     end

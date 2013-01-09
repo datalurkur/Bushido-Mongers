@@ -9,6 +9,7 @@ class FakeRoom
     def name; "Fake Room"; end
     def add_object(o); end
     def remove_object(o); end
+    def monicker() self.name; end
 end
 
 unless Object.const_defined?("Message")

@@ -1,0 +1,4 @@
+item rock {
+    weight 5;
+    size small;
+}
