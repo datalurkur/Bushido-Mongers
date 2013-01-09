@@ -17,6 +17,9 @@ command attack {
 command inspect {
     invocation inspect;
 }
+command look {
+    invocation inspect;
+}
 
 command move {
     invocation move;
