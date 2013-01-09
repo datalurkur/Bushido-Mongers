@@ -1,5 +1,9 @@
 abstract object item {
     has int value;
+
+    /* These values are filled out automatically for compositional objects */
+    weight 0;
+    value 0;
 }
 
 abstract item composition {
@@ -11,13 +15,13 @@ abstract item composition {
     class bool preserve_internal;
     class bool preserve_incidental;
     class bool preserve_external;
-    class bool is_container;
 
     preserve_internal   false;
     preserve_incidental false;
     preserve_external   true;
 
     /* Determines whether objects can be placed inside this item */
+    class bool is_container;
     is_container false;
 
     uses composition;

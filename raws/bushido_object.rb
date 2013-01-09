@@ -2,7 +2,7 @@ class BushidoObject
     attr_reader :type, :properties
 
     def initialize(core, type, context, params={})
-        Log.debug("Creating #{type}", 1) unless core.db.types_of(:body_part).include?(type)
+        Log.debug("Creating #{type}", 6) unless core.db.types_of(:body_part).include?(type)
         @core = core
         @type = type
 

@@ -2,6 +2,7 @@ abstract item consumable {
 }
 
 consumable carrot {
+    size tiny;
     weight 1;
 }
 

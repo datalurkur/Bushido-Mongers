@@ -9,6 +9,7 @@ module Composition
                     @properties[comp_type] = components
                     @properties[:weight] += @properties[comp_type].inject(0) { |s,p| s + p.weight }
                 end
+                @properties[:value] += @properties[:incidental].inject(0) { |s,p| s + p.value }
             end
         end
 
@@ -29,12 +30,15 @@ module Composition
     end
 
     def add_object(object)
-        raise "#{monicker} is not a container" unless @properties[:is_container]
+        # TODO - this should return to the client the message that this action is not possible
+        raise "#{monicker} is not a container" unless @core.db.info_for(self.type, :is_container)
+        # TODO - check for relative size / max carry number / other restrictions
         Log.debug("Inserting #{object.monicker} into #{monicker}")
         @properties[:internal] << object
     end
 
     def attach_object(object)
+        # TODO - check for relative size / max carry number / other restrictions
         Log.debug("Attaching #{object.monicker} to #{monicker}")
         @properties[:external] << object
     end
