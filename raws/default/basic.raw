@@ -16,7 +16,7 @@ abstract root aligned {
 }
 
 abstract root karmic {
-    has string name;
+    has optional string name;
 
     has_many optional complex kills;
     has_many optional complex deeds;

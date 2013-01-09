@@ -67,7 +67,7 @@ module SlimInterface
 
     class << self
         def text_field(field)
-            field.to_title
+            field.title
         end
 
         def list(items, field=nil, style=:number)
@@ -95,7 +95,7 @@ module VerboseInterface
 
     class << self
         def text_field(field)
-            field.to_title
+            field.title
         end
 
         def list(items, field=nil, style=:number)
