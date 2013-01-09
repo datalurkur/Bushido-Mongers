@@ -7,28 +7,57 @@ abstract root command {
     class sym invocation;
 }
 
+abstract root command_alias {
+    class sym aliases;
+    class optional sym derived_target;
+    class optional sym derived_location;
+    class optional sym derived_tool;
+}
+
 command attack {
     target corporeal;
     tool weapon;
 
     invocation attack;
 }
+command_alias strike {
+    aliases attack;
+}
+command_alias hit {
+    aliases attack;
+}
 
 command inspect {
     invocation inspect;
 }
-command look {
-    invocation inspect;
+command_alias look {
+    aliases inspect;
+    derived_target location;
+}
+command_alias search {
+    aliases inspect;
 }
 
 command move {
     invocation move;
+}
+command_alias go {
+    aliases move;
 }
 
 command consume {
     target consumable;
 
     invocation consume;
+}
+command_alias eat {
+    aliases consume;
+}
+command_alias quaff {
+    aliases consume;
+}
+command_alias drink {
+    aliases consume;
 }
 
 abstract command construct {

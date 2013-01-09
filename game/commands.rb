@@ -4,6 +4,23 @@ module Commands
             unless core.db.has_type?(command)
                 raise "I don't know how to #{command}"
             end
+            if core.db.is_type?(command, :command_alias)
+                alias_info = core.db.info_for(command)
+
+                # Translate any derived parameters
+                derived_params = {}
+                [:target, :location, :tool].each do |key|
+                    derived_key = "derived_#{key}".to_sym
+                    if alias_info[derived_key]
+                        derived_params[key] = params[alias_info[derived_key]]
+                    end
+                end
+                derived_params.reject! { |k,v| v.nil? }
+
+                # Set the new parameters and proper command
+                params.merge!(derived_params)
+                command = alias_info[:aliases]
+            end
 
             invocation = core.db.info_for(command, :invocation)
             mod        = invocation.to_caml.to_const(Commands)
@@ -12,7 +29,7 @@ module Commands
             mod.do(core, params)
 
             # Return the resolved parameters
-            params
+            params.merge(:command => command)
         end
 
         def filter_objects(agent, location, type=nil, name=nil)

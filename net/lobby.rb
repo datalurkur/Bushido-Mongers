@@ -243,7 +243,6 @@ class Lobby
                 character = @game_core.get_character(username)
 
                 results = Commands.do(@game_core, message.command, message.args.merge(:agent => character))
-                results.merge!(:command => message.command)
                 send_to_user(username, Message.new(:act_success, {:description => results}))
             rescue Exception => e
                 Log.debug(["Failed to perform command #{message.command}", e.message, e.backtrace])

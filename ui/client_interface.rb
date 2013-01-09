@@ -105,7 +105,7 @@ module VerboseInterface
         def properties(message)
             if message.field == :action_results
                 case message.properties[:command]
-                when :inspect, :look
+                when :inspect
                     target = message.properties[:target]
                     case target[:type]
                     when :room
