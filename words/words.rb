@@ -540,7 +540,7 @@ module Words
             related = self.db.get_related_words(verb)
             # Non-existent command; let the playing state handle it.
             if related.nil?
-                return {:command => command, :args => {}}
+                return {:command => verb, :args => {}}
             end
             matching_commands = commands & related
             case matching_commands.size
