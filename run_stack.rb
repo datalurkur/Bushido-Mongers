@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 
+require 'util/traps'
 require 'util/timer'
 #MeteredMethods.enable
 
@@ -17,12 +18,8 @@ $config = {
 Log.setup("Main", "stack")
 $client = StackClient.new($config)
 
-signals = ["TERM","INT"]
-signals.each do |signal|
-    Signal.trap(signal) {
-        Log.debug("Caught signal #{signal}")
-        $client.stop if $client
-    }
+trap_signals do
+    $client.stop if $client
 end
 
 $client.stack.set_state(:join_lobby)

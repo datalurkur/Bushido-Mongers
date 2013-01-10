@@ -1,5 +1,6 @@
 require 'thread'
 require 'util/formatting'
+require 'util/basic'
 
 # Threadsafe logging that logs the name of the thread, the file and line number, log level (less than or equal to that set in log.cfg), and log message
 # Requires setup

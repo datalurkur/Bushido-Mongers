@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 
+require 'util/traps'
 require 'net/automated_client'
 
 $config = {
@@ -14,12 +15,8 @@ $config = {
 Log.setup("Main", "client")
 $client = PairedAutoClient.new($config)
 
-signals = ["TERM","INT"]
-signals.each do |signal|
-    Signal.trap(signal) {
-        Log.debug("Caught signal #{signal}")
-        $client.stop if $client
-    }
+trap_signals do
+    $client.stop if $client
 end
 
 $client.push_pair({:type => :choose_from_list,  :field => :server_menu_choice, :choices => [:list_lobbies, :join_lobby, :create_lobby, :disconnect]},

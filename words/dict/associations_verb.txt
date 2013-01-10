@@ -1,4 +1,4 @@
-attack chop slice stab
-eat chomp gnaw bite
-drink quaff
-see look observe notice spot detect perceive
+attack chop slice stab strike hit
+consume eat chomp gnaw bite drink quaff
+inspect see look observe notice spot detect perceive search
+move go

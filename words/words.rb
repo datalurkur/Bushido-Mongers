@@ -530,7 +530,6 @@ module Words
         command = pieces.slice!(0)
         # Look for synonym command verbs.
         commands = self.db.get_keyword_words(:command, :verb)
-        Log.debug(commands)
         if !commands.include?(command)
             matching_commands = commands & self.db.get_related_words(command)
             case matching_commands.size

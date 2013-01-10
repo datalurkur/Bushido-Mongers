@@ -7,6 +7,9 @@ class PlayingState < State
 
     def from_server(message)
         case message.type
+        when :link
+            pass_to_client(message)
+            return
         when :user_joins, :user_leaves, :admin_change
             pass_to_client(message)
             return
@@ -33,10 +36,21 @@ class PlayingState < State
             if message.type == :raw_command
                 # Parse the command into an action
                 Log.debug("Parsing command #{message.command.inspect}", 6)
-                pieces = message.command.split(/\s+/).collect(&:to_sym)
-                act_args = Words.decompose_command(pieces)
 
-                @client.send_to_server(Message.new(:act, act_args))
+                if message.command.empty?
+                    Log.debug("No command data given", 4)
+                elsif message.command[0,1] == "/"
+                    if message.command.match(/link/)
+                        @client.send_to_server(Message.new(:get_link))
+                    else
+                        Log.debug("Unrecognized command #{message.command}", 4)
+                    end
+                else
+                    pieces = message.command.split(/\s+/).collect(&:to_sym)
+                    act_args = Words.decompose_command(pieces)
+
+                    @client.send_to_server(Message.new(:act, act_args))
+                end
             else
                 Log.debug(["Unhandled message #{message.type} encountered during client processing for #{self.class}", caller])
             end

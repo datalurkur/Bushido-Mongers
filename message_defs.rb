@@ -66,6 +66,8 @@ Message.define(:act_fail,      :game, [:reason], "Failed to perform action")
 Message.define(:act_success,   :game, [:description])
 Message.define(:game_event,    :game, [:description])
 Message.define(:user_dies,     :game, [:result], "User dies")
+Message.define(:get_link,      :game)
+Message.define(:link,          :game, [:result], "Received link from server")
 
 # Core Game Information
 # Messages passed between the game lobby / game objects / lobby

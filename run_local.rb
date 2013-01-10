@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 
+require 'util/traps'
 require 'util/timer'
 require 'net/game_server'
 require 'net/stack_client'
@@ -31,14 +32,10 @@ recreate_test_character("test_user", "default")
 $server = GameServer.new($server_config)
 $client = StackClient.new($client_config)
 
-signals = ["TERM","INT"]
-signals.each do |signal|
-    Signal.trap(signal) {
-        # TODO - Save the game here so that we don't lose progress
-        Log.debug("Caught signal #{signal}")
-        $server.stop if $server
-        $client.stop if $client
-    }
+trap_signals do
+    # TODO - Save the game here so that we don't lose progress
+    $server.stop if $server
+    $client.stop if $client
 end
 
 $server.start

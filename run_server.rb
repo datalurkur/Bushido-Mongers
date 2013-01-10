@@ -1,5 +1,7 @@
 #!/usr/bin/ruby
 
+require 'util/traps'
+
 # Uncomment to enable code coverage
 #require 'util/coverage'
 #CodeCoverage.setup
@@ -24,13 +26,9 @@ Log.setup("Main", "server")
 require 'game/character_test'
 recreate_test_character("test_user", "default")
 
-signals = ["TERM","INT"]
-signals.each do |signal|
-    Signal.trap(signal) {
-        # TODO - Save the game here so that we don't lose progress
-        Log.debug("Caught signal #{signal}")
-        $server.stop if $server
-    }
+trap_signals do
+    # TODO - Save the game here so that we don't lose progress
+    $server.stop if $server
 end
 
 $server = GameServer.new(config)

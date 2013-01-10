@@ -1,5 +1,6 @@
 #!/usr/bin/ruby
 
+require 'util/traps'
 require 'net/remote_client'
 
 $config = {
@@ -14,12 +15,8 @@ Log.setup("Main", "client")
 
 $client = RemoteClient.new($config)
 
-signals = ["TERM","INT"]
-signals.each do |signal|
-    Signal.trap(signal) {
-        Log.debug("Caught signal #{signal}")
-        $client.stop if $client
-    }
+trap_signals do
+    $client.stop if $client
 end
 
 $client.start
