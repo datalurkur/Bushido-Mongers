@@ -60,12 +60,14 @@ class WordDB
     # Get a list of related groups
     def get_related_groups(word_or_group)
         group = find_group_for(word_or_group)
+        return nil if group.nil?
         @associations[group]
     end
 
     # Get a list of related words with the same part of speech as the query word
     def get_related_words(word)
         group = find_group_for(word)
+        return nil if group.nil?
         pos = group.part_of_speech(word)
         @associations[group].select { |g| g.has?(pos) }.collect { |g| g[pos] }
     end
@@ -92,17 +94,17 @@ class WordDB
     end
 
     private
-    def find_group_for(word, fail_on_nil=true)
+    def find_group_for(word, verbose = true)
         case word
         when Symbol,String
             matching = @groups.select { |group| group.contains?(word.to_sym) }
             Log.debug("Warning - '#{word}' appears in more than one word group") if matching.size > 1
-            Log.debug("No reference to '#{word}' found!") if matching.size <= 0 && fail_on_nil
+            Log.debug("No reference to '#{word}' found!") if matching.size <= 0 && verbose
             matching.first
         when WordGroup, Hash
             matching = @groups.select { |group| group == word.to_sym }
             raise "Duplicate word groups found in #{self.class} for #{word.inspect}" unless matching.size < 2
-            Log.debug("No word group '#{word.inspect}' found!") if matching.size <= 0 && fail_on_nil
+            Log.debug("No word group '#{word.inspect}' found!") if matching.size <= 0 && verbose
             matching.first
         else
             raise "Can't find groups given type #{word.class}"

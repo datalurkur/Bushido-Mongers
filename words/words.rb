@@ -537,7 +537,12 @@ module Words
         if commands.include?(verb)
             command = verb
         else
-            matching_commands = commands & self.db.get_related_words(verb)
+            related = self.db.get_related_words(verb)
+            # Non-existent command; let the playing state handle it.
+            if related.nil?
+                return {:command => command, :args => {}}
+            end
+            matching_commands = commands & related
             case matching_commands.size
             when 0
                 raise "'#{verb}' is not a valid command!"
