@@ -2,8 +2,10 @@ require 'thread'
 
 # Miscellaneous shared code and utilities
 module SocketUtils
+    # TODO - Move these numbers into a config file
     STATIC_SOCKET_READ_SIZE = 5096
-    DEFAULT_LISTEN_PORT = 9999
+    DEFAULT_LISTEN_PORT     = 9999
+    HTTP_LISTEN_PORT        = 3000
 
     # For a given socket protected by a mutex, take a partial buffer and poll for new messages
     # If new messages are received (completely), unpack them from network format and recast them

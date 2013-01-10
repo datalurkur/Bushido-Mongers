@@ -7,10 +7,7 @@ class PlayingState < State
 
     def from_server(message)
         case message.type
-        when :map
-            f = File.open("map.png", "w")
-            f.write(message.map_data)
-            f.close
+        when :link
             pass_to_client(message)
             return
         when :user_joins, :user_leaves, :admin_change
@@ -44,8 +41,8 @@ class PlayingState < State
                 if message.command.empty?
                     Log.debug("No command data given", 4)
                 elsif message.command[0,1] == "/"
-                    if message.command.match(/map/)
-                        @client.send_to_server(Message.new(:get_map))
+                    if message.command.match(/link/)
+                        @client.send_to_server(Message.new(:get_link))
                     else
                         Log.debug("Unrecognized command #{message.command}", 4)
                     end

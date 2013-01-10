@@ -1,3 +1,5 @@
+require 'uri'
+
 class Symbol
     def title
         self.to_s.gsub(/_/, ' ').gsub(/(^| )(.)/) { "#{$1}#{$2.upcase}" }
@@ -25,6 +27,10 @@ class String
 
     def capitalized?
         !!(self.to_s[0].chr.match(/[A-Z]/))
+    end
+
+    def escape
+        URI.escape(self)
     end
 end
 

@@ -8,11 +8,23 @@ class GameServer < Server
     def initialize(config={})
         super(config)
 
-        @user_mutex  = Mutex.new
-        @user_info   = {}
+        @user_mutex    = Mutex.new
+        @user_info     = {}
 
-        @lobby_mutex = Mutex.new
-        @lobbies     = []
+        @lobby_mutex   = Mutex.new
+        @lobbies       = []
+
+        @web_server    = HTTPServer.new(HTTP_LISTEN_PORT)
+    end
+
+    def start
+        super()
+        @web_server.start
+    end
+
+    def stop
+        @web_server.stop
+        super()
     end
 
     def get_socket_for_user(username)
@@ -90,9 +102,9 @@ class GameServer < Server
                 if @lobbies.find { |lobby| lobby.name == message.lobby_name }
                     send_to_client(socket, Message.new(:create_fail, {:reason => :lobby_exists}))
                 else
-                    lobby = Lobby.new(message.lobby_name,password_hash,username) do |user,message|
+                    lobby = Lobby.new(message.lobby_name, password_hash, username, @web_server) do |user, message|
                         socket = get_socket_for_user(user)
-                        send_to_client(socket,message) unless socket.nil?
+                        send_to_client(socket, message) unless socket.nil?
                     end
                     @lobbies << lobby
                     @user_mutex.synchronize do

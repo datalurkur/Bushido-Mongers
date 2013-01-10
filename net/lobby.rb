@@ -1,12 +1,13 @@
 require 'game/game_core'
 require 'game/descriptors'
 require 'util/log'
+require 'net/http_server'
 
 # Lobbies group players together with a Game and facilitate communications between the game and the client sockets
 class Lobby
     attr_reader :name
 
-    def initialize(name,password_hash,creator,&block)
+    def initialize(name, password_hash, creator, web_server, &block)
         # Credentials
         @name          = name
         @password_hash = password_hash
@@ -28,6 +29,10 @@ class Lobby
             raise "Lobby has no means with which to send client data"
         end
         @send_callback = block
+
+        web_server.add_response(/\/#{@name.escape}\/([^\/]*)/i) do |args|
+            "Status page for #{args.first} (in lobby #{@name})"
+        end
     end
 
     def is_admin?(username)
@@ -248,10 +253,13 @@ class Lobby
                 Log.debug(["Failed to perform command #{message.command}", e.message, e.backtrace])
                 send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
             end
-        when :get_map
+        when :get_link
+            send_to_user(username, Message.new(:link, {:result => "/#{@name.escape}/#{username.escape}"}))
+=begin
             character = @game_core.get_character(username)
             map_data = @game_core.world.get_map({character.position => :red})
             send_to_user(username, Message.new(:map, {:map_data => map_data}))
+=end
         else
             Log.warning("Unhandled game message type #{message.type} received from client")
         end
