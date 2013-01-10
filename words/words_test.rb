@@ -7,11 +7,9 @@ Log.setup("Vocabulary Test", "wordtest")
 
 require 'words/words'
 
-require 'raws/db'
-require 'game/object_extensions'
-
-require 'game/game_core'
-
+#require 'raws/db'
+#require 'game/object_extensions'
+#require 'game/game_core'
 #core = GameCore.new
 #core.setup(:world_size => 1, :world_depth => 1)
 

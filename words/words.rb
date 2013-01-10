@@ -464,6 +464,7 @@ module Words
 
     # Required/expected arg values: keywords objects exits
     def self.gen_room_description(args = {})
+        Log.debug(args.inspect)
         @sentences = []
 
         args = args.merge(:action => :see)
@@ -501,5 +502,46 @@ module Words
 #        descriptor = db.get_keyword_words(:abstract, :noun).rand
 
         name.to_s.title
+    end
+
+    def self.decompose_command(pieces)
+        # TODO - Join any conjunctions together
+        #while (i = pieces.index(:and))
+        #    first_part = (i > 1)               ? pieces[0...(i-1)] : []
+        #    last_part  = (i < pieces.size - 2) ? pieces[(i+1)..-1] : []
+        #    first_part + [pieces[(i-1)..(i+1)]] + last_part
+        #end
+
+        # Find the verb
+        command = pieces.slice!(0)
+
+        # Find the tool
+        tool = if (tool_index = pieces.index(:with))
+            pieces.slice!(tool_index,2).last
+        end
+
+        # Find the location
+        location = if (location_index = pieces.index(:at))
+            pieces.slice!(location_index,2).last
+        end
+
+        # Find materials
+        materials = if (materials_index = pieces.index(:using))
+            pieces.slice!(materials_index,2).last
+        end
+
+        # Whatever is left over is the target
+        target = pieces.slice!(0)
+
+        if pieces.size > 0
+            Log.debug(["Ignoring potentially important syntactic pieces", pieces])
+        end
+
+        {:command => command, :args => {
+            :tool      => tool,
+            :location  => location,
+            :materials => materials,
+            :target    => target
+        }}
     end
 end

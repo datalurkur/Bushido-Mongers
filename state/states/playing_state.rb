@@ -35,45 +35,9 @@ class PlayingState < State
                 # FIXME - Hey zphobic!  Make this more grammatical!
                 Log.debug("Parsing command #{message.command.inspect}", 6)
                 pieces = message.command.split(/\s+/).collect(&:to_sym)
+                act_args = Words.decompose_command(pieces)
 
-                # Join any conjunctions together
-                while (i = pieces.index(:and))
-                    first_part = (i > 1)               ? pieces[0...(i-1)] : []
-                    last_part  = (i < pieces.size - 2) ? pieces[(i+1)..-1] : []
-                    first_part + [pieces[(i-1)..(i+1)]] + last_part
-                end
-                
-                # Find the verb
-                command = pieces.slice!(0)
-
-                # Find the tool
-                tool = if (tool_index = pieces.index(:with))
-                    pieces.slice!(tool_index,2).last
-                end
-
-                # Find the location
-                location = if (location_index = pieces.index(:at))
-                    pieces.slice!(location_index,2).last
-                end
-
-                # Find materials
-                materials = if (materials_index = pieces.index(:using))
-                    pieces.slice!(materials_index,2).last
-                end
-
-                # Whatever is left over is the target
-                target = pieces.slice!(0)
-
-                if pieces.size > 0
-                    Log.debug(["Ignoring potentially important syntactic pieces", pieces])
-                end
-
-                @client.send_to_server(Message.new(:act, {:command => command, :args => {
-                    :tool      => tool,
-                    :location  => location,
-                    :materials => materials,
-                    :target    => target
-                }}))
+                @client.send_to_server(Message.new(:act, act_args))
             else
                 Log.debug(["Unhandled message #{message.type} encountered during client processing for #{self.class}", caller])
             end
