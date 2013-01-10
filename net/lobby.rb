@@ -255,11 +255,6 @@ class Lobby
             end
         when :get_link
             send_to_user(username, Message.new(:link, {:result => "/#{@name.escape}/#{username.escape}"}))
-=begin
-            character = @game_core.get_character(username)
-            map_data = @game_core.world.get_map({character.position => :red})
-            send_to_user(username, Message.new(:map, {:map_data => map_data}))
-=end
         else
             Log.warning("Unhandled game message type #{message.type} received from client")
         end

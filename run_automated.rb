@@ -4,12 +4,12 @@ require 'util/traps'
 require 'net/automated_client'
 
 $config = {
-    :server_ip => "localhost",
-    :server_port => PairedAutoClient::DEFAULT_LISTEN_PORT,
-    :username => "zphobic",
-    :password => "d3rt3rl3rk3r",
-    :lobby_name => "test_lobby",
-    :lobby_password => "test",
+    :server_hostname => "localhost",
+    :server_port     => PairedAutoClient::DEFAULT_LISTEN_PORT,
+    :username        => "zphobic",
+    :password        => "d3rt3rl3rk3r",
+    :lobby_name      => "test_lobby",
+    :lobby_password  => "test",
 }
 
 Log.setup("Main", "client")
