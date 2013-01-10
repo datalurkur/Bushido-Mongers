@@ -8,7 +8,7 @@ class PlayingState < State
     def from_server(message)
         case message.type
         when :link
-            pass_to_client(message)
+            @client.send_to_client(Message.new(:properties, {:field => :server_link, :properties => {:host => @client.get(:server_hostname), :uri => message.uri}}))
             return
         when :user_joins, :user_leaves, :admin_change
             pass_to_client(message)

@@ -129,6 +129,8 @@ module VerboseInterface
                 else
                     return "I don't know how to express a game event of type #{message.event_type}"
                 end
+            elsif message.field == :server_link
+                return "Server Link: http://#{message.properties[:host]}#{message.properties[:uri]}"
             else
                 return message.properties.to_formatted_string("", true)
             end
