@@ -140,21 +140,22 @@ class DerpyPNG
         Zlib::Deflate.deflate(stream)
     end
 
-    def save(filename)
+    def get_png_data
         interlaced_data = interlace
         filtered_data = filter(interlaced_data)
         compressed_data = compress(filtered_data)
-
-        file_data = [
+        [
             DerpyPNG.png_start(),
             DerpyPNG.make_ihdr(width,height),
             DerpyPNG.make_plte(colors),
             DerpyPNG.make_idat(compressed_data),
             DerpyPNG.make_iend()
         ].join
+    end
 
+    def save(filename)
         f = File.open(filename, "w")
-        f.write(file_data)
+        f.write(get_png_data)
         f.close
     end
 end

@@ -7,6 +7,12 @@ class PlayingState < State
 
     def from_server(message)
         case message.type
+        when :map
+            f = File.open("map.png", "w")
+            f.write(message.map_data)
+            f.close
+            pass_to_client(message)
+            return
         when :user_joins, :user_leaves, :admin_change
             pass_to_client(message)
             return
@@ -34,46 +40,57 @@ class PlayingState < State
                 # Parse the command into an action
                 # FIXME - Hey zphobic!  Make this more grammatical!
                 Log.debug("Parsing command #{message.command.inspect}", 6)
-                pieces = message.command.split(/\s+/).collect(&:to_sym)
 
-                # Join any conjunctions together
-                while (i = pieces.index(:and))
-                    first_part = (i > 1)               ? pieces[0...(i-1)] : []
-                    last_part  = (i < pieces.size - 2) ? pieces[(i+1)..-1] : []
-                    first_part + [pieces[(i-1)..(i+1)]] + last_part
+                if message.command.empty?
+                    Log.debug("No command data given", 4)
+                elsif message.command[0,1] == "/"
+                    if message.command.match(/map/)
+                        @client.send_to_server(Message.new(:get_map))
+                    else
+                        Log.debug("Unrecognized command #{message.command}", 4)
+                    end
+                else
+                    pieces = message.command.split(/\s+/).collect(&:to_sym)
+
+                    # Join any conjunctions together
+                    while (i = pieces.index(:and))
+                        first_part = (i > 1)               ? pieces[0...(i-1)] : []
+                        last_part  = (i < pieces.size - 2) ? pieces[(i+1)..-1] : []
+                        first_part + [pieces[(i-1)..(i+1)]] + last_part
+                    end
+                    
+                    # Find the verb
+                    command = pieces.slice!(0)
+
+                    # Find the tool
+                    tool = if (tool_index = pieces.index(:with))
+                        pieces.slice!(tool_index,2).last
+                    end
+
+                    # Find the location
+                    location = if (location_index = pieces.index(:at))
+                        pieces.slice!(location_index,2).last
+                    end
+
+                    # Find materials
+                    materials = if (materials_index = pieces.index(:using))
+                        pieces.slice!(materials_index,2).last
+                    end
+
+                    # Whatever is left over is the target
+                    target = pieces.slice!(0)
+
+                    if pieces.size > 0
+                        Log.debug(["Ignoring potentially important syntactic pieces", pieces])
+                    end
+
+                    @client.send_to_server(Message.new(:act, {:command => command, :args => {
+                        :tool      => tool,
+                        :location  => location,
+                        :materials => materials,
+                        :target    => target
+                    }}))
                 end
-                
-                # Find the verb
-                command = pieces.slice!(0)
-
-                # Find the tool
-                tool = if (tool_index = pieces.index(:with))
-                    pieces.slice!(tool_index,2).last
-                end
-
-                # Find the location
-                location = if (location_index = pieces.index(:at))
-                    pieces.slice!(location_index,2).last
-                end
-
-                # Find materials
-                materials = if (materials_index = pieces.index(:using))
-                    pieces.slice!(materials_index,2).last
-                end
-
-                # Whatever is left over is the target
-                target = pieces.slice!(0)
-
-                if pieces.size > 0
-                    Log.debug(["Ignoring potentially important syntactic pieces", pieces])
-                end
-
-                @client.send_to_server(Message.new(:act, {:command => command, :args => {
-                    :tool      => tool,
-                    :location  => location,
-                    :materials => materials,
-                    :target    => target
-                }}))
             else
                 Log.debug(["Unhandled message #{message.type} encountered during client processing for #{self.class}", caller])
             end

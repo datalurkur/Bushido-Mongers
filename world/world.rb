@@ -13,12 +13,11 @@ class World < Area
         starting_locations.rand
     end
 
-    def print_map(filename, cell_size=10, corridor_size=2, color=:white)
+    def get_map(colored_rooms={}, cell_size=10, corridor_size=2, default_color=:white)
         depth_powers   = (0..@depth-1).collect { |n| @size ** n }.reverse
         cells_per_side = depth_powers.first
         png_size       = cell_size * cells_per_side
         cell_sizes     = depth_powers.reverse.collect { |p| png_size / p }
-        Log.debug("Printing a map of the world with cell size #{cell_size}, size/depth of #{@size}/#{@depth} (#{cells_per_side} cells per side), and a png size of #{png_size}", 5)
         Log.debug("Preliminary depth power computation: #{depth_powers.inspect}", 5)
         Log.debug("Preliminary png cell size computation: #{cell_sizes.inspect}", 5)
         png = DerpyPNG.new(png_size, png_size)
@@ -41,7 +40,8 @@ class World < Area
             png_room_size   = local_cell_size - (corridor_size * 2)
             Log.debug("\tPNG Cell/Room size computed to be #{local_cell_size}/#{png_room_size}", 7)
 
-            png.fill_box(png_coords.x + corridor_size, png_coords.y - corridor_size - png_room_size, png_room_size, png_room_size, color)
+            room_color = colored_rooms.has_key?(leaf) ? colored_rooms[leaf] : default_color
+            png.fill_box(png_coords.x + corridor_size, png_coords.y - corridor_size - png_room_size, png_room_size, png_room_size, room_color)
 
             Log.debug("\tDrawing corridors", 7)
             leaf.connected_directions.each do |dir|
@@ -82,11 +82,11 @@ class World < Area
                 end
                 Log.debug("\t\tOffset found to be #{corridor_offset.inspect}", 9)
 
-                png.fill_box(png_coords.x + corridor_offset.x, png_coords.y - corridor_offset.y - corridor_size, corridor_size, corridor_size, color)
+                png.fill_box(png_coords.x + corridor_offset.x, png_coords.y - corridor_offset.y - corridor_size, corridor_size, corridor_size, default_color)
             end
         end
 
-        png.save(filename)
+        png.get_png_data
     end
 
     def self.test_world
