@@ -4,23 +4,6 @@ module Commands
             unless core.db.has_type?(command)
                 raise "I don't know how to #{command}"
             end
-            if core.db.is_type?(command, :command_alias)
-                alias_info = core.db.info_for(command)
-
-                # Translate any derived parameters
-                derived_params = {}
-                [:target, :location, :tool].each do |key|
-                    derived_key = "derived_#{key}".to_sym
-                    if alias_info[derived_key]
-                        derived_params[key] = params[alias_info[derived_key]]
-                    end
-                end
-                derived_params.reject! { |k,v| v.nil? }
-
-                # Set the new parameters and proper command
-                params.merge!(derived_params)
-                command = alias_info[:aliases]
-            end
 
             invocation = core.db.info_for(command, :invocation)
             mod        = invocation.to_caml.to_const(Commands)
@@ -97,6 +80,27 @@ module Commands
                 raise "#{agent.monicker} doesn't know how to eat a #{params[:target].type}"
             end
             params[:target].destroy
+        end
+    end
+
+    module Fetch
+        def self.do(core, params)
+            SharedObjectExtensions.check_required_params(params, [:target])
+            Log.debug(params.inspect)
+
+            agent        = params[:agent]
+            edible_types = (agent.class_info(:consumes) || :consumable)
+            params[:target] = Commands.lookup_object(agent, edible_types, params[:target], [:inventory, :position])
+
+            if agent.class_info(:on_consume)
+                eval agent.class_info(:on_consume)
+            elsif params[:target].is_type?(:consumable)
+                # Do normal consumption
+                Log.info("#{agent.monicker} eats #{params[:target].monicker} like a normal person.")
+                agent.position.remove_object(params[:target])
+            else
+                raise "#{agent.monicker} doesn't know how to eat a #{params[:target].type}"
+            end
         end
     end
 

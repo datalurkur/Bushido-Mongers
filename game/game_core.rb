@@ -20,7 +20,10 @@ class GameCore
         # Read the raws
         raw_group = args[:raw_group] || "default"
         @db       = ObjectDB.get(raw_group)
+        # And the word text information.
         @words_db = WordParser.load
+        # And finally read in some basic noun & adjective information from the raws db.
+        WordParser.read_raws(@words_db, @db)
 
         setup_world(args.merge(:core => self))
     end

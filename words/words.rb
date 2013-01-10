@@ -24,6 +24,7 @@ module Words
         end
     end
 
+    # FIXME: use this
     class Adjective
         def self.adv(adj)
             adv = adj.to_s if Symbol === adj
@@ -512,6 +513,11 @@ module Words
         end
     end
 
+    # Decompose a given command into pieces usable by the command.rb object-finder.
+    # TODO - Since this exclusively happens on the server-side, we will have access
+    # to adjective and noun information, and can store adjectives and pass them along
+    # to the object-finder to narrow the search.
+    # prerequisites: pieces is an array of symbols
     def self.decompose_command(pieces)
         # TODO - Join any conjunctions together
         #while (i = pieces.index(:and))
@@ -522,6 +528,20 @@ module Words
 
         # Find the verb
         command = pieces.slice!(0)
+        # Look for synonym command verbs.
+        commands = self.db.get_keyword_words(:command, :verb)
+        Log.debug(commands)
+        if !commands.include?(command)
+            matching_commands = commands & self.db.get_related_words(command)
+            case matching_commands.size
+            when 0
+                raise "'#{command}' is not a valid command!"
+            when 1
+                command = matching_commands.first
+            else
+                raise "'#{command}' has too many command synonyms: #{matching_commands.inspect}"
+            end
+        end
 
         tool      = decompose_phrase(pieces, :with)
         location  = decompose_phrase(pieces, :at)

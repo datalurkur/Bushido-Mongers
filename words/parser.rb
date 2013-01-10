@@ -57,8 +57,20 @@ module WordParser
             db.add_preposition(preposition, *family)
         end
 
-        # FIXME: We currently register the last-loaded db inside of Words, making it the de-facto global. Das nasty.
         Words.register_db(db)
         db
+    end
+
+    # Read (mostly type) information from the raws database.
+    # Expects certain raw classes as commands, nouns, etc.
+    def self.read_raws(db, raws_db)
+        raws_db.types_of(:command).each do |comm|
+            db.add_keyword_family(:command, {:verb => comm})
+        end
+        Log.debug("Found #{db.get_keyword_groups(:command).size} commands.")
+        raws_db.types_of(:item).each do |item|
+            db.add_keyword_family(:item, {:noun => item})
+        end
+        Log.debug("Found #{db.get_keyword_groups(:item).size} items.")
     end
 end
