@@ -32,7 +32,6 @@ class PlayingState < State
         unless process_exchange(message, :client)
             if message.type == :raw_command
                 # Parse the command into an action
-                # FIXME - Hey zphobic!  Make this more grammatical!
                 Log.debug("Parsing command #{message.command.inspect}", 6)
                 pieces = message.command.split(/\s+/).collect(&:to_sym)
                 act_args = Words.decompose_command(pieces)

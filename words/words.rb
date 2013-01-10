@@ -504,6 +504,14 @@ module Words
         name.to_s.title
     end
 
+    # TODO - add adjective detection and passthroughs, so one could e.g. say "with the big sword"
+    # Note that this method modifies the pieces array
+    def self.decompose_phrase(pieces, preposition)
+        if (index = pieces.index(preposition))
+            pieces.slice!(index,2).last
+        end
+    end
+
     def self.decompose_command(pieces)
         # TODO - Join any conjunctions together
         #while (i = pieces.index(:and))
@@ -515,20 +523,9 @@ module Words
         # Find the verb
         command = pieces.slice!(0)
 
-        # Find the tool
-        tool = if (tool_index = pieces.index(:with))
-            pieces.slice!(tool_index,2).last
-        end
-
-        # Find the location
-        location = if (location_index = pieces.index(:at))
-            pieces.slice!(location_index,2).last
-        end
-
-        # Find materials
-        materials = if (materials_index = pieces.index(:using))
-            pieces.slice!(materials_index,2).last
-        end
+        tool      = decompose_phrase(pieces, :with)
+        location  = decompose_phrase(pieces, :at)
+        materials = decompose_phrase(pieces, :using)
 
         # Whatever is left over is the target
         target = pieces.slice!(0)
