@@ -17,7 +17,7 @@ class BushidoObject
 
         type_info[:class_values].each do |k,v|
             unless type_info[:has].has_key?(k) && type_info[:has][k][:class_only]
-                @properties[k] = v
+                @properties[k] = Marshal.load(Marshal.dump(v))
             end
         end
 

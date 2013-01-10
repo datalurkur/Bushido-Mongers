@@ -6,13 +6,13 @@ class ConnectState < State
         super(client, method)
 
         @connect_exchange = define_exchange_chain([
-            [:text_field, {:field => :server_ip}],
+            [:text_field, {:field => :server_hostname}],
             [:text_field, {:field => :server_port}]
         ]) do
             attempt_connection
         end
 
-        if @client.get(:server_ip) && @client.get(:server_port)
+        if @client.get(:server_hostname) && @client.get(:server_port)
             attempt_connection
         else
             begin_exchange(@connect_exchange)
@@ -20,9 +20,9 @@ class ConnectState < State
     end
 
     def attempt_connection
-        Log.debug("Attempting to connect to #{@client.get(:server_ip)}:#{@client.get(:server_port)}")
+        Log.debug("Attempting to connect to #{@client.get(:server_hostname)}:#{@client.get(:server_port)}")
         begin
-            @client.connect(@client.get(:server_ip), @client.get(:server_port).to_i)
+            @client.connect(@client.get(:server_hostname), @client.get(:server_port).to_i)
             Log.debug("Connection successful")
             LoginState.new(@client, :set)
         rescue Exception => e

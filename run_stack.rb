@@ -7,12 +7,12 @@ require 'util/timer'
 require 'net/stack_client'
 
 $config = {
-    :server_ip => "localhost",
-    :server_port => StackClient::DEFAULT_LISTEN_PORT,
-    :username => "test_user",
-    :password => "stack_pass",
-    :lobby_name => "test_lobby",
-    :lobby_password => "test",
+    :server_hostname => "localhost",
+    :server_port     => StackClient::DEFAULT_LISTEN_PORT,
+    :username        => "test_user",
+    :password        => "stack_pass",
+    :lobby_name      => "test_lobby",
+    :lobby_password  => "test",
 }
 
 Log.setup("Main", "stack")
