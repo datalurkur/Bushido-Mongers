@@ -527,19 +527,26 @@ module Words
         #end
 
         # Find the verb
-        command = pieces.slice!(0)
+        verb = pieces.slice!(0)
         # Look for synonym command verbs.
         commands = self.db.get_keyword_words(:command, :verb)
-        if !commands.include?(command)
-            matching_commands = commands & self.db.get_related_words(command)
+        if commands.include?(verb)
+            command = verb
+        else
+            matching_commands = commands & self.db.get_related_words(verb)
             case matching_commands.size
             when 0
-                raise "'#{command}' is not a valid command!"
+                raise "'#{verb}' is not a valid command!"
             when 1
                 command = matching_commands.first
             else
-                raise "'#{command}' has too many command synonyms: #{matching_commands.inspect}"
+                raise "'#{verb}' has too many command synonyms: #{matching_commands.inspect}"
             end
+        end
+
+        # Handle "look at rock" case
+        if preposition = self.db.get_preposition(verb)
+            target = decompose_phrase(pieces, preposition)
         end
 
         tool      = decompose_phrase(pieces, :with)
@@ -547,7 +554,7 @@ module Words
         materials = decompose_phrase(pieces, :using)
 
         # Whatever is left over is the target
-        target = pieces.slice!(0)
+        target = pieces.slice!(0) unless target
 
         if pieces.size > 0
             Log.debug(["Ignoring potentially important syntactic pieces", pieces])

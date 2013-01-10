@@ -51,7 +51,7 @@ module WordParser
         end
 
         load_file(dict_dir, "direct_prepositions.txt") do |line, match|
-            words = line.split(/\s/)
+            words = line.split(/\s/).map(&:to_sym)
             preposition = words.shift
             family = words.collect { |word| {:verb => word} }
             db.add_preposition(preposition, *family)
