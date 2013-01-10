@@ -217,6 +217,7 @@ module Words
             include Listable
             def initialize(nouns)
                 # Descriptor composition
+                # TODO - parse hash for noun descriptors
                 if Hash === nouns
                     nouns = nouns[:monicker]
                 end
@@ -525,6 +526,9 @@ module Words
         #    last_part  = (i < pieces.size - 2) ? pieces[(i+1)..-1] : []
         #    first_part + [pieces[(i-1)..(i+1)]] + last_part
         #end
+
+        # Strip out articles, since they aren't necessary (always?)
+        pieces = pieces.select { |p| !Sentence::Article.article?(p) }
 
         # Find the verb
         verb = pieces.slice!(0)

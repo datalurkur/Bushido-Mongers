@@ -96,13 +96,13 @@ class WordDB
         case word
         when Symbol,String
             matching = @groups.select { |group| group.contains?(word.to_sym) }
-            Log.debug("Warning - #{word} appears in more than one word group") if matching.size > 1
-            raise "No reference to #{word} found in #{self.class}" if matching.size <= 0 && fail_on_nil
+            Log.debug("Warning - '#{word}' appears in more than one word group") if matching.size > 1
+            Log.debug("No reference to '#{word}' found!") if matching.size <= 0 && fail_on_nil
             matching.first
         when WordGroup, Hash
             matching = @groups.select { |group| group == word.to_sym }
             raise "Duplicate word groups found in #{self.class} for #{word.inspect}" unless matching.size < 2
-            raise "No word group #{word.inspect} found in #{self.class}" if matching.size <= 0 && fail_on_nil
+            Log.debug("No word group '#{word.inspect}' found!") if matching.size <= 0 && fail_on_nil
             matching.first
         else
             raise "Can't find groups given type #{word.class}"
