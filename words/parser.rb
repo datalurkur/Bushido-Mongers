@@ -1,4 +1,4 @@
-require 'words/family'
+require 'words/db'
 
 =begin
 
