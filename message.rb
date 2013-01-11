@@ -44,13 +44,13 @@ class Message
         end
 
         def register_listener(core, message_class, listener)
-            Log.debug("#{listener.class} starts listening for #{message_class} messages")
+            Log.debug("#{listener.class} starts listening for #{message_class} messages", 6)
             listeners(core, message_class) << listener
             listeners(core, message_class).uniq!
         end
 
         def unregister_listener(core, message_class, listener)
-            Log.debug("#{listener.class} stops listening for #{message_class} messages")
+            Log.debug("#{listener.class} stops listening for #{message_class} messages", 6)
             listeners(core, message_class).delete(listener)
         end
 

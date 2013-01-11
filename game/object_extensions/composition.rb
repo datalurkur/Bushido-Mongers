@@ -36,6 +36,7 @@ module Composition
     # This is used by various at_creation methods to assemble objects sans-sanity checks
     def add_object(object, type=:internal)
         Log.debug("Assembling #{monicker} - #{object.monicker} added to list of #{type} parts", 6)
+        raise "Invalid composition type: #{type}" unless [:internal, :incidental, :external].include?(type)
         @properties[type] << object
     end
 
@@ -63,22 +64,24 @@ module Composition
         end
     end
 
-    def internal_objects
-        select_objects(:internal, false)
+    def internal_objects(&block)
+        select_objects(:internal, false, &block)
     end
 
-    def external_objects
-        select_objects(:external, false)
+    def external_objects(&block)
+        select_objects(:external, false, &block)
     end
 
-    private
-    def select_objects(type, recursive=false, &block)
+    def select_objects(type, recursive=false, depth=5, &block)
+        type = Array(type)
         list = []
-        @properties[type].each do |obj|
-            if block_given?
-                list << obj if block.call(obj)
-            else
+        type.each do |type|
+            @properties[type].each do |obj|
+                next if block_given? && !block.call(obj)
                 list << obj
+                if recursive && obj.is_type?(:composition) && depth > 0
+                    list += obj.select_objects(type, recursive, depth - 1, &block)
+                end
             end
         end
         list
