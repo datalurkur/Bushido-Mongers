@@ -443,6 +443,12 @@ module Words
             subject = :you
         end
 
+        # Second person if subject is you
+        if subject == :you || (subject.respond_to?(:[]) && subject[:monicker] == :you)
+            args[:state] ||= State.new
+            args[:state].person = :second
+        end
+
         raise unless verb
 
         # Use an associated verb, if any exist.

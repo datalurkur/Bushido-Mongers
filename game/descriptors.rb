@@ -31,6 +31,8 @@ class Descriptor
             d[:name]             = object.name if object.has_property?(:name)
             d[:monicker]         = (d[:name] || d[:type])
 
+            d[:name] = d[:monicker] = :you if d[:monicker] == observer.monicker
+
             # Collect parent type information
             d[:is_type]          = object.type_ancestry
 
@@ -38,6 +40,13 @@ class Descriptor
             d[:properties]       = Descriptor.describe(object.properties, observer)
             # Undecided as to whether these are useful to have - lots of duplication
             #d[:class_properties] = Descriptor.describe(object.class_properties, observer)
+
+            # Drop some non-informative values.
+            [:incidental, :external, :internal].each do |prop|
+                if d[:properties][prop] && d[:properties][prop].empty?
+                    d[:properties].delete(prop)
+                end
+            end
 
             # FIXME - Add more things
 
