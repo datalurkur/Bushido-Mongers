@@ -24,8 +24,8 @@ Log.debug(["Types of items:", db.types_of(:item)])
 # Basic item creation tests
 test_item_type = :helmet
 Log.debug("Creating a #{test_item_type}")
-test_item_args = {:quality => :fine, :components => [db.create($core, :iron_ingot)]}
-test_item = db.create($core, test_item_type, {:position => FakeRoom.new}, test_item_args)
+test_item_args = {:quality => :fine, :components => [db.create($core, :iron_ingot)], :position => FakeRoom.new}
+test_item = db.create($core, test_item_type, test_item_args)
 Log.debug("Test item is a metal? #{test_item.is_type?(:metal)}")
 Log.debug("Test item is a constructable? #{test_item.is_type?(:constructed)}")
 Log.debug("Test item is a headgear? #{test_item.is_type?(:headgear)}")
@@ -35,7 +35,7 @@ Log.debug(["Types of NPCs:", db.types_of(:npc)])
 
 def test_npc(db, test_npc_type, name)
     Log.debug(["Creating a #{test_npc_type} with raw info", db.raw_info_for(test_npc_type)])
-    test_npc = db.create($core, test_npc_type, {:position => FakeRoom.new}, {:name => name})
+    test_npc = db.create($core, test_npc_type, :position => FakeRoom.new, :name => name)
 
     Log.debug("Test NPC is a guard? #{test_npc.is_type?(:guard)}")
     Log.debug(["Test NPC has parts", test_npc.body.internal, test_npc.body.external])
@@ -87,10 +87,12 @@ end
 
 # item composition tests
 begin
-    bp = db.create($core, :leather_backpack, {}, {})
+    bp = db.create($core, :leather_backpack)
     Log.debug(bp)
-    carrot = db.create($core, :carrot, {}, {:size=>:medium})
+    carrot = db.create($core, :carrot, :size=>:medium)
     Log.debug(carrot)
     bp.insert_object(carrot)
     Log.debug(bp)
+    Log.debug(bp.internal_objects)
+    Log.debug(bp.external_objects)
 end
