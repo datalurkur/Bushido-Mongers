@@ -6,6 +6,7 @@ module SocketUtils
     STATIC_SOCKET_READ_SIZE = 5096
     DEFAULT_LISTEN_PORT     = 9999
     HTTP_LISTEN_PORT        = 3000
+    WEB_ROOT                = "web_data"
 
     # For a given socket protected by a mutex, take a partial buffer and poll for new messages
     # If new messages are received (completely), unpack them from network format and recast them
