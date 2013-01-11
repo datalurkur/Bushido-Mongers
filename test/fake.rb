@@ -7,7 +7,7 @@ end
 
 class FakeRoom
     def name; "Fake Room"; end
-    def add_object(o); end
+    def add_object(o,t=nil); end
     def remove_object(o); end
     def monicker() self.name; end
 end

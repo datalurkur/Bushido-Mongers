@@ -8,7 +8,7 @@ module Composition
                     components = @properties[comp_type].dup
                     @properties[comp_type] = []
                     components.each do |component|
-                        @core.db.create(@core, component, params.merge(:position => instance))
+                        @core.db.create(@core, component, params.merge(:position => instance, :position_type => comp_type))
                     end
                     @properties[:weight] += @properties[comp_type].inject(0) { |s,p| s + p.weight }
                 end
