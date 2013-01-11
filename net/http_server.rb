@@ -93,19 +93,19 @@ class HTTPServer
 
     def process_exchanges(socket)
         client_thread = Thread.new do
-            Log.debug("Accepting connection from")
+            #Log.debug("Accepting connection from")
             begin
                 reader = HTTPReader.new
                 while true
                     request = reader.read(socket)
                     if request
-                        Log.debug("HTTP request received")
+                        #Log.debug("HTTP request received")
                         response = process_request(request)
                         socket.write(response)
                     end
                 end
             rescue Errno::ECONNRESET
-                Log.debug("Client disconnected")
+                #Log.debug("Client disconnected")
             rescue Exception => e
                 Log.debug(["Thread exited abnormally", e.message, e.backtrace])
             end
@@ -116,7 +116,7 @@ class HTTPServer
     end
 
     def process_request(request)
-        Log.debug("Processing request #{request.uri}")
+        #Log.debug("Processing request #{request.uri}")
 
         data = nil
         type = nil
@@ -124,13 +124,14 @@ class HTTPServer
             m = request.uri.match(regex)
             next unless m
             begin
+                #Log.debug("Attempting match #{regex.inspect}")
                 data, type = @responses[regex].call(m.captures)
                 return HTTP::Response::OK.new(data, type).pack unless data.nil?
             rescue Exception => e
                 Log.debug(["Failed to check uri match #{regex.inspect}", e.message, e.backtrace])
             end
         end
-        Log.debug("URI #{request.uri} not found")
+        #Log.debug("URI #{request.uri} not found")
 
         return HTTP::Response::NotFound.new.pack
     end
@@ -160,21 +161,32 @@ class HTTPServer
     def find_file(filename)
         begin
             file_request   = File.join(@web_root, filename)
-            Log.debug("Loading #{file_request}")
-            file_extension = file_request.split(/\./).last
+            unless File.exist?(file_request)
+                #Log.debug("#{file_request} does not exist")
+                return nil
+            end
+            if File.directory?(file_request)
+                #Log.debug("#{file_request} is a directory")
+                return nil
+            end
+            #Log.debug("Loading #{file_request}")
             data           = File.read(file_request)
+
+            file_extension = file_request.split(/\./).last
             type = case file_extension
             when "ico";        "image/x-icon"
             when "png";        "image/png"
             when "jpg","jpeg"; "image/jpeg"
+            when "css";        "text/css"
             when "html";       "text/html"
+            when "ttf";        "font/ttf"
             else
                 Log.warning("Unrecognized extension #{file_extension}")
                 "text/plain"
             end
             [data, type]
         rescue Exception => e
-            Log.error(["Failed to load data from #{filename}", e.message, e.backtrace])
+            Log.debug(["Failed to load data from #{filename}", e.message, e.backtrace])
             nil
         end
     end

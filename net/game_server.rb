@@ -16,8 +16,11 @@ class GameServer < Server
 
         @web_server  = HTTPServer.new(WEB_ROOT, HTTP_LISTEN_PORT)
 
-        # TODO - This seems pretty special case, but adding this kind of thing is annoying
-        @web_server.add_route(/\/favicon\.ico$/i) { @web_server.find_file("favicon.ico") }
+        # Allow files at the root to be accessed
+        @web_server.add_route(/\/#{@web_server.wildcard}$/i) do |args|
+            @web_server.find_file(args.first)
+        end
+        @web_server.add_route(/\/$/) { @web_server.process_template("index.erb", binding) }
     end
 
     def start

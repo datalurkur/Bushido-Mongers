@@ -249,8 +249,6 @@ class Lobby
                 Log.debug(["Failed to perform command #{message.command}", e.message, e.backtrace])
                 send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
             end
-        when :get_link
-            send_to_user(username, Message.new(:link, {:uri => "/#{@name.escape}/#{username.escape}"}))
         else
             Log.warning("Unhandled game message type #{message.type} received from client")
         end

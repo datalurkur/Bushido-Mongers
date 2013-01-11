@@ -1,0 +1,26 @@
+<%
+    map_name     = "map.png"
+    map_location = File.join(web_directory, map_name)
+    map_uri      = File.join(web_uri, map_name)
+    unless File.exist?(map_location)
+        map_data = @game_core.world.get_map
+        f = File.open(map_location, 'w')
+        f.write(map_data)
+        f.close
+    end
+%>
+
+<!DOCTYPE HTML>
+<html><head><title>Bushido Mongers</title></head>
+<link rel="stylesheet" href="main.css" type="text/css"/>
+<body>
+    <table>
+        <tr>
+            <th><%= @name %></th>
+        </tr>
+        <td>
+            <img src="<%= map_uri %>"/>
+        </td>
+    </table>
+</body>
+</html>

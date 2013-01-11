@@ -1,7 +1,27 @@
+<%
+    lobby_list = []
+    @lobby_mutex.synchronize do
+        lobby_list = @lobbies.collect do |lobby|
+            if WebEnabledLobby === lobby
+                "<a href=\"#{lobby.web_uri}\">#{lobby.name}</a>"
+            else
+                lobby.name
+            end
+        end
+    end
+%>
+
 <!DOCTYPE HTML>
-<html><head><title>BushidoMongers</title></head>
+<html><head><title>Bushido Mongers</title></head>
+<link rel="stylesheet" href="main.css" type="text/css"/>
 <body>
-    <h1>BushidoMongers</h1>
-    <h2><%= @name %></h2>
+    <table>
+        <tr>
+            <th>Bushido Mongers</th>
+        </tr>
+        <% lobby_list.each do |lobby| %>
+        <tr><td><%= lobby %></td></tr>
+        <% end %>
+    </table>
 </body>
 </html>

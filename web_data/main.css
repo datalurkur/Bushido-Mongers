@@ -1,0 +1,35 @@
+/* Sending fonts is really slow :( */
+/*
+@font-face {
+    font-family: 'Beginning Yoga';
+    src: url('beginning_yoga.ttf');
+}
+
+@font-face {
+    font-family: 'Ninja Naruto';
+    src: url('ninja_naruto.ttf');
+}
+*/
+
+body {
+    background: #000000;
+    color: #aaaaaa;
+    font-family: 'Arial', sans-serif;
+    margin: 50px;
+    padding: 0;
+    text-align: left;
+}
+
+table {
+    background: #553333;
+    color: #dddddd;
+    text-align: center;
+}
+
+a:link {
+    color: #aaaaaa;
+    text-decoration: none;
+}
+a:hover   { color: #ffaaaa; }
+a:visited { color: #bbaaaa; }
+a:active  { color: #ddaaaa; }
