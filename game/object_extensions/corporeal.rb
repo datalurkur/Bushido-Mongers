@@ -36,7 +36,7 @@ module Corporeal
 
     def all_body_parts(type = [:internal, :external])
         selector = Proc.new { |obj| obj.is_type?(:body_part) }
-        self.body.select_objects(type, true, &selector)
+        [self.body] + self.body.select_objects(type, true, &selector)
     end
 
     def external_body_parts
