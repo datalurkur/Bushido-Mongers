@@ -1,0 +1,8 @@
+body_armor,constructed leather_armor {
+    value 30;
+    weight 10;
+    size medium;
+
+    required_components leather;
+    technique craft;
+}

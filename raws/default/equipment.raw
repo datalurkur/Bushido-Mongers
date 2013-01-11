@@ -1,10 +1,35 @@
 abstract item equipment {
     class sym slot;
+
+    /* Protection can be based on a modifier manipulated by the material properties */
+    class int protection;
+    protection 0;
 }
 
 abstract equipment headgear {
     slot head;
 }
+
+abstract equipment body_armor {
+    slot humanoid_body;
+}
+
+/*
+abstract equipment bracer {
+    slot arm;
+}
+
+abstract equipment glove {
+    slot hand;
+}
+
+abstract equipment leg_armor {
+    slot leg;
+}
+
+abstract equipment boots {
+}
+*/
 
 abstract item weapon {
     /* TODO - Work out the slot (or slots) a weapon can go in based on its handedness */
@@ -44,4 +69,14 @@ constructed,ranged_weapon bow {
 
 constructed,ammunition arrow {
     technique fletching;
+}
+
+post_process {
+    self.find_subtypes(:equipment, {}, true).each do |equipment|
+        Log.debug("Propagating slot information for #{equipment}")
+        propagate_recursive(info_for(equipment, :slot)) do |subtype|
+            Log.debug("#{subtype} can equip #{equipment}")
+            info_for(subtype, :can_equip, []) << equipment
+        end
+    end
 }

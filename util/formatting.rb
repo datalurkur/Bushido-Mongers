@@ -50,7 +50,7 @@ class Array
                         element
                     when Symbol
                         element.inspect
-                    when Fixnum,Float
+                    when Fixnum,Float,Module
                         element.to_s
                     else
                         element.class.to_s

@@ -102,22 +102,18 @@ body_part head {
 body_part arm {
     weight 5;
     typical_size small;
-    is_container true;
     external hand;
 }
 
 body_part hand {
-    /* TODO - make hands able to grasp somehow */
     weight 2;
     typical_size small;
     is_container true;
-    preserve_internal true;
 }
 
 body_part leg {
     weight 10;
     typical_size small;
-    is_container true;
     external foot;
 }
 

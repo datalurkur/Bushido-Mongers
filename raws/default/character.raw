@@ -1,5 +1,5 @@
 karmic,aligned,corporeal,position character {
-    uses character;
+    uses character equipment;
 
     needs name;
 
