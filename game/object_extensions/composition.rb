@@ -1,8 +1,6 @@
 module Composition
     class << self
         def at_creation(instance, params)
-            # Need to delete position here, otherwise incidentals and externals
-            # will attach themselves internally.
             instance.instance_exec do
                 [:internal, :incidental, :external].each do |comp_type|
                     components = @properties[comp_type].dup
@@ -61,5 +59,26 @@ module Composition
         else
             raise "No matching object found"
         end
+    end
+
+    def internal_objects
+        select_objects(:internal, false)
+    end
+
+    def external_objects
+        select_objects(:external, false)
+    end
+
+    private
+    def select_objects(type, recursive=false, &block)
+        list = []
+        @properties[type].each do |obj|
+            if block_given?
+                list << obj if block.call(obj)
+            else
+                list << obj
+            end
+        end
+        list
     end
 end
