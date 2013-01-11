@@ -1,4 +1,3 @@
-#!/usr/bin/ruby
 require './raws/db'
 require './game/tables'
 require './game/object_extensions'

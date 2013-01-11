@@ -1,4 +1,3 @@
-#!/usr/bin/ruby
 require './words/words'
 require './raws/db'
 require './test/fake'
