@@ -44,7 +44,7 @@ Behavior.define(:consume) do |actor|
     end.flatten
 
     if consumables.empty?
-        Log.debug("#{actor.monicker} finds nothing to consume")
+        Log.debug("#{actor.monicker} finds nothing to consume", 6)
         false
     else
         consumable = consumables.first

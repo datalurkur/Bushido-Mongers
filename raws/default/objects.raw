@@ -58,11 +58,11 @@ abstract composition constructed {
 }
 
 post_process {
-    Log.debug("Propagating component information for constructed objects")
+    Log.debug("Propagating component information for constructed objects", 7)
     types_of(:constructed, true).each do |constructed|
         info_for(constructed, :required_components).each do |component|
             propagate_recursive(component) do |comp_subtype|
-                Log.debug("#{comp_subtype} is used in #{constructed}")
+                Log.debug("#{comp_subtype} is used in #{constructed}", 7)
                 info_for(comp_subtype, :used_in, []) << constructed
             end
         end
