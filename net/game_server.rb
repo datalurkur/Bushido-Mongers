@@ -1,5 +1,5 @@
 require 'net/server'
-require 'net/lobby'
+require 'net/web_enabled_lobby'
 
 # GameServer is responsible for handling client communications above the socket layer and delegating them where appropriate
 # Handles logins and authentication
@@ -8,13 +8,16 @@ class GameServer < Server
     def initialize(config={})
         super(config)
 
-        @user_mutex    = Mutex.new
-        @user_info     = {}
+        @user_mutex  = Mutex.new
+        @user_info   = {}
 
-        @lobby_mutex   = Mutex.new
-        @lobbies       = []
+        @lobby_mutex = Mutex.new
+        @lobbies     = []
 
-        @web_server    = HTTPServer.new(HTTP_LISTEN_PORT)
+        @web_server  = HTTPServer.new(WEB_ROOT, HTTP_LISTEN_PORT)
+
+        # TODO - This seems pretty special case, but adding this kind of thing is annoying
+        @web_server.add_route(/\/favicon\.ico$/i) { @web_server.find_file("favicon.ico") }
     end
 
     def start
@@ -102,7 +105,7 @@ class GameServer < Server
                 if @lobbies.find { |lobby| lobby.name == message.lobby_name }
                     send_to_client(socket, Message.new(:create_fail, {:reason => :lobby_exists}))
                 else
-                    lobby = Lobby.new(message.lobby_name, password_hash, username, @web_server) do |user, message|
+                    lobby = WebEnabledLobby.new(message.lobby_name, password_hash, username, @web_server) do |user, message|
                         socket = get_socket_for_user(user)
                         send_to_client(socket, message) unless socket.nil?
                     end

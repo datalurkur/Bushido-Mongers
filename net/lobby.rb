@@ -7,10 +7,10 @@ require 'net/http_server'
 class Lobby
     attr_reader :name
 
-    def initialize(name, password_hash, creator, web_server, &block)
+    def initialize(name, password_hash, creator, &block)
         # Credentials
-        @name          = name
-        @password_hash = password_hash
+        @name           = name
+        @password_hash  = password_hash
 
         # Game administration / socket maintenance / broadcast list
         @users          = {}
@@ -18,21 +18,17 @@ class Lobby
         @default_admin  = creator
 
         # Local state, basically
-        @game_state    = :genesis
+        @game_state     = :genesis
 
         # Game objects
-        @game_core     = nil
-        @game_args     = {}
+        @game_core      = nil
+        @game_args      = {}
 
         # How the lobby sends messages back to clients (while still using the thread-safe mutexes and methods)
         unless block_given?
             raise "Lobby has no means with which to send client data"
         end
         @send_callback = block
-
-        web_server.add_response(/\/#{@name.escape}\/([^\/]*)/i) do |args|
-            "Status page for #{args.first} (in lobby #{@name})"
-        end
     end
 
     def is_admin?(username)

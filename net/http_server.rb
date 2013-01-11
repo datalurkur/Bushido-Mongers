@@ -1,97 +1,8 @@
+require 'erb'
 require 'socket'
 require 'net/socket_utils'
+require 'net/http_protocol'
 require 'util/compression'
-
-class HTTP
-    VERSION = 1.1
-
-    def self.pack_header(k,v)
-        k + ": " + v
-    end
-
-    def self.version_string
-        "HTTP/#{VERSION}"
-    end
-
-    class Request < HTTP
-        attr_accessor :method, :uri, :host, :headers
-        def initialize(method, host, uri)
-            @method  = method
-            @host    = host
-            @uri     = uri
-
-            @headers = {}
-            @headers["Host"] = @host unless @host.nil?
-        end
-
-        def pack
-            status = [
-                method,
-                uri,
-                HTTP.version_string
-            ].join(" ")
-
-            [
-                status,
-                @headers.collect { |k,v| HTTP.pack_header(k,v) }
-            ].join("\r\n")
-        end
-
-        class Get < Request
-            def initialize(host, uri); super("GET", host, uri); end
-        end
-    end
-
-    class Response < HTTP
-        attr_accessor :status, :status_code, :data, :content_type
-        def initialize(status, status_code, data=nil, content_type=nil)
-            @status       = status
-            @status_code  = status_code
-            @data         = data
-            @content_type = content_type
-
-            @use_compression = true
-        end
-
-        def pack
-            status = [
-                HTTP.version_string,
-                @status_code,
-                @status
-            ].join(" ")
-
-            headers = {}
-
-            if @data
-                if @use_compression
-                    @data = @data.deflate
-                    headers["Content-Encoding"] = "deflate"
-                end
-                headers["Content-Length"] = @data.length.to_s
-                headers["Content-Type"]   = @content_type
-            end
-
-            [
-                status,
-                headers.collect { |k,v| HTTP.pack_header(k,v) },
-                "",
-                @data
-            ].join("\r\n")
-        end
-
-        class OK < Response
-            def initialize(data=nil, content_type=nil)
-                super("OK", 200, data, content_type)
-            end
-        end
-
-        class NotFound < Response
-            def initialize
-                super("NOT FOUND", 404)
-            end
-        end
-    end
-end
 
 class HTTPReader
     def initialize
@@ -103,28 +14,19 @@ class HTTPReader
         raise Errno::ECONNRESET if buffer.nil?
 
         if buffer.gsub(/\s+/, '').empty?
-            #Log.debug("Buffer is empty, returning finished request")
-            ret = @current_request
-            @current_request = nil
+            ret,@current_request = [@current_request,nil]
             return ret
         end
 
         unless @current_request
             method, uri, version_string = buffer.split(/\s+/)
-            #Log.debug(["Request line: ", [method, uri, version_string]])
             version = version_string.split(/\//).last.to_f
-            unless version == HTTP::VERSION
-                Log.debug("Unsupported version #{version}")
-                return nil
-            end
+            raise "HTTP version mismatch #{version} / #{HTTP::VERSION}" unless version == HTTP::VERSION
             @current_request = HTTP::Request.new(method, nil, uri)
         else
-            #Log.debug(["Received line: ", buffer])
             k,v = buffer.split(/:\s+/)
             @current_request.headers[k] = v
-            if k == "Host"
-                @current_request.host = v
-            end
+            @current_request.host = v if k.match(/host/i)
         end
 
         return nil
@@ -132,7 +34,9 @@ class HTTPReader
 end
 
 class HTTPServer
-    def initialize(port)
+    attr_reader :web_root, :port
+
+    def initialize(web_root, port)
         @port          = port
         @responses     = {}
 
@@ -141,6 +45,8 @@ class HTTPServer
 
         @listen_thread = nil
         @accept_socket = nil
+
+        @web_root      = web_root
     end
 
     def start
@@ -211,30 +117,65 @@ class HTTPServer
 
     def process_request(request)
         Log.debug("Processing request #{request.uri}")
+
         data = nil
         type = nil
-        @responses.each do |regex,block|
+        @responses.keys.each do |regex|
             m = request.uri.match(regex)
             next unless m
-            data,type = block.call(m.captures)
-            next unless data
-            type ||= "text/plain"
-            break
+            begin
+                data, type = @responses[regex].call(m.captures)
+                return HTTP::Response::OK.new(data, type).pack unless data.nil?
+            rescue Exception => e
+                Log.debug(["Failed to check uri match #{regex.inspect}", e.message, e.backtrace])
+            end
         end
-        if data
-            HTTP::Response::OK.new(data, type).pack
-        else
-            Log.debug("No appropriate response found")
-            HTTP::Response::NotFound.new.pack
-        end
+        Log.debug("URI #{request.uri} not found")
+
+        return HTTP::Response::NotFound.new.pack
     end
 
     def wildcard
         "([^\/]*)"
     end
 
-    def add_response(uri_regex, &block)
-        return unless block_given?
+    def add_route(uri_regex, &block)
         @responses[uri_regex] = block
+    end
+
+    def process_template(template_name, object_binding, args=[])
+        begin
+            template_filename = File.join(@web_root, template_name)
+            template_data     = File.read(template_filename)
+            renderer          = ERB.new(template_data)
+            data              = renderer.result(object_binding)
+            type              = "text/html"
+            [data, type]
+        rescue Exception => e
+            Log.error(["Failed to process template #{template_name}", e.message, e.backtrace])
+            nil
+        end
+    end
+
+    def find_file(filename)
+        begin
+            file_request   = File.join(@web_root, filename)
+            Log.debug("Loading #{file_request}")
+            file_extension = file_request.split(/\./).last
+            data           = File.read(file_request)
+            type = case file_extension
+            when "ico";        "image/x-icon"
+            when "png";        "image/png"
+            when "jpg","jpeg"; "image/jpeg"
+            when "html";       "text/html"
+            else
+                Log.warning("Unrecognized extension #{file_extension}")
+                "text/plain"
+            end
+            [data, type]
+        rescue Exception => e
+            Log.error(["Failed to load data from #{filename}", e.message, e.backtrace])
+            nil
+        end
     end
 end
