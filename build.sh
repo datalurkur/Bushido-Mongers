@@ -1,6 +1,7 @@
 #!/bin/bash
 
 pushd math/lib/noise
+rm *.o
 ruby extconf.rb
 make
 popd

@@ -1,4 +1,3 @@
-#!/usr/bin/ruby
 require './util/log'
 require './util/basic'
 

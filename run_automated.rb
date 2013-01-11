@@ -1,5 +1,3 @@
-#!/usr/bin/ruby
-
 require './util/traps'
 require './net/automated_client'
 

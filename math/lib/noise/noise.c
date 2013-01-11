@@ -28,16 +28,12 @@ void Init_noise() {
 
 VALUE Perlin3(VALUE rSelf, VALUE x, VALUE y, VALUE z) {
     Perlin* cPerlin;
-    double noise;
-
     Data_Get_Struct(rSelf, Perlin, cPerlin);
     return rb_float_new(noise3(cPerlin, NUM2DBL(x), NUM2DBL(y), NUM2DBL(z)));
 }
 
 VALUE Perlin2(VALUE rSelf, VALUE x, VALUE y) {
     Perlin* cPerlin;
-    double noise;
-
     Data_Get_Struct(rSelf, Perlin, cPerlin);
     return rb_float_new(noise2(cPerlin, NUM2DBL(x), NUM2DBL(y)));
 }

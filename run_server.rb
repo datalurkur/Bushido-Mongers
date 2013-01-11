@@ -1,5 +1,3 @@
-#!/usr/bin/ruby
-
 require './util/traps'
 
 # Uncomment to enable code coverage

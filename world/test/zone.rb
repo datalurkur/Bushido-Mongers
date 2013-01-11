@@ -1,4 +1,3 @@
-#!/usr/bin/ruby
 require './util/basic'
 require './world/zone'
 

@@ -1,4 +1,3 @@
-#!/usr/bin/ruby
 require './math/noisemap'
 
 size = 128

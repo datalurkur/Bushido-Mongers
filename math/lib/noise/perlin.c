@@ -8,9 +8,6 @@ double noise2(Perlin *perlin, double x, double y) {
     double u,v;
     int a, b;
 
-    int i1, i2, i3, i4;
-    double g1,g2,g3,g4;
-
     fX = ((int)x) % perlin->size;
     fY = ((int)y) % perlin->size;
 
@@ -130,7 +127,6 @@ double lerp(double t, double a, double b) {
 }
 
 double gradient2(int hash, double x, double y) {
-    int h;
     double r;
 
     r = (hash & 0x02) ? x : y;
