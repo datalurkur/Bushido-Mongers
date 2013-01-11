@@ -1,4 +1,4 @@
-require 'state/state'
+require './state/state'
 
 class CreateCharacterState < State
     def initialize(client, method)

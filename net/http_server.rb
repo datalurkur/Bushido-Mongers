@@ -1,8 +1,8 @@
 require 'erb'
 require 'socket'
-require 'net/socket_utils'
-require 'net/http_protocol'
-require 'util/compression'
+require './net/socket_utils'
+require './net/http_protocol'
+require './util/compression'
 
 class HTTPReader
     def initialize
@@ -93,19 +93,23 @@ class HTTPServer
 
     def process_exchanges(socket)
         client_thread = Thread.new do
-            #Log.debug("Accepting connection from")
+            Log.debug("Accepting connection from", 8)
             begin
                 reader = HTTPReader.new
                 while true
                     request = reader.read(socket)
                     if request
-                        #Log.debug("HTTP request received")
+                        start = Time.now
+                        Log.debug("HTTP request received", 8)
                         response = process_request(request)
-                        socket.write(response)
+                        processed = Time.now
+                        socket.puts(response)
+                        sent = Time.now
+                        Log.debug("Responded to request in #{sent - start} seconds (Processed in #{processed - start} seconds, send in #{sent - processed} seconds)", 6)
                     end
                 end
             rescue Errno::ECONNRESET
-                #Log.debug("Client disconnected")
+                Log.debug("Client disconnected", 8)
             rescue Exception => e
                 Log.debug(["Thread exited abnormally", e.message, e.backtrace])
             end
@@ -116,7 +120,7 @@ class HTTPServer
     end
 
     def process_request(request)
-        #Log.debug("Processing request #{request.uri}")
+        Log.debug("Processing request #{request.uri}", 6)
 
         data = nil
         type = nil
@@ -124,14 +128,14 @@ class HTTPServer
             m = request.uri.match(regex)
             next unless m
             begin
-                #Log.debug("Attempting match #{regex.inspect}")
+                Log.debug("Attempting match #{regex.inspect}", 7)
                 data, type = @responses[regex].call(m.captures)
                 return HTTP::Response::OK.new(data, type).pack unless data.nil?
             rescue Exception => e
                 Log.debug(["Failed to check uri match #{regex.inspect}", e.message, e.backtrace])
             end
         end
-        #Log.debug("URI #{request.uri} not found")
+        Log.debug("URI #{request.uri} not found", 6)
 
         return HTTP::Response::NotFound.new.pack
     end
@@ -162,14 +166,14 @@ class HTTPServer
         begin
             file_request   = File.join(@web_root, filename)
             unless File.exist?(file_request)
-                #Log.debug("#{file_request} does not exist")
+                Log.debug("#{file_request} does not exist", 7)
                 return nil
             end
             if File.directory?(file_request)
-                #Log.debug("#{file_request} is a directory")
+                Log.debug("#{file_request} is a directory", 7)
                 return nil
             end
-            #Log.debug("Loading #{file_request}")
+            Log.debug("Loading #{file_request}", 7)
             data           = File.read(file_request)
 
             file_extension = file_request.split(/\./).last

@@ -1,4 +1,4 @@
-require 'util/coverage'
+require './util/coverage'
 
 CodeCoverage.setup
 

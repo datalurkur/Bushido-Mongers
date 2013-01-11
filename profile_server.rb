@@ -1,11 +1,10 @@
 #!/usr/bin/ruby
-
 require 'rubygems'
 require 'ruby-prof'
 
 RubyProf.start
 
-require 'run_server'
+require './run_server'
 
 result = RubyProf.stop
 

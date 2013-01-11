@@ -1,4 +1,4 @@
-require 'util/log'
+require './util/log'
 
 # Generic message defining, creation, checking, and delegation
 # Used in lots of places
@@ -121,4 +121,4 @@ class Message
     end
 end
 
-require 'message_defs'
+require './message_defs'

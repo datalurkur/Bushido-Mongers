@@ -1,6 +1,6 @@
-require 'net/game_client'
-require 'automation/stack'
-require 'ui/client_interface'
+require './net/game_client'
+require './automation/stack'
+require './ui/client_interface'
 
 class StackClient < GameClient
     attr_reader :stack

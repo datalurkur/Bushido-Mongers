@@ -1,6 +1,5 @@
 #!/usr/bin/ruby
-
-require 'words/words'
+require './words/words'
 
 Log.setup("Main", "family_test")
 

@@ -1,3 +1,5 @@
+require './util/log'
+
 class BushidoObject
     attr_reader :type, :properties
 

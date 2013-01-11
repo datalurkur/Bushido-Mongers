@@ -1,3 +1,5 @@
+require './util/log'
+
 module Corporeal
     class << self
         def at_message(instance, message)

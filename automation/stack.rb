@@ -1,3 +1,5 @@
+require './util/log'
+
 class AutomationStack
     def initialize
         @state              = nil

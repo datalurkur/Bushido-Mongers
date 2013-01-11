@@ -1,4 +1,4 @@
-require 'ai/behavior'
+require './ai/behavior'
 
 class BehaviorSet
     class << self

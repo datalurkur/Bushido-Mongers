@@ -1,9 +1,9 @@
 #!/usr/bin/ruby
 
-require 'util/traps'
-require 'util/timer'
-require 'net/game_server'
-require 'net/stack_client'
+require './util/traps'
+require './util/timer'
+require './net/game_server'
+require './net/stack_client'
 
 $server_config = {
     :irc_enabled => false,
@@ -26,7 +26,7 @@ $client_config = {
 Log.setup("Main", "local")
 
 # DEBUG
-require 'game/character_test'
+require './game/test/character'
 recreate_test_character("test_user", "default")
 
 $server = GameServer.new($server_config)

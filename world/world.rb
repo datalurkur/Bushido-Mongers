@@ -1,6 +1,6 @@
-require 'util/basic'
-require 'world/room'
-require 'graphics/png'
+require './util/basic'
+require './world/room'
+require './graphics/png'
 
 class World < Area
     # Also see the recursive method Area::add_starting_location.

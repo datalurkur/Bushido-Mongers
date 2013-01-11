@@ -1,5 +1,5 @@
-require 'math/noise'
-require 'graphics/png'
+require './math/noise'
+require './graphics/png'
 
 class NoiseMap
     def initialize(size)

@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 
-require 'util/traps'
-require 'net/remote_client'
+require './util/traps'
+require './net/remote_client'
 
 $config = {
     :server_hostname     => "localhost",

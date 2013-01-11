@@ -1,5 +1,5 @@
-require 'game/tables'
-require 'world/zone'
+require './game/tables'
+require './world/zone'
 
 module ZoneWithKeywords
     # The instantiated zone, a BushidoObject.

@@ -1,5 +1,4 @@
 /* Sending fonts is really slow :( */
-/*
 @font-face {
     font-family: 'Beginning Yoga';
     src: url('beginning_yoga.ttf');
@@ -9,21 +8,31 @@
     font-family: 'Ninja Naruto';
     src: url('ninja_naruto.ttf');
 }
-*/
 
 body {
     background: #000000;
     color: #aaaaaa;
-    font-family: 'Arial', sans-serif;
+    font-family: 'Ninja Naruto', 'Arial', sans-serif;
     margin: 50px;
     padding: 0;
     text-align: left;
 }
 
-table {
+div#wrapper {
     background: #553333;
     color: #dddddd;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+div#header {
     text-align: center;
+}
+
+div#core {
+}
+
+div#footer {
 }
 
 a:link {

@@ -1,8 +1,8 @@
-require 'util/basic'
-require 'util/formatting'
 require 'set'
-require 'util/log'
-require 'words/parser'
+require './util/basic'
+require './util/formatting'
+require './util/log'
+require './words/parser'
 
 # TODO - add info on acceptable/used arguments to generators
 

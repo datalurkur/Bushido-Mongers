@@ -1,15 +1,15 @@
 #!/usr/bin/ruby
 
-require 'util/traps'
+require './util/traps'
 
 # Uncomment to enable code coverage
 #require 'util/coverage'
 #CodeCoverage.setup
 
-require 'util/timer'
+require './util/timer'
 #MeteredMethods.enable
 
-require 'net/game_server'
+require './net/game_server'
 
 config = {
     :irc_enabled => false,
@@ -23,7 +23,7 @@ config = {
 Log.setup("Main", "server")
 
 # DEBUG
-require 'game/character_test'
+require './game/test/character'
 recreate_test_character("test_user", "default")
 
 trap_signals do

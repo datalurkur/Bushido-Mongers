@@ -1,3 +1,5 @@
+require './util/log'
+
 module Karmic
     class << self
         def at_creation(instance, params)

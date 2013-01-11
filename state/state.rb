@@ -1,9 +1,9 @@
-require 'message'
+require './message'
 
 # Provides a set of tools for maintaining a state stack and state variables
 module StateMaintainer
     def setup_state
-        @var_mutex       = Mutex.new
+        @var_mutex = Mutex.new
     end
 
     def current_state

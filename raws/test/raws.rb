@@ -1,9 +1,8 @@
 #!/usr/bin/ruby
-
-require 'raws/db'
-require 'game/tables'
-require 'game/object_extensions'
-require 'test/fake'
+require './raws/db'
+require './game/tables'
+require './game/object_extensions'
+require './test/fake'
 Log.setup("Main", "test")
 
 # Basic DB parsing tests

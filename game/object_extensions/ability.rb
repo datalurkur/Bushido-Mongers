@@ -1,3 +1,5 @@
+require './util/log'
+
 # FIXME - Make this into a usable module like the rest
 module Ability
     def attempt(difficulty)

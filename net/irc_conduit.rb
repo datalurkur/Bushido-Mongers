@@ -1,8 +1,7 @@
 require 'rubygems'
 require 'socket'
 require 'openssl'
-
-require 'util/log'
+require './util/log'
 
 $ruby_irc_version = "NinjaBot v0.1"
 

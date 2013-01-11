@@ -1,3 +1,5 @@
+require './util/log'
+
 module Position
     class << self
         def at_creation(instance, params)

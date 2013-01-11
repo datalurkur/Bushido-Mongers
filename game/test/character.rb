@@ -1,8 +1,7 @@
 #!/usr/bin/ruby
-
-require 'words/words'
-require 'raws/db'
-require 'test/fake'
+require './words/words'
+require './raws/db'
+require './test/fake'
 
 def recreate_test_character(username, raw_group, clean=true)
     if clean

@@ -1,6 +1,6 @@
-require 'raws/parser'
-require 'raws/bushido_object'
-require 'util/timer'
+require './raws/parser'
+require './raws/bushido_object'
+require './util/timer'
 
 class ObjectDB
     class << self

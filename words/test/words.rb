@@ -1,11 +1,10 @@
 #!/usr/bin/ruby
-
-require 'util/log'
-require 'util/basic'
+require './util/log'
+require './util/basic'
 
 Log.setup("Vocabulary Test", "wordtest")
 
-require 'words/words'
+require './words/words'
 
 #require 'raws/db'
 #require 'game/object_extensions'

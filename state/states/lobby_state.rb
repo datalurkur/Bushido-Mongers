@@ -1,5 +1,5 @@
-require 'state/state'
-require 'state/states/playing_state'
+require './state/state'
+require './state/states/playing_state'
 
 class LobbyState < State
     def initialize(client)

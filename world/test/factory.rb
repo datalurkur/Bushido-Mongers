@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
 
-require 'world/factories'
+require './world/factories'
 
 Log.setup("Main", "factory_test")
 

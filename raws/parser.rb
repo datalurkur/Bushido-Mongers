@@ -1,5 +1,5 @@
-require 'util/log'
-require 'util/basic'
+require './util/log'
+require './util/basic'
 
 =begin
 

@@ -1,8 +1,8 @@
-require 'world/factories'
-require 'game/tables'
-require 'game/object_extensions'
-require 'raws/db'
-require 'message'
+require './world/factories'
+require './game/tables'
+require './game/object_extensions'
+require './raws/db'
+require './message'
 
 class GameCore
     attr_reader :world, :db

@@ -1,4 +1,4 @@
-require 'state/state'
+require './state/state'
 
 class PlayingState < State
     def initialize(client)

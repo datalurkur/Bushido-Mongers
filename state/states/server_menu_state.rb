@@ -1,5 +1,5 @@
-require 'state/state'
-require 'util/crypto'
+require './state/state'
+require './util/crypto'
 
 class ServerMenuState < State
     def initialize(client, method)

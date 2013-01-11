@@ -1,3 +1,5 @@
+require './util/log'
+
 module Composition
     class << self
         def at_creation(instance, params)

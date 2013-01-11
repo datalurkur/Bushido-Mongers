@@ -1,4 +1,4 @@
-require 'util/log'
+require './util/log'
 
 module MeteredMethods
     class << self

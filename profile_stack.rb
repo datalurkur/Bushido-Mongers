@@ -1,11 +1,10 @@
 #!/usr/bin/ruby
-
 require 'rubygems'
 require 'ruby-prof'
 
 RubyProf.start
 
-require 'run_stack'
+require './run_stack'
 
 result = RubyProf.stop
 

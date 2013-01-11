@@ -1,4 +1,5 @@
-require 'world/world'
+#!/usr/bin/ruby
+require './world/world'
 
 Log.setup("Main", "world_test")
 

@@ -1,3 +1,5 @@
+require './util/log'
+
 module Commands
     class << self
         def do(core, command, params)

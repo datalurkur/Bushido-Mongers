@@ -1,8 +1,7 @@
 require 'socket'
-
-require 'net/socket_utils'
-require 'net/irc_conduit'
-require 'net/irc_client'
+require './net/socket_utils'
+require './net/irc_conduit'
+require './net/irc_client'
 
 # Responsible for low-level socket IO, socket maintenance, and communication via IRC
 # Listens for new connections in a separate thread

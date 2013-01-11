@@ -1,4 +1,4 @@
-require 'util/log'
+require './util/log'
 
 def trap_signals(signals=["TERM","INT"], &block)
     signals.each do |signal|

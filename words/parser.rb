@@ -1,4 +1,4 @@
-require 'words/db'
+require './words/db'
 
 =begin
 

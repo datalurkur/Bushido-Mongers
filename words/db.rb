@@ -1,4 +1,4 @@
-require 'util/log'
+require './util/log'
 
 class WordDB
     def initialize

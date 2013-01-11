@@ -1,6 +1,6 @@
-require 'util/math'
-require 'util/log'
-require 'words/words'
+require './util/math'
+require './util/log'
+require './words/words'
 
 class Zone
     # Create zones given a parent (nil for the root zone) and depth information.

@@ -1,5 +1,5 @@
-require 'net/server'
-require 'net/web_enabled_lobby'
+require './net/server'
+require './net/web_enabled_lobby'
 
 # GameServer is responsible for handling client communications above the socket layer and delegating them where appropriate
 # Handles logins and authentication

@@ -1,7 +1,6 @@
-require 'game/game_core'
-require 'game/descriptors'
-require 'util/log'
-require 'net/http_server'
+require './game/game_core'
+require './game/descriptors'
+require './net/http_server'
 
 # Lobbies group players together with a Game and facilitate communications between the game and the client sockets
 class Lobby

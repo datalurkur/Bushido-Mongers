@@ -1,7 +1,6 @@
-require 'net/client_base'
-
-require 'state/state'
-require 'state/states/connect_state'
+require './net/client_base'
+require './state/state'
+require './state/states/connect_state'
 
 # GameClient mostly functions as an input buffer and state container; it is also responsible for passing messages and interactables through the interface module for translation
 # When it comes to actual game events and functionality, the state objects do all the heavy lifting

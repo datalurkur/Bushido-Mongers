@@ -1,7 +1,7 @@
-require 'state/state'
-require 'state/states/lobby_state'
-require 'state/states/server_menu_state'
-require 'util/crypto'
+require './state/state'
+require './state/states/lobby_state'
+require './state/states/server_menu_state'
+require './util/crypto'
 
 class LoginState < State
     def initialize(client, method)

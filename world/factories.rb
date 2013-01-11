@@ -1,6 +1,6 @@
-require 'world/world'
-require 'math/noisemap'
-require 'util/timer'
+require './world/world'
+require './math/noisemap'
+require './util/timer'
 
 class WorldFactory
 class << self

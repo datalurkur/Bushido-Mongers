@@ -1,5 +1,5 @@
-require 'state/state'
-require 'state/states/login_state'
+require './state/state'
+require './state/states/login_state'
 
 class ConnectState < State
     def initialize(client, method)

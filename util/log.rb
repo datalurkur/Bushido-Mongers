@@ -1,14 +1,14 @@
 require 'thread'
-require 'util/formatting'
-require 'util/basic'
+require './util/formatting'
+require './util/basic'
 
 # Threadsafe logging that logs the name of the thread, the file and line number, log level (less than or equal to that set in log.cfg), and log message
 # Requires setup
 # Functions as a singleton
 class Log
     class << self
-        LOG_DIR    = "logs"
-        LOG_CONFIG = "log.cfg"
+        LOG_DIR    = "./logs"
+        LOG_CONFIG = "./log.cfg"
 
         def setup(name, logfile_prefix, logfile_behavior=:terse)
             @log_mutex = Mutex.new

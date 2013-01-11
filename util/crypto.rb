@@ -1,10 +1,10 @@
-require 'util/basic'
+require './util/basic'
 
 class String
     def xor(other)
         l = [self.length, other.length].max
         (0...l).collect do |i|
-            (self[i] || 0x00) ^ (other[i] || 0x00)
+            (self[i] || 0x00).ord ^ (other[i] || 0x00).ord
         end.pack("C*")
     end
 end

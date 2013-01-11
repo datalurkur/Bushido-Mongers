@@ -1,4 +1,4 @@
-require 'net/lobby'
+require './net/lobby'
 
 class WebEnabledLobby < Lobby
     def initialize(name, password_hash, creator, web_server, &block)

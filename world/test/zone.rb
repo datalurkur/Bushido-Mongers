@@ -1,6 +1,6 @@
 #!/usr/bin/ruby
-require 'util/basic'
-require 'world/zone'
+require './util/basic'
+require './world/zone'
 
 Log.setup("Zone", "zonetest")
 

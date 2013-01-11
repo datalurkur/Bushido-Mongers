@@ -1,8 +1,5 @@
 require 'socket'
-
-require 'net/socket_utils'
-
-require 'util/log'
+require './net/socket_utils'
 
 # ClientBase provides a low-level interface to server and client communications
 # In this case, the server is the actual server, and the "client" is whatever object is providing input from the user (this might be the command line or the IRCConduit, for example, hence the distinction)

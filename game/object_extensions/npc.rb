@@ -1,7 +1,6 @@
-require 'ai/behavior_set'
-require 'ai/basic_behavior'
-require 'ai/roamers'
-require 'game/commands'
+require './ai/behavior_set'
+require './ai/basic_behavior'
+require './game/commands'
 
 module NpcBehavior
     class << self

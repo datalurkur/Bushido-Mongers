@@ -1,4 +1,5 @@
 require 'thread'
+require './util/log'
 
 # Miscellaneous shared code and utilities
 module SocketUtils

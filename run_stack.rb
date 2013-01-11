@@ -1,10 +1,10 @@
 #!/usr/bin/ruby
 
-require 'util/traps'
-require 'util/timer'
+require './util/traps'
+require './util/timer'
 #MeteredMethods.enable
 
-require 'net/stack_client'
+require './net/stack_client'
 
 $config = {
     :server_hostname => "localhost",
