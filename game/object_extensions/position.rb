@@ -1,7 +1,7 @@
 module Position
     class << self
         def at_creation(instance, params)
-            instance.set_position(params[:position]) unless params[:position].nil?
+            instance.set_position(params[:position], params[:position_type] || :internal) unless params[:position].nil?
         end
 
         def at_destruction(instance)
@@ -11,11 +11,11 @@ module Position
 
     attr_reader :position
 
-    def set_position(position)
+    def set_position(position, type=:internal)
         Log.debug("Setting position of #{monicker} to #{position.monicker}", 6)
         Log.warning("WARNING: Position being set more than once for #{monicker}; this method is meant to be called during setup and never again; call \"move\" instead") unless @position.nil?
         @position = position
-        @position.add_object(self)
+        @position.add_object(self, type)
     end
 
     def nil_position
