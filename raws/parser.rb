@@ -245,6 +245,7 @@ module ObjectRawParser
                         case dup_data
                         when Array
                             object_data[key].concat(dup_data)
+                            object_data[key].uniq!
                         when Hash
                             object_data[key].merge!(dup_data)
                         else
@@ -262,7 +263,7 @@ module ObjectRawParser
                     statement_pieces = statement.split(/\s+/)
                     case statement_pieces[0]
                     when "uses"
-                        Log.debug("#{next_object} uses #{statement_pieces[1..-1].inspect}",8)
+                        Log.debug("#{next_object} uses #{statement_pieces[1..-1].inspect}", 8)
                         raise "Insufficient arguments in #{statement.inspect}" unless statement_pieces.size >= 2
                         object_data[:uses].concat(statement_pieces[1..-1].collect { |m| m.to_caml.to_const })
                     when "has","has_many","class","class_many"

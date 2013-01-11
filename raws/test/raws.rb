@@ -32,23 +32,22 @@ Log.debug("Test item is a headgear? #{test_item.is_type?(:headgear)}")
 Log.debug(["Types of NPCs:", db.types_of(:npc)])
 
 def test_npc(db, test_npc_type, name)
-    Log.debug(["Creating a #{test_npc_type} with raw info", db.raw_info_for(test_npc_type)])
+    Log.debug("Creating a #{test_npc_type}")
     test_npc = db.create($core, test_npc_type, :position => FakeRoom.new, :name => name)
 
     Log.debug("Test NPC is a guard? #{test_npc.is_type?(:guard)}")
-    Log.debug(["Test NPC has parts", test_npc.body.internal, test_npc.body.external])
+    Log.debug(["Test NPC has parts", test_npc.body.internal.collect(&:monicker), test_npc.body.external.collect(&:monicker)])
     if test_npc.has_property?(:provocations)
         Log.debug(["Test NPC has provocations", test_npc.provocations])
     end
-    Log.debug(["Test NPC", test_npc])
 end
 
 test_npc(db, :peacekeeper, "Derpus Maximus")
 test_npc(db, :giant_spider, "Leggus Maximus")
 
 # Body / Corporeal tests
-hb = db.create($core, :humanoid_body, {}, {:relative_size => :large})
-hb = db.create($core, :arachnoid_body, {}, {:relative_size => :tiny})
+hb = db.create($core, :humanoid_body, {:relative_size => :large})
+hb = db.create($core, :arachnoid_body, {:relative_size => :tiny})
 
 # Recipe and command tests
 Log.debug("How do I produce a dagger?")

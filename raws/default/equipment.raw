@@ -1,4 +1,4 @@
-abstract item equipment {
+abstract root equipment {
     class sym slot;
 
     /* Protection can be based on a modifier manipulated by the material properties */
@@ -31,7 +31,7 @@ abstract equipment boots {
 }
 */
 
-abstract item weapon {
+abstract root weapon {
     /* TODO - Work out the slot (or slots) a weapon can go in based on its handedness */
     class sym handedness;
     class sym type;
@@ -41,7 +41,7 @@ abstract weapon melee_weapon {}
 
 abstract weapon ranged_weapon {}
 
-abstract item ammunition {}
+abstract root ammunition {}
 
 constructed dagger_blade {
     required_components metal;

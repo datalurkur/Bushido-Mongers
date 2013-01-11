@@ -15,7 +15,9 @@ module Position
 
     def set_position(position, type=:internal)
         Log.debug("Setting position of #{monicker} to #{position.monicker}", 6)
-        Log.warning("WARNING: Position being set more than once for #{monicker}; this method is meant to be called during setup and never again; call \"move\" instead") unless @position.nil?
+        unless @position.nil?
+            Log.warning("WARNING: Position being set more than once for #{monicker}; this method is meant to be called during setup and never again; call \"move\" instead")
+        end
         @position = position
         @position.add_object(self, type)
     end
