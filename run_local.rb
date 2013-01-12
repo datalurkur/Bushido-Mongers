@@ -1,3 +1,5 @@
+#!/usr/bin/ruby
+
 require './util/traps'
 require './util/timer'
 require './net/game_server'
