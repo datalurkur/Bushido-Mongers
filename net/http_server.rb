@@ -55,7 +55,7 @@ class HTTPServer
             return
         end
 
-        Log.debug("Web service starting")
+        Log.debug("Web service starting on port #{@port.inspect}")
         @accept_socket = TCPServer.new(@port)
         @listen_thread = Thread.new do 
             Log.name_thread("http-a")

@@ -12,9 +12,11 @@ void FreePerlin(Perlin *cPerlin) {
 }
 
 VALUE AllocPerlin(VALUE rPerlinClass) {
-    Perlin *cPerlin = (Perlin*)malloc(sizeof(Perlin));
+    VALUE rPerlin;
+    Perlin *cPerlin;
+    cPerlin = (Perlin*)malloc(sizeof(Perlin));
     setupPermutationTable(cPerlin, NOISE_SIZE);
-    VALUE rPerlin = Data_Wrap_Struct(rPerlinClass, MarkPerlin, FreePerlin, cPerlin);
+    rPerlin = Data_Wrap_Struct(rPerlinClass, MarkPerlin, FreePerlin, cPerlin);
     return rPerlin;
 }
 

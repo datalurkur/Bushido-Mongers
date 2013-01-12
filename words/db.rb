@@ -78,7 +78,12 @@ class WordDB
     end
 
     def get_keyword_words(keyword, pos)
-        get_keyword_groups(keyword).select { |g| g.has?(pos) }.collect { |g| g[pos] }
+        keyword_groups = get_keyword_groups(keyword)
+        if keyword_groups.nil? || keyword_groups.empty?
+            Log.warning(["No keyword groups found for #{keyword.inspect}", @keywords])
+            return []
+        end
+        keyword_groups.select { |g| g.has?(pos) }.collect { |g| g[pos] }
     end
 
     # Check whether a word is associated with a preposition

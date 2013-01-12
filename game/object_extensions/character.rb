@@ -13,7 +13,7 @@ require './util/log'
 
 module Character
     class << self
-        CHARACTER_DIRECTORY = "data/characters"
+        CHARACTER_DIRECTORY = "./data/characters"
 
         # It would be cleaner to store the timestamp in the character object, but doing that doesn't allow us to check for the existence of a (possibly) corrupt character
         # Basically if we store all the character information inside the object and use a random hash as the filename, we lose the ability to pull out metadata about a corrupt character

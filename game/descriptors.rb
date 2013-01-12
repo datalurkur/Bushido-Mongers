@@ -31,7 +31,7 @@ class Descriptor
             d[:name]             = object.name if object.has_property?(:name)
             d[:monicker]         = (d[:name] || d[:type])
 
-            d[:name] = d[:monicker] = :you if d[:monicker] == observer.monicker
+            d[:name] = d[:monicker] = :you if observer && d[:monicker] == observer.monicker
 
             # Collect parent type information
             d[:is_type]          = object.type_ancestry

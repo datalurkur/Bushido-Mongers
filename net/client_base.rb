@@ -1,5 +1,6 @@
 require 'socket'
 require './net/socket_utils'
+require './util/cfg_reader'
 
 # ClientBase provides a low-level interface to server and client communications
 # In this case, the server is the actual server, and the "client" is whatever object is providing input from the user (this might be the command line or the IRCConduit, for example, hence the distinction)
@@ -10,7 +11,9 @@ class ClientBase
     include SocketUtils
 
     def initialize
-        @setup = false
+        @setup  = false
+        @config = {}
+        @config[:buffer_size] = (CFGReader.get_param("net", :buffer_size) || DEFAULT_BUFFER_SIZE).to_i
     end
 
     def start
@@ -34,8 +37,8 @@ class ClientBase
 
     def connect(ip, port)
         raise "Can't attempt to connect until client has started" unless @setup
-        @socket                = TCPSocket.new(ip,port)
-        @socket_mutex          = Mutex.new
+        @socket       = TCPSocket.new(ip,port)
+        @socket_mutex = Mutex.new
         start_processing_server_messages
     end
 
@@ -61,15 +64,9 @@ class ClientBase
 
         # This really doesn't need to be in a begin / rescue block, but until we find this thread concurrency bug, I need all the logging I can get
         begin
-            Log.debug("Packing message #{message.type} for server", 8)
+            #Log.debug("Packing message #{message.type} for server", 8)
             packed_data = pack_message(message)
-            @socket_mutex.synchronize {
-                begin
-                    @socket.write_nonblock(packed_data)
-                rescue Exception => e
-                    Log.error(["Failed to write to server socket", e.message, e.backtrace])
-                end
-            }
+            @socket.write_nonblock(packed_data)
         rescue Exception => e
             Log.error(["Failed to send data to server", e.message, e.backtrace])
         end
@@ -83,21 +80,20 @@ class ClientBase
                 while(true)
                     messages = []
                     while messages.empty?
-                        new_messages = buffer_socket_input(@socket, @socket_mutex, data_buffer)
-                        new_messages.reject! do |message|
-                            if message.type == :heartbeat
-                                Log.debug("Heartbeat", 8)
-                                send_to_server(Message.new(:heartbeat))
-                            else
-                                false
-                            end
+                        begin
+                            data = @socket.read_nonblock(@config[:buffer_size])
+                            raise Errno::ECONNRESET if data.empty?
+                            data_buffer += data
+                            new_messages, data_buffer = buffer_socket_input(data_buffer)
+                            messages.concat(new_messages)
+                        rescue Errno::EWOULDBLOCK,Errno::EAGAIN
+                            IO.select([@socket])
+                            retry
                         end
-                        messages.concat(new_messages)
                     end
-                
                     @server_mutex.synchronize { @server_message_buffer.concat(messages) }
                 end
-            rescue Errno::ECONNRESET
+            rescue Errno::ECONNRESET,EOFError
                 # Pass a fake server message informing the client that the connection was reset
                 reset_message = Message.new(:connection_reset)
                 @server_mutex.synchronize { @server_message_buffer << reset_message }

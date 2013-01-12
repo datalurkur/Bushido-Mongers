@@ -2,6 +2,7 @@ require 'socket'
 require './net/socket_utils'
 require './net/irc_conduit'
 require './net/irc_client'
+require './util/cfg_reader'
 
 # Responsible for low-level socket IO, socket maintenance, and communication via IRC
 # Listens for new connections in a separate thread
@@ -10,10 +11,11 @@ class Server
     include SocketUtils
 
     def initialize(config={})
-        @config  = config
         @running = false
-        @config[:heartbeat_interval] ||= 5
-        @config[:heartbeat_timeout]  ||= 5 
+        @config  = config.merge(CFGReader.read("net"))
+        @config[:buffer_size] = (@config[:buffer_size] || DEFAULT_BUFFER_SIZE).to_i
+        @config[:listen_port] = (@config[:listen_port] || DEFAULT_LISTEN_PORT).to_i
+        @config[:irc_port]    = (@config[:irc_port]    || DEFAULT_IRC_PORT).to_i
     end
 
     def start
@@ -32,7 +34,7 @@ class Server
         start_listening_for_connections
 
         # Open the IRC Conduit if required
-        if @config[:irc_enabled]
+        if @config[:irc_enabled] == "1"
             IRCConduit.start(@config[:irc_server], @config[:irc_port], @config[:irc_nick], self)
         end
     end
@@ -40,8 +42,6 @@ class Server
     def start_listening_for_connections
         # Establish the listen socket
         # This is used not only be remotely connecting clients, but also by the IRC Clients
-        Log.debug("Listen port undefined, using default port #{DEFAULT_LISTEN_PORT}") unless @config[:listen_port]
-        @config[:listen_port] ||= DEFAULT_LISTEN_PORT
 
         @sockets_mutex = Mutex.new
         @client_sockets = {}
@@ -53,13 +53,8 @@ class Server
                 begin
                     # Accept the new connection
                     socket = @accept_socket.accept
-                    set_client_info(socket, {
-                        :state         => :accepted,
-                        :mutex         => Mutex.new
-                    })
-                    alter_client_info(socket) do |hash|
-                        hash[:listen_thread] = spawn_listen_thread_for(socket)
-                    end
+                    client_thread = spawn_thread_for(socket)
+                    set_client_info(socket, client_thread)
                 rescue Exception => e
                     Log.debug(["Failed to accept connection",e.message,e.backtrace])
                 end
@@ -72,7 +67,7 @@ class Server
         @accept_socket.close
         @sockets_mutex.synchronize do
             @client_sockets.each_key do |k|
-                @client_sockets[k][:listen_thread].kill
+                @client_sockets[k].kill
                 k.close
             end
             @client_sockets.clear
@@ -81,7 +76,7 @@ class Server
 
     def teardown
         stop_listening_for_connections
-        if @config[:irc_enabled]
+        if @config[:irc_enabled] == "1"
             IRCConduit.stop
         end
     end
@@ -90,23 +85,10 @@ class Server
         Log.debug("Terminating client socket")
         @sockets_mutex.synchronize {
             unless @client_sockets[socket].nil?
-                @client_sockets[socket][:listen_thread].kill
+                @client_sockets[socket].kill
                 socket.close
                 @client_sockets.delete(socket)
             end
-        }
-    end
-
-    def get_client_info(socket)
-        info = nil
-        @sockets_mutex.synchronize { info = @client_sockets[socket] }
-        info
-    end
-
-    def alter_client_info(socket, info = {}, &block)
-        @sockets_mutex.synchronize {
-            @client_sockets[socket].merge!(info)
-            (block.call(@client_sockets[socket]) if block_given?)
         }
     end
 
@@ -119,7 +101,7 @@ class Server
         @sockets_mutex.synchronize { @client_sockets.delete(socket) }
     end
 
-    def spawn_listen_thread_for(socket)
+    def spawn_thread_for(socket)
         sockaddr = socket.addr.last
         @threadcount           ||= {}
         @threadcount[sockaddr] ||= 0
@@ -127,64 +109,42 @@ class Server
         thread_name = "Cli #{@threadcount[sockaddr]}"
         Log.debug("Listening for client input from #{sockaddr}")
         Thread.new do
-            mutex = get_client_info(socket)[:mutex]
+            Log.name_thread(thread_name)
             begin
-                Log.name_thread(thread_name)
-
-                data_buffer           = ""
-                last_heartbeat        = Time.now
-                waiting_for_heartbeat = false
-                next_interval         = last_heartbeat + @config[:heartbeat_interval]
+                data_buffer = ""
 
                 while(true)
-                    while Time.now < next_interval
-                        new_messages = buffer_socket_input(socket, mutex, data_buffer)
-                        new_messages.each do |message|
-                            if message.type == :heartbeat
-                                waiting_for_heartbeat = false
-                                next_interval = Time.now + @config[:heartbeat_interval]
-                            else
-                                process_client_message(message, socket)
-                            end
+                    begin
+                        data = socket.read_nonblock(@config[:buffer_size])
+                        raise Errno::ECONNRESET if data.empty?
+                        data_buffer += data
+                        messages, data_buffer = buffer_socket_input(data_buffer)
+                        messages.each do |message|
+                            process_client_message(message, socket)
                         end
-                    end
-
-                    if waiting_for_heartbeat
-                        Log.warning("Client failed to respond to heartbeat")
-                        raise Errno::ECONNRESET
-                    else
-                        Log.debug("Heartbeat", 8)
-                        waiting_for_heartbeat = true
-                        send_to_client(socket, Message.new(:heartbeat))
-                        next_interval = Time.now + @config[:heartbeat_timeout]
+                    rescue Errno::EWOULDBLOCK,Errno::EAGAIN
+                        IO.select([socket])
+                        retry
                     end
                 end
-            rescue Errno::ECONNRESET
+            rescue Errno::ECONNRESET,EOFError
                 Log.debug("Client disconnected")
+                socket.close
             rescue Exception => e
-                Log.debug(["Thread exited abnormally", e.message, e.backtrace])
+                Log.debug(["Thread exited abnormally #{e.class}", e.message, e.backtrace])
             end
             clear_client_info(socket)
         end
     end
 
     def send_to_client(socket, message)
-        # This really doesn't need to be in a begin / rescue block, but until we find this thread concurrency bug, I need all the logging I can get
         begin
             #Log.debug("Packing message #{message.type} for client", 8)
             packed_data = pack_message(message)
-            begin
-                get_client_info(socket)[:mutex].synchronize {
-                    socket.write_nonblock(packed_data)
-                }
-            rescue Errno::ECONNRESET
-                Log.debug("Client connection reset")
-                clear_client_info(socket)
-            rescue Exception => e
-                Log.debug(["Failed to write to client socket", e.message, e.backtrace])
-            end
+            socket.write_nonblock(packed_data)
         rescue Exception => e
             Log.debug(["Failed to send data to client", e.message, e.backtrace])
+            clear_client_info(socket)
         end
     end
 

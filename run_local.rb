@@ -3,15 +3,6 @@ require './util/timer'
 require './net/game_server'
 require './net/stack_client'
 
-$server_config = {
-    :irc_enabled => false,
-    :irc_server  => "irc.freenode.net",
-    :irc_port    => 7000,
-    :irc_nick    => "ninja_game_bot",
-    :listen_port => 9999,
-    :motd        => "Youkoso!",
-}
-
 $client_config = {
     :server_hostname => "localhost",
     :server_port     => StackClient::DEFAULT_LISTEN_PORT,
@@ -27,7 +18,7 @@ Log.setup("Main", "local")
 require './game/test/character'
 recreate_test_character("test_user", "default")
 
-$server = GameServer.new($server_config)
+$server = GameServer.new
 $client = StackClient.new($client_config)
 
 trap_signals do
