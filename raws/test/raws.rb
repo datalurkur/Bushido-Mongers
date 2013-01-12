@@ -17,7 +17,7 @@ db = Marshal.load(db_data)
 $core = FakeCore.new(db)
 
 # Basic DB listing tests
-Log.debug(["Types of items:", db.types_of(:item)])
+Log.debug(["Number of types of items:", db.types_of(:item).size])
 
 # Basic item creation tests
 test_item_type = :helmet
@@ -32,7 +32,7 @@ Log.debug("Test item is a headgear? #{test_item.is_type?(:headgear)}")
 Log.debug(["Types of NPCs:", db.types_of(:npc)])
 
 def test_npc(db, test_npc_type, name)
-    Log.debug("Creating a #{test_npc_type}")
+    Log.debug(["Creating a #{test_npc_type} with raw info", db.raw_info_for(test_npc_type)])
     test_npc = db.create($core, test_npc_type, :position => FakeRoom.new, :name => name)
 
     Log.debug("Test NPC is a guard? #{test_npc.is_type?(:guard)}")
@@ -46,8 +46,8 @@ test_npc(db, :peacekeeper, "Derpus Maximus")
 test_npc(db, :giant_spider, "Leggus Maximus")
 
 # Body / Corporeal tests
-hb = db.create($core, :humanoid_body, {:relative_size => :large})
-hb = db.create($core, :arachnoid_body, {:relative_size => :tiny})
+hb = db.create($core, :humanoid_body, :relative_size => :large)
+hb = db.create($core, :arachnoid_body, :relative_size => :tiny)
 
 # Recipe and command tests
 Log.debug("How do I produce a dagger?")
