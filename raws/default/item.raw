@@ -1,0 +1,8 @@
+abstract object,position item {
+    has int value;
+
+    /* These values are filled out automatically for compositional objects */
+    weight 0;
+    value 0;
+}
+

@@ -1,3 +1,5 @@
+# FIXME: Systematize these
+
 module Quality
     class << self
         def levels
@@ -51,6 +53,24 @@ module Chance
         def take(level)
             raise "Level #{level.inspect} is not a Chance!" unless levels.keys.include?(level)
             return (Kernel.rand < levels[level])
+        end
+    end
+end
+
+module Rarity
+    class << self
+        def levels
+            [
+                :extinct,
+                :singular,
+                :rare,
+                :unusual,
+                :uncommon,
+                :common,
+                :thriving,
+                :teeming,
+                :ubiquitous
+            ]
         end
     end
 end
