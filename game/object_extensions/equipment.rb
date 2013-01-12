@@ -10,7 +10,6 @@ module Equipment
         def at_creation(instance, params)
             Log.debug(params)
             instance.instance_exec {
-                Log.debug(all_body_parts)
                 external_body_parts.each do |part|
                     if part.has_property?(:can_equip) && !part.can_equip.empty?
                         rand_type = @core.db.random(part.can_equip.rand)
@@ -28,7 +27,7 @@ module Equipment
 
                         # FIXME: adjust size based on size of self
                         new_equip = @core.db.create(@core, rand_type, creation_hash)
-                        part.attach_object(new_equip)
+                        @equipped = (new_equip)
                     end
                 end
             }

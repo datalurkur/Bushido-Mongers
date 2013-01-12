@@ -8,10 +8,12 @@ module Corporeal
                 when :unit_attacks
                     if message.defender == self
                         Log.debug("#{monicker} is being attacked!")
-                        # This unit is being attacked and needs to be damaged or something
-                        # FIXME - Actually do damage rather than just destroying the thing
-                        Message.dispatch(@core, :object_destroyed, {:agent => message.attacker, :position => @position, :target => self})
-                        self.destroy
+
+                        # TODO - extract damage from attacker, tool, etc.
+                        damage = 1
+                        rand_part = external_body_parts.rand
+                        damage(rand_part, damage, message.attacker)
+                        damage(self.body, damage, message.attacker)
                     end
                 end
             }
@@ -22,7 +24,8 @@ module Corporeal
                 body_type = @core.db.info_for(@type, :body_type)
                 body      = @core.db.create(@core, body_type, {:relative_size => @properties[:size]})
                 @properties[:body]   = body
-                @properties[:weight] = body.weight
+                @properties[:weight] = all_body_parts.map(&:weight).inject(0, &:+)
+                @properties[:body].set_property(:hp, all_body_parts.map(&:hp).inject(0, &:+))
             }
         end
 
@@ -36,14 +39,28 @@ module Corporeal
 
     def all_body_parts(type = [:internal, :external])
         selector = Proc.new { |obj| obj.is_type?(:body_part) }
-        self.body.select_objects(type, true, &selector)
+        @properties[:body].select_objects(type, true, &selector)
     end
 
     def external_body_parts
-        [self.body] + all_body_parts(:external)
+        [@properties[:body]] + all_body_parts(:external)
     end
 
     def internal_body_parts
         all_body_parts(:internal)
+    end
+
+    def damage(part, damage, attacker)
+        part.set_property(:hp, part.hp - damage)
+        if part.hp <= 0
+            part.destroy
+            if part == self.body
+                target = self
+                self.destroy
+            else
+                target = part
+            end
+            Message.dispatch(@core, :object_destroyed, :agent => attacker, :position => self.position, :target => target)
+        end
     end
 end
