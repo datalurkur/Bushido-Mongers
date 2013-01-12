@@ -10,7 +10,7 @@ db = ObjectDB.get(raw_group)
 core = FakeCore.new(db)
 
 db.types_of(:body).each do |body|
-    test_body = db.create(core, body, {}, {:relative_size => :medium})
+    test_body = db.create(core, body, {:relative_size => :medium})
     Log.debug(test_body)
-    test_body.destroy({:position => FakeRoom.new})
+    test_body.destroy
 end

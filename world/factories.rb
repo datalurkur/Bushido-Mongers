@@ -5,8 +5,7 @@ require './util/timer'
 class WorldFactory
 class << self
     def generate(config={})
-        # core and db are necessary for zone creation and info.
-        SharedObjectExtensions.check_required_params(config, [:core])
+        raise "No core object given to #{self.class}" unless config[:core]
 
         config[:world_size]         ||= 3
         config[:world_depth]        ||= 3

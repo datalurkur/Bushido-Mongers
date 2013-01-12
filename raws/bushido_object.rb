@@ -1,4 +1,5 @@
 require './util/log'
+require './game/object_extensions'
 
 class BushidoObject
     attr_reader :type, :properties
