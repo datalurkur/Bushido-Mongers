@@ -49,16 +49,35 @@ class ObjectDB
         @db[type]
     end
 
-    def info_for(type, datapoint=nil, initialize_to=nil)
+    def info_for(type, datapoint=nil, no=false)
         type_hash = raw_info_for(type)
         return type_hash[:class_values] if datapoint.nil?
 
-        unless initialize_to.nil? || type_hash[:class_values].has_key?(datapoint)
-            type_hash[:class_values][datapoint] = initialize_to
+        ret = type_hash[:class_values][datapoint]
+        if Array === ret || Hash === ret
+            ret.dup
+        else
+            ret
         end
-        return type_hash[:class_values][datapoint]
     end
 
+    private
+    def set_info(type, datapoint, value)
+        type_hash = raw_info_for(type)
+        type_hash[:class_values][datapoint] = value
+    end
+
+    # Will not destroy pre-existing data.
+    def init_or_info(type, datapoint, init_value)
+        type_hash = raw_info_for(type)
+
+        if type_hash[:class_values][datapoint].nil?
+            type_hash[:class_values][datapoint] = init_value
+        end
+        type_hash[:class_values][datapoint]
+    end
+
+    public
     def types_of(types, instantiable_only=true)
         list = (Array === types) ? types : [types]
         list.compact.inject([]) do |arr, type|

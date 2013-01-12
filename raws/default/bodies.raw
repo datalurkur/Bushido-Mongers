@@ -1,10 +1,6 @@
-abstract composition body_part {
-    has int hp;
+abstract root adjustable_weight {
     class sym typical_size;
     needs relative_size;
-
-    /* Body parts are worthless by default */
-    value 0;
 
     /* Adjust the weight and hp of the body part based on size */
     at_creation {
@@ -16,6 +12,17 @@ abstract composition body_part {
             :hp     => 2**Size.index(actual_size)
         }
     }
+}
+
+abstract composition,adjustable_weight body_part {
+    has int hp;
+
+    /* Body parts are worthless by default */
+    value 0;
+}
+
+body_part,consumable flesh {
+    typical_size small;
 }
 
 abstract body_part body {}
@@ -101,39 +108,46 @@ body_part head {
 
 body_part arm {
     weight 5;
+    incidental flesh;
     typical_size small;
     external hand;
 }
 
 body_part hand {
     weight 2;
+    incidental flesh;
     typical_size small;
     is_container true;
 }
 
 body_part leg {
     weight 10;
+    incidental flesh;
     typical_size small;
     external foot;
 }
 
 body_part foot {
     weight 4;
+    incidental flesh;
     typical_size small;
 }
 
 body_part carapace {
     weight 15;
+    incidental flesh;
     typical_size small;
 }
 
 body_part spinner {
     weight 1;
+    incidental flesh;
     typical_size tiny;
 }
 
 body_part tail {
     weight 1;
+    incidental flesh;
     typical_size tiny;
 }
 
