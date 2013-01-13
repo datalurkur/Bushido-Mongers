@@ -332,6 +332,7 @@ class ZoneLeaf < Zone
     end
 
     def resolve_connections
+        raise "Connections are already resolved!" if @resolved
         @connections.each do |direction,value|
             if TrueClass === value
                 @connections[direction] = connected_leaf(direction)

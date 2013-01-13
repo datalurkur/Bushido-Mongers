@@ -25,14 +25,8 @@ class << self
         world_name = Words.gen_area_name(params).to_s
 
         world = World.new(world_name, size, depth, params)
-
         populate_area(world, config)
-
-        # Cache room adjacency to avoid lookups
-        world.leaves.each do |leaf|
-            leaf.resolve_connections
-        end
-
+        world.finalize
         world
     end
 

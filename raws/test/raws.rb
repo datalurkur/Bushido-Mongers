@@ -46,7 +46,7 @@ def test_test_npc(db, test_npc_type, name)
 end
 
 test_test_npc(db, :peacekeeper, "Derpus Maximus")
-test_test_npc(db, :giant_spider, "Leggus Maximus")
+#test_test_npc(db, :giant_spider, "Leggus Maximus")
 
 # Body / Corporeal tests
 hb = db.create($core, :humanoid_body, :relative_size => :large)
