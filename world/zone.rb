@@ -273,6 +273,7 @@ class ZoneLeaf < Zone
         super(name)
 
         @connections = {}
+        @resolved    = false
     end
 
     def depth
@@ -328,5 +329,23 @@ class ZoneLeaf < Zone
                 raise "Zone connection consistency check failed - #{@name} does not connect uniquely to the #{dir} with #{other.name}"
             end
         end
+    end
+
+    def resolve_connections
+        @connections.each do |direction,value|
+            if TrueClass === value
+                @connections[direction] = connected_leaf(direction)
+            elsif FalseClass === value
+                @connections[direction] = nil
+            else
+                Log.warning("Unknown connection class #{value.class}")
+            end
+        end
+        @resolved = true
+    end
+
+    def get_adjacent(direction)
+        raise "Connections not resolved!" unless @resolved
+        @connections[direction]
     end
 end

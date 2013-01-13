@@ -35,7 +35,7 @@ module Position
         raise Exception, "Position uninitialized for #{monicker}" if @position.nil?
 
         # This method raises an exception if the direction is invalid, so no need to check it
-        new_position = @position.connected_leaf(direction)
+        new_position = @position.get_adjacent(direction)
 
         Log.debug("#{monicker} moves from #{@position.name} to #{new_position.name}")
         @position.remove_object(self)

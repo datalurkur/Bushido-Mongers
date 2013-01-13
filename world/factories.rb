@@ -28,6 +28,11 @@ class << self
 
         populate_area(world, config)
 
+        # Cache room adjacency to avoid lookups
+        world.leaves.each do |leaf|
+            leaf.resolve_connections
+        end
+
         world
     end
 

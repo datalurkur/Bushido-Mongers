@@ -12,5 +12,5 @@ core = FakeCore.new(db)
 db.types_of(:body).each do |body|
     test_body = db.create(core, body, {:relative_size => :medium})
     Log.debug(test_body)
-    test_body.destroy
+    test_body.destroy(nil)
 end

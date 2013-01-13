@@ -45,7 +45,7 @@ class World < Area
 
             Log.debug("\tDrawing corridors", 7)
             leaf.connected_directions.each do |dir|
-                other = leaf.connected_leaf(dir)
+                other = leaf.get_adjacent(dir)
                 other_coords = other.get_full_coordinates
                 Log.debug("\t\tCorridor to the #{dir} is connected to #{other.name}", 9)
 
