@@ -100,6 +100,11 @@ quadriped rodent_body {
     external head tail;
 }
 
+quadriped ungulate_body {
+    weight 200;
+    typical_size large;
+    external head tail;
+}
 
 body_part head {
     weight 4;

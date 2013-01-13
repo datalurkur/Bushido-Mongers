@@ -46,11 +46,13 @@ module Words
 
     # TODO - distinguish between patient (action receiver) and direct object (part of sentence), esp. useful for passive case.
     class State
-        ASPECTS = [:perfect, :imperfect, :habitual, :stative, :progressive]
-        TENSE   = [:present, :past]
-        MOOD    = [:indicative, :subjunctive, :imperative]
-        PERSON  = [:first, :second, :third, :first_plural, :second_plural, :third_plural]
-        VOICE   = [:active, :passive]
+        FIELDS = {
+            :aspects => [:perfect, :imperfect, :habitual, :stative, :progressive],
+            :tense   => [:present, :past],
+            :mood    => [:indicative, :subjunctive, :imperative],
+            :person  => [:first, :second, :third, :first_plural, :second_plural, :third_plural],
+            :voice   => [:active, :passive]
+        }
 
         attr_accessor :aspect, :tense, :mood, :person, :voice
 
@@ -64,6 +66,19 @@ module Words
             @mood   = :indicative
             @person = :third
             @voice  = :active
+        end
+
+        def ==(other)
+            case other
+            when State
+                @aspect == other.aspect
+                @tense  == other.tense
+                @mood   == other.mood
+                @person == other.person
+                @voice  == other.voice
+            else
+                raise "Can't compare word state to #{other.class}"
+            end
         end
     end
 
@@ -231,6 +246,7 @@ module Words
                 end
 
                 @list = (nouns.size > 1)
+
                 @children = nouns.map do |noun|
                     noun_with_article(noun)
                 end
@@ -285,11 +301,11 @@ module Words
             end
 
             def self.conjugate(infinitive, state = State.new)
-                # Words::Conjugations for 'special' conjugations
-                if {}.keys.include?(infinitive)
-                    nil
+                if Words.db.conjugation_for?(infinitive, state)
+                    return Worda.db.conjugate(infinitive, state)
                 end
 
+                infinitive = infinitive.to_s
                 # defaults
                 infinitive = case state.tense
                 when :present
@@ -457,7 +473,7 @@ module Words
             verb = associated_verbs.rand
         end
 
-        # TODO - Use expletive
+        # TODO - Use expletive / inverted copula construction
         # TODO - expletive more often for second person
         #features = []
         #features << :expletive if Chance.take(:coin_toss)
@@ -466,6 +482,9 @@ module Words
         verb_np    = Sentence::VerbPhrase.new(verb, args)
 
         Sentence.new(subject_np, verb_np)
+    end
+
+    def self.gen_copula(name, args = {})
     end
 
     #:keywords=>[], :objects=>["Test NPC 23683", "Test NPC 35550", "Test Character"], :exits=>[:west], :name=>"b00"
@@ -551,7 +570,7 @@ module Words
             matching_commands = commands & related
             case matching_commands.size
             when 0
-                raise "'#{verb}' is not a valid command!"
+                return {:command => verb, :args => {}}
             when 1
                 command = matching_commands.first
             else

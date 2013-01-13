@@ -6,6 +6,7 @@ class WordDB
         @associations = {}
         @keywords     = {}
         @prepositions = {}
+        @conjugations = {}
     end
 
     def collect_groups(*list_of_words)
@@ -96,6 +97,42 @@ class WordDB
             end
         end
         nil
+    end
+
+    # For 'special' conjugations. Basic rules are in Sentence::Verb::conjugate.
+    def conjugate(infinitive, state)
+        @conjugations[state][infinitive]
+    end
+
+    def conjugation_for?(infinitive, state)
+        !!(@conjugations[state] && @conjugations[state][infinitive])
+    end
+
+    def add_conjugation(infinitive, state, expr)
+        @conjugations[state] ||= {}
+        @conjugations[state][infinitive] = expr
+    end
+
+    # :person  => [:first, :second, :third, :first_plural, :second_plural, :third_plural],
+    def add_conjugation_by_person(infinitive, state, list)
+        first_person = list.first
+        case list.size
+        when 2, 3, 6
+            Words::State::FIELDS[:person].each do |person|
+                curr_state = state.dup
+                curr_state.person = person
+
+                expr = list.shift
+                if expr
+                    add_conjugation(infinitive, state, expr)
+                else
+                    # If the list is unfilled, use the first person as default.
+                    add_conjugation(infinitive, state, first_person)
+                end
+            end
+        else
+            raise "Wrong number of conjugation terms: #{list}"
+        end
     end
 
     private
