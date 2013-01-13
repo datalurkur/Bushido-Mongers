@@ -60,13 +60,19 @@ class BushidoObject
         self
     end
 
-    def destroy
+    def destroy(destroyer)
         @core.db.raw_info_for(@type)[:at_destruction].each do |destruction_proc|
             eval(destruction_proc, nil, __FILE__, __LINE__)
         end
 
         @extensions.each do |mod|
             mod.at_destruction(self) if mod.respond_to?(:at_destruction)
+        end
+
+        if @position
+            Message.dispatch(@core, :object_destroyed, :agent => destroyer, :position => @position, :target => self)
+        else
+            Log.warning("#{monicker} is being destroyed but has no position")
         end
     end
 
@@ -125,5 +131,44 @@ class BushidoObject
 
     def to_formatted_string(prefix, nest_prefix=true)
         [@type, [@properties]].to_formatted_string(prefix, nest_prefix)
+    end
+end
+
+class SafeBushidoObject < BushidoObject
+    attr_reader :destroyed
+
+    def initialize(*args)
+        @destroyed = false
+        super(*args)
+    end
+
+    def check_destroyed
+        Log.warning(["Destroyed object being used!", caller]) if @destroyed
+    end
+
+    def destroy(*args)
+        check_destroyed
+        super(*args)
+        @destroyed = true
+    end
+
+    def monicker
+        check_destroyed
+        super()
+    end
+
+    def method_missing(*args, &block)
+        check_destroyed
+        super(*args, &block)
+    end
+
+    def set_property(*args)
+        check_destroyed
+        super(*args)
+    end
+
+    def process_message(*args)
+        check_destroyed
+        super(*args)
     end
 end

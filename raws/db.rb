@@ -49,7 +49,7 @@ class ObjectDB
         @db[type]
     end
 
-    def info_for(type, datapoint=nil, no=false)
+    def info_for(type, datapoint=nil)
         type_hash = raw_info_for(type)
         return type_hash[:class_values] if datapoint.nil?
 
@@ -126,7 +126,10 @@ class ObjectDB
     def create(core, type, params={})
         raise "#{type.inspect} not defined as db type" unless @db[type]
         raise "#{type.inspect} is not instantiable" if @db[type][:abstract]
-        BushidoObject.new(core, type, params)
+
+        # When no longer in debug mode, go back to using BushidoObject
+        #BushidoObject.new(core, type, params)
+        SafeBushidoObject.new(core, type, params)
     end
 
     def get_binding

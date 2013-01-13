@@ -67,8 +67,8 @@ class Server
         @accept_socket.close
         @sockets_mutex.synchronize do
             @client_sockets.each_key do |k|
-                @client_sockets[k].kill
                 k.close
+                @client_sockets[k].kill
             end
             @client_sockets.clear
         end
@@ -131,7 +131,7 @@ class Server
                 Log.debug("Client disconnected")
                 socket.close
             rescue Exception => e
-                Log.debug(["Thread exited abnormally #{e.class}", e.message, e.backtrace])
+                Log.debug("Thread exited abnormally (#{e.class} : #{e.message})")
             end
             clear_client_info(socket)
         end

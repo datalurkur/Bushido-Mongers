@@ -2,19 +2,26 @@ require './util/log'
 
 module Commands
     class << self
-        def do(core, command, params)
+        def get_command_module(core, command)
             unless core.db.has_type?(command)
                 raise "I don't know how to #{command}"
             end
 
             invocation = core.db.info_for(command, :invocation)
-            mod        = invocation.to_caml.to_const(Commands)
+            invocation.to_caml.to_const(Commands)
+        end
 
+        def stage(core, command, params)
+            mod = get_command_module(core, command)
             SharedObjectExtensions.check_required_params(params, [:agent])
-            mod.do(core, params)
-
+            mod.stage(core, params)
             # Return the resolved parameters
             params.merge(:command => command)
+        end
+
+        def do(core, command, params)
+            mod = get_command_module(core, command)
+            mod.do(core, params)
         end
 
         def filter_objects(agent, location, type=nil, name=nil)
@@ -56,7 +63,7 @@ module Commands
     end
 
     module Inspect
-        def self.do(core, params)
+        def self.stage(core, params)
             if params[:target]
                 params[:target] = Commands.lookup_object(
                     params[:agent],
@@ -69,16 +76,20 @@ module Commands
                 params[:target] = params[:agent].position
             end
         end
+
+        def self.do(core, params); end
     end
 
     module Consume
-        def self.do(core, params)
+        def self.stage(core, params)
             SharedObjectExtensions.check_required_params(params, [:target])
 
-            agent        = params[:agent]
-            edible_types = (agent.class_info(:consumes) || :consumable)
-            params[:target] = Commands.lookup_object(agent, edible_types, params[:target], [:inventory, :position])
+            edible_types    = (params[:agent].class_info(:consumes) || :consumable)
+            params[:target] = Commands.lookup_object(params[:agent], edible_types, params[:target], [:inventory, :position])
+        end
 
+        def self.do(core, params)
+            agent = params[:agent]
             if agent.class_info(:on_consume)
                 eval agent.class_info(:on_consume)
             elsif params[:target].is_type?(:consumable)
@@ -92,28 +103,29 @@ module Commands
     end
 
     module Get
+        def self.stage(core, params)
+            gettable_types = (params[:agent].class_info(:consumes) || :consumable)
+            params[:target] = Commands.lookup_object(params[:agent], gettable_types, params[:target], [:position, :inventory])
+        end
+
         def self.do(core, params)
-            Log.debug(params.inspect)
-
-            agent        = params[:agent]
-            target       = params[:target]
-
-            gettable_types = (agent.class_info(:consumes) || :consumable)
-            params[:target] = Commands.lookup_object(agent, gettable_types, params[:target], [:position, :inventory])
+            #FIXME
         end
     end
 
     module Move
-        def self.do(core, params)
+        def self.stage(core, params)
             SharedObjectExtensions.check_required_params(params, [:target])
+        end
 
+        def self.do(core, params)
             # The target is a location direction and doesn't need to be looked up
             params[:agent].move(params[:target])
         end
     end
 
     module Attack
-        def self.do(core, params)
+        def self.stage(core, params)
             SharedObjectExtensions.check_required_params(params, [:target])
 
             # The target is an object and needs to be resolved
@@ -123,7 +135,9 @@ module Commands
                 params[:target],
                 [:position]
             )
+        end
 
+        def self.do(core, params)
             Log.debug("#{params[:agent].monicker} attacks #{params[:target].monicker}")
             Message.dispatch(core, :unit_attacks, {
                 :attacker      => params[:agent],
@@ -135,8 +149,12 @@ module Commands
     end
 
     module Construct
+        def self.stage(core, params)
+            #FIXME
+        end
+
         def self.do(core, params)
-            Log.debug("Constructing something!")
+            #FIXME
         end
     end
 end

@@ -32,7 +32,9 @@ module Corporeal
         def at_destruction(instance)
             # Drop the body
             instance.instance_exec {
-                @properties[:body].set_position(@position)
+                if @properties[:body]
+                    @properties[:body].set_position(@position)
+                end
             }
         end
     end
@@ -53,14 +55,12 @@ module Corporeal
     def damage(part, damage, attacker)
         part.set_property(:hp, part.hp - damage)
         if part.hp <= 0
-            part.destroy
-            if part == self.body
-                target = self
-                self.destroy
-            else
-                target = part
+            part.destroy(attacker)
+            if part == @properties[:body]
+                Log.debug("Destroying body of #{monicker}")
+                @properties[:body] = nil
+                destroy(attacker)
             end
-            Message.dispatch(@core, :object_destroyed, :agent => attacker, :position => self.position, :target => target)
         end
     end
 end

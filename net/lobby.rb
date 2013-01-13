@@ -238,15 +238,22 @@ class Lobby
         when :act
             Log.debug("Parsing action message", 8)
             action = nil
+            params = {}
             begin
                 Log.debug("Performing command", 8)
                 character = @game_core.get_character(username)
 
-                results = Commands.do(@game_core, message.command, message.args.merge(:agent => character))
-                send_to_user(username, Message.new(:act_success, {:description => results}))
+                params = Commands.stage(@game_core, message.command, message.args.merge(:agent => character))
+                send_to_user(username, Message.new(:act_success, {:description => params}))
             rescue Exception => e
-                Log.debug(["Failed to perform command #{message.command}", e.message, e.backtrace])
+                Log.debug(["Failed to stage command #{message.command}", e.message])
                 send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
+            end
+
+            begin
+                Commands.do(@game_core, message.command, params)
+            rescue
+                Log.error(["Failed to perform command #{message.command}", e.message, e.backtrace])
             end
         else
             Log.warning("Unhandled game message type #{message.type} received from client")
