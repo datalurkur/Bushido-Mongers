@@ -5,25 +5,15 @@ require './game/commands'
 module NpcBehavior
     class << self
         def at_creation(instance, params)
-            instance.instance_exec {
-                set_behavior(class_info(:behavior) || :random_attack_and_move)
-                Message.register_listener(@core, :core, self)
-            }
+            instance.set_behavior(instance.class_info(:behavior) || :random_attack_and_move)
+            instance.start_listening_for(:core)
         end
 
         def at_message(instance, message)
             case message.type
             when :tick
                 instance.behavior.act(instance)
-                return true
             end
-            return false
-        end
-
-        def at_destruction(instance)
-            instance.instance_exec {
-                Message.unregister_listener(@core, :core, self)
-            }
         end
     end
 

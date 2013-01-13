@@ -1,7 +1,21 @@
 require './util/log'
 
-# FIXME - Make this into a usable module like the rest
 module Ability
+    class << self
+        def at_creation(instance, params)
+            instance.set_property(:skill,       instance.class_info(:default_skill))
+            instance.set_property(:familiarity, instance.class_info(:default_familiarity))
+            instance.start_listening_for(:core)
+        end
+
+        def at_message(instance, message)
+            case message.type
+            when :tick
+                instance.tick
+            end
+        end
+    end
+
     def attempt(difficulty)
         Log.debug("Attempting to perform #{difficulty} task")
         last_used = current_tick

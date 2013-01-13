@@ -63,18 +63,6 @@ Description: None
 Format: "needs" <argument list, whitespace-delimited>
 Description: None
 
-"at_creation"
-    Provides a block of Ruby code to be evaluated during object instantiation.
-    The block is assumed to receive a hash of object parameters and return a hash of property modifications.
-Format: "at_creation"
-Description: A block of raw Ruby code to be evaluated.
-
-"at_destruction"
-    Provides a block of Ruby code to be evaluated during object teardown.
-    The block is assumed to receive no parameters and return nothing in particular.
-Format: "at_destruction"
-Description: A block of raw Ruby code to be evaluated
-
 Any other keyword
     Any other keyword is assumed to be a default property value, and will be treated as such.
     The property must have been specified within the object, and the value provided will be parsed according to the type of said property.
@@ -219,8 +207,6 @@ module ObjectRawParser
                 :uses           => [],
                 :has            => {},
                 :needs          => [],
-                :at_creation    => [],
-                :at_destruction => [],
                 :class_values   => {}
             }
 
@@ -238,7 +224,7 @@ module ObjectRawParser
                     parent_object = object_database[parent]
                     raise "Parent object type '#{parent}' not abstract!" unless parent_object[:abstract]
 
-                    [:uses, :has, :needs, :at_creation, :at_destruction, :class_values].each do |key|
+                    [:uses, :has, :needs, :class_values].each do |key|
                         # Just dup isn't enough here, because occasionally we have an array within a hash that doesn't get duped properly
                         dup_data = Marshal.load(Marshal.dump(parent_object[key]))
                         #Log.debug(["Dup data is ", dup_data], 8)
@@ -265,7 +251,15 @@ module ObjectRawParser
                     when "uses"
                         Log.debug("#{next_object} uses #{statement_pieces[1..-1].inspect}", 8)
                         raise "Insufficient arguments in #{statement.inspect}" unless statement_pieces.size >= 2
-                        object_data[:uses].concat(statement_pieces[1..-1].collect { |m| m.to_caml.to_const })
+                        modules = statement_pieces[1..-1].collect do |m|
+                            begin
+                                m.to_caml.to_const
+                            rescue
+                                Log.error("Failed to load object extension #{m.inspect}")
+                                nil
+                            end
+                        end.compact
+                        object_data[:uses].concat(modules)
                     when "has","has_many","class","class_many"
                         class_only, multiple = case statement_pieces[0]
                         when "has";        [false, false]
@@ -298,10 +292,6 @@ module ObjectRawParser
                     when "needs"
                         raise "Insufficient arguments in #{statement.inspect}" unless statement_pieces.size >= 2
                         object_data[:needs].concat(statement_pieces[1..-1].collect { |piece| piece.to_sym })
-                    when "at_creation"
-                        object_data[:at_creation] << data
-                    when "at_destruction"
-                        object_data[:at_destruction] << data
                     else
                         field = statement_pieces[0].to_sym
                         unless object_data[:has].has_key?(field)

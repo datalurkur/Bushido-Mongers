@@ -7,13 +7,7 @@ abstract root ability {
 
     has int familiarity_loss; /* Familiarity begins to degrade after this many ticks */
 
-    at_creation {
-        extend Ability
-        {
-            :skill       => @core.db.info_for(@type, :default_skill),
-            :familiarity => @core.db.info_for(@type, :default_familiarity)
-        }
-    }
+    uses ability;
 }
 
 ability hide {

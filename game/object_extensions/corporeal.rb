@@ -2,41 +2,45 @@ require './util/log'
 
 module Corporeal
     class << self
-        def at_message(instance, message)
-            instance.instance_exec {
-                case message.type
-                when :unit_attacks
-                    if message.defender == self
-                        Log.debug("#{monicker} is being attacked!")
-
-                        # TODO - extract damage from attacker, tool, etc.
-                        damage = 1
-                        rand_part = external_body_parts.rand
-                        damage(rand_part, damage, message.attacker)
-                        damage(self.body, damage, message.attacker)
-                    end
-                end
-            }
+        def at_creation(instance, params)
+            instance.create_body
+            instance.start_listening_for(:core)
         end
 
-        def at_creation(instance, params)
-            instance.instance_exec {
-                body_type = @core.db.info_for(@type, :body_type)
-                body      = @core.db.create(@core, body_type, {:relative_size => @properties[:size]})
-                @properties[:body]   = body
-                @properties[:weight] = all_body_parts.map(&:weight).inject(0, &:+)
-                @properties[:body].set_property(:hp, all_body_parts.map(&:hp).inject(0, &:+))
-            }
+        def at_message(instance, message)
+            case message.type
+            when :unit_attacks
+                if message.defender == instance
+                    Log.debug("#{instance.monicker} is being attacked!")
+
+                    # TODO - extract damage from attacker, tool, etc.
+                    damage = 1
+                    rand_part = instance.external_body_parts.rand
+                    instance.damage(rand_part,     damage, message.attacker)
+                    instance.damage(instance.body, damage, message.attacker)
+                end
+            end
         end
 
         def at_destruction(instance)
-            # Drop the body
-            instance.instance_exec {
-                if @properties[:body]
-                    @properties[:body].set_position(@position)
-                end
-            }
+            instance.drop_body
         end
+    end
+
+    def create_body
+        if @properties[:body]
+            Log.error("Body created twice for #{monicker}")
+            return
+        end
+        body_type = class_info(:body_type)
+        body      = @core.db.create(@core, body_type, {:relative_size => @properties[:size]})
+        @properties[:body]   = body
+        @properties[:weight] = all_body_parts.map(&:weight).inject(0, &:+)
+        @properties[:body].set_property(:hp, all_body_parts.map(&:hp).inject(0, &:+))
+    end
+
+    def drop_body
+        @properties[:body].set_position(@position) if @properties[:body]
     end
 
     def all_body_parts(type = [:internal, :external])

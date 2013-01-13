@@ -125,6 +125,8 @@ class Server
                     rescue Errno::EWOULDBLOCK,Errno::EAGAIN
                         IO.select([socket])
                         retry
+                    rescue Exception => e
+                        Log.error(["Processing error - #{e.message}", e.backtrace])
                     end
                 end
             rescue Errno::ECONNRESET,EOFError

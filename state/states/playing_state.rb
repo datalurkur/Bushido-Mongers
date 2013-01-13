@@ -46,7 +46,7 @@ class PlayingState < State
                         Log.debug("Unrecognized command #{message.command}", 4)
                     end
                 else
-                    pieces = message.command.split(/\s+/).collect(&:to_sym)
+                    pieces = message.command.strip.split(/\s+/).collect(&:to_sym)
                     act_args = Words.decompose_command(pieces)
 
                     @client.send_to_server(Message.new(:act, act_args))

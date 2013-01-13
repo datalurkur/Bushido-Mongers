@@ -9,8 +9,9 @@ class BushidoObject
         @core = core
         @type = type
 
-        @properties = {}
-        @extensions = []
+        @properties  = {}
+        @extensions  = []
+        @listens_for = []
 
         type_info = @core.db.raw_info_for(@type)
 
@@ -30,14 +31,9 @@ class BushidoObject
         end
 
         @extensions.each do |mod|
-            mod.at_creation(self, params) if mod.respond_to?(:at_creation)
-        end
-
-        type_info[:at_creation].each do |creation_proc|
-            result = eval(creation_proc, nil, __FILE__, __LINE__)
-            if Hash === result
-                @properties.merge!(result)
-            end
+            next unless mod.respond_to?(:at_creation)
+            result = mod.at_creation(self, params)
+            @properties.merge!(result) if Hash === result
         end
 
         type_info[:has].keys.each do |property|
@@ -61,9 +57,7 @@ class BushidoObject
     end
 
     def destroy(destroyer)
-        @core.db.raw_info_for(@type)[:at_destruction].each do |destruction_proc|
-            eval(destruction_proc, nil, __FILE__, __LINE__)
-        end
+        stop_listening
 
         @extensions.each do |mod|
             mod.at_destruction(self) if mod.respond_to?(:at_destruction)
@@ -72,8 +66,27 @@ class BushidoObject
         if @position
             Message.dispatch(@core, :object_destroyed, :agent => destroyer, :position => @position, :target => self)
         else
-            Log.warning("#{monicker} is being destroyed but has no position")
+            Log.warning("#{monicker} is being destroyed but has no position") unless is_type?(:body)
         end
+    end
+
+    def start_listening_for(message_type)
+        return if @listens_for.include?(message_type)
+        @listens_for << message_type
+        Message.register_listener(@core, message_type, self)
+    end
+
+    def stop_listening_for(message_type)
+        return unless @listens_for.include?(message_type)
+        Message.unregister_listener(@core, message_type, self)
+        @listens_for.delete(message_type)
+    end
+
+    def stop_listening
+        @listens_for.each do |type|
+            Message.unregister_listener(@core, type, self)
+        end
+        @listens_for.clear
     end
 
     def monicker
@@ -113,7 +126,7 @@ class BushidoObject
 
     def process_message(message)
         @extensions.each do |mod|
-            break if mod.respond_to?(:at_message) && mod.at_message(self, message)
+            mod.at_message(self, message) if mod.respond_to?(:at_message)
         end
     end
 

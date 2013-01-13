@@ -20,14 +20,6 @@ abstract root zone {
 
     class sym sideness;
     sideness outside;
-
-    at_creation {
-        # TODO - Insert some of the optional_keywords here.
-        keywords = self.keywords + (params[:inherited_keywords] || [])
-        {
-            :keywords => keywords
-        }
-    }
 }
 
 zone haven {
