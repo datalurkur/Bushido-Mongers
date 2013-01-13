@@ -33,8 +33,11 @@ Log.debug(["Types of NPCs:", db.types_of(:npc)])
 
 def test_npc(db, test_npc_type, name)
     Log.debug(["Creating a #{test_npc_type} with raw info", db.raw_info_for(test_npc_type)])
-    test_npc = db.create($core, test_npc_type, :position => FakeRoom.new, :name => name)
+    db.create($core, test_npc_type, :position => FakeRoom.new, :name => name)
+end
 
+def test_test_npc(db, test_npc_type, name)
+    test_npc = test_npc(db, test_npc_type, name)
     Log.debug("Test NPC is a guard? #{test_npc.is_type?(:guard)}")
     Log.debug(["Test NPC has parts", test_npc.body.internal.collect(&:monicker), test_npc.body.external.collect(&:monicker)])
     if test_npc.has_property?(:provocations)
@@ -42,8 +45,8 @@ def test_npc(db, test_npc_type, name)
     end
 end
 
-test_npc(db, :peacekeeper, "Derpus Maximus")
-test_npc(db, :giant_spider, "Leggus Maximus")
+test_test_npc(db, :peacekeeper, "Derpus Maximus")
+test_test_npc(db, :giant_spider, "Leggus Maximus")
 
 # Body / Corporeal tests
 hb = db.create($core, :humanoid_body, :relative_size => :large)

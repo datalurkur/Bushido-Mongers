@@ -101,19 +101,20 @@ zone temple_that_serves_as_the_final_bastion_of_light_in_an_otherwise_evil_fores
 */
 
 post_process {
+    name = :spawn_npcs
     self.find_subtypes(:zone, {}, true).each do |zone|
-        unless info_for(zone, :spawn_npcs).empty?
-            list = info_for(zone, :spawn_npcs).dup
-            info_for(zone, :spawn_npcs).clear
-            info_for(zone, :spawn_npcs) << list.inject([]) { |arr, spawn_npcs| arr + types_of(spawn_npcs) }
-            info_for(zone, :spawn_npcs).flatten!
+        unless list = info_for(zone, name).empty?
+            set_info(zone, name,
+                init_or_info(zone, name, []).map { |spawns| types_of(spawns) }.flatten.uniq
+            )
         end
     end
     self.find_subtypes(:npc, {}, true).each do |npc|
         if spawns_in = info_for(npc, :spawns_in)
             spawns_in.each do |zone|
-                info_for(zone, :spawn_npcs) << npc
-                info_for(zone, :spawn_npcs).uniq!
+                set_info(zone, name,
+                    (init_or_info(zone, name, []) + [npc]).uniq
+                )
             end
         end
     end

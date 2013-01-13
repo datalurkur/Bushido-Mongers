@@ -101,6 +101,7 @@ class Log
 
             file,line = caller[1].split(/:/)
             @source_files[file] ||= @max_log_level
+            raise TypeError, "Bad log level: #{level}" unless Numeric === level
             return unless level <= @source_files[file] || @logfile_behavior == :verbose
 
             thread_name = @source_threads[Thread.current] || @default_thread_name

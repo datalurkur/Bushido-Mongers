@@ -20,11 +20,16 @@ module Commands
         def filter_objects(agent, location, type=nil, name=nil)
             case location
             when :position
-                agent.position.objects.select do |p|
-                    (type ? p.is_type?(type) : true) &&
-                    (name ? p.monicker.match(/#{name}/i) : true)
+                agent.position.objects.select do |o|
+                    (type ? o.is_type?(type) : true) &&
+                    (name ? o.monicker.match(/#{name}/i) : true)
                 end
-            # when :inventory
+            when :inventory
+                # TODO - recursive
+                agent.inventory.select_by_value do |o|
+                    (type ? o.is_type?(type) : true) &&
+                    (name ? o.monicker.match(/#{name}/i) : true)
+                end
             else
                 Log.warning("#{location} lookups not implemented")
                 []
@@ -85,24 +90,15 @@ module Commands
         end
     end
 
-    module Fetch
+    module Get
         def self.do(core, params)
-            SharedObjectExtensions.check_required_params(params, [:target])
             Log.debug(params.inspect)
 
             agent        = params[:agent]
-            edible_types = (agent.class_info(:consumes) || :consumable)
-            params[:target] = Commands.lookup_object(agent, edible_types, params[:target], [:inventory, :position])
+            target       = params[:target]
 
-            if agent.class_info(:on_consume)
-                eval agent.class_info(:on_consume)
-            elsif params[:target].is_type?(:consumable)
-                # Do normal consumption
-                Log.info("#{agent.monicker} eats #{params[:target].monicker} like a normal person.")
-                agent.position.remove_object(params[:target])
-            else
-                raise "#{agent.monicker} doesn't know how to eat a #{params[:target].type}"
-            end
+            gettable_types = (agent.class_info(:consumes) || :consumable)
+            params[:target] = Commands.lookup_object(agent, gettable_types, params[:target], [:position, :inventory])
         end
     end
 

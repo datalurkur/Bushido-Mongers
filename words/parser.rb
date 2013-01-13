@@ -46,16 +46,38 @@ module WordParser
         end
         load_file(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/) do |line, match|
             part_of_speech = match[1].to_sym
-            family = line.split(/\s/).collect { |word| {part_of_speech => word} }
+            family = line.split(/\s+/).collect { |word| {part_of_speech => word} }
             db.add_family(*family)
         end
 
         load_file(dict_dir, "direct_prepositions.txt") do |line, match|
-            words = line.split(/\s/).map(&:to_sym)
+            words = line.split(/\s+/).map(&:to_sym)
             preposition = words.shift
             family = words.collect { |word| {:verb => word} }
             db.add_preposition(preposition, *family)
         end
+
+        load_file(dict_dir, "conjugations.txt") do |line, match|
+            words = line.split(/\s+/)
+            infinitive = words.shift.to_sym
+
+            # Convert properties ("present,second") into a State
+            properties = words.shift.split(",").map(&:to_sym)
+            state = Words::State.new
+            properties.each do |prop|
+                Words::State::FIELDS.each do |field, list|
+                    if list.include?(prop)
+                        state.send("#{field}=", prop)
+                    end
+                end
+            end
+
+            db.add_conjugation_by_person(infinitive, state, words.map(&:to_sym))
+        end
+
+        db.instance_exec {
+            Log.debug(@conjugations, 8)
+        }
 
         Words.register_db(db)
         db
@@ -63,6 +85,7 @@ module WordParser
 
     # Read (mostly type) information from the raws database.
     # Expects certain raw classes as commands, nouns, etc.
+    # Can only happen on the server side.
     def self.read_raws(db, raws_db)
         raws_db.types_of(:command).each do |comm|
             db.add_keyword_family(:command, {:verb => comm})

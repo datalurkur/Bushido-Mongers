@@ -125,7 +125,7 @@ module VerboseInterface
                     d = message.properties
                     t = d[:target]
                     m = t[:monicker]
-                    "#{m} was destroyed - FORMAT ME"
+                    return "#{m} destroyed!"
                 else
                     return "I don't know how to express a game event of type #{message.event_type}"
                 end

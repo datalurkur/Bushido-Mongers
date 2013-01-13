@@ -48,6 +48,10 @@ class GameCore
         @world = nil
     end
 
+    def create(type, hash = {})
+        @db.create(self, type, hash)
+    end
+
     # TICK MAINTENANCE
     def start_ticking
         already_ticking = false

@@ -1,11 +1,3 @@
-abstract object,position item {
-    has int value;
-
-    /* These values are filled out automatically for compositional objects */
-    weight 0;
-    value 0;
-}
-
 abstract item composition {
     has_many optional sym internal;
     has_many optional sym incidental;
@@ -64,9 +56,10 @@ post_process {
     Log.debug("Propagating component information for constructed objects", 7)
     types_of(:constructed, true).each do |constructed|
         info_for(constructed, :required_components).each do |component|
-            propagate_recursive(component) do |comp_subtype|
-                Log.debug("#{comp_subtype} is used in #{constructed}", 7)
-                info_for(comp_subtype, :used_in, []) << constructed
+            propagate_recursive(component) do |subtype|
+                Log.debug("#{subtype} is used in #{constructed}", 7)
+                name = :used_in
+                set_info(subtype, name, init_or_info(subtype, name, []) << constructed)
             end
         end
     end

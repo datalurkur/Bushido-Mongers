@@ -3,6 +3,8 @@
 #  destruction down on you as the message packers / unpackers attempt to infinitely 
 #  pack and unpack the core contained within
 
+require "./world/room"
+
 class Descriptor
     def self.describe(object, observer)
         case object

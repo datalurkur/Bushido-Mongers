@@ -5,29 +5,50 @@
 16:55 <@datalurkur> And the inventory will just be a list of equipment attached to slots along with the contents of any of that equipment that happens to be a container.
 =end
 
+module Inventory
+    attr_reader :inventory
+
+    def equip(part, equipment)
+        @inventory ||= {}
+        if @inventory[part.type].nil?
+            @inventory[part.type] = equipment
+        else
+            raise "Couldn't equip #{equipment}; already wearing #{@inventory[part.type]}"
+        end
+    end
+end
+
 module Equipment
+    include Inventory
+
     class << self
         def at_creation(instance, params)
             Log.debug(params)
             instance.instance_exec {
                 external_body_parts.each do |part|
                     if part.has_property?(:can_equip) && !part.can_equip.empty?
+                        Log.debug([part, part.can_equip])
                         rand_type = @core.db.random(part.can_equip.rand)
 
-                        # Pick random component type
                         creation_hash = {}
+
+                        # Pick random component type
+                        Log.debug(rand_type)
                         components = @core.db.info_for(rand_type, :required_components)
-                        components.map! do |comp|
-                            @core.db.create(@core, @core.db.random(comp))
+                        Log.debug(components)
+
+                        if components
+                            components.map! do |comp|
+                                Log.debug(@core.db.random(comp))
+                                @core.db.create(@core, @core.db.random(comp))
+                            end
+                            creation_hash[:components] = components
                         end
 
-                        creation_hash[:components] = components
-                        
                         creation_hash[:quality] = :standard
 
-                        # FIXME: adjust size based on size of self
-                        new_equip = @core.db.create(@core, rand_type, creation_hash)
-                        @equipped = (new_equip)
+                        # FIXME: adjust size based on size of self, like bodies do.
+                        equip(part, @core.db.create(@core, rand_type, creation_hash))
                     end
                 end
             }
@@ -37,9 +58,5 @@ module Equipment
         def at_destruction(instance)
             # drop equipment on death, or leave it on the body to be pulled off?
         end
-    end
-
-    def equip
-        # TODO
     end
 end
