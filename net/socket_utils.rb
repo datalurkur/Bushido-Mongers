@@ -7,7 +7,7 @@ module SocketUtils
     DEFAULT_BUFFER_SIZE = 5096
     DEFAULT_LISTEN_PORT = 9999
     DEFAULT_IRC_PORT    = 7000
-    DEFAULT_HTTP_PORT   = 80
+    DEFAULT_HTTP_PORT   = 8000
     DEFAULT_WEB_ROOT    = "web_data"
 
     # For a given socket protected by a mutex, take a partial buffer and poll for new messages
