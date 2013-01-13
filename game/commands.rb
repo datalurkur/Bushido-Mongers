@@ -26,6 +26,7 @@ module Commands
                 end
             when :inventory
                 # TODO - recursive
+                return [] unless agent.has_property?(:inventory)
                 agent.inventory.select_by_value do |o|
                     (type ? o.is_type?(type) : true) &&
                     (name ? o.monicker.match(/#{name}/i) : true)
