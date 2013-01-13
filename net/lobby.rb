@@ -248,6 +248,7 @@ class Lobby
             rescue Exception => e
                 Log.debug(["Failed to stage command #{message.command}", e.message])
                 send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
+                return
             end
 
             begin
