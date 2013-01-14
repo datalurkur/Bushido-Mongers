@@ -97,6 +97,11 @@ class BushidoObject
         @core.db.is_type?(@type, type)
     end
 
+    def matches(args = {})
+        (args[:type] ? self.is_type?(args[:type]) : true) &&
+        (args[:name] ? self.monicker.match(/#{args[:name]}/i) : true)
+    end
+
     def type_ancestry
         types   = []
         current = [@type]

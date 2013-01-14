@@ -110,10 +110,12 @@ module VerboseInterface
                     case target[:type]
                     when :room
                         return Words.gen_room_description(target)
+                    when :item
+                        return Words.gen_sentence(message.properties).to_s
                     else
                         return "I don't know how to describe a #{target[:type].inspect}, bother zphobic to fix this"
                     end
-                when :move, :attack
+                when :move, :attack, :get
                     return Words.gen_sentence(message.properties).to_s
                 else
                     return "I don't know how to express the results of a(n) #{message.properties[:command]}, pester zphobic to work on this"
@@ -121,11 +123,7 @@ module VerboseInterface
             elsif message.field == :game_event
                 case message.properties[:event_type]
                 when :object_destroyed
-                    # FIXME
-                    d = message.properties
-                    t = d[:target]
-                    m = t[:monicker]
-                    return "#{m} destroyed!"
+                    return Words.gen_copula(message.properties.merge(:verb=>:destroy))
                 else
                     return "I don't know how to express a game event of type #{message.event_type}"
                 end

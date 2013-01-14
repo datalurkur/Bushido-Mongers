@@ -27,16 +27,14 @@ module Commands
         def filter_objects(agent, location, type=nil, name=nil)
             case location
             when :position
-                agent.position.objects.select do |o|
-                    (type ? o.is_type?(type) : true) &&
-                    (name ? o.monicker.match(/#{name}/i) : true)
+                agent.position.objects.select do |object|
+                    object.matches(:type => type, :name => name)
                 end
             when :inventory
                 # TODO - recursive
-                return [] unless agent.has_property?(:inventory)
-                agent.inventory.select_by_value do |o|
-                    (type ? o.is_type?(type) : true) &&
-                    (name ? o.monicker.match(/#{name}/i) : true)
+                return [] unless core.db.raw_info_for(agent.type)[:uses].include?(Equipment)
+                agent.select_inventory do |object|
+                    object.matches(:type => type, :name => name)
                 end
             else
                 Log.warning("#{location} lookups not implemented")
@@ -104,12 +102,12 @@ module Commands
 
     module Get
         def self.stage(core, params)
-            gettable_types = (params[:agent].class_info(:consumes) || :consumable)
-            params[:target] = Commands.lookup_object(params[:agent], gettable_types, params[:target], [:position, :inventory])
+            # Can get all items
+            params[:target] = Commands.lookup_object(params[:agent], :item, params[:target], [:position, :inventory])
         end
 
         def self.do(core, params)
-            #FIXME
+            params[:agent].stash(params[:target])
         end
     end
 

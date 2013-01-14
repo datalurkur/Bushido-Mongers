@@ -94,6 +94,6 @@ module WordParser
         raws_db.types_of(:item).each do |item|
             db.add_keyword_family(:item, {:noun => item})
         end
-        Log.debug("Found #{db.get_keyword_groups(:item).size} items.")
+        Log.debug("Found #{db.get_keyword_groups(:item).size} item types.")
     end
 end
