@@ -3,3 +3,4 @@ consume eat chomp gnaw bite drink quaff
 inspect see look observe notice spot detect perceive
 search
 move go
+get fetch grab take

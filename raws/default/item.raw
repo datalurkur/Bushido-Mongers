@@ -1,6 +1,9 @@
 abstract object,position item {
     has int value;
 
+    class bool gettable;
+    gettable true;
+
     /* These values are filled out automatically for compositional objects */
     weight 0;
     value 0;

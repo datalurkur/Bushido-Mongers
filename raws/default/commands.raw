@@ -28,12 +28,14 @@ command consume {
     invocation consume;
 }
 
-/* fetch/grab/get/take, stash/put/place, drop/ditch */
-command grab {
+/* fetch/grab/get/take */
+command get {
     target item;
 
-    invocation fetch;
+    invocation get;
 }
+
+/* stash/put/place, drop/ditch */
 
 abstract command construct {
     invocation construct;

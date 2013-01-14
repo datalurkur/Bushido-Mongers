@@ -22,7 +22,7 @@ I you he we you they
 
 def load_file(dir, glob_str, regex = //, &block)
     Dir.glob("#{dir}/#{glob_str}").each do |file|
-        Log.debug("Reading #{file}")
+        Log.debug("Reading #{file}", 7)
         match = file.match(regex)
 
         File.readlines(file).each do |line|
@@ -94,6 +94,6 @@ module WordParser
         raws_db.types_of(:item).each do |item|
             db.add_keyword_family(:item, {:noun => item})
         end
-        Log.debug("Found #{db.get_keyword_groups(:item).size} items.")
+        Log.debug("Found #{db.get_keyword_groups(:item).size} item types.")
     end
 end

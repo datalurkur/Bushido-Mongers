@@ -14,6 +14,7 @@ abstract composition,adjustable_weight body_part {
 
 body_part,consumable flesh {
     typical_size small;
+    weight 1;
 }
 
 abstract body_part body {}
@@ -73,6 +74,7 @@ post_process {
 /* Basically, this is the equivalent of a torso */
 biped humanoid_body {
     weight 15;
+    incidental flesh;
     typical_size medium;
     internal liver;
     external head;
@@ -80,6 +82,7 @@ biped humanoid_body {
 
 octiped arachnoid_body {
     weight 10;
+    incidental flesh;
     typical_size medium;
     internal spinner;
     external carapace;
@@ -87,12 +90,14 @@ octiped arachnoid_body {
 
 quadriped rodent_body {
     weight 2;
+    incidental flesh;
     typical_size small;
     external head tail;
 }
 
 quadriped ungulate_body {
     weight 200;
+    incidental flesh;
     typical_size large;
     external head tail;
 }
@@ -149,5 +154,6 @@ body_part tail {
 
 body_part liver {
     weight 3;
+    incidental flesh;
     typical_size small;
 }
