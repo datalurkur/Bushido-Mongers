@@ -254,8 +254,8 @@ class Lobby
 
             begin
                 Commands.do(@game_core, command, params)
-            rescue
-                Log.error(["Failed to perform command #{message.command}", e.message, e.backtrace])
+            rescue Exception => e
+                Log.error(["Failed to perform command #{command}", e.message, e.backtrace])
             end
         else
             Log.warning("Unhandled game message type #{message.type} received from client")

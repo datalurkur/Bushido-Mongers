@@ -37,9 +37,9 @@ end
 class Object
     def self.format_arbitrary(object)
         case object
-        when String, NilClass, TrueClass, FalseClass
+        when String, Symbol, NilClass, TrueClass, FalseClass
             object.inspect
-        when Symbol, Numeric, Module
+        when Numeric, Module
             object.to_s
         else
             object.class.to_s
