@@ -18,15 +18,13 @@ module Composition
         end
 
         def at_destruction(instance)
-            instance.instance_exec do
-                Log.debug("Destroying #{@type}")
-                [:internal, :incidental, :external].each do |switch, key|
-                    switch = "preserve_#{key}".to_sym
-                    if class_info(switch)
-                        # Drop these components at the location where this object is
-                        @properties[key].each do |component|
-                            component.move(@position)
-                        end
+            Log.debug("Destroying #{instance.monicker}")
+            [:internal, :incidental, :external].each do |switch, key|
+                switch = "preserve_#{key}".to_sym
+                if instance.class_info(switch)
+                    # Drop these components at the location where this object is
+                    instance.get_property(key).each do |component|
+                        component.move(instance.position)
                     end
                 end
             end

@@ -1,11 +1,11 @@
-abstract root adjustable_weight {
+abstract root adjustable_size {
     class sym typical_size;
     needs relative_size;
 
-    uses adjustable_weight;
+    uses adjustable_size;
 }
 
-abstract composition,adjustable_weight body_part {
+abstract composition,adjustable_size body_part {
     has int hp;
 
     /* Body parts are worthless by default */

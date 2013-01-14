@@ -36,7 +36,8 @@ module Corporeal
         body      = @core.db.create(@core, body_type, {:relative_size => @properties[:size]})
         @properties[:body]   = body
         @properties[:weight] = all_body_parts.map(&:weight).inject(0, &:+)
-        @properties[:body].set_property(:hp, all_body_parts.map(&:hp).inject(0, &:+))
+
+        @total_hp = all_body_parts.map(&:hp).inject(0, &:+)
     end
 
     def drop_body
@@ -59,12 +60,11 @@ module Corporeal
     def damage(part, damage, attacker)
         part.set_property(:hp, part.hp - damage)
         if part.hp <= 0
-            part.destroy(attacker)
             if part == @properties[:body]
                 Log.debug("Destroying body of #{monicker}")
-                @properties[:body] = nil
                 destroy(attacker)
             end
+            part.destroy(attacker)
         end
     end
 end
