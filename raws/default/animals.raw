@@ -1,0 +1,33 @@
+abstract npc animal {
+    factions neutral;
+}
+
+animal,corporeal rat {
+    size tiny;
+    body_type rodent_body;
+    spawns_in sewer dock;
+    spawn_chance likely;
+}
+
+animal,corporeal mouse {
+    size tiny;
+    body_type rodent_body;
+    spawns_in meadow;
+    spawn_chance likely;
+}
+
+animal,corporeal goat {
+    size large;
+    body_type ungulate_body;
+    spawns_in meadow forest;
+    spawn_chance likely;
+}
+
+
+monster,corporeal giant_spider {
+    size medium;
+    body_type arachnoid_body;
+    spawns_in sewer;
+    spawn_chance likely;
+}
+
