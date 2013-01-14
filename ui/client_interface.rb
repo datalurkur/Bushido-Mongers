@@ -111,10 +111,12 @@ module VerboseInterface
                     case target[:type]
                     when :room
                         return Words.gen_room_description(target)
-                    when :item
-                        return Words.gen_sentence(message.properties).to_s
                     else
-                        return "I don't know how to describe a #{target[:type].inspect}, bother zphobic to fix this"
+                        if target[:is_type].include?(:item)
+                            Words.gen_sentence(message.properties).to_s
+                        else
+                            return "I don't know how to describe a #{target[:type].inspect}, bother zphobic to fix this"
+                        end
                     end
                 when :move, :attack, :get
                     return Words.gen_sentence(message.properties).to_s
