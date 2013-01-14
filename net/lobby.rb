@@ -253,7 +253,7 @@ class Lobby
 
             begin
                 Commands.do(@game_core, message.command, params)
-            rescue
+            rescue Exception => e
                 Log.error(["Failed to perform command #{message.command}", e.message, e.backtrace])
             end
         else
