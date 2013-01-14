@@ -5,7 +5,7 @@ require './net/stack_client'
 
 $client_config = {
     :server_hostname => "localhost",
-    :server_port     => StackClient::DEFAULT_LISTEN_PORT,
+    :server_port     => DEFAULT_LISTEN_PORT,
     :username        => "test_user",
     :password        => "stack_pass",
     :lobby_name      => "test_lobby",
@@ -25,6 +25,8 @@ trap_signals do
     # TODO - Save the game here so that we don't lose progress
     $server.stop if $server
     $client.stop if $client
+    MeteredMethods.report
+    exit
 end
 
 $server.start
@@ -100,4 +102,6 @@ end
 
 $client.start
 
-MeteredMethods.report
+while true
+    sleep 30
+end

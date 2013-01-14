@@ -3,7 +3,7 @@ require './net/automated_client'
 
 $config = {
     :server_hostname => "localhost",
-    :server_port     => PairedAutoClient::DEFAULT_LISTEN_PORT,
+    :server_port     => DEFAULT_LISTEN_PORT,
     :username        => "zphobic",
     :password        => "d3rt3rl3rk3r",
     :lobby_name      => "test_lobby",

@@ -12,6 +12,10 @@ class RemoteClient < GameClient
         puts super(message)
     end
 
+    def get_client_stream
+        $stdin
+    end
+
     def get_from_client
         super(gets)
     end

@@ -1,21 +1,21 @@
 require 'socket'
-require './net/socket_utils'
+require './net/defaults'
 require './net/irc_conduit'
 require './net/irc_client'
+require './util/message_buffer'
 require './util/cfg_reader'
 
 # Responsible for low-level socket IO, socket maintenance, and communication via IRC
 # Listens for new connections in a separate thread
 # Polls sockets for input on separate threads, for this reason, sockets should be modified and closed using the provided APIs
 class Server
-    include SocketUtils
-
     def initialize(config={})
         @running = false
         @config  = config.merge(CFGReader.read("net"))
         @config[:buffer_size] = (@config[:buffer_size] || DEFAULT_BUFFER_SIZE).to_i
         @config[:listen_port] = (@config[:listen_port] || DEFAULT_LISTEN_PORT).to_i
         @config[:irc_port]    = (@config[:irc_port]    || DEFAULT_IRC_PORT).to_i
+        @message_buffer = MessageBuffer.new
     end
 
     def start
@@ -67,6 +67,7 @@ class Server
         @accept_socket.close
         @sockets_mutex.synchronize do
             @client_sockets.each_key do |k|
+                # FIXME - This is not a graceful way to teardown
                 k.close
                 @client_sockets[k].kill
             end
@@ -111,20 +112,19 @@ class Server
         Thread.new do
             Log.name_thread(thread_name)
             begin
-                data_buffer = ""
-
                 while(true)
                     begin
                         data = socket.read_nonblock(@config[:buffer_size])
                         raise Errno::ECONNRESET if data.empty?
-                        data_buffer += data
-                        messages, data_buffer = buffer_socket_input(data_buffer)
+                        messages = @message_buffer.unpack_messages(data)
                         messages.each do |message|
                             process_client_message(message, socket)
                         end
                     rescue Errno::EWOULDBLOCK,Errno::EAGAIN
                         IO.select([socket])
                         retry
+                    rescue EOFError => e
+                        raise e
                     rescue Exception => e
                         Log.error(["Processing error - #{e.message}", e.backtrace])
                     end
@@ -142,7 +142,7 @@ class Server
     def send_to_client(socket, message)
         begin
             #Log.debug("Packing message #{message.type} for client", 8)
-            packed_data = pack_message(message)
+            packed_data = @message_buffer.pack_message(message)
             socket.write_nonblock(packed_data)
         rescue Exception => e
             Log.debug(["Failed to send data to client", e.message, e.backtrace])

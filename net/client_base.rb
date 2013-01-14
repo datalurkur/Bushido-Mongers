@@ -1,5 +1,5 @@
 require 'socket'
-require './net/socket_utils'
+require './util/message_buffer'
 require './util/cfg_reader'
 
 # ClientBase provides a low-level interface to server and client communications
@@ -8,12 +8,11 @@ require './util/cfg_reader'
 # Server IO is asynchronous
 # Client IO is asynchronous
 class ClientBase
-    include SocketUtils
-
     def initialize
         @setup  = false
         @config = {}
         @config[:buffer_size] = (CFGReader.get_param("net", :buffer_size) || DEFAULT_BUFFER_SIZE).to_i
+        @message_buffer = MessageBuffer.new
     end
 
     def start
@@ -65,7 +64,7 @@ class ClientBase
         # This really doesn't need to be in a begin / rescue block, but until we find this thread concurrency bug, I need all the logging I can get
         begin
             #Log.debug("Packing message #{message.type} for server", 8)
-            packed_data = pack_message(message)
+            packed_data = @message_buffer.pack_message(message)
             @socket.write_nonblock(packed_data)
         rescue Exception => e
             Log.error(["Failed to send data to server", e.message, e.backtrace])
@@ -84,7 +83,7 @@ class ClientBase
                             data = @socket.read_nonblock(@config[:buffer_size])
                             raise Errno::ECONNRESET if data.empty?
                             data_buffer += data
-                            new_messages, data_buffer = buffer_socket_input(data_buffer)
+                            new_messages, data_buffer = @message_buffer.unpack_messages(data_buffer)
                             messages.concat(new_messages)
                         rescue Errno::EWOULDBLOCK,Errno::EAGAIN
                             IO.select([@socket])

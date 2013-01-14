@@ -1,11 +1,11 @@
-require './net/client_base'
+require './net/muxed_client_base'
 require './state/state'
 require './state/states/connect_state'
 
 # GameClient mostly functions as an input buffer and state container; it is also responsible for passing messages and interactables through the interface module for translation
 # When it comes to actual game events and functionality, the state objects do all the heavy lifting
 # GameClient basically gadflys for input events and passes any that come in to whatever state is currently controlling its behavior
-class GameClient < ClientBase
+class GameClient < MuxedClientBase
     include StateMaintainer
 
     def initialize(interface, initial_config={})
@@ -18,28 +18,39 @@ class GameClient < ClientBase
     end
 
     def start(initial_state=ConnectState)
+        return if @running
         super()
         initial_state.new(self, :set)
         @running = true
-        start_main_loop
+        @running_thread = start_main_loop
     end
 
     def stop
+        return unless @running
         @running = false
+        @running_thread.kill
         super()
     end
 
     def running?; @running; end
 
     def start_main_loop
-        while @running
-            get_client_messages.each do |message|
-                current_state.from_client(message)
-            end
+        Thread.new do
+            Log.name_thread("Loop")
+            while @running
+                client_messages, server_messages = get_messages
 
-            get_server_messages.each do |message|
-                Log.debug("Parsing message #{message.type}", 7)
-                current_state.from_server(message)
+                Log.debug("Processing #{client_messages.size} client messages and #{server_messages.size} server messages")
+
+                client_messages.each do |message|
+                    Log.debug("Client message #{message.type}")
+                    current_state.from_client(message)
+                end
+
+                server_messages.each do |message|
+                    Log.debug("Server message #{message.type}")
+                    current_state.from_server(message)
+                end
             end
         end
     end

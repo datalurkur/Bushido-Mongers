@@ -4,33 +4,42 @@ require './ui/client_interface'
 
 class StackClient < GameClient
     attr_reader :stack
+
     def initialize(config={})
-        @stack    = AutomationStack.new
-        @pipeline = @stack
+        @stack = AutomationStack.new
+        seize_control
         super(MetaDataInterface,config)
     end
 
     def release_control
         Log.debug("Releasing control to user")
-        stop_processing_client_messages
+        return unless AutomationStack === @pipeline
         @interface = VerboseInterface
-        @pipeline  = Kernel
-        start_processing_client_messages
+        @pipeline.teardown
+        @pipeline  = $stdin
     end
 
     def seize_control
         Log.debug("Seizing control from user")
-        stop_processing_client_messages
+        return if AutomationStack === @pipeline
         @interface = MetaDataInterface
         @pipeline  = @stack
-        start_processing_client_messages
+        @pipeline.setup
     end
 
     def send_to_client(message)
-        @pipeline.puts(super(message))
+        data = super(message)
+        Log.debug("Sending to client: #{data.inspect}")
+        @pipeline.puts(data)
+    end
+
+    def get_client_stream
+        (AutomationStack === @pipeline) ? @pipeline.read_pipe : @pipeline
     end
 
     def get_from_client
-        super(@pipeline.gets)
+        data = @pipeline.gets
+        Log.debug("Returning from client: #{data.inspect}")
+        super(data)
     end
 end

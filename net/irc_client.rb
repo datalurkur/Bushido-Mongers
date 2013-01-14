@@ -12,6 +12,10 @@ class IRCClient < GameClient
         IRCConduit.puts(get(:name),text)
     end
 
+    def get_client_stream
+        raise "NOT IMPLEMENTED"
+    end
+
     # Called from a thread in ClientBase
     def get_from_client
         text = IRCConduit.gets(get(:name))

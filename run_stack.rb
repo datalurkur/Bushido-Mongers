@@ -6,7 +6,7 @@ require './net/stack_client'
 
 $config = {
     :server_hostname => "localhost",
-    :server_port     => StackClient::DEFAULT_LISTEN_PORT,
+    :server_port     => DEFAULT_LISTEN_PORT,
     :username        => "test_user",
     :password        => "stack_pass",
     :lobby_name      => "test_lobby",
@@ -18,6 +18,8 @@ $client = StackClient.new($config)
 
 trap_signals do
     $client.stop if $client
+    MeteredMethods.report
+    exit
 end
 
 $client.stack.set_state(:join_lobby)
@@ -91,4 +93,6 @@ end
 
 $client.start
 
-MeteredMethods.report
+while true
+    sleep 30
+end

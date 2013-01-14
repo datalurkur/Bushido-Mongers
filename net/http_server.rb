@@ -1,6 +1,5 @@
 require 'erb'
 require 'socket'
-require './net/socket_utils'
 require './net/http_protocol'
 require './util/compression'
 
