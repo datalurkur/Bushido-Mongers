@@ -12,15 +12,15 @@ class StackClient < GameClient
     end
 
     def release_control
-        Log.debug("Releasing control to user")
+        Log.info("Releasing control to user")
         return unless AutomationStack === @pipeline
         @interface = VerboseInterface
         @pipeline.teardown
-        @pipeline  = $stdin
+        @pipeline  = Kernel
     end
 
     def seize_control
-        Log.debug("Seizing control from user")
+        Log.info("Seizing control from user")
         return if AutomationStack === @pipeline
         @interface = MetaDataInterface
         @pipeline  = @stack
@@ -28,18 +28,18 @@ class StackClient < GameClient
     end
 
     def send_to_client(message)
-        data = super(message)
-        Log.debug("Sending to client: #{data.inspect}")
-        @pipeline.puts(data)
+        @pipeline.puts(super(message))
     end
 
     def get_client_stream
-        (AutomationStack === @pipeline) ? @pipeline.read_pipe : @pipeline
+        if AutomationStack === @pipeline
+            @pipeline.read_pipe
+        else # Kernel
+            $stdin
+        end
     end
 
     def get_from_client
-        data = @pipeline.gets
-        Log.debug("Returning from client: #{data.inspect}")
-        super(data)
+        super(@pipeline.gets)
     end
 end

@@ -60,10 +60,7 @@ class MuxedClientBase
         stream_list << @socket if @socket
         ready_streams = IO.select(stream_list)
 
-        #Log.debug(["Ready streams", ready_streams])
-
         ready_streams.first.each do |stream|
-            Log.debug("Stream #{stream.class} is ready to provide data")
             if stream == @socket
                 server_messages.concat(get_server_messages)
             else
@@ -93,7 +90,6 @@ class MuxedClientBase
         rescue Exception => e
             Log.warning(["Exception occurred while getting server messages - #{e.message}", e.backtrace])
         end
-        Log.debug(["Returning server messages", messages])
         messages
     end
 
@@ -102,15 +98,11 @@ class MuxedClientBase
         begin
             if @setup && input = get_from_client
                 raise RuntimeError, "Received non-message #{input.inspect} from client!" unless Message === input
-                Log.debug("Received client message #{input.type}", 8)
                 messages << input
-            else
-                Log.warning("#{@setup.inspect} / #{input.inspect}")
             end
         rescue Exception => e
             Log.warning(["Exception occurred while getting client messages - #{e.message}", e.backtrace])
         end
-        Log.debug(["Returning client messages", messages])
         messages
     end
 end

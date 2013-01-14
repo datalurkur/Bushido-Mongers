@@ -40,15 +40,15 @@ class GameClient < MuxedClientBase
             while @running
                 client_messages, server_messages = get_messages
 
-                Log.debug("Processing #{client_messages.size} client messages and #{server_messages.size} server messages")
+                Log.debug("Processing #{client_messages.size} client messages and #{server_messages.size} server messages", 6)
 
                 client_messages.each do |message|
-                    Log.debug("Client message #{message.type}")
+                    Log.debug("Client message #{message.type}", 8)
                     current_state.from_client(message)
                 end
 
                 server_messages.each do |message|
-                    Log.debug("Server message #{message.type}")
+                    Log.debug("Server message #{message.type}", 8)
                     current_state.from_server(message)
                 end
             end
