@@ -34,6 +34,19 @@ class String
     end
 end
 
+class Object
+    def self.format_arbitrary(object)
+        case object
+        when String, NilClass, TrueClass, FalseClass
+            object.inspect
+        when Symbol, Numeric, Module
+            object.to_s
+        else
+            object.class.to_s
+        end
+    end
+end
+
 class Array
     def to_formatted_string(prefix="", nest_prefix=true)
         if empty?
@@ -45,16 +58,7 @@ class Array
                 data = if element.respond_to?(:to_formatted_string)
                     element.to_formatted_string(prefix + "  ", false)
                 else
-                    case element
-                    when String
-                        element
-                    when Symbol
-                        element.inspect
-                    when Fixnum,Float,Module
-                        element.to_s
-                    else
-                        element.class.to_s
-                    end
+                    Object.format_arbitrary(element)
                 end
 
                 header = (i == 0) ? "[ " : "  "
@@ -85,12 +89,7 @@ class Hash
                 value_output  = if value.respond_to?(:to_formatted_string)
                     value.to_formatted_string(prefix + "    ", false)
                 else
-                    case value
-                    when String,Symbol,Fixnum,Float
-                        value.inspect
-                    else
-                        value.class.to_s
-                    end
+                    Object.format_arbitrary(value)
                 end
 
                 header     = (i == 0) ? "{ " : "  "
