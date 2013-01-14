@@ -32,7 +32,7 @@ module Commands
                 end
             when :inventory
                 # TODO - recursive
-                return [] unless core.db.raw_info_for(agent.type)[:uses].include?(Equipment)
+                return [] unless agent.uses?(Equipment)
                 agent.select_inventory do |object|
                     object.matches(:type => type, :name => name)
                 end

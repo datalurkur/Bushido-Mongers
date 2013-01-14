@@ -5,3 +5,5 @@ be   present am  are is   are are are
 be   past    was were was were were were
 find past    found found found found found found
 sneak past   sneaked sneaked sneaked sneaked sneaked sneaked
+wear past    wore wore wore
+hold past    held held held

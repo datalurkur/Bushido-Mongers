@@ -54,7 +54,23 @@ module Inventory
         list
     end
 
+    def containers_in_inventory(type)
+        worn_containers + held_containers
+    end
+
+    def worn_containers
+        containers(:worn)
+    end
+
+    def held_containers
+        containers(:held)
+    end
+
     private
+    def containers(type)
+        @inventory[type].select { |p, e| e.has_property?(:is_container) }
+    end
+
     def add(type, part, equipment)
         init_inventory unless @inventory
         if @inventory[type][part.type].nil?
