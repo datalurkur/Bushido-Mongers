@@ -22,7 +22,7 @@ I you he we you they
 
 def load_file(dir, glob_str, regex = //, &block)
     Dir.glob("#{dir}/#{glob_str}").each do |file|
-        Log.debug("Reading #{file}")
+        Log.debug("Reading #{file}", 7)
         match = file.match(regex)
 
         File.readlines(file).each do |line|

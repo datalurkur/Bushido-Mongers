@@ -237,22 +237,23 @@ class Lobby
         case message.type
         when :act
             Log.debug("Parsing action message", 8)
-            action = nil
-            params = {}
+            params = Words.decompose_command(message.command)
+            command = params[:command]
+
             begin
                 Log.debug("Performing command", 8)
                 character = @game_core.get_character(username)
 
-                params = Commands.stage(@game_core, message.command, message.args.merge(:agent => character))
+                params = Commands.stage(@game_core, command, params.merge(:agent => character))
                 send_to_user(username, Message.new(:act_success, {:description => params}))
             rescue Exception => e
-                Log.debug(["Failed to stage command #{message.command}", e.message])
+                Log.debug(["Failed to stage command #{command}", e.message])
                 send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
                 return
             end
 
             begin
-                Commands.do(@game_core, message.command, params)
+                Commands.do(@game_core, command, params)
             rescue
                 Log.error(["Failed to perform command #{message.command}", e.message, e.backtrace])
             end

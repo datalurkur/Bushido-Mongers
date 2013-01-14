@@ -46,10 +46,7 @@ class PlayingState < State
                         Log.debug("Unrecognized command #{message.command}", 4)
                     end
                 else
-                    pieces = message.command.strip.split(/\s+/).collect(&:to_sym)
-                    act_args = Words.decompose_command(pieces)
-
-                    @client.send_to_server(Message.new(:act, act_args))
+                    @client.send_to_server(Message.new(:act, :command => message.command))
                 end
             else
                 Log.debug(["Unhandled message #{message.type} encountered during client processing for #{self.class}", caller])

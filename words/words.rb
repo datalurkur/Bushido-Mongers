@@ -473,18 +473,21 @@ module Words
             verb = associated_verbs.rand
         end
 
-        # TODO - Use expletive / inverted copula construction
-        # TODO - expletive more often for second person
-        #features = []
-        #features << :expletive if Chance.take(:coin_toss)
-
         subject_np = Sentence::NounPhrase.new(subject)
         verb_np    = Sentence::VerbPhrase.new(verb, args)
 
         Sentence.new(subject_np, verb_np)
     end
 
-    def self.gen_copula(name, args = {})
+    def self.gen_copula(args = {})
+        # TODO - Use expletive / inverted copula construction
+        # TODO - expletive more often for second person
+#        if Chance.take(:coin_toss)
+            # <Agent> <verbs> <target>
+            self.gen_sentence(args)
+#        else
+            # passive: <target> is <verbed> <preposition <Agent>>
+#        end
     end
 
     #:keywords=>[], :objects=>["Test NPC 23683", "Test NPC 35550", "Test Character"], :exits=>[:west], :name=>"b00"
@@ -531,20 +534,14 @@ module Words
         name.to_s.title
     end
 
-    # TODO - add adjective detection and passthroughs, so one could e.g. say "with the big sword"
-    # Note that this method modifies the pieces array
-    def self.decompose_phrase(pieces, preposition)
-        if (index = pieces.index(preposition))
-            pieces.slice!(index,2).last
-        end
-    end
-
     # Decompose a given command into pieces usable by the command.rb object-finder.
     # TODO - Since this exclusively happens on the server-side, we will have access
     # to adjective and noun information, and can store adjectives and pass them along
     # to the object-finder to narrow the search.
-    # prerequisites: pieces is an array of symbols
-    def self.decompose_command(pieces)
+    # parameter: A whitespace-separated list of words.
+    def self.decompose_command(command)
+        Log.debug(command)
+        pieces = command.strip.split(/\s+/).collect(&:to_sym)
         # TODO - Join any conjunctions together
         #while (i = pieces.index(:and))
         #    first_part = (i > 1)               ? pieces[0...(i-1)] : []
@@ -557,19 +554,21 @@ module Words
 
         # Find the verb
         verb = pieces.slice!(0)
-        # Look for synonym command verbs.
+
+        # Look for matching command.
         commands = self.db.get_keyword_words(:command, :verb)
         if commands.include?(verb)
             command = verb
         else
             related = self.db.get_related_words(verb)
-            # Non-existent command; let the playing state handle it.
             if related.nil?
+                # Non-existent command; let the playing state handle it.
                 return {:command => verb, :args => {}}
             end
             matching_commands = commands & related
             case matching_commands.size
             when 0
+                # Non-existent command; let the playing state handle it.
                 return {:command => verb, :args => {}}
             when 1
                 command = matching_commands.first
@@ -594,11 +593,21 @@ module Words
             Log.debug(["Ignoring potentially important syntactic pieces", pieces])
         end
 
-        {:command => command, :args => {
+        {
+            :command   => command,
             :tool      => tool,
             :location  => location,
             :materials => materials,
             :target    => target
-        }}
+        }
+    end
+
+    private
+    # TODO - add adjective detection and passthroughs, so one could e.g. say "with the big sword"
+    # Note that this method modifies the pieces array
+    def self.decompose_phrase(pieces, preposition)
+        if (index = pieces.index(preposition))
+            pieces.slice!(index,2).last
+        end
     end
 end
