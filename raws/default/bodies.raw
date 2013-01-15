@@ -4,14 +4,16 @@
       is dropped into the world as a corpse
     TODO : Figure out how to impart the corpse with some of the information of the NPC / character
 */
-abstract composition corporeal {
+abstract root corporeal {
     has sym size;
     class sym body_type;
     class optional sym consumes;
     class optional proc on_consume;
 
     /* The body is the incidental. */
-    preserved_container_classes   internal incidental external;
+    container_classes             incidental;
+    mutable_container_classes     incidental;
+    preserved_container_classes   incidental;
 
     uses corporeal;
 }
