@@ -10,7 +10,7 @@ module Position
             if instance.has_position?
                 instance.relative_position.remove_object(instance)
             else
-                Log.warning(["Destroying object with no position - #{monicker}", caller])
+                Log.warning(["Destroying object with no position - #{instance.monicker}", caller])
             end
         end
     end

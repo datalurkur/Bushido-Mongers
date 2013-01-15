@@ -17,6 +17,7 @@ unless Object.const_defined?("Message")
         class << self
             def register_listener(core, klass, obj); end
             def unregister_listener(core, klass, obj); end
+            def dispatch(core, type, args={}); end
         end
     end
 end

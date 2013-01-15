@@ -39,7 +39,6 @@ end
 def test_test_npc(db, test_npc_type, name)
     test_npc = test_npc(db, test_npc_type, name)
     Log.debug("Test NPC is a guard? #{test_npc.is_type?(:guard)}")
-    Log.debug(["Test NPC has parts", test_npc.body.internal.collect(&:monicker), test_npc.body.external.collect(&:monicker)])
     if test_npc.has_property?(:provocations)
         Log.debug(["Test NPC has provocations", test_npc.provocations])
     end
