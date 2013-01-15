@@ -1,7 +1,7 @@
 /*
     A corporeal is a special type of thing that is incidentally composed of a body.
     Doing damage to the corporeal damages the body, and upon death the incidental composition
-      is dropped into the world as a corpose
+      is dropped into the world as a corpse
     TODO : Figure out how to impart the corpse with some of the information of the NPC / character
 */
 abstract composition corporeal {
@@ -10,7 +10,8 @@ abstract composition corporeal {
     class optional sym consumes;
     class optional proc on_consume;
 
-    preserve_incidental true;
+    /* The body is the incidental. */
+    preserved_container_classes   internal incidental external;
 
     uses corporeal;
 }
@@ -22,14 +23,24 @@ abstract root adjustable_size {
     uses adjustable_size;
 }
 
-abstract composition,adjustable_size body_part {
+abstract item,composition,adjustable_size body_part {
     has int hp;
 
     /* Body parts are worthless by default */
     value 0;
 }
 
-body_part,consumable flesh {
+/* An extra container class for grasped objects, since they've got some special semantics. */
+abstract body_part grasping_body_part {
+    container_classes           grasped;
+    mutable_container_classes   grasped;
+    /* Grasped objects always preserved through destruction */
+    preserved_container_classes grasped;
+
+    has_many optional sym grasped;
+}
+
+consumable,adjustable_size flesh {
     typical_size small;
     weight 1;
 }
@@ -133,11 +144,10 @@ body_part arm {
     external hand;
 }
 
-body_part hand {
+grasping_body_part hand {
     weight 2;
     incidental flesh;
     typical_size small;
-    is_container true;
 }
 
 body_part leg {

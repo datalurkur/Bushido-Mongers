@@ -1,7 +1,11 @@
-abstract composition backpack {
-    is_container true;
-    preserve_internal true;
+abstract composition container {
+    mutable_container_classes     internal            external;
+    preserved_container_classes   internal            external;
+}
+
+abstract item,container backpack {
     size medium;
+    value 1;
 }
 
 backpack leather_backpack {

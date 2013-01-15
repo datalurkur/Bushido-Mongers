@@ -38,8 +38,9 @@ end
 
 def test_test_npc(db, test_npc_type, name)
     test_npc = test_npc(db, test_npc_type, name)
+    Log.debug(test_npc)
     Log.debug("Test NPC is a guard? #{test_npc.is_type?(:guard)}")
-    Log.debug(["Test NPC has parts", test_npc.body.internal.collect(&:monicker), test_npc.body.external.collect(&:monicker)])
+#    Log.debug(["Test NPC has parts", test_npc.body.internal.collect(&:monicker), test_npc.body.external.collect(&:monicker)])
     if test_npc.has_property?(:provocations)
         Log.debug(["Test NPC has provocations", test_npc.provocations])
     end
@@ -95,4 +96,21 @@ begin
     Log.debug(bp)
     Log.debug(bp.internal_objects)
     Log.debug(bp.external_objects)
+end
+
+# test test.raw
+begin
+    bp = db.create($core, :leather_backpack)
+    Log.debug(bp)
+    carrot = db.create($core, :carrot, :size=>:medium)
+    Log.debug(carrot)
+    bp.insert_object(carrot)
+    Log.debug(bp)
+
+    sbp = db.create($core, :leather_backpack)
+    Log.debug(sbp)
+    sbp.insert_object(carrot)
+    carrot = db.create($core, :carrot, :size=>:medium)
+    sbp.attach_object(carrot)
+    Log.debug(sbp)
 end

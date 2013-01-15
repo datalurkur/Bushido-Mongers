@@ -1,24 +1,25 @@
-abstract item composition {
+abstract root composition_root {
+    has_many sym container_classes;
+    has_many sym mutable_container_classes;
+    has_many sym preserved_container_classes;
+    has_many sym added_value_container_classes;
+
+    uses composition;
+}
+
+/* The classic composition. */
+abstract composition_root composition {
+    container_classes             internal incidental external;
+    /* Determines which components are modifiable after creation */
+    mutable_container_classes                         external;
+    /* Determines which components are destroyed if this item is destroyed */
+    preserved_container_classes                       external;
+    /* Determines whether the value of the contained item is added to the container */
+    added_value_container_classes          incidental external;
+
     has_many optional sym internal;
     has_many optional sym incidental;
     has_many optional sym external;
-
-    /* Determines which components are destroyed if this item is destroyed */
-    class bool preserve_internal;
-    class bool preserve_incidental;
-    class bool preserve_external;
-
-    preserve_internal   false;
-    preserve_incidental false;
-    preserve_external   true;
-
-    /* Determines whether objects can be placed inside this item */
-    class bool is_container;
-    is_container false;
-
-    /* TODO - store particular types or number of items only */
-
-    uses composition;
 }
 
 abstract composition constructed {

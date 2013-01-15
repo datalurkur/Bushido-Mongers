@@ -9,9 +9,8 @@ module Composition
 
         def at_destruction(instance)
             Log.debug("Destroying composition #{instance.monicker}", 7)
-            [:internal, :incidental, :external].each do |key|
-                switch = "preserve_#{key}".to_sym
-                if instance.class_info(switch)
+            instance.container_classes.each do |key|
+                if instance.preserved_container_classes.include?(key)
                     # Drop these components at the location where this object is
                     instance.get_property(key).each do |component|
                         Log.debug("Dropping #{component.monicker} at #{instance.absolute_position.name}")
@@ -25,7 +24,7 @@ module Composition
     end
 
     def initial_composure(params)
-        [:internal, :incidental, :external].each do |comp_type|
+        self.container_classes.each do |comp_type|
             components           = @properties[comp_type].dup
             already_created      = components.select { |component| BushidoObject === component }
             to_be_created        = components - already_created
@@ -41,45 +40,44 @@ module Composition
     end
 
     # This is used by various at_creation methods to assemble objects sans-sanity checks
+    # TODO - check for relative size / max carry number / other restrictions
     def add_object(object, type=:internal)
         Log.debug("Assembling #{monicker} - #{object.monicker} added to list of #{type} parts", 6)
-        raise "Invalid composition type: #{type}" unless [:internal, :incidental, :external].include?(type)
+        raise "Invalid composition type: #{type}" unless self.container_classes.include?(type)
         @properties[type] << object
         add_weight(object)
-        add_value(object) unless type == :internal
+        add_value(object) if self.added_value_container_classes.include?(type)
     end
 
+    # TODO - check for relative size / max carry number / other restrictions
     def insert_object(object)
-        raise "#{monicker} is not a container" unless @core.db.info_for(self.type, :is_container)
-        # TODO - check for relative size / max carry number / other restrictions
+        raise "Can't insert into #{type}" unless self.container_classes.include?(:internal)
+        raise "#{monicker} is not a container." unless self.mutable_container_classes.include?(:internal)
         Log.debug("Inserting #{object.monicker} into #{monicker}", 6)
         @properties[:internal] << object
         add_weight(object)
     end
 
+    # TODO - check for relative size / max carry number / other restrictions
     def attach_object(object)
-        # TODO - check for relative size / max carry number / other restrictions
+        raise "Can't attach to #{type}" unless self.container_classes.include?(:external)
         Log.debug("Attaching #{object.monicker} to #{monicker}", 6)
         @properties[:external] << object
         add_weight(object)
         add_value(object)
     end
 
+    # TODO - expand this for all container_classes
     def remove_object(object)
         Log.debug("Removing #{object.monicker} from #{monicker}", 6)
-        if @properties[:internal].include?(object)
-            @properties[:internal].delete(object)
-            remove_weight(object)
-        elsif @properties[:external].include?(object)
-            @properties[:external].delete(object)
-            remove_weight(object)
-            remove_value(object)
-        elsif @properties[:incidental].include?(object)
-            remove_weight(object)
-            remove_value(object)
-        else
-            raise "No matching object found"
+        self.container_classes.each do |comp_type|
+            if @properties[comp_type].include?(object)
+                remove_weight(object)
+                remove_value(object) if self.added_value_container_classes.include?(type)
+                return @properties[comp_type].delete(object)
+            end
         end
+        raise "No matching object #{object.monicker} found."
     end
 
     def internal_objects(&block)
@@ -94,6 +92,7 @@ module Composition
         type = Array(type)
         list = []
         type.each do |type|
+            next unless @properties[type]
             @properties[type].each do |obj|
                 next if block_given? && !block.call(obj)
                 list << obj
@@ -107,7 +106,7 @@ module Composition
 
     private
     def add_weight(object)
-        @properties[:weight] += object.weight
+        @properties[:weight] = (@properties[:weight] || 0) + object.weight
     end
 
     def remove_weight(object)
@@ -115,7 +114,7 @@ module Composition
     end
 
     def add_value(object)
-        @properties[:value] += object.value
+        @properties[:value] = (@properties[:value] || 0) + object.value
     end
 
     def remove_value(object)
