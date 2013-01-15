@@ -179,6 +179,7 @@ module ObjectRawParser
             [typed_objects_hash, post_processes]
         end
 
+        # FIXME - Eventually, we'll want to handle the exceptions in this method gracefully rather than crashing
         def parse_object(next_object, unparsed_objects, metadata, object_database)
             Log.debug("Parsing object #{next_object.inspect}", 8)
 
@@ -198,6 +199,25 @@ module ObjectRawParser
                     unparsed_objects.delete(parent)
                     parse_object(parent, unparsed_objects, metadata, object_database)
                 end
+            end
+
+            # Check for duplicate parent classes
+            running_list = object_metadata[:is_type].dup
+            inheritance_list = []
+            until running_list.empty?
+                running_list.reject! { |p| p == :root }
+                inheritance_list.concat(running_list)
+                running_list.collect! do |parent|
+                    object_database[parent][:is_type]
+                end
+                running_list.flatten!
+            end
+            if inheritance_list.size != inheritance_list.uniq.size
+                duplicate_elements = inheritance_list.select do |parent|
+                    inheritance_list.index(parent) != inheritance_list.rindex(parent)
+                end.uniq
+                Log.warning(["Object #{next_object} has duplicate parents in its inheritance list", duplicate_elements])
+                raise "Object has duplicate parents"
             end
 
             # Begin accumulating object data for the database
@@ -255,8 +275,7 @@ module ObjectRawParser
                             begin
                                 m.to_caml.to_const
                             rescue
-                                Log.error("Failed to load object extension #{m.inspect}")
-                                nil
+                                raise "Failed to load object extension #{m.inspect}"
                             end
                         end.compact
                         object_data[:uses].concat(modules)
