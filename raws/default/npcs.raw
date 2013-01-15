@@ -37,6 +37,20 @@ monster,corporeal jikininki {
     }
 }
 
+monster,corporeal giant {
+    size enormous;
+    body_type humanoid_body;
+    spawns_in mountain;
+    spawn_chance unusual;
+}
+
+monster,corporeal dwarf {
+    size small;
+    body_type humanoid_body;
+    spawns_in mountain;
+    spawn_chance uncommon;
+}
+
 abstract npc guard {
     has_many sym provocations;
 }
