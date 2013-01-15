@@ -17,9 +17,9 @@ module Inventory
 
     def wear(part, equipment)
         if add(:worn, part, equipment)
-            return part.type
+            return part
         else
-            raise "Couldn't wear #{equipment}; already wearing #{@inventory[:worn][part.type]}"
+            raise "Couldn't wear #{equipment.monicker}; already wearing #{@inventory[:worn][part].monicker}"
         end
     end
 
@@ -33,7 +33,7 @@ module Inventory
         if add(:held, part, object)
             return part.type
         else
-            raise "Couldn't hold #{object}; already holding #{@inventory[:held][part.type]}"
+            raise "Couldn't hold #{object}; already holding #{@inventory[:held][part]}"
         end
     end
 
@@ -73,8 +73,8 @@ module Inventory
 
     def add(type, part, equipment)
         init_inventory unless @inventory
-        if @inventory[type][part.type].nil?
-            @inventory[type][part.type] = equipment
+        if @inventory[type][part].nil?
+            @inventory[type][part] = equipment
         else
             nil
         end
@@ -98,6 +98,7 @@ module Equipment
     def random_equipment
         external_body_parts.each do |part|
             if part.has_property?(:can_equip) && !part.can_equip.empty?
+                Log.debug("Looking for equipment worn on #{part.monicker}")
                 rand_type = @core.db.random(part.can_equip.rand)
 
                 creation_hash = {}
