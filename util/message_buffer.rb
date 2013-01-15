@@ -21,7 +21,7 @@ class MessageBuffer
                 messages << message
                 @buffer = @buffer[(next_length+4)..-1]
             else
-                Log.warning("Buffering socket data: #{@buffer.size}b/#{next_length}b received (consider increasing buffer size")
+                Log.warning("Buffering socket data: #{@buffer.size}b/#{next_length}b received (consider increasing buffer size for #{caller[0]})")
                 break
             end
         end
