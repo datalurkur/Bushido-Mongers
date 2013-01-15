@@ -86,8 +86,8 @@ class Server
         Log.debug("Terminating client socket")
         @sockets_mutex.synchronize {
             unless @client_sockets[socket].nil?
-                @client_sockets[socket].kill
-                socket.close
+                @client_sockets[socket].kill if @client_sockets[socket].alive?
+                socket.close unless socket.closed?
                 @client_sockets.delete(socket)
             end
         }
