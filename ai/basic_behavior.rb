@@ -1,7 +1,13 @@
 Behavior.define(:random_movement) do |actor|
-    direction = actor.position.connected_directions.rand
+    position = actor.absolute_position
+
+    # A Dwarf in a bag is kinda just screwed
+    return false unless Room === position
+
+    direction = position.connected_directions.rand
     if direction
-        actor.move(direction)
+        location = position.get_adjacent(direction)
+        actor.move_to(location)
         true
     else
         false
@@ -14,9 +20,15 @@ Behavior.define(:flee) do |actor|
     if enemies.empty?
         false
     else
-        direction = actor.position.connected_directions.rand
+        position = actor.absolute_position
+
+        # A Dwarf trapped in a bag with a voracious wolf is *doubly* screwed
+        return false unless Room === position
+
+        direction = position.connected_directions.rand
         if direction
-            actor.move(direction)
+            location = position.get_adjacent(direction)
+            actor.move(location)
             true
         else
             false

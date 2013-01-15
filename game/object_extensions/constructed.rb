@@ -7,8 +7,8 @@ module Constructed
             params[:components].each do |component|
                 # This next is only necessary if the component has been created
                 # ex nihilo, which happens sometimes.
-                next if component.position.nil?
-                component.position.remove_object(component)
+                next unless component.has_position?
+                component.relative_position.remove_object(component)
             end
 
             # Created object quality depends on the quality of its components as well

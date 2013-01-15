@@ -39,7 +39,7 @@ post_process {
             propagate_recursive(component) do |subtype|
                 Log.debug("#{subtype} is used in #{constructed}", 7)
                 name = :used_in
-                set_info(subtype, name, init_or_info(subtype, name, []) << constructed)
+                modify_info(subtype, name, []) << constructed
             end
         end
     end

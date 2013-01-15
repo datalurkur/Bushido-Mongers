@@ -97,7 +97,7 @@ post_process {
     self.find_subtypes(:zone, {}, true).each do |zone|
         unless list = info_for(zone, name).empty?
             set_info(zone, name,
-                init_or_info(zone, name, []).map { |spawns| types_of(spawns) }.flatten.uniq
+                modify_info(zone, name, []).map { |spawns| types_of(spawns) }.flatten.uniq
             )
         end
     end
@@ -105,7 +105,7 @@ post_process {
         if spawns_in = info_for(npc, :spawns_in)
             spawns_in.each do |zone|
                 set_info(zone, name,
-                    (init_or_info(zone, name, []) + [npc]).uniq
+                    (modify_info(zone, name, []) + [npc]).uniq
                 )
             end
         end

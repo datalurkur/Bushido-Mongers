@@ -27,7 +27,8 @@ module Commands
         def filter_objects(agent, location, type=nil, name=nil)
             case location
             when :position
-                agent.position.objects.select do |object|
+                # A player tied to a long pole can still grab apples
+                agent.absolute_position.objects.select do |object|
                     object.matches(:type => type, :name => name)
                 end
             when :inventory
@@ -71,7 +72,7 @@ module Commands
                 )
             else
                 # Assume the player wants a broad overview of what he can see, describe the room
-                params[:target] = params[:agent].position
+                params[:target] = params[:agent].absolute_position
             end
         end
 
@@ -96,7 +97,7 @@ module Commands
             else
                 raise "#{agent.monicker} doesn't know how to eat a #{params[:target].type}"
             end
-            params[:target].destroy
+            params[:target].destroy(agent)
         end
     end
 
@@ -114,11 +115,16 @@ module Commands
     module Move
         def self.stage(core, params)
             SharedObjectExtensions.check_required_params(params, [:target])
+
+            position = params[:agent].absolute_position
+            raise "You're trapped in a #{position.monicker}!" unless Room === position
+
+            # This method raises an exception if the direction is invalid, so no need to check it
+            params[:target] = position.get_adjacent(params[:target])
         end
 
         def self.do(core, params)
-            # The target is a location direction and doesn't need to be looked up
-            params[:agent].move(params[:target])
+            params[:agent].move_to(params[:target])
         end
     end
 

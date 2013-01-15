@@ -143,7 +143,7 @@ class GameCore
             # TODO - We should determine what happens when a character is killed - can he reload his last save, or must he start a new character?
         else
             # Cache the character's position within the game server so that it can be placed back where it exited when logging back in
-            cached_positions[username] = character.position
+            cached_positions[username] = character.absolute_position
             Character.save(username, character)
         end
         characters.delete(username)

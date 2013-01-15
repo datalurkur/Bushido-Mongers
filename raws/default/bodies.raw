@@ -1,3 +1,20 @@
+/*
+    A corporeal is a special type of thing that is incidentally composed of a body.
+    Doing damage to the corporeal damages the body, and upon death the incidental composition
+      is dropped into the world as a corpose
+    TODO : Figure out how to impart the corpse with some of the information of the NPC / character
+*/
+abstract composition corporeal {
+    has sym size;
+    class sym body_type;
+    class optional sym consumes;
+    class optional proc on_consume;
+
+    preserve_incidental true;
+
+    uses corporeal;
+}
+
 abstract root adjustable_size {
     class sym typical_size;
     needs relative_size;
@@ -27,8 +44,10 @@ post_process {
     duplicate_object(:leg, :right_leg)
     duplicate_object(:arm, :left_arm)
     duplicate_object(:arm, :right_arm)
+    Log.debug("Adding limbs to bipeds")
     types_of(:biped).each do |biped|
-        info_for(biped, :external).concat([
+        Log.debug("#{biped.inspect} gets limbs!")
+        modify_info(biped, :external).concat([
             :left_leg,
             :right_leg,
             :left_arm,
@@ -41,7 +60,7 @@ post_process {
     duplicate_object(:leg, :right_front_leg)
     duplicate_object(:leg, :right_rear_leg)
     types_of(:quadriped).each do |qp|
-        info_for(qp, :external).concat([
+        modify_info(qp, :external).concat([
             :left_front_leg,
             :left_rear_leg,
             :right_front_leg,
@@ -58,7 +77,7 @@ post_process {
     duplicate_object(:leg, :right_rear_anterior_leg)
     duplicate_object(:leg, :right_rear_posterior_leg)
     types_of(:octiped).each do |op|
-        info_for(op, :external).concat([
+        modify_info(op, :external).concat([
             :left_front_anterior_leg,
             :left_front_posterior_leg,
             :left_rear_anterior_leg,

@@ -70,6 +70,8 @@ class Zone
         @name = name
     end
 
+    def monicker; @name; end
+
     def set_parent(parent, offset)
         @parent = parent
         @offset = offset

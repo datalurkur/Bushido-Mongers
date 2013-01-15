@@ -54,11 +54,7 @@ class ObjectDB
         return type_hash[:class_values] if datapoint.nil?
 
         ret = type_hash[:class_values][datapoint]
-        if Array === ret || Hash === ret
-            ret.dup
-        else
-            ret
-        end
+        Marshal.load(Marshal.dump(ret))
     end
 
     private
@@ -68,7 +64,7 @@ class ObjectDB
     end
 
     # Will not destroy pre-existing data.
-    def init_or_info(type, datapoint, init_value)
+    def modify_info(type, datapoint, init_value = nil)
         type_hash = raw_info_for(type)
 
         if type_hash[:class_values][datapoint].nil?

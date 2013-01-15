@@ -78,7 +78,7 @@ post_process {
         propagate_recursive(info_for(equipment, :slot)) do |subtype|
             Log.debug("#{subtype} can equip #{equipment}")
             name = :can_equip
-            set_info(subtype, name, init_or_info(subtype, name, []) << equipment)
+            modify_info(subtype, name, []) << equipment
         end
     end
 }

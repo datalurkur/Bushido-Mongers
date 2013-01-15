@@ -206,7 +206,7 @@ class Lobby
             @users.keys.each do |username|
                 character = @game_core.get_character(username)
                 next if character.nil?
-                next unless message.position == character.position
+                next unless message.position == character.absolute_position
 
                 event_properties = message.params.merge(:event_type => action)
                 send_to_user(username, Message.new(:game_event, {:description => event_properties}))
@@ -215,7 +215,7 @@ class Lobby
             @users.keys.each do |username|
                 character = @game_core.get_character(username)
                 next if character.nil?
-                next unless message.position == character.position
+                next unless message.position == character.absolute_position
 
                 event_properties = message.params.merge(:event_type => :object_destroyed)
                 send_to_user(username, Message.new(:game_event, {:description => event_properties}))

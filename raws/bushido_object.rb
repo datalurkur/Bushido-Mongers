@@ -63,9 +63,8 @@ class BushidoObject
             mod.at_destruction(self) if mod.respond_to?(:at_destruction)
         end
 
-
-        if @position
-            Message.dispatch(@core, :object_destroyed, :agent => destroyer, :position => @position, :target => self)
+        if has_position?
+            Message.dispatch(@core, :object_destroyed, :agent => destroyer, :position => absolute_position, :target => self)
         else
             Log.warning("#{monicker} is being destroyed but has no position")
         end
@@ -174,6 +173,7 @@ class SafeBushidoObject < BushidoObject
     end
 
     def destroy(*args)
+        Log.info("Destroying #{@type} (#{object_id})", 8)
         check_destroyed
         super(*args)
         @destroyed = true

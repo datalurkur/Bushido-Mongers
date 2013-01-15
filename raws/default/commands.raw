@@ -61,21 +61,21 @@ post_process {
         propagate_recursive(info_for(command, :tool)) do |subtype|
             Log.debug("#{subtype} is a required tool for #{command}")
             name = :used_for
-            set_info(subtype, name, init_or_info(subtype, name, []) << command)
+            modify_info(subtype, name, []) << command
         end
 
         Log.debug("Propagating target information for #{command}")
         propagate_recursive(info_for(command, :target)) do |subtype|
             Log.debug("#{subtype} is a target of #{command}")
             name = :target_of
-            set_info(subtype, name, init_or_info(subtype, name, []) << command)
+            modify_info(subtype, name, []) << command
         end
 
         Log.debug("Propagating location information for #{command}")
         propagate_recursive(info_for(command, :location)) do |subtype|
             Log.debug("#{subtype} is the location at which #{command} happens")
             name = :location_of
-            set_info(subtype, name, init_or_info(subtype, name, []) << command)
+            modify_info(subtype, name, []) << command
         end
     end
 }

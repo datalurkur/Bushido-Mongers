@@ -15,56 +15,64 @@ module Corporeal
 
                     # TODO - extract damage from attacker, tool, etc.
                     damage = 1
-                    rand_part = instance.external_body_parts.rand
-                    instance.damage(rand_part,     damage, message.attacker)
-                    instance.damage(instance.body, damage, message.attacker)
+
+                    target_part = if rand() > 0.5
+                        # Target a random body part
+                        instance.external_body_parts.rand
+                    else
+                        # Not a targeted shot
+                        nil
+                    end
+                    instance.damage(damage, message.attacker, target_part)
                 end
             end
-        end
-
-        def at_destruction(instance)
-            instance.drop_body
         end
     end
 
     def create_body
-        if @properties[:body]
+        unless @properties[:incidental].empty?
             Log.error("Body created twice for #{monicker}")
             return
         end
         body_type = class_info(:body_type)
-        body      = @core.db.create(@core, body_type, {:relative_size => @properties[:size]})
-        @properties[:body]   = body
-        @properties[:weight] = all_body_parts.map(&:weight).inject(0, &:+)
-
+        @core.db.create(@core, body_type, {
+            :relative_size => @properties[:size],
+            :position      => self,
+            :position_type => :incidental
+        })
         @total_hp = all_body_parts.map(&:hp).inject(0, &:+)
-    end
 
-    def drop_body
-        @properties[:body].set_position(@position) if @properties[:body]
+        # If this has multiple values, I don't know what the fuck we're doing
+        # That would mean that this corporeal thing has multiple independent bodies
+        # How do you even describe such a thing?
+        raise "Wat" if @properties[:incidental].size > 1
     end
 
     def all_body_parts(type = [:internal, :external])
         selector = Proc.new { |obj| obj.is_type?(:body_part) }
-        @properties[:body].select_objects(type, true, &selector)
+        @properties[:incidental].collect do |incidental_part|
+            incidental_part.select_objects(type, true, &selector)
+        end.flatten
     end
 
     def external_body_parts
-        [@properties[:body]] + all_body_parts(:external)
+        @properties[:incidental] + all_body_parts(:external)
     end
 
     def internal_body_parts
         all_body_parts(:internal)
     end
 
-    def damage(part, damage, attacker)
-        part.set_property(:hp, part.hp - damage)
-        if part.hp <= 0
-            if part == @properties[:body]
+    def damage(amount, attacker, target=nil)
+        target ||= @properties[:incidental].rand
+        target.set_property(:hp, target.hp - amount)
+        @total_hp -= amount
+        if target.hp <= 0
+            if @properties[:incidental].include?(target)
                 Log.debug("Destroying body of #{monicker}")
                 destroy(attacker)
             end
-            part.destroy(attacker)
+            target.destroy(attacker)
         end
     end
 end

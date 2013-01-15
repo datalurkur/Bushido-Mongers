@@ -3,14 +3,6 @@ abstract root object {
     has sym size;
 }
 
-abstract root corporeal {
-    has sym size;
-    class sym body_type;
-    class optional sym consumes;
-    class optional proc on_consume;
-    uses corporeal;
-}
-
 abstract root aligned {
     has_many sym factions;
 }
