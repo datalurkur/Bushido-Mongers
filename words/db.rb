@@ -15,9 +15,9 @@ class WordDB
                 find_group_for(word)
             else
                 # Check if a definition exists
-                if matched = find_group_for(word, true)
+                if matched = find_group_for(word, false)
                     matched
-                elsif mergee = find_group_matching_any(word, true)
+                elsif mergee = find_group_matching_any(word, false)
                     merge(mergee, word)
                 else
                     @groups << WordGroup.new(word)

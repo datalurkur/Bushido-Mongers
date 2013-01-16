@@ -99,9 +99,9 @@ class ObjectDB
 
     def is_type?(type, parent_type)
         Log.debug("Is #{type.inspect} a #{parent_type.inspect}? (from #{caller[0]})", 8)
-        (return true)  if (parent_type == :root)
-        (return false) if (type == :root)
-        current = [type]
+        return true  if parent_type == :root
+        return false if        type == :root
+        current = Array(type)
         until current.empty?
             if current.include?(parent_type)
                 Log.debug("Yes!", 8)

@@ -12,9 +12,9 @@ module ZoneWithKeywords
         @params[:zone].keywords
     end
 
-    def monicker
-        @params[:zone].monicker
-    end
+#    def monicker
+#        @params[:zone].monicker
+#    end
 end
 
 class Room < ZoneLeaf
@@ -32,13 +32,15 @@ class Room < ZoneLeaf
         Log.debug("Inserting #{object.monicker} into #{@name}", 6)
         @objects << object
     end
-    def add_object(object,type=:internal)
+
+    def add_object(object, type=:internal)
         Log.debug("Adding #{object.monicker} into #{@name}", 6)
         if type != :internal
             Log.warning(["Rooms cannot be comprised of #{type.inspect} objects", caller])
         end
         @objects << object
     end
+
     def remove_object(object)
         unless @objects.include?(object)
             Log.error("#{object.monicker} not found in #{@name}") 
@@ -54,7 +56,7 @@ class Room < ZoneLeaf
         # FIXME: This should be somewhere else, and not so inclusive.
         @parent.add_starting_location(self)# if Chance.take(:coin_toss)
 
-        populate_npcs(core)
+#        populate_npcs(core)
         populate_items(core)
     end
 
@@ -108,3 +110,5 @@ class Area < ZoneContainer
         end
     end
 end
+
+$nowhere = Room.new("Nowhere")
