@@ -113,7 +113,7 @@ module VerboseInterface
                         return Words.gen_room_description(target)
                     else
                         if target[:is_type].include?(:item)
-                            return Words.gen_sentence(message.properties).to_s
+                            return Words.gen_sentence(message.properties)
                         elsif target[:is_type].include?(:corporeal)
                             return Words.describe_corporeal(target)
                         elsif target[:is_type].include?(:composition_root)
@@ -123,14 +123,14 @@ module VerboseInterface
                         end
                     end
                 when :move, :attack, :get
-                    return Words.gen_sentence(message.properties).to_s
+                    return Words.gen_sentence(message.properties)
                 else
                     return "I don't know how to express the results of a(n) #{message.properties[:command]}, pester zphobic to work on this"
                 end
             elsif message.field == :game_event
                 case message.properties[:event_type]
                 when :object_destroyed
-                    return Words.gen_copula(message.properties)
+                    return Words.gen_copula(message.properties.merge(:verb=>:destroy))
                 else
                     return "I don't know how to express a game event of type #{message.event_type}"
                 end

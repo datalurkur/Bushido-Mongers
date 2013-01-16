@@ -480,50 +480,51 @@ module Words
         subject_np = Sentence::NounPhrase.new(subject)
         verb_np    = Sentence::VerbPhrase.new(verb, args)
 
-        Sentence.new(subject_np, verb_np)
+        Sentence.new(subject_np, verb_np).to_s
     end
 
     def self.describe_corporeal(target)
         # Describe the corporeal body
-        describe_composition(target[:properties][:incidental].first)
+        body = target[:properties][:incidental].first
+        sentences = [gen_copula(:target=>body[:monicker])]
+        sentences << describe_composition(body)
+
         # TODO - Add more information about abilities, features, etc.
     end
 
     def self.describe_composition(target)
-        sentences = [gen_copula(:subject=>:it, :target=>target[:type])]
+        Log.debug("Describing #{target[:monicker]}")
+        sentences = []
 
         if target[:properties][:external] && !target[:properties][:external].empty?
-            Log.debug("external found for #{target[:type]}")
+            sentences << gen_copula(:subject=>"Attached to the #{target[:monicker]}", :target=>target[:properties][:external].collect { |p| p[:monicker] })
             sentences += target[:properties][:external].collect do |part|
-                Log.debug(part[:type])
                 if part[:is_type].include?(:composition_root)
                     describe_composition(part)
                 else
-                    gen_copula(:subject=>:it, :target=>part[:type])
+                    gen_copula(:target=>part[:monicker])
                 end
             end
         end
 
         if target[:properties][:worn] && !target[:properties][:worn].empty?
-            Log.debug("worn found for #{target[:type]}")
+            sentences << gen_copula(:subject=>"Worn on the #{target[:monicker]}", :target=>target[:properties][:worn].collect { |p| p[:monicker] })
             sentences += target[:properties][:worn].collect do |part|
-                Log.debug(part[:type])
                 if part[:is_type].include?(:composition_root)
                     describe_composition(part)
                 else
-                    gen_copula(:subject=>:it, :target=>part[:type])
+                    gen_copula(:target=>part[:monicker])
                 end
             end
         end
 
         if target[:properties][:grasped] && !target[:properties][:grasped].empty?
-            Log.debug("grasped found for #{target[:type]}")
+            sentences << gen_copula(:subject=>"Grasped by the #{target[:monicker]}", :target=>target[:properties][:grasped].collect { |p| p[:monicker] })
             sentences += target[:properties][:grasped].collect do |part|
-                Log.debug(part[:type])
                 if part[:is_type].include?(:composition_root)
                     describe_composition(part)
                 else
-                    gen_copula(:subject=>:it, :target=>part[:type])
+                    gen_copula(:target=>part[:monicker])
                 end
             end
         end
@@ -539,6 +540,7 @@ module Words
         unless args[:verb] || args[:action] || args[:command]
             args[:verb]    = :be
         end
+        Log.debug(args)
 
         # TODO - Use expletive / inverted copula construction
         # TODO - expletive more often for second person
