@@ -44,6 +44,7 @@ class Lobby
         message.alter_params do |params|
             Descriptor.describe(params, character)
         end
+        Log.debug(message, 10)
         @send_callback.call(username, message)
     end
 

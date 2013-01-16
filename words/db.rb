@@ -153,10 +153,10 @@ class WordDB
 
                 expr = list.shift
                 if expr
-                    add_conjugation(infinitive, state, expr)
+                    add_conjugation(infinitive, curr_state, expr)
                 else
                     # If the list is unfilled, use the first person as default.
-                    add_conjugation(infinitive, state, first_person)
+                    add_conjugation(infinitive, curr_state, first_person)
                 end
             end
         else

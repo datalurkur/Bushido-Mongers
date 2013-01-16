@@ -73,3 +73,5 @@ begin
         Action.do(:agent => agent, :target => target, :action => :attack, :tool => :dagger)
     end
 end
+
+Log.debug(Words.gen_copula(:target=>:sunny).to_s)

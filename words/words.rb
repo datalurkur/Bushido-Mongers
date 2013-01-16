@@ -68,17 +68,21 @@ module Words
             @voice  = :active
         end
 
-        def ==(other)
+        def eql?(other)
             case other
             when State
-                @aspect == other.aspect
-                @tense  == other.tense
-                @mood   == other.mood
-                @person == other.person
+                @aspect == other.aspect &&
+                @tense  == other.tense  &&
+                @mood   == other.mood   &&
+                @person == other.person &&
                 @voice  == other.voice
             else
                 raise "Can't compare word state to #{other.class}"
             end
+        end
+
+        def hash
+            [@aspect, @tense, @mood, @person, @voice].hash
         end
     end
 
@@ -302,7 +306,7 @@ module Words
 
             def self.conjugate(infinitive, state = State.new)
                 if Words.db.conjugation_for?(infinitive, state)
-                    return Worda.db.conjugate(infinitive, state)
+                    return Words.db.conjugate(infinitive, state)
                 end
 
                 infinitive = infinitive.to_s
@@ -527,9 +531,13 @@ module Words
         sentences.flatten.join(" ")
     end
 
+    # TODO - Still not a proper copula.
     def self.gen_copula(args = {})
+        unless args[:subject] || args[:agent]
+            args[:subject] = :it
+        end
         unless args[:verb] || args[:action] || args[:command]
-            args[:verb] = :be
+            args[:verb]    = :be
         end
 
         # TODO - Use expletive / inverted copula construction
