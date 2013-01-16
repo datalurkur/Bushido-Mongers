@@ -32,13 +32,30 @@ abstract item,composition,adjustable_size body_part {
     value 0;
 }
 
+/* An extra container class for worn objects, since they've got some special semantics. */
+abstract body_part body_part_can_wear {
+    container_classes           worn;
+    mutable_container_classes   worn;
+    /* Worn objects always preserved through destruction? */
+    preserved_container_classes worn;
+    has_many optional sym worn;
+}
+
 /* An extra container class for grasped objects, since they've got some special semantics. */
-abstract body_part grasping_body_part {
+abstract body_part_can_wear grasping_body_part {
     container_classes           grasped;
     mutable_container_classes   grasped;
     /* Grasped objects always preserved through destruction */
     preserved_container_classes grasped;
+    has_many optional sym grasped;
+}
 
+/* This is for parts that can hold but can't wear anything, e.g. a mouth. */
+abstract body_part holding_body_part {
+    container_classes           grasped;
+    mutable_container_classes   grasped;
+    /* Grasped objects always preserved through destruction */
+    preserved_container_classes grasped;
     has_many optional sym grasped;
 }
 
@@ -47,7 +64,7 @@ consumable,adjustable_size flesh {
     weight 1;
 }
 
-abstract body_part body {}
+abstract root body {}
 abstract body biped {}
 abstract body quadriped {}
 abstract body octiped {}
@@ -104,7 +121,7 @@ post_process {
 }
 
 /* Basically, this is the equivalent of a torso */
-biped humanoid_body {
+biped,body_part_can_wear humanoid_body {
     weight 15;
     incidental flesh;
     typical_size medium;
@@ -112,7 +129,7 @@ biped humanoid_body {
     external head;
 }
 
-octiped arachnoid_body {
+octiped,body_part arachnoid_body {
     weight 10;
     incidental flesh;
     typical_size medium;
@@ -120,26 +137,32 @@ octiped arachnoid_body {
     external carapace;
 }
 
-quadriped rodent_body {
+quadriped,body_part rodent_body {
     weight 2;
     incidental flesh;
     typical_size small;
     external head tail;
 }
 
-quadriped ungulate_body {
+quadriped,body_part ungulate_body {
     weight 200;
     incidental flesh;
     typical_size large;
     external head tail;
 }
 
-body_part head {
+body_part_can_wear head {
     weight 4;
     typical_size small;
+    external mouth;
 }
 
-body_part arm {
+holding_body_part mouth {
+    weight 0.5;
+    typical_size tiny;
+}
+
+body_part_can_wear arm {
     weight 5;
     incidental flesh;
     typical_size small;
@@ -152,20 +175,20 @@ grasping_body_part hand {
     typical_size small;
 }
 
-body_part leg {
+body_part_can_wear leg {
     weight 10;
     incidental flesh;
     typical_size small;
     external foot;
 }
 
-body_part foot {
+body_part_can_wear foot {
     weight 4;
     incidental flesh;
     typical_size small;
 }
 
-body_part carapace {
+body_part_can_wear carapace {
     weight 15;
     incidental flesh;
     typical_size small;

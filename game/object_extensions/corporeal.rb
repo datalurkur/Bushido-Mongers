@@ -56,11 +56,11 @@ module Corporeal
     end
 
     def external_body_parts
-        @properties[:incidental] + all_body_parts(:external)
+        all_body_parts(:external)
     end
 
     def internal_body_parts
-        all_body_parts(:internal)
+        all_body_parts(:internal) + @properties[:incidental]
     end
 
     def damage(amount, attacker, target=nil)

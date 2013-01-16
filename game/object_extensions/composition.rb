@@ -40,53 +40,78 @@ module Composition
         end
     end
 
+    # HELPER FUNCTIONS for different composition types.
+    # TODO - make generators for these functions.
+
     # This is used by various at_creation methods to assemble objects sans-sanity checks
     # TODO - check for relative size / max carry number / other restrictions
     def add_object(object, type=:internal)
         Log.debug("Assembling #{monicker} - #{object.monicker} added to list of #{type} parts", 6)
         raise "Invalid composition type: #{type}" unless self.container_classes.include?(type)
-        @properties[type] << object
-        add_weight(object)
-        add_value(object) if self.added_value_container_classes.include?(type)
+        _add_object(object, type, false)
     end
 
     # TODO - check for relative size / max carry number / other restrictions
     def insert_object(object)
         raise "Can't insert into #{type}" unless self.container_classes.include?(:internal)
-        raise "#{monicker} is not a container." unless self.mutable_container_classes.include?(:internal)
         Log.debug("Inserting #{object.monicker} into #{monicker}", 6)
-        @properties[:internal] << object
-        add_weight(object)
+        _add_object(object, :internal)
     end
 
     # TODO - check for relative size / max carry number / other restrictions
     def attach_object(object)
         raise "Can't attach to #{type}" unless self.container_classes.include?(:external)
         Log.debug("Attaching #{object.monicker} to #{monicker}", 6)
-        @properties[:external] << object
-        add_weight(object)
-        add_value(object)
+        _add_object(object, :external)
     end
 
-    # TODO - expand this for all container_classes
+    def wear(object)
+        raise "Can't wear #{object.monicker} on #{monicker}!" unless self.container_classes.include?(:worn)
+        Log.debug("Equipping #{object.monicker} on #{monicker}", 6)
+        _add_object(object, :worn)
+    end
+
+    def grasp(object)
+        raise "Can't grasp #{object.monicker} in #{monicker}!" unless self.container_classes.include?(:grasp)
+        Log.debug("Grasping #{object.monicker} in #{monicker}", 6)
+        _add_object(object, :grasped)
+    end
+
     def remove_object(object)
         Log.debug("Removing #{object.monicker} from #{monicker}", 6)
-        self.container_classes.each do |comp_type|
-            if @properties[comp_type].include?(object)
-                remove_weight(object)
-                remove_value(object) if self.added_value_container_classes.include?(type)
-                return @properties[comp_type].delete(object)
+        self.container_classes.each do |type|
+            if @properties[type].include?(object)
+                return _remove_object(object, type)
             end
         end
         raise "No matching object #{object.monicker} found."
     end
 
-    def internal_objects(&block)
-        select_objects(:internal, false, &block)
+    def full?(type=:internal)
+        case type
+        when :grasp
+            @properties[type].size > 0
+        when :worn
+            @properties[type].size > 1
+        else
+            false
+        end
     end
 
-    def external_objects(&block)
-        select_objects(:external, false, &block)
+    def grasped_objects(recursive=false, &block)
+        select_objects(:grasped, recursive, &block)
+    end
+
+    def worn_objects(recursive=false, &block)
+        select_objects(:worn, recursive, &block)
+    end
+
+    def internal_objects(recursive=false, &block)
+        select_objects(:internal, recursive, &block)
+    end
+
+    def external_objects(recursive=false, &block)
+        select_objects(:external, recursive, &block)
     end
 
     def select_objects(type, recursive=false, depth=5, &block)
@@ -105,7 +130,34 @@ module Composition
         list
     end
 
+    def all_children
+        self.container_classes.inject([]) do |i, cc|
+            i + cc.inject([]) do |j, obj|
+                j + if obj.is_type?(:composition)
+                    [obj, obj.all_children]
+                else
+                    [obj]
+                end
+            end
+        end.flatten
+    end
+
     private
+    def _add_object(object, type, respect_mutable=true)
+        raise "Cannot modify #{type} composition of #{monicker}!" if respect_mutable && !self.mutable_container_classes.include?(type)
+        add_weight(object)
+        add_value(object) if self.added_value_container_classes.include?(type)
+        @properties[type] << object
+        object
+    end
+
+    def _remove_object(object, type)
+        raise "Cannot modify #{type} composition of #{monicker}!" unless self.mutable_container_classes.include?(type)
+        remove_weight(object)
+        remove_value(object) if self.added_value_container_classes.include?(type)
+        @properties[type].delete(object)
+    end
+
     def add_weight(object)
         @properties[:weight] = (@properties[:weight] || 0) + object.weight
     end

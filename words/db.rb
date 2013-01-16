@@ -17,12 +17,41 @@ class WordDB
                 # Check if a definition exists
                 if matched = find_group_for(word, false)
                     matched
+                elsif mergee = find_group_matching_any(word, false)
+                    merge(mergee, word)
                 else
                     @groups << WordGroup.new(word)
                     @groups.last
                 end
             end
         end
+    end
+
+    def find_group_matching_any(word, verbose=true)
+        case word
+        when Symbol,String
+            # should've been caught by find_group_for already
+            nil
+        when WordGroup
+            # Necessary? Ideally. But not implemented yet.
+            raise NotImplementedError
+        when Hash
+            matching = @groups.select do |group|
+#                Log.debug(["Analyzing:", word, group])
+                word.any? { |pos, w| group.has?(pos) && group[pos] == w }
+            end
+            raise "Duplicate word groups found in #{self.class} for #{word.inspect}" unless matching.size < 2
+            Log.debug("No word group '#{word.inspect}' found!") if matching.size <= 0 && verbose
+            matching.first
+        else
+            Log.debug("Couldn't find group matching word class #{word.class}")
+        end
+    end
+
+    # requirements: matched is a WordGroup, word is a Hash
+    def merge(mergee, merger)
+        Log.debug(["Merging:", mergee, merger])
+        merger.each { |k, v| mergee[k] = v }
     end
 
     def associate_groups(*list_of_groups)
@@ -113,7 +142,7 @@ class WordDB
         @conjugations[state][infinitive] = expr
     end
 
-    # :person  => [:first, :second, :third, :first_plural, :second_plural, :third_plural],
+    #  Words::State::FIELDS[:person] => [:first, :second, :third, :first_plural, :second_plural, :third_plural],
     def add_conjugation_by_person(infinitive, state, list)
         first_person = list.first
         case list.size
@@ -166,6 +195,10 @@ class WordGroup
 
     def [](part_of_speech)
         parts_of_speech[part_of_speech]
+    end
+
+    def []=(part_of_speech, word)
+        parts_of_speech[part_of_speech] = word
     end
 
     def part_of_speech(word)

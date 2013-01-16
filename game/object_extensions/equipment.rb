@@ -6,56 +6,45 @@
 =end
 
 module Inventory
-    INV_TYPES = [:worn, :held]
-
-    def init_inventory
-        @inventory ||= {}
-        INV_TYPES.each do |type|
-            @inventory[type] = {}
-        end
-    end
-
     def wear(part, equipment)
-        if add(:worn, part, equipment)
-            return part
-        else
-            raise "Couldn't wear #{equipment.monicker}; already wearing #{@inventory[:worn][part].monicker}"
+        if part.full?(:worn)
+            raise "Can't wear #{equipment.monicker}; already wearing #{part.worn_objects}"
         end
+        equipment.equip_on(part)
     end
 
-    def hold(equipment)
+    def grasp(part, object)
+        if part.full?(:worn)
+            raise "Can't hold #{equipment.monicker}; already holding #{part.grasped_objects}"
+        end
+        equipment.grasped_by(part)
     end
 
-    def hold(part, object)
-        unless part.has_property?(:is_container)
-            raise "Couldn't hold #{object} in #{part.inspect}!"
-        end
-        if add(:held, part, object)
-            return part.type
-        else
-            raise "Couldn't hold #{object}; already holding #{@inventory[:held][part]}"
-        end
-    end
-
+    # TODO - stash priorities for a) particular items and b) particular commands.
     def stash(object)
-        # TODO - search for containers in inventory, stash object within
-        # hold(instantiated_hand, object)
+        # Try grabbing it first.
+        self.open_held.each do |part|
+            return if wear(part, object)
+        end
+        # TODO - Next, look for a container to stash it in.
     end
 
-    def select_inventory(&block)
-        list = []
-        INV_TYPES.each do |type|
-            @inventory[type].each do |part, equipment|
-                if (block_given? && block.call(equipment)) || !block_given?
-                    list << equipment
-                end
-            end
-        end
-        list
+    def open_held
+        all_body_parts.select { |bp| bp.class_containers.include?(:grasp) && bp.worn_objects.empty? }
+    end
+
+    def grasped_objects
+        all_body_parts.collect { |bp| bp.worn_objects }
+    end
+
+    def held_objects
+        all_body_parts.collect { |bp| bp.worn_objects }
     end
 
     def containers_in_inventory(type)
-        worn_containers + held_containers
+        (all_children - all_body_parts).select do |c|
+            c
+        end
     end
 
     def worn_containers
@@ -70,15 +59,6 @@ module Inventory
     def containers(type)
         @inventory[type].select { |p, e| e.has_property?(:is_container) }
     end
-
-    def add(type, part, equipment)
-        init_inventory unless @inventory
-        if @inventory[type][part].nil?
-            @inventory[type][part] = equipment
-        else
-            nil
-        end
-    end
 end
 
 module Equipment
@@ -86,7 +66,9 @@ module Equipment
 
     class << self
         def at_creation(instance, params)
-            instance.init_inventory
+            unless instance.uses?(Corporeal)
+                raise "Equipment can only be used on a corporeal!"
+            end
             instance.random_equipment
         end
 
@@ -113,6 +95,7 @@ module Equipment
                 end
 
                 creation_hash[:quality] = :standard
+                creation_hash[:position] = $nowhere
 
                 wear(part, @core.db.create(@core, rand_type, creation_hash))
             end

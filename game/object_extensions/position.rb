@@ -16,7 +16,7 @@ module Position
     end
 
     def has_position?
-        !@position.nil?
+        !!@position
     end
 
     def absolute_position
@@ -56,30 +56,45 @@ module Position
         @position_type = nil
     end
 
-    def move_to(new_position)
-        raise(Exception, "Position uninitialized for #{monicker}") if @position.nil?
+    def grasped_by(new_position)
+        Log.debug("#{monicker} grasped by #{new_position.monicker}")
+        _set_position(new_position)
+        @position_type = :grasped
+        @position.grasp(self)
+    end
 
-        Log.debug("#{monicker} moved from #{@position.monicker} to #{new_position.monicker}")
-        @position.remove_object(self)
-        @position      = new_position
+    def equip_on(new_position)
+        Log.debug("#{monicker} equipped on #{new_position.monicker}")
+        _set_position(new_position)
+        @position_type = :worn
+        @position.wear(self)
+    end
+
+    def move_to(new_position)
+        Log.debug("#{monicker} moved to #{new_position.monicker}")
+        _set_position(new_position)
         @position_type = :internal
         @position.add_object(self)
     end
 
-    def attach_to(object)
-        raise(Exception, "Position uninitialized for #{monicker}") if @position.nil?
-
-        Log.debug("#{monicker} attaches to #{object.monicker} (was in #{@position.monicker})")
-        @position.remove_object(self)
-        @position      = object
+    def attach_to(new_position)
+        Log.debug("#{monicker} attaches to #{new_position.monicker}")
+        _set_position(new_position)
         @position_type = :external
         @position.attach_object(self)
     end
 
     private
+    def _set_position(new_position)
+        safe_position
+
+        @position.remove_object(self)
+        @position = new_position
+    end
+
     def safe_position
         unless has_position?
-            Log.error(["Object with no position being queried for its position", caller])
+            Log.error(["Object #{self.type} with no position being queried for its position", caller])
             raise Exception
         end
     end
