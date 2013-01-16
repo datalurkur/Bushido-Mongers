@@ -27,23 +27,22 @@ module Inventory
         self.grasping_parts.each do |part|
             Log.debug("Looking at #{part.type} for grasping")
             unless part.full?(:grasped)
-                ret = grasp(part, object)
-                Log.debug("stash returning #{ret.type}")
-                return ret if ret
+                return grasp(part, object)
             end
         end
         # TODO - Next, look for a container to stash it in.
+        (worn_containers + grasped_containers).each do |cont|
+            unless cont.full?
+                return object.move_to(pot_container)
+            end
+        end
     end
 
-    def grasping_parts
-        all_body_parts.select { |bp| bp.container_classes.include?(:grasped) }
-    end
-
-    def grasped_objects
+    def all_grasped_objects
         all_body_parts.collect { |bp| bp.grasped_objects }
     end
 
-    def held_objects
+    def all_worn_objects
         all_body_parts.collect { |bp| bp.worn_objects }
     end
 
@@ -57,13 +56,8 @@ module Inventory
         containers(:worn)
     end
 
-    def held_containers
-        containers(:held)
-    end
-
-    private
-    def containers(type)
-        @inventory[type].select { |p, e| e.has_property?(:is_container) }
+    def grasped_containers
+        containers(:grasped)
     end
 end
 
@@ -103,8 +97,11 @@ module Equipment
                 creation_hash[:quality] = :standard
                 creation_hash[:position] = $nowhere
 
+                Log.debug("Wearing new #{rand_type} on #{part.type}")
                 wear(part, @core.db.create(@core, rand_type, creation_hash))
             end
         end
+        # TEST FUNCTIONALITY
+        # Now, insert rocks until we can't anymore.
     end
 end
