@@ -93,6 +93,6 @@ end
 
 $client.start
 
-while true
-    sleep 30
+while $client.running?
+    sleep 10
 end

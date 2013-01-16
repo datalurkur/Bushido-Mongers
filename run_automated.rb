@@ -25,3 +25,7 @@ $client.push_pair({:type => :text_field,        :field => :lobby_password},
                   {:type => :valid_input,       :input => $config[:lobby_password]})
 
 $client.start
+
+while $client.running?
+    sleep 10
+end

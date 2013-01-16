@@ -37,20 +37,25 @@ class GameClient < MuxedClientBase
     def start_main_loop
         Thread.new do
             Log.name_thread("Loop")
-            while @running
-                client_messages, server_messages = get_messages
+            begin
+                while @running
+                    client_messages, server_messages = get_messages
 
-                Log.debug("Processing #{client_messages.size} client messages and #{server_messages.size} server messages", 6)
+                    Log.debug("Processing #{client_messages.size} client messages and #{server_messages.size} server messages", 6)
 
-                client_messages.each do |message|
-                    Log.debug("Client message #{message.type}", 8)
-                    current_state.from_client(message)
+                    client_messages.each do |message|
+                        Log.debug("Client message #{message.type}", 8)
+                        current_state.from_client(message)
+                    end
+
+                    server_messages.each do |message|
+                        Log.debug("Server message #{message.type}", 8)
+                        current_state.from_server(message)
+                    end
                 end
-
-                server_messages.each do |message|
-                    Log.debug("Server message #{message.type}", 8)
-                    current_state.from_server(message)
-                end
+            rescue Exception => e
+                @running = false
+                Log.error(["Client loop terminating abnormally", e.message, e.backtrace])
             end
         end
     end

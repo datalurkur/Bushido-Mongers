@@ -108,7 +108,7 @@ class ClientBase
 
     def start_processing_client_messages
         Log.debug("Polling for client messages", 8)
-        @client_listen_thread  = Thread.new do
+        @client_listen_thread = Thread.new do
             begin
                 Log.name_thread("I/O")
                 while(true)

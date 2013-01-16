@@ -23,6 +23,7 @@ end
 $server = GameServer.new
 $server.start
 while $server.is_running?
+    sleep 10
 end
 
 MeteredMethods.report

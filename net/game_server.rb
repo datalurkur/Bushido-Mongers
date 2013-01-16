@@ -22,7 +22,9 @@ class GameServer < Server
         @web_server.add_route(/\/#{@web_server.wildcard}$/i) do |args|
             @web_server.find_file(args.first)
         end
-        @web_server.add_route(/\/$/) { @web_server.process_template("index.erb", binding) }
+        @web_server.add_route(/\/$/) do
+            @web_server.process_template("index.erb", binding)
+        end
     end
 
     def start
