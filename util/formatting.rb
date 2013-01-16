@@ -32,6 +32,10 @@ class String
     def escape
         URI.escape(self)
     end
+
+    def unescape
+        URI.unescape(self)
+    end
 end
 
 class Object
