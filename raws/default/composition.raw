@@ -1,8 +1,8 @@
 abstract root composition_root {
     has_many sym container_classes;
-    has_many sym mutable_container_classes;
-    has_many sym preserved_container_classes;
-    has_many sym added_value_container_classes;
+    has_many optional sym mutable_container_classes;
+    has_many optional sym preserved_container_classes;
+    has_many optional sym added_value_container_classes;
 
     uses composition;
 }

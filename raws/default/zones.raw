@@ -43,30 +43,33 @@ abstract zone monster_spawner {
     spawn_npcs monster;
 }
 
-inside_zone,monster_spawner castle {
+monster_spawner castle {
     depth_range 0 1 2 3 4;
     keywords constructed;
+    sideness inside;
     child_zones barracks portcullis sewer tower dungeon;
 }
 
-inside_zone,monster_spawner barracks {
+monster_spawner barracks {
     depth_range 0 1;
     keywords constructed;
+    sideness inside;
     child_zones sewer tower dungeon;
 }
 
-inside_zone,monster_spawner sewer {
+monster_spawner sewer {
     depth_range 0 1 2;
     keywords dank wet;
+    sideness inside;
 }
 
-zone,monster_spawner dock {
+monster_spawner dock {
     depth_range 1;
     keywords wooden;
     child_zones pier boat;
 }
 
-zone,monster_spawner boat {
+monster_spawner boat {
     depth_range 0 1;
     keywords wet;
 }

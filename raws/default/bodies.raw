@@ -4,7 +4,7 @@
       is dropped into the world as a corpse
     TODO : Figure out how to impart the corpse with some of the information of the NPC / character
 */
-abstract root corporeal {
+abstract composition_root corporeal {
     has sym size;
     class sym body_type;
     class optional sym consumes;
@@ -12,8 +12,8 @@ abstract root corporeal {
 
     /* The body is the incidental. */
     container_classes             incidental;
-    mutable_container_classes     incidental;
     preserved_container_classes   incidental;
+    has_many optional sym         incidental;
 
     uses corporeal;
 }

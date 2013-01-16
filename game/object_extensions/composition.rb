@@ -25,6 +25,7 @@ module Composition
 
     def initial_composure(params)
         self.container_classes.each do |comp_type|
+            raise "Container class #{comp_type} specified but not created!" if @properties[comp_type].nil?
             components           = @properties[comp_type].dup
             already_created      = components.select { |component| BushidoObject === component }
             to_be_created        = components - already_created
