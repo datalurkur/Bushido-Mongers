@@ -49,9 +49,8 @@ module Corporeal
     end
 
     def all_body_parts(type = [:internal, :external])
-        selector = Proc.new { |obj| obj.is_type?(:body_part) }
-        @properties[:incidental].collect do |incidental_part|
-            incidental_part.select_objects(type, true, &selector)
+        @properties[:incidental].collect do |body|
+            body.select_objects(type, true) { |obj| obj.is_type?(:body_part) }
         end.flatten
     end
 
@@ -60,7 +59,7 @@ module Corporeal
     end
 
     def internal_body_parts
-        all_body_parts(:internal) + @properties[:incidental]
+        @properties[:incidental] + all_body_parts(:internal)
     end
 
     def damage(amount, attacker, target=nil)

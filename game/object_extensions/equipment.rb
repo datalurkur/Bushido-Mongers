@@ -14,27 +14,33 @@ module Inventory
     end
 
     def grasp(part, object)
-        if part.full?(:worn)
-            raise "Can't hold #{equipment.monicker}; already holding #{part.grasped_objects}"
+        if part.full?(:grasped)
+            raise "Can't hold #{object.monicker}; already holding #{part.grasped_objects}"
         end
-        equipment.grasped_by(part)
+        object.grasped_by(part)
     end
 
     # TODO - stash priorities for a) particular items and b) particular commands.
     def stash(object)
+        Log.debug("Stashing #{object.type}")
         # Try grabbing it first.
-        self.open_held.each do |part|
-            return if wear(part, object)
+        self.grasping_parts.each do |part|
+            Log.debug("Looking at #{part.type} for grasping")
+            unless part.full?(:grasped)
+                ret = grasp(part, object)
+                Log.debug("stash returning #{ret.type}")
+                return ret if ret
+            end
         end
         # TODO - Next, look for a container to stash it in.
     end
 
-    def open_held
-        all_body_parts.select { |bp| bp.class_containers.include?(:grasp) && bp.worn_objects.empty? }
+    def grasping_parts
+        all_body_parts.select { |bp| bp.container_classes.include?(:grasped) }
     end
 
     def grasped_objects
-        all_body_parts.collect { |bp| bp.worn_objects }
+        all_body_parts.collect { |bp| bp.grasped_objects }
     end
 
     def held_objects

@@ -72,7 +72,7 @@ module Composition
     end
 
     def grasp(object)
-        raise "Can't grasp #{object.monicker} in #{monicker}!" unless self.container_classes.include?(:grasp)
+        raise "Can't grasp #{object.monicker} in #{monicker}!" unless self.container_classes.include?(:grasped)
         Log.debug("Grasping #{object.monicker} in #{monicker}", 6)
         _add_object(object, :grasped)
     end
