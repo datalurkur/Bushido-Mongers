@@ -479,7 +479,59 @@ module Words
         Sentence.new(subject_np, verb_np)
     end
 
+    def self.describe_corporeal(target)
+        # Describe the corporeal body
+        describe_composition(target[:properties][:incidental].first)
+        # TODO - Add more information about abilities, features, etc.
+    end
+
+    def self.describe_composition(target)
+        sentences = [gen_copula(:subject=>:it, :target=>target[:type])]
+
+        if target[:properties][:external] && !target[:properties][:external].empty?
+            Log.debug("external found for #{target[:type]}")
+            sentences += target[:properties][:external].collect do |part|
+                Log.debug(part[:type])
+                if part[:is_type].include?(:composition_root)
+                    describe_composition(part)
+                else
+                    gen_copula(:subject=>:it, :target=>part[:type])
+                end
+            end
+        end
+
+        if target[:properties][:worn] && !target[:properties][:worn].empty?
+            Log.debug("worn found for #{target[:type]}")
+            sentences += target[:properties][:worn].collect do |part|
+                Log.debug(part[:type])
+                if part[:is_type].include?(:composition_root)
+                    describe_composition(part)
+                else
+                    gen_copula(:subject=>:it, :target=>part[:type])
+                end
+            end
+        end
+
+        if target[:properties][:grasped] && !target[:properties][:grasped].empty?
+            Log.debug("grasped found for #{target[:type]}")
+            sentences += target[:properties][:grasped].collect do |part|
+                Log.debug(part[:type])
+                if part[:is_type].include?(:composition_root)
+                    describe_composition(part)
+                else
+                    gen_copula(:subject=>:it, :target=>part[:type])
+                end
+            end
+        end
+
+        sentences.flatten.join(" ")
+    end
+
     def self.gen_copula(args = {})
+        unless args[:verb] || args[:action] || args[:command]
+            args[:verb] = :be
+        end
+
         # TODO - Use expletive / inverted copula construction
         # TODO - expletive more often for second person
 #        if Chance.take(:coin_toss)
@@ -494,7 +546,6 @@ module Words
 
     # Required/expected arg values: keywords objects exits
     def self.gen_room_description(args = {})
-        Log.debug(args.inspect)
         @sentences = []
 
         args = args.merge(:action => :see)
@@ -540,8 +591,8 @@ module Words
     # to the object-finder to narrow the search.
     # parameter: A whitespace-separated list of words.
     def self.decompose_command(command)
-        Log.debug(command)
         pieces = command.strip.split(/\s+/).collect(&:to_sym)
+
         # TODO - Join any conjunctions together
         #while (i = pieces.index(:and))
         #    first_part = (i > 1)               ? pieces[0...(i-1)] : []
@@ -593,13 +644,15 @@ module Words
             Log.debug(["Ignoring potentially important syntactic pieces", pieces])
         end
 
-        {
+        ret = {
             :command   => command,
             :tool      => tool,
             :location  => location,
             :materials => materials,
             :target    => target
         }
+        Log.debug(ret, 6)
+        ret
     end
 
     private

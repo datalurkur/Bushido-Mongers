@@ -61,6 +61,9 @@ module WordParser
             words = line.split(/\s+/)
             infinitive = words.shift.to_sym
 
+            # add infinitive as a verb
+            db.add_family(:verb => infinitive)
+
             # Convert properties ("present,second") into a State
             properties = words.shift.split(",").map(&:to_sym)
             state = Words::State.new
