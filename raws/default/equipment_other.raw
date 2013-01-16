@@ -13,7 +13,7 @@ leg_armor,constructed leggings {
     technique forge;
 }
 
-boots,constructed high_boots {
+boots,constructed high_boot {
     required_components metal;
     technique forge;
 }

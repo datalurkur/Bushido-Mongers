@@ -64,6 +64,10 @@ module Commands
     module Inspect
         def self.stage(core, params)
             if params[:target]
+                # Examine the agent.
+                # TODO - there should be multiple ways to specify this.
+                params[:target] = params[:agent] if params[:target] == :self
+
                 params[:target] = Commands.lookup_object(
                     params[:agent],
                     core.db.info_for(:inspect, :target),

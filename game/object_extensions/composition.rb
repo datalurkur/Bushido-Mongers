@@ -72,7 +72,7 @@ module Composition
     end
 
     def grasp(object)
-        raise "Can't grasp #{object.monicker} in #{monicker}!" unless self.container_classes.include?(:grasp)
+        raise "Can't grasp #{object.monicker} in #{monicker}!" unless self.container_classes.include?(:grasped)
         Log.debug("Grasping #{object.monicker} in #{monicker}", 6)
         _add_object(object, :grasped)
     end
@@ -89,13 +89,25 @@ module Composition
 
     def full?(type=:internal)
         case type
-        when :grasp
+        when :grasped
             @properties[type].size > 0
         when :worn
             @properties[type].size > 1
         else
             false
         end
+    end
+
+    def is_container?
+        self.is_type?(:composition) && self.container_classes.include?(:internal)
+    end
+
+    def grasping_parts
+        all_body_parts.select { |bp| bp.container_classes.include?(:grasped) }
+    end
+
+    def containers(type, recursive=true)
+        select_objects(type, recursive) { |obj| cont.respond_to?(:is_container?) && cont.is_container? }
     end
 
     def grasped_objects(recursive=false, &block)
@@ -133,11 +145,7 @@ module Composition
     def all_children
         self.container_classes.inject([]) do |i, cc|
             i + cc.inject([]) do |j, obj|
-                j + if obj.is_type?(:composition)
-                    [obj, obj.all_children]
-                else
-                    [obj]
-                end
+                j + [obj] + obj.is_type?(:composition) ? obj.all_children : []
             end
         end.flatten
     end

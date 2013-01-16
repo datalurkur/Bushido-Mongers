@@ -113,13 +113,17 @@ module VerboseInterface
                         return Words.gen_room_description(target)
                     else
                         if target[:is_type].include?(:item)
-                            Words.gen_sentence(message.properties).to_s
+                            return Words.gen_sentence(message.properties)
+                        elsif target[:is_type].include?(:corporeal)
+                            return Words.describe_corporeal(target)
+                        elsif target[:is_type].include?(:composition_root)
+                            return Words.describe_composition(target)
                         else
                             return "I don't know how to describe a #{target[:type].inspect}, bother zphobic to fix this"
                         end
                     end
                 when :move, :attack, :get
-                    return Words.gen_sentence(message.properties).to_s
+                    return Words.gen_sentence(message.properties)
                 else
                     return "I don't know how to express the results of a(n) #{message.properties[:command]}, pester zphobic to work on this"
                 end

@@ -3,7 +3,8 @@ abstract composition container {
     preserved_container_classes   internal            external;
 }
 
-abstract item,container backpack {
+abstract equipment,container backpack {
+    slot humanoid_body;
     size medium;
     value 1;
 }

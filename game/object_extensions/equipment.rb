@@ -14,30 +14,35 @@ module Inventory
     end
 
     def grasp(part, object)
-        if part.full?(:worn)
-            raise "Can't hold #{equipment.monicker}; already holding #{part.grasped_objects}"
+        if part.full?(:grasped)
+            raise "Can't hold #{object.monicker}; already holding #{part.grasped_objects}"
         end
-        equipment.grasped_by(part)
+        object.grasped_by(part)
     end
 
     # TODO - stash priorities for a) particular items and b) particular commands.
     def stash(object)
+        Log.debug("Stashing #{object.type}")
         # Try grabbing it first.
-        self.open_held.each do |part|
-            return if wear(part, object)
+        self.grasping_parts.each do |part|
+            Log.debug("Looking at #{part.type} for grasping")
+            unless part.full?(:grasped)
+                return grasp(part, object)
+            end
         end
         # TODO - Next, look for a container to stash it in.
+        (worn_containers + grasped_containers).each do |cont|
+            unless cont.full?
+                return object.move_to(pot_container)
+            end
+        end
     end
 
-    def open_held
-        all_body_parts.select { |bp| bp.class_containers.include?(:grasp) && bp.worn_objects.empty? }
+    def all_grasped_objects
+        all_body_parts.collect { |bp| bp.grasped_objects }
     end
 
-    def grasped_objects
-        all_body_parts.collect { |bp| bp.worn_objects }
-    end
-
-    def held_objects
+    def all_worn_objects
         all_body_parts.collect { |bp| bp.worn_objects }
     end
 
@@ -51,13 +56,8 @@ module Inventory
         containers(:worn)
     end
 
-    def held_containers
-        containers(:held)
-    end
-
-    private
-    def containers(type)
-        @inventory[type].select { |p, e| e.has_property?(:is_container) }
+    def grasped_containers
+        containers(:grasped)
     end
 end
 
@@ -97,8 +97,11 @@ module Equipment
                 creation_hash[:quality] = :standard
                 creation_hash[:position] = $nowhere
 
+                Log.debug("Wearing new #{rand_type} on #{part.type}")
                 wear(part, @core.db.create(@core, rand_type, creation_hash))
             end
         end
+        # TEST FUNCTIONALITY
+        # Now, insert rocks until we can't anymore.
     end
 end

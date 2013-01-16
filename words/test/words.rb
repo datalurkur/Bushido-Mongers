@@ -23,14 +23,14 @@ Log.debug(see_synonyms.rand)
 
 Log.debug(Words.db.get_related_words(:attack).inspect)
 
-Log.debug(Words.gen_area_name({:type => :mountain, :keywords => [:beautiful]}).to_s)
-Log.debug(Words.gen_area_name({:type => :sewer,    :keywords => [:dank]}).to_s)
-Log.debug(Words.gen_room_description(:type => :mountain, :keywords => [:beautiful], :objects => ["elderly beaver", "Frank the Ninja Bunny"], :exits => [:east, :north]).to_s)
+Log.debug(Words.gen_area_name({:type => :mountain, :keywords => [:beautiful]}))
+Log.debug(Words.gen_area_name({:type => :sewer,    :keywords => [:dank]}))
+Log.debug(Words.gen_room_description(:type => :mountain, :keywords => [:beautiful], :objects => ["elderly beaver", "Frank the Ninja Bunny"], :exits => [:east, :north]))
 
 
 def john_and_mary(state)
-    Log.debug(Words.gen_sentence(:agent => :John, :target=>:west, :command=>:move, :state=>state).to_s)
-    Log.debug(Words.gen_sentence(:agent => :John, :action => :see, :target => :Mary, :state=>state).to_s)
+    Log.debug(Words.gen_sentence(:agent => :John, :target=>:west, :command=>:move, :state=>state))
+    Log.debug(Words.gen_sentence(:agent => :John, :action => :see, :target => :Mary, :state=>state))
 end
 
 s = Words::State.new
@@ -38,7 +38,7 @@ john_and_mary(s)
 s.tense = :past
 john_and_mary(s)
 
-#Log.debug(Words.gen_sentence({}).to_s)
+#Log.debug(Words.gen_sentence({}))
 
 # Action tests.
 begin
@@ -73,3 +73,5 @@ begin
         Action.do(:agent => agent, :target => target, :action => :attack, :tool => :dagger)
     end
 end
+
+Log.debug(Words.gen_copula(:target=>:sunny))

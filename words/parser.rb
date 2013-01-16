@@ -50,7 +50,8 @@ module WordParser
             db.add_family(*family)
         end
 
-        load_file(dict_dir, "direct_prepositions.txt") do |line, match|
+        # TODO - Add distinctions between preposition types, i.e. store match somewhere.
+        load_file(dict_dir, "prepositions_*.txt", /^.*prepositions_(.*).txt/) do |line, match|
             words = line.split(/\s+/).map(&:to_sym)
             preposition = words.shift
             family = words.collect { |word| {:verb => word} }
@@ -60,6 +61,9 @@ module WordParser
         load_file(dict_dir, "conjugations.txt") do |line, match|
             words = line.split(/\s+/)
             infinitive = words.shift.to_sym
+
+            # add infinitive as a verb
+            db.add_family(:verb => infinitive)
 
             # Convert properties ("present,second") into a State
             properties = words.shift.split(",").map(&:to_sym)

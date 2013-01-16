@@ -68,17 +68,34 @@ module Words
             @voice  = :active
         end
 
-        def ==(other)
+        def self.plural_person(person)
+            index = FIELDS[:person].index(person)
+            case index
+            when 0, 1, 2
+                FIELDS[:person][ index + 3 ]
+            when 3, 4, 5
+                person
+            else
+                raise "Not in State.person field: #{person}"
+            end
+        end
+
+        # State is used in WordDB's special conjugation hash.
+        def eql?(other)
             case other
             when State
-                @aspect == other.aspect
-                @tense  == other.tense
-                @mood   == other.mood
-                @person == other.person
+                @aspect == other.aspect &&
+                @tense  == other.tense  &&
+                @mood   == other.mood   &&
+                @person == other.person &&
                 @voice  == other.voice
             else
                 raise "Can't compare word state to #{other.class}"
             end
+        end
+
+        def hash
+            [@aspect, @tense, @mood, @person, @voice].hash
         end
     end
 
@@ -302,7 +319,7 @@ module Words
 
             def self.conjugate(infinitive, state = State.new)
                 if Words.db.conjugation_for?(infinitive, state)
-                    return Worda.db.conjugate(infinitive, state)
+                    return Words.db.conjugate(infinitive, state)
                 end
 
                 infinitive = infinitive.to_s
@@ -451,18 +468,25 @@ module Words
 
     # TODO - action descriptors: The generic ninja generically slices the goat with genericness.
     def self.gen_sentence(args = {})
+        args[:state] ||= State.new
+
         subject = args[:subject] || args[:agent]
         verb    = args[:verb] || args[:action] || args[:command]
 
         # Subject is you in second person
-        if !subject && args[:state] && args[:state].person == :second
+        if !subject && args[:state].person == :second
             subject = :you
         end
 
         # Second person if subject is you
-        if subject == :you || (subject.respond_to?(:[]) && subject[:monicker] == :you)
-            args[:state] ||= State.new
+        if subject == :you || (Hash === subject && subject[:monicker] == :you)
             args[:state].person = :second
+        end
+
+        # If subject is plural and person isn't, adjust the person
+        if Array === subject && subject.size > 1
+            # use magical knowledge of State's person field ordering
+            args[:state].person = State.plural_person(args[:state].person)
         end
 
         raise unless verb
@@ -476,10 +500,85 @@ module Words
         subject_np = Sentence::NounPhrase.new(subject)
         verb_np    = Sentence::VerbPhrase.new(verb, args)
 
-        Sentence.new(subject_np, verb_np)
+        Sentence.new(subject_np, verb_np).to_s
     end
 
+    def self.describe_corporeal(target)
+        # Describe the corporeal body
+        body = target[:properties][:incidental].first
+        sentences = [gen_copula(:target=>body[:monicker])]
+        #begin
+        sentences << describe_composition(body)
+        #rescue Exception => e
+        #Log.debug(["Terminating abnormally", e.message, e.backtrace])
+        #end
+
+        # TODO - Add more information about abilities, features, etc.
+    end
+
+    def self.describe_composition(target)
+        state = State.new
+        # Description is a currently-progressing state, so present progressive.
+#        state.aspect = :progressive
+
+        Log.debug("Describing #{target[:monicker]}")
+        sentences = []
+
+        if target[:properties][:external] && !target[:properties][:external].empty?
+            sentences << gen_copula(
+                            :subject => target[:properties][:external].collect { |p| p[:monicker] },
+                            :target  => Sentence::Noun.new("attached to the #{target[:monicker]}"),
+                            :state   => state)
+            sentences += target[:properties][:external].collect do |part|
+                if part[:is_type].include?(:composition_root)
+                    describe_composition(part)
+                else
+                    gen_copula(:target=>part[:monicker])
+                end
+            end
+        end
+
+        if target[:properties][:worn] && !target[:properties][:worn].empty?
+            sentences << gen_copula(
+                            :subject => target[:properties][:worn].collect { |p| p[:monicker] },
+                            :target  => Sentence::Noun.new("worn on the #{target[:monicker]}"),
+                            :state   => state)
+            sentences += target[:properties][:worn].collect do |part|
+                if part[:is_type].include?(:composition_root)
+                    describe_composition(part)
+                else
+                    gen_copula(:target=>part[:monicker])
+                end
+            end
+        end
+
+        if target[:properties][:grasped] && !target[:properties][:grasped].empty?
+            sentences << gen_copula(
+                            :subject => target[:properties][:grasped].collect { |p| p[:monicker] },
+                            :target  => Sentence::Noun.new("grasped by the #{target[:monicker]}"),
+                            :state   => state)
+            sentences += target[:properties][:grasped].collect do |part|
+                if part[:is_type].include?(:composition_root)
+                    describe_composition(part)
+                else
+                    gen_copula(:target=>part[:monicker])
+                end
+            end
+        end
+
+        sentences.flatten.join(" ")
+    end
+
+    # TODO - Still not a proper copula.
     def self.gen_copula(args = {})
+        unless args[:subject] || args[:agent]
+            args[:subject] = :it
+        end
+        unless args[:verb] || args[:action] || args[:command]
+            args[:verb]    = :be
+        end
+        Log.debug(args)
+
         # TODO - Use expletive / inverted copula construction
         # TODO - expletive more often for second person
 #        if Chance.take(:coin_toss)
@@ -494,7 +593,6 @@ module Words
 
     # Required/expected arg values: keywords objects exits
     def self.gen_room_description(args = {})
-        Log.debug(args.inspect)
         @sentences = []
 
         args = args.merge(:action => :see)
@@ -540,8 +638,8 @@ module Words
     # to the object-finder to narrow the search.
     # parameter: A whitespace-separated list of words.
     def self.decompose_command(command)
-        Log.debug(command)
         pieces = command.strip.split(/\s+/).collect(&:to_sym)
+
         # TODO - Join any conjunctions together
         #while (i = pieces.index(:and))
         #    first_part = (i > 1)               ? pieces[0...(i-1)] : []
@@ -593,13 +691,15 @@ module Words
             Log.debug(["Ignoring potentially important syntactic pieces", pieces])
         end
 
-        {
+        ret = {
             :command   => command,
             :tool      => tool,
             :location  => location,
             :materials => materials,
             :target    => target
         }
+        Log.debug(ret, 6)
+        ret
     end
 
     private

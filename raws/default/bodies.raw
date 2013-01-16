@@ -70,18 +70,18 @@ abstract body quadriped {}
 abstract body octiped {}
 
 post_process {
-    duplicate_object(:leg, :left_leg)
-    duplicate_object(:leg, :right_leg)
     duplicate_object(:arm, :left_arm)
     duplicate_object(:arm, :right_arm)
+    duplicate_object(:leg, :left_leg)
+    duplicate_object(:leg, :right_leg)
     Log.debug("Adding limbs to bipeds")
     types_of(:biped).each do |biped|
         Log.debug("#{biped.inspect} gets limbs!")
         modify_info(biped, :external).concat([
-            :left_leg,
-            :right_leg,
             :left_arm,
-            :right_arm
+            :right_arm,
+            :left_leg,
+            :right_leg
         ])
     end
 

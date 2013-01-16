@@ -22,7 +22,7 @@ class << self
 
         params = Zone.create(config[:core], nil, depth)
 
-        world_name = Words.gen_area_name(params).to_s
+        world_name = Words.gen_area_name(params)
 
         world = World.new(world_name, size, depth, params)
         populate_area(world, config)
@@ -39,7 +39,7 @@ class << self
         params = Zone.create(config[:core], parent_zone, depth)
 
         Log.debug(params.inspect, 6)
-        name = "#{Words.gen_area_name(params).to_s}-#{rand(1000)}"
+        name = "#{Words.gen_area_name(params)}-#{rand(1000)}"
 
         area = if (depth < 2) || (rand() < config[:area_size_tendency])
             Log.debug("Generating room #{name}", 5)

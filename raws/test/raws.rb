@@ -32,7 +32,7 @@ Log.debug("Test item is a headgear? #{test_item.is_type?(:headgear)}")
 Log.debug(["Types of NPCs:", db.types_of(:npc)])
 
 def test_npc(db, test_npc_type, name)
-    Log.debug(["Creating a #{test_npc_type} with raw info", db.raw_info_for(test_npc_type)])
+#    Log.debug(["Creating a #{test_npc_type} with raw info", db.raw_info_for(test_npc_type)])
     db.create($core, test_npc_type, :position => FakeRoom.new, :name => name)
 end
 
