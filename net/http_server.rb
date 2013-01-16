@@ -5,30 +5,65 @@ require './util/compression'
 
 class HTTPReader
     def initialize
+        @buffer = ""
         @current_request = nil
     end
 
     def read(socket)
-        buffer = socket.gets
-        raise Errno::ECONNRESET if buffer.nil?
-
-        if buffer.gsub(/\s+/, '').empty?
-            ret,@current_request = [@current_request,nil]
-            return ret
+        buffer = ""
+        begin
+            buffer = socket.read_nonblock(DEFAULT_BUFFER_SIZE)
+            raise Errno::ECONNRESET if buffer.empty?
+        rescue
+            IO.select([socket])
+            retry
         end
 
-        unless @current_request
-            method, uri, version_string = buffer.split(/\s+/)
-            version = version_string.split(/\//).last.to_f
-            raise "HTTP version mismatch #{version} / #{HTTP::VERSION}" unless version == HTTP::VERSION
-            @current_request = HTTP::Request.new(method, nil, uri)
-        else
-            k,v = buffer.split(/:\s+/)
-            @current_request.headers[k] = v
-            @current_request.host = v if k.match(/host/i)
+        @buffer += buffer
+
+        while (index = @buffer.index(/\r\n/))
+            line = @buffer[0...index]
+            @buffer = @buffer[(index+2)..-1]
+            if @current_request
+                if line.empty?
+                    #Log.debug("End of headers")
+                    if @current_request.method.match(/get/i)
+                        #Log.debug("End of Get request")
+                        ret, @current_request = [@current_request, nil]
+                        return ret
+                    else
+                        raise "Put / Post requests not supported"
+                    end
+                else
+                    # Assume we're parsing headers, since we don't support put / post yet
+                    parse_header(line)
+                end
+            else
+                new_request = parse_query(line)
+                unless new_request
+                    Log.warning("Malformed HTTP query - #{line.inspect}")
+                    raise "Malformed data received from client"
+                end
+                @current_request = new_request
+            end
         end
 
         return nil
+    end
+
+    def parse_query(line)
+        method, uri, version_string = line.split(/\s+/)
+        version = version_string.split(/\//).last.to_f
+        raise "HTTP version mismatch #{version} / #{HTTP::VERSION}" unless version == HTTP::VERSION
+        #Log.debug(["Creating new HTTP request", [method, uri, version_string]])
+        return HTTP::Request.new(method, nil, uri)
+    end
+
+    def parse_header(line)
+        k,v = line.split(/:\s+/)
+        #Log.debug("Setting header #{k.inspect} to #{v.inspect}")
+        @current_request.headers[k] = v
+        @current_request.host = v if k.match(/host/i)
     end
 end
 
@@ -63,6 +98,7 @@ class HTTPServer
                 begin
                     # Accept the new connection
                     socket = @accept_socket.accept
+                    Log.debug("Incoming HTTP connection from #{socket.addr.last}", 6)
                     process_exchanges(socket)
                 rescue Exception => e
                     Log.debug(["Failed to accept connection",e.message,e.backtrace])
@@ -81,28 +117,27 @@ class HTTPServer
             @accept_socket.close
             @accept_socket = nil
         end
-        @client_mutex.synchronize {
+
+        @client_mutex.synchronize do
             @clients.each do |k,v|
-                v.kill
-                k.close
+                v.kill if v.alive?
+                k.close unless k.closed?
             end
             @clients.clear
-        }
+        end
     end
 
     def process_exchanges(socket)
         client_thread = Thread.new do
-            Log.debug("Accepting connection from", 8)
             begin
                 reader = HTTPReader.new
                 while true
                     request = reader.read(socket)
                     if request
                         start = Time.now
-                        Log.debug("HTTP request received", 8)
                         response = process_request(request)
                         processed = Time.now
-                        socket.puts(response)
+                        socket.write(response)
                         sent = Time.now
                         Log.debug("Responded to request in #{sent - start} seconds (Processed in #{processed - start} seconds, send in #{sent - processed} seconds)", 6)
                     end
@@ -112,10 +147,17 @@ class HTTPServer
             rescue Exception => e
                 Log.debug(["Thread exited abnormally", e.message, e.backtrace])
             end
+
+            @client_mutex.synchronize do
+                socket.close unless socket.closed?
+                @clients.delete(socket)
+            end
+            Log.debug("HTTP Request thread exiting")
         end
-        @client_mutex.synchronize {
+
+        @client_mutex.synchronize do
             @clients[socket] = client_thread
-        }
+        end
     end
 
     def process_request(request)
@@ -129,13 +171,17 @@ class HTTPServer
             begin
                 Log.debug("Attempting match #{regex.inspect}", 7)
                 data, type = @responses[regex].call(m.captures)
-                return HTTP::Response::OK.new(data, type).pack unless data.nil?
+                if data.nil?
+                    Log.debug("Nil data for match #{regex.inspect}", 7)
+                else
+                    Log.debug("HTTP OK", 7)
+                    return HTTP::Response::OK.new(data, type).pack
+                end
             rescue Exception => e
                 Log.debug(["Failed to check uri match #{regex.inspect}", e.message, e.backtrace])
             end
         end
         Log.debug("URI #{request.uri} not found", 6)
-
         return HTTP::Response::NotFound.new.pack
     end
 
@@ -151,13 +197,12 @@ class HTTPServer
         begin
             template_filename = File.join(@web_root, template_name)
             template_data     = File.read(template_filename)
-            renderer          = ERB.new(template_data)
-            data              = renderer.result(object_binding)
+            data              = ERB.new(template_data).result(object_binding)
             type              = "text/html"
-            [data, type]
+            return [data, type]
         rescue Exception => e
             Log.error(["Failed to process template #{template_name}", e.message, e.backtrace])
-            nil
+            return [nil, nil]
         end
     end
 

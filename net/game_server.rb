@@ -8,7 +8,7 @@ class GameServer < Server
     def initialize(config={})
         super(config)
         @config[:web_port] = (@config[:web_port] || DEFAULT_HTTP_PORT).to_i
-        @config[:web_root] = @config[:web_root] || DEFAULT_WEB_ROOT
+        @config[:web_root] =  @config[:web_root] || DEFAULT_WEB_ROOT
 
         @user_mutex  = Mutex.new
         @user_info   = {}
