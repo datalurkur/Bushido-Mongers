@@ -98,7 +98,7 @@ class HTTPServer
                 begin
                     # Accept the new connection
                     socket = @accept_socket.accept
-                    Log.debug("Incoming HTTP connection from #{socket.addr.last}")
+                    Log.debug("Incoming HTTP connection from #{socket.addr.last}", 6)
                     process_exchanges(socket)
                 rescue Exception => e
                     Log.debug(["Failed to accept connection",e.message,e.backtrace])
