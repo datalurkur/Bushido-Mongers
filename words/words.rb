@@ -92,6 +92,10 @@ module Words
             end
         end
 
+        def plural_person!
+            self.person = State.plural_person(self.person)
+        end
+
         # State is used in WordDB's special conjugation hash.
         def eql?(other)
             case other
@@ -572,7 +576,7 @@ module Words
 
         # If subject is plural and person isn't, adjust the person
         if Array === subject && subject.size > 1
-            args[:state].person = State.plural_person(args[:state].person)
+            args[:state].plural_person!
         end
 
         raise unless verb
