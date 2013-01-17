@@ -20,7 +20,7 @@ class World < Area
         starting_locations.rand
     end
 
-    def get_map(colored_rooms={}, cell_size=10, corridor_size=2, default_color=:white)
+    def get_map(colored_rooms={}, cell_size=30, corridor_size=6, default_color=:white)
         depth_powers   = (0..@depth-1).collect { |n| @size ** n }.reverse
         cells_per_side = depth_powers.first
         png_size       = cell_size * cells_per_side

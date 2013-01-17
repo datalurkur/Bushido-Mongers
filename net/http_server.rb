@@ -1,4 +1,5 @@
 require 'erb'
+require 'haml'
 require 'socket'
 require 'thread'
 require './net/http_protocol'
@@ -198,21 +199,26 @@ class HTTPServer
     def process_template(template_name, object_binding, args=[])
         template_filename = File.join(@web_root, template_name)
         return nil unless File.exist?(template_filename)
+        template_ext      = template_filename.split(/\./).last
         template_data     = File.read(template_filename)
         return nil unless template_data
-        data              = erb_protect(template_data, object_binding)
+        data = template_protect(template_data, object_binding, template_ext)
         return data ? [data, "text/html"] : nil
     end
 
     # Runs an ERB template evaluation in its own thread to protect the caller
-    def erb_protect(template_data, bindings)
+    def template_protect(template_data, bindings, type)
         return_value = nil
 
         sandbox = Thread.new(return_value) do |return_value|
             begin
-                return_value = ERB.new(template_data).result(bindings)
+                return_value = case type
+                when "erb";  ERB.new(template_data).result(bindings)
+                when "haml"; Haml::Engine.new(template_data).render(bindings)
+                else;        raise "Unrecognized template type #{type.inspect}"
+                end
             rescue Exception => e
-                Log.warning(["Caught exception from ERB", e.message, e.backtrace])
+                Log.warning(["Caught exception from template rendering", e.message, e.backtrace])
             end
         end
 

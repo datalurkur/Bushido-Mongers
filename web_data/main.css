@@ -19,26 +19,55 @@ body {
 }
 
 div#wrapper {
-    background: #553333;
-    color: #dddddd;
-    border-radius: 10px;
+    background: rgba(55, 50, 50, 1.0);
+    color:      rgba(100, 100, 100, 1.0);
+    border-radius: 3px;
     padding: 10px;
 }
 
-div#header {
+header {
     text-align: center;
 }
 
 div#core {
+    background: rgba(10, 10, 10, 0.2);
+    /*color: #000000;*/
+    padding: 5px;
+    box-shadow: 0px 0px 4px #000;
 }
 
-div#footer {
+footer {
+}
+
+section#map {
+    float: left;
+}
+
+section#data {
+    float: right;
 }
 
 a:link {
-    color: #aaaaaa;
+    color: rgba(100, 100, 100, 1.0);
     text-decoration: none;
 }
-a:hover   { color: #ffaaaa; }
-a:visited { color: #bbaaaa; }
-a:active  { color: #ddaaaa; }
+a:hover   { color: rgba(150, 150, 150, 1.0); }
+a:visited { color: rgba(100, 100, 100, 1.0); }
+a:active  { color: rgba(100, 100, 100, 1.0); }
+
+li {
+    list-style-type: none;
+}
+
+.clearfix:after {
+    content: ".";
+    display: block;
+    clear: both;
+    visibility: hidden;
+    line-height: 0;
+    height: 0;
+}
+
+.clearfix {
+    display: inline-block;
+}

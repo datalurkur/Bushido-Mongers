@@ -23,7 +23,7 @@ class GameServer < Server
             @web_server.find_file(args.first)
         end
         @web_server.add_route(/\/$/) do
-            @web_server.process_template("index.erb", binding)
+            @web_server.process_template("index.haml", binding)
         end
     end
 
