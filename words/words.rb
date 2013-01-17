@@ -332,17 +332,17 @@ module Words
             def self.state_conjugate(verb, state)
                 case state.aspect
                 when :stative
-                    # TODO - Thus shall is used with the meaning of obligation and will with the meaning of desire or intention.
+                    # TODO - Thus 'shall' is used with the meaning of obligation and 'will' with the meaning of desire or intention.
                     case state.tense
                     when :future
-                        state = state.dup
-                        state.tense = :present
                         [conjugate(:will, State.new), verb]
                     else
                         [conjugate(verb, state)]
                     end
                 when :progressive
                     be_state = State.new
+                    # Do other state fields need copying here?
+                    be_state.person = state.person
                     case state.voice
                     when :active
                         [conjugate(:be, be_state), gerund_participle(verb)]
@@ -572,9 +572,7 @@ module Words
 
         # If subject is plural and person isn't, adjust the person
         if Array === subject && subject.size > 1
-#            Log.debug([subject.collect {|n| n[:monicker]}, args[:state].person])
             args[:state].person = State.plural_person(args[:state].person)
-#            Log.debug(args[:state].person)
         end
 
         raise unless verb
