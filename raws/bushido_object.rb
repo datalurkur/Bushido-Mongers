@@ -90,7 +90,7 @@ class BushidoObject
     end
 
     def monicker
-        (@properties[:name] || @type).to_s
+        (get_property(:name) || @type).to_s
     end
 
     def is_type?(type)

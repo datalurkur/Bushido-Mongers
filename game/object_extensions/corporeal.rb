@@ -30,13 +30,13 @@ module Corporeal
     end
 
     def create_body
-        unless @properties[:incidental].empty?
+        unless get_property(:incidental).empty?
             Log.error("Body created twice for #{monicker}")
             return
         end
         body_type = class_info(:body_type)
         @core.db.create(@core, body_type, {
-            :relative_size => @properties[:size],
+            :relative_size => get_property(:size),
             :position      => self,
             :position_type => :incidental
         })
@@ -45,11 +45,11 @@ module Corporeal
         # If this has multiple values, I don't know what the fuck we're doing
         # That would mean that this corporeal thing has multiple independent bodies
         # How do you even describe such a thing?
-        raise "Wat" if @properties[:incidental].size > 1
+        raise "Wat" if get_property(:incidental).size > 1
     end
 
     def all_body_parts(type = [:internal, :external])
-        @properties[:incidental].collect do |body|
+        get_property(:incidental).collect do |body|
             body.select_objects(type, true) { |obj| obj.is_type?(:body_part) }
         end.flatten
     end
@@ -59,15 +59,15 @@ module Corporeal
     end
 
     def internal_body_parts
-        @properties[:incidental] + all_body_parts(:internal)
+        get_property(:incidental) + all_body_parts(:internal)
     end
 
     def damage(amount, attacker, target=nil)
-        target ||= @properties[:incidental].rand
+        target ||= get_property(:incidental).rand
         target.set_property(:hp, target.hp - amount)
         @total_hp -= amount
         if target.hp <= 0
-            if @properties[:incidental].include?(target)
+            if get_property(:incidental).include?(target)
                 Log.debug("Destroying body of #{monicker}")
                 destroy(attacker)
             end

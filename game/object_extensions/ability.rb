@@ -26,7 +26,7 @@ module Ability
 
     def tick
         current_tick += 1
-        languish if current_tick - last_used > @properties[:familiarity_loss]
+        languish if current_tick - last_used > get_property(:familiarity_loss)
     end
 
     private
@@ -35,8 +35,8 @@ module Ability
 
     # Make a check using skill and familiarity to determine the outcome
     def make_check
-        skill_check       = rand(@properties[:skill])
-        familiarity_check = rand(@properties[:familiarity]) - @properties[:familiarity]
+        skill_check       = rand(get_property(:skill))
+        familiarity_check = rand(get_property(:familiarity)) - get_property(:familiarity)
         # TODO - Probably add scaling to the familiarity check
         result = skill_check + familiarity_check
     end
@@ -45,7 +45,7 @@ module Ability
     def practice(difficulty)
         # Use the difficulty of the training / task being performed to determine familiarity gain
         # FIXME
-        @properties[:familiarity] += amount
+        set_property(:familiarity, get_property(:familiarity) + amount)
     end
 
     # Decrease familiarity
@@ -53,16 +53,14 @@ module Ability
         # Exponentially decrease familiarity
         #  (familiarity loss slows as time spent away from a task increases)
         # FIXME
-        @properties[:familiarity] -= amount
-        clamp(@properties[:familiarity])
+        set_property(:familiarity, clamp(get_property(:familiarity) - amount))
     end
 
     # Increase skill
     def improve(difficulty)
         # Use the difficulty of the training / task being performed to determine skill gain
         # FIXME
-        @properties[:skill] += amount
-        clamp(@properties[:skill])
+        set_property(:skill, clamp(get_property(:skill) + amount))
     end
 
     def clamp(thing)

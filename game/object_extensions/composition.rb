@@ -83,7 +83,7 @@ module Composition
     def remove_object(object)
         Log.debug("Removing #{object.monicker} from #{monicker}", 6)
         self.container_classes.each do |type|
-            if @properties[type].include?(object)
+            if get_property(type).include?(object)
                 return _remove_object(object, type)
             end
         end
@@ -93,9 +93,9 @@ module Composition
     def full?(type=:internal)
         case type
         when :grasped
-            @properties[type].size > 0
+            get_property(type).size > 0
         when :worn
-            @properties[type].size > 1
+            get_property(type).size > 1
         else
             false
         end
@@ -133,8 +133,8 @@ module Composition
         type = Array(type)
         list = []
         type.each do |type|
-            next unless @properties[type]
-            @properties[type].each do |obj|
+            next unless get_property(type)
+            get_property(type).each do |obj|
                 next if block_given? && !block.call(obj)
                 list << obj
                 if recursive && obj.is_type?(:composition) && depth > 0
@@ -158,7 +158,7 @@ module Composition
         raise "Cannot modify #{type} composition of #{monicker}!" if respect_mutable && !self.mutable_container_classes.include?(type)
         add_weight(object)
         add_value(object) if self.added_value_container_classes.include?(type)
-        @properties[type] << object
+        set_property(type, get_property(type) << object)
         object
     end
 
@@ -166,22 +166,22 @@ module Composition
         raise "Cannot modify #{type} composition of #{monicker}!" unless self.mutable_container_classes.include?(type)
         remove_weight(object)
         remove_value(object) if self.added_value_container_classes.include?(type)
-        @properties[type].delete(object)
+        set_property(type, get_property(type).delete(object))
     end
 
     def add_weight(object)
-        @properties[:weight] = (@properties[:weight] || 0) + object.weight
+        set_property(:weight, (get_property(:weight) || 0) + object.weight)
     end
 
     def remove_weight(object)
-        @properties[:weight] -= object.weight
+        set_property(:weight, get_property(:weight) - object.weight)
     end
 
     def add_value(object)
-        @properties[:value] = (@properties[:value] || 0) + object.value
+        set_property(:value, (get_property(:value) || 0) + object.value)
     end
 
     def remove_value(object)
-        @properties[:value] -= object.value
+        set_property(:value, get_property(:value) - object.value)
     end
 end
