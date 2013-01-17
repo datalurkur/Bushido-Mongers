@@ -1,0 +1,19 @@
+!!! 5
+%head
+    %title Bushido Mongers
+    %link{:rel => "stylesheet", :href=>"main.css", :type=>"text/css"}
+%body
+    #wrapper
+        %header
+            %h1 Bushido Mongers
+        #core.clearfix
+            %h2 Game Lobbies
+            %ul
+                -@lobby_mutex.synchronize do
+                    -@lobbies.collect do |lobby|
+                        -if WebEnabledLobby === lobby
+                            %li
+                                %a{:href=>lobby.web_uri}=lobby.name
+                        -else
+                            %li=lobby.name
+        %footer
