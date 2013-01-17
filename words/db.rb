@@ -146,7 +146,7 @@ class WordDB
     def add_conjugation_by_person(infinitive, state, list)
         first_person = list.first
         case list.size
-        when 2, 3, 6
+        when 1, 2, 3, 6
             Words::State::FIELDS[:person].each do |person|
                 curr_state = state.dup
                 curr_state.person = person

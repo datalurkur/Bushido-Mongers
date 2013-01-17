@@ -45,10 +45,14 @@ module Words
     # http://en.wikipedia.org/wiki/English_clause_syntax
 
     # TODO - distinguish between patient (action receiver) and direct object (part of sentence), esp. useful for passive case.
+    # Aspect descriptions: actions that are processes (bhāva), from those where the action is considered as a completed whole (mūrta). This is the key distinction between the imperfective and perfective.
+    # further :aspects => [:inchoative,  # starting a state (not really used in English)
+    #                      :prospective, # describing an event that occurs subsequent to a given reference time
+    #                      :gnomic,      # for aphorisms. Similar to :habitual, doesn't usually use articles.
     class State
         FIELDS = {
             :aspects => [:perfect, :imperfect, :habitual, :stative, :progressive],
-            :tense   => [:present, :past],
+            :tense   => [:present, :past, :future],
             :mood    => [:indicative, :subjunctive, :imperative],
             :person  => [:first, :second, :third, :first_plural, :second_plural, :third_plural],
             :voice   => [:active, :passive]
@@ -301,14 +305,13 @@ module Words
         class Adjective < ParseTree::PTLeaf; end
 
         # http://en.wikipedia.org/wiki/English_verbs
-        # http://en.wikipedia.org/wiki/List_of_English_irregular_verbs
         # http://en.wikipedia.org/wiki/Predicate_(grammar)
         # http://en.wikipedia.org/wiki/Phrasal_verb
         # http://www.verbix.com/webverbix/English/have.html
         class Verb < ParseTree::PTLeaf
             def initialize(verb, args = {})
-                state = args[:state] || State.new
-                @children = [Verb.conjugate(verb, state)]
+                state = args[:state]
+                @children = Verb.state_conjugate(verb, state)
 
                 # Insert a direct preposition, if it exists for the verb.
                 if args[:target]
@@ -317,13 +320,35 @@ module Words
                 end
             end
 
-            def self.conjugate(infinitive, state = State.new)
+            # Used for adding modals, aspects, etc.
+            def self.state_conjugate(verb, state)
+                case state.aspect
+                when :stative
+                    [conjugate(verb, state)]
+                when :progressive
+                    be_state = State.new
+                    case state.voice
+                    when :active
+                        [conjugate(:be, be_state), gerund_participle(verb)]
+                    when :passive
+                        [conjugate(:be, be_state), past_participle(verb)]
+                    else
+                        raise "Invalid voice #{state.voice}!"
+                    end
+                else
+                    raise NotImplementedError
+                end
+            end
+
+            # Used for conjugating a single verb.
+            # http://en.wikipedia.org/wiki/List_of_English_irregular_verbs
+            def self.conjugate(infinitive, state)
                 if Words.db.conjugation_for?(infinitive, state)
                     return Words.db.conjugate(infinitive, state)
                 end
 
                 infinitive = infinitive.to_s
-                # defaults
+                # Regular conjugation.
                 infinitive = case state.tense
                 when :present
                     if state.person == :third
@@ -337,6 +362,50 @@ module Words
                     # drop any ending 'e'
                     infinitive.sub!(/e$/, '')
                     infinitive += 'ed'
+                when :future
+                    raise NotImplementedError
+                end
+            end
+
+            # [One participle], called variously the present, active, imperfect,
+            # or progressive participle, is identical in form to the gerund;
+            # the term present participle is sometimes used to include the
+            # gerund. The term gerund-participle is also used.
+            def self.gerund_participle(infinitive)
+                # handle irregular forms.
+                case infinitive
+                when :be
+                    :being
+                else
+                    # Regular form.
+                    infinitive = infinitive.to_s
+                    # drop any ending 'e'
+                    infinitive.sub!(/e$/, '')
+                    infinitive += 'ing'
+                end
+            end
+
+            # [The other participle], called variously the past, passive, or
+            # perfect participle, is usually identical to the verb's preterite
+            # (past tense) form, though in irregular verbs the two usually differ.
+            def self.past_participle(infinitive)
+                # handle irregular forms.
+                case infinitive
+                when :do
+                    :done
+                when :eat
+                    :eaten
+                when :write
+                    :written
+                when :beat
+                    :beaten
+                when :wear
+                    :worn
+                else
+                    # Regular form.
+                    state = State.new
+                    state.tense = :past
+                    conjugate(infinitive, state)
                 end
             end
 
@@ -483,8 +552,12 @@ module Words
             args[:state].person = :second
         end
 
+        Log.debug(subject)
+        Log.debug(Array === subject && subject.size > 1)
+
         # If subject is plural and person isn't, adjust the person
         if Array === subject && subject.size > 1
+            Log.debug("found!")
             # use magical knowledge of State's person field ordering
             args[:state].person = State.plural_person(args[:state].person)
         end
@@ -507,64 +580,42 @@ module Words
         # Describe the corporeal body
         body = target[:properties][:incidental].first
         sentences = [gen_copula(:target=>body[:monicker])]
-        #begin
         sentences << describe_composition(body)
-        #rescue Exception => e
-        #Log.debug(["Terminating abnormally", e.message, e.backtrace])
-        #end
 
         # TODO - Add more information about abilities, features, etc.
     end
 
+    def self.describe_property_list(target, type, verb, state)
+        sentences = []
+        if target[:properties][type] && !target[:properties][type].empty?
+            sentences << gen_sentence(
+                            :subject => target[:properties][type].collect { |p| p[:monicker] },
+                            :verb    => verb,
+                            :target  => target[:monicker],
+                            :state   => state)
+            sentences += target[:properties][type].collect do |part|
+                if part[:is_type].include?(:composition_root)
+                    describe_composition(part)
+                else
+                    gen_copula(:target => part[:monicker])
+                end
+            end
+        end
+        sentences
+    end
+
     def self.describe_composition(target)
         state = State.new
-        # Description is a currently-progressing state, so present progressive.
-#        state.aspect = :progressive
+        # Description is a currently-progressing state, so passive progressive.
+        state.voice  = :passive
+        state.aspect = :progressive
 
         Log.debug("Describing #{target[:monicker]}")
         sentences = []
 
-        if target[:properties][:external] && !target[:properties][:external].empty?
-            sentences << gen_copula(
-                            :subject => target[:properties][:external].collect { |p| p[:monicker] },
-                            :target  => Sentence::Noun.new("attached to the #{target[:monicker]}"),
-                            :state   => state)
-            sentences += target[:properties][:external].collect do |part|
-                if part[:is_type].include?(:composition_root)
-                    describe_composition(part)
-                else
-                    gen_copula(:target=>part[:monicker])
-                end
-            end
-        end
-
-        if target[:properties][:worn] && !target[:properties][:worn].empty?
-            sentences << gen_copula(
-                            :subject => target[:properties][:worn].collect { |p| p[:monicker] },
-                            :target  => Sentence::Noun.new("worn on the #{target[:monicker]}"),
-                            :state   => state)
-            sentences += target[:properties][:worn].collect do |part|
-                if part[:is_type].include?(:composition_root)
-                    describe_composition(part)
-                else
-                    gen_copula(:target=>part[:monicker])
-                end
-            end
-        end
-
-        if target[:properties][:grasped] && !target[:properties][:grasped].empty?
-            sentences << gen_copula(
-                            :subject => target[:properties][:grasped].collect { |p| p[:monicker] },
-                            :target  => Sentence::Noun.new("grasped by the #{target[:monicker]}"),
-                            :state   => state)
-            sentences += target[:properties][:grasped].collect do |part|
-                if part[:is_type].include?(:composition_root)
-                    describe_composition(part)
-                else
-                    gen_copula(:target=>part[:monicker])
-                end
-            end
-        end
+        sentences << describe_property_list(target, :external, :attach, state)
+        sentences << describe_property_list(target, :worn,     :wear,   state)
+        sentences << describe_property_list(target, :grasped,  :grasp,  state)
 
         sentences.flatten.join(" ")
     end
@@ -577,7 +628,6 @@ module Words
         unless args[:verb] || args[:action] || args[:command]
             args[:verb]    = :be
         end
-        Log.debug(args)
 
         # TODO - Use expletive / inverted copula construction
         # TODO - expletive more often for second person

@@ -54,8 +54,12 @@ module WordParser
         load_file(dict_dir, "prepositions_*.txt", /^.*prepositions_(.*).txt/) do |line, match|
             words = line.split(/\s+/).map(&:to_sym)
             preposition = words.shift
-            family = words.collect { |word| {:verb => word} }
-            db.add_preposition(preposition, *family)
+            words.each do |verb|
+                # add infinitive as a verb
+                family = {:verb => verb}
+                db.add_family(family)
+                db.add_preposition(preposition, family)
+            end
         end
 
         load_file(dict_dir, "conjugations.txt") do |line, match|
