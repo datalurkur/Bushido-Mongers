@@ -8,3 +8,5 @@ charge
 run
 move
 inspect
+destroy
+drop

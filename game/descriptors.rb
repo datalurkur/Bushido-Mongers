@@ -58,9 +58,11 @@ class Descriptor
 
     class RoomDescriptor
         def self.describe(room, observer)
+            friendly_name = room.name.gsub(/-\d+$/, '')
             {
                 :type      => :room,
-                :name      => room.name,
+                :monicker  => friendly_name.to_sym,
+                :zone      => room.zone.type,
                 :keywords  => room.keywords,
                 :objects   => room.objects.collect(&:monicker) - [observer.monicker],
                 :exits     => room.connected_directions,

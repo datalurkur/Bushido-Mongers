@@ -559,6 +559,11 @@ module Words
 
     # TODO - action descriptors: The generic ninja generically slices the goat with genericness.
     def self.gen_sentence(args = {})
+        agent = args[:agent]
+        args.delete(:agent)
+        Log.debug(args, 6)
+        args[:agent] = agent
+
         args[:state] ||= State.new
 
         subject = args[:subject] || args[:agent]
@@ -645,6 +650,8 @@ module Words
             args[:verb]    = :be
         end
 
+        args[:subj_complement] = args[:adjective] || args[:complement]
+
         # TODO - Use expletive / inverted copula construction
         # TODO - expletive more often for second person
 #        if Chance.take(:coin_toss)
@@ -657,30 +664,46 @@ module Words
 
     #:keywords=>[], :objects=>["Test NPC 23683", "Test NPC 35550", "Test Character"], :exits=>[:west], :name=>"b00"
 
+    def self.gen_move_description(args = {})
+        room = args[:target]
+
+        move_args = args.dup
+        move_args[:target] = gen_room_phrase(room)
+        room[:room_mentioned] = true
+
+        [self.gen_sentence(move_args), gen_room_description(room)].join(" ")
+    end
+
+    def self.gen_room_phrase(args)
+        if args[:keywords].empty?
+            "boring #{args[:zone]}"
+        else
+            "#{args[:keywords].rand.to_s} #{args[:zone]}"
+        end
+    end
+
     # Required/expected arg values: keywords objects exits
     def self.gen_room_description(args = {})
-        @sentences = []
+        sentences = []
 
         args = args.merge(:action => :see)
 
         args[:state] = State.new
         args[:state].person = :second
 
-        if args[:keywords].empty?
-            @sentences << Words.gen_sentence(args.merge(:target => "boring room"))
-        else
-            @sentences << Words.gen_sentence(args.merge(:target => (args[:keywords].rand.to_s + " room")))
+        unless args[:room_mentioned]
+            sentences << Words.gen_sentence(args.merge(:target => gen_room_phrase(args)))
         end
 
         if args[:objects] && !args[:objects].empty?
-            @sentences << Words.gen_sentence(args.merge(:target => args[:objects]))
+            sentences << Words.gen_sentence(args.merge(:target => args[:objects]))
         end
 
         if args[:exits] && !args[:exits].empty?
-            @sentences << Words.gen_sentence(args.merge(:target => Sentence::Noun.new("exits to #{Sentence::NounPhrase.new(args[:exits])}")))
+            sentences << Words.gen_sentence(args.merge(:target => Sentence::Noun.new("exits to #{Sentence::NounPhrase.new(args[:exits])}")))
         end
 
-        @sentences.join(" ")
+        sentences.join(" ")
     end
 
     def self.gen_area_name(args = {})
