@@ -40,7 +40,7 @@ class HTTP
 
     class Response < HTTP
         attr_accessor :status, :status_code, :data, :content_type
-        def initialize(status, status_code, data="", content_type="text/html")
+        def initialize(status, status_code, data=nil, content_type="text/html")
             @status       = status
             @status_code  = status_code
             @data         = data
@@ -58,6 +58,8 @@ class HTTP
 
             headers = {}
 
+            parts = [status]
+
             if @data
                 if @use_compression
                     @data = @data.deflate
@@ -67,12 +69,11 @@ class HTTP
                 headers["Content-Type"]   = @content_type
             end
 
-            [
-                status,
-                headers.collect { |k,v| HTTP.pack_header(k,v) },
-                "",
-                @data
-            ].join("\r\n")
+            parts << headers.collect { |k,v| HTTP.pack_header(k,v) }
+            parts << ""
+            parts << @data if data
+
+            parts.join("\r\n")
         end
 
         class OK < Response

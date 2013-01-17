@@ -8,12 +8,16 @@ class WebEnabledLobby < Lobby
         setup_web_routes
     end
 
-    def web_directory; "#{@web_server.web_root}/#{@name.escape}"; end
     def web_uri;       "/#{@name.escape}";                        end
+    def web_directory; "#{@web_server.web_root}/#{@name.escape}"; end
 
     def characters_directory;    "#{web_directory}/characters";                    end
-    def directory_for(username); "#{web_directory}/characters/#{username.escape}"; end
     def uri_for(username);       "#{web_uri}/characters/#{username.escape}";       end
+    def directory_for(username)
+        dir = "#{web_directory}/characters/#{username.escape}"
+        ensure_directory_exists(dir)
+        dir
+    end
 
     def ensure_directory_exists(directory)
         Dir.mkdir(directory) unless File.exist?(directory)
@@ -34,24 +38,16 @@ class WebEnabledLobby < Lobby
 
         # User pages
         @web_server.add_route(/\/#{@name.escape}\/characters\/#{@web_server.wildcard}$/i) do |args|
-            username = args.first.unescape
-            if @users.has_key?(username)
-                ensure_directory_exists(directory_for(username))
-                @web_server.process_template("character.erb", binding, args)
-            else
-                nil
-            end
+            username = args[0].unescape
+            return nil unless @users.has_key?(username)
+            @web_server.process_template("character.erb", binding, args)
         end
 
         # Files within user directories
         @web_server.add_route(/\/#{@name.escape}\/characters\/#{@web_server.wildcard}\/#{@web_server.wildcard}$/i) do |args|
             username = args[0].unescape
-            if @users.has_key?(username)
-                ensure_directory_exists(directory_for(username))
-                @web_server.find_file(File.join(uri_for(username), args[1].unescape))
-            else
-                nil
-            end
+            return nil unless @users.has_key?(username)
+            @web_server.find_file(File.join(uri_for(username), args[1].unescape))
         end
     end
 
