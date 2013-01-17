@@ -49,6 +49,14 @@ module Words
     # further :aspects => [:inchoative,  # starting a state (not really used in English)
     #                      :prospective, # describing an event that occurs subsequent to a given reference time
     #                      :gnomic,      # for aphorisms. Similar to :habitual, doesn't usually use articles.
+    #
+    # http://en.wikipedia.org/wiki/Subjunctive_mood
+    # The form of the subjunctive is distinguishable from the indicative in five circumstances:
+    # in the third person singular of any verb in the present form;
+    # in all instances of the verb "be" in the present form;
+    # in the first and third persons singular of the verb "be" in the past form;
+    # in all instances of all verbs in the future form; and
+    # in all instances of all verbs in the present negative form.
     class State
         FIELDS = {
             :aspects => [:perfect, :imperfect, :habitual, :stative, :progressive],
@@ -324,7 +332,15 @@ module Words
             def self.state_conjugate(verb, state)
                 case state.aspect
                 when :stative
-                    [conjugate(verb, state)]
+                    # TODO - Thus shall is used with the meaning of obligation and will with the meaning of desire or intention.
+                    case state.tense
+                    when :future
+                        state = state.dup
+                        state.tense = :present
+                        [conjugate(:will, State.new), verb]
+                    else
+                        [conjugate(verb, state)]
+                    end
                 when :progressive
                     be_state = State.new
                     case state.voice
@@ -363,6 +379,7 @@ module Words
                     infinitive.sub!(/e$/, '')
                     infinitive += 'ed'
                 when :future
+                    # Handled in state_conjugate.
                     raise NotImplementedError
                 end
             end
@@ -390,6 +407,7 @@ module Words
             # (past tense) form, though in irregular verbs the two usually differ.
             def self.past_participle(infinitive)
                 # handle irregular forms.
+                # TODO - put these in dictionary.
                 case infinitive
                 when :do
                     :done
@@ -552,14 +570,11 @@ module Words
             args[:state].person = :second
         end
 
-        Log.debug(subject)
-        Log.debug(Array === subject && subject.size > 1)
-
         # If subject is plural and person isn't, adjust the person
         if Array === subject && subject.size > 1
-            Log.debug("found!")
-            # use magical knowledge of State's person field ordering
+#            Log.debug([subject.collect {|n| n[:monicker]}, args[:state].person])
             args[:state].person = State.plural_person(args[:state].person)
+#            Log.debug(args[:state].person)
         end
 
         raise unless verb
@@ -610,7 +625,6 @@ module Words
         state.voice  = :passive
         state.aspect = :progressive
 
-        Log.debug("Describing #{target[:monicker]}")
         sentences = []
 
         sentences << describe_list(target[:properties][:external], :attach, target[:monicker], state)

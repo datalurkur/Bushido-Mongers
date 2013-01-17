@@ -5,12 +5,6 @@ Log.setup("Vocabulary Test", "wordtest")
 
 require './words/words'
 
-#require 'raws/db'
-#require 'game/object_extensions'
-#require 'game/game_core'
-#core = GameCore.new
-#core.setup(:world_size => 1, :world_depth => 1)
-
 japanese_names = Words.db.get_keyword_words(:japanese, :name)
 
 Log.debug("Japanese names: #{japanese_names.inspect}")
@@ -37,11 +31,20 @@ s = Words::State.new
 john_and_mary(s)
 s.tense = :past
 john_and_mary(s)
+s.tense = :future
+john_and_mary(s)
 
-#Log.debug(Words.gen_sentence({}))
+Log.debug(Words.gen_copula)
+Log.debug(Words.gen_copula(:adjective=>:sunny))
+
+Log.debug(Words.gen_sentence(
+    :subject => [:Billy_Bob, :beaver],
+    :verb    => :walk,
+    :target  => :bar
+))
 
 # Action tests.
-begin
+=begin
     require './raws/db'
     db = ObjectDB.get('default')
     require './raws/test/raws'
@@ -72,6 +75,4 @@ begin
     5.times do
         Action.do(:agent => agent, :target => target, :action => :attack, :tool => :dagger)
     end
-end
-
-Log.debug(Words.gen_copula(:target=>:sunny))
+=end

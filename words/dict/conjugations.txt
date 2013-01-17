@@ -11,3 +11,7 @@ wear past    wore
 hold past    held
 say  present say  say  says
 say  past    said
+will present will
+will past    would
+shall present shall
+shall past    should
