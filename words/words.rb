@@ -585,15 +585,15 @@ module Words
         # TODO - Add more information about abilities, features, etc.
     end
 
-    def self.describe_property_list(target, type, verb, state)
+    def self.describe_list(list, verb, target_monicker, state)
         sentences = []
-        if target[:properties][type] && !target[:properties][type].empty?
+        if list && !list.empty?
             sentences << gen_sentence(
-                            :subject => target[:properties][type].collect { |p| p[:monicker] },
+                            :subject => list.collect { |p| p[:monicker] },
                             :verb    => verb,
-                            :target  => target[:monicker],
+                            :target  => target_monicker,
                             :state   => state)
-            sentences += target[:properties][type].collect do |part|
+            sentences += list.collect do |part|
                 if part[:is_type].include?(:composition_root)
                     describe_composition(part)
                 else
@@ -613,9 +613,9 @@ module Words
         Log.debug("Describing #{target[:monicker]}")
         sentences = []
 
-        sentences << describe_property_list(target, :external, :attach, state)
-        sentences << describe_property_list(target, :worn,     :wear,   state)
-        sentences << describe_property_list(target, :grasped,  :grasp,  state)
+        sentences << describe_list(target[:properties][:external], :attach, target[:monicker], state)
+        sentences << describe_list(target[:properties][:worn],     :wear,   target[:monicker], state)
+        sentences << describe_list(target[:properties][:grasped],  :grasp,  target[:monicker], state)
 
         sentences.flatten.join(" ")
     end
