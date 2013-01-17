@@ -56,7 +56,7 @@ class Room < ZoneLeaf
         # FIXME: This should be somewhere else, and not so inclusive.
         @parent.add_starting_location(self)# if Chance.take(:coin_toss)
 
-#        populate_npcs(core)
+        populate_npcs(core)
         populate_items(core)
     end
 
