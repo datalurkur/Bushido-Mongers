@@ -32,11 +32,22 @@ module Commands
                     object.matches(:type => type, :name => name)
                 end
             when :inventory
-                # TODO - recursive
                 return [] unless agent.uses?(Equipment)
-                agent.select_inventory do |object|
+                # First, look through the basic items.
+                (agent.all_grasped_objects + agent.all_worn_objects).select do |object|
                     object.matches(:type => type, :name => name)
                 end
+                # Then try searching in all the containers.
+                return [] unless agent.uses?(Equipment)
+                # First, look through the basic items.
+                agent.containers_in_inventory.select do |cont|
+                    cont.internal_objects(true) do |object|
+                        object.matches(:type => type, :name => name)
+                    end
+                end
+#            when :body
+                # FIXME: Search through all resident corporeals' bodies.
+#                []
             else
                 Log.warning("#{location} lookups not implemented")
                 []
@@ -54,10 +65,15 @@ module Commands
                 break unless potentials.empty?
             end
 
-            # FIXME: Handle contingencies
-            raise "No object #{object} found" if potentials.empty?
-
-            return potentials.first
+            case potentials.size
+            when 0
+                raise "No object #{object} found"
+            when 1
+                return potentials.first
+            else
+                # TODO - We should try re-searching here based on other descriptive information/heuristics.
+                raise "Ambiguous: There are too many #{type_class} objects!"
+            end
         end
     end
 
@@ -72,7 +88,7 @@ module Commands
                     params[:agent],
                     core.db.info_for(:inspect, :target),
                     params[:target],
-                    [:position, :inventory]
+                    [:position, :inventory, :body]
                 )
             else
                 # Assume the player wants a broad overview of what he can see, describe the room

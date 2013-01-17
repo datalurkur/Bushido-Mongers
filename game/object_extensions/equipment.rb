@@ -39,25 +39,23 @@ module Inventory
     end
 
     def all_grasped_objects
-        all_body_parts.collect { |bp| bp.grasped_objects }
+        all_body_parts.collect { |bp| bp.grasped_objects }.flatten
     end
 
     def all_worn_objects
-        all_body_parts.collect { |bp| bp.worn_objects }
+        all_body_parts.collect { |bp| bp.worn_objects }.flatten
     end
 
-    def containers_in_inventory(type)
-        (all_children - all_body_parts).select do |c|
-            c
-        end
-    end
-
-    def worn_containers
-        containers(:worn)
+    def containers_in_inventory
+        grasped_containers + worn_containers
     end
 
     def grasped_containers
         containers(:grasped)
+    end
+
+    def worn_containers
+        containers(:worn)
     end
 end
 

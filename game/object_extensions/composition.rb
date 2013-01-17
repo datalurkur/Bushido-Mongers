@@ -99,7 +99,7 @@ module Composition
     end
 
     def is_container?
-        self.is_type?(:composition) && self.container_classes.include?(:internal)
+        self.container_classes.include?(:internal)
     end
 
     def grasping_parts
