@@ -36,10 +36,10 @@ module Position
         @position
     end
 
-    def set_position(position, type=:internal)
+    def set_position(position, type=:internal, force_set=false)
         Log.debug("Setting position of #{monicker} to #{position.monicker}", 6)
-        unless @position.nil?
-            Log.warning("WARNING: Position being set more than once for #{monicker}; this method is meant to be called during setup and never again; call \"move\" instead")
+        if @position && !force_set
+            Log.warning("WARNING: Position being set more than once for #{monicker}; this method is meant to be called during setup and never again; call \"move_to\" instead")
         end
         @position      = position
         @position_type = type
@@ -55,6 +55,9 @@ module Position
         @position      = nil
         @position_type = nil
     end
+
+    # HELPER FUNCTIONS for different position types.
+    # TODO - make generators for these functions.
 
     def grasped_by(new_position)
         Log.debug("#{monicker} grasped by #{new_position.monicker}")
@@ -78,7 +81,7 @@ module Position
     end
 
     def attach_to(new_position)
-        Log.debug("#{monicker} attaches to #{new_position.monicker}")
+        Log.debug("#{monicker} attached to #{new_position.monicker}")
         _set_position(new_position)
         @position_type = :external
         @position.attach_object(self)

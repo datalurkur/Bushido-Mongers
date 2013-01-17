@@ -14,8 +14,11 @@ module Composition
                     # Drop these components at the location where this object is
                     instance.get_property(key).each do |component|
                         Log.debug("Dropping #{component.monicker} at #{instance.absolute_position.name}")
-                        component.move_to(instance.absolute_position)
+                        # Force the new position.
+                        component.set_position(instance.absolute_position, :internal, true)
                     end
+                    # All components set to a new location. Clear the local references.
+                    instance.set_property(key, [])
                 else
                     Log.debug("#{instance.monicker} does not preserve #{key} components")
                 end
@@ -25,11 +28,11 @@ module Composition
 
     def initial_composure(params)
         self.container_classes.each do |comp_type|
-            raise "Container class #{comp_type} specified but not created!" if @properties[comp_type].nil?
-            components           = @properties[comp_type].dup
+            raise "Container class #{comp_type} specified but not created!" if get_property(comp_type).nil?
+            components           = get_property(comp_type).dup
             already_created      = components.select { |component| BushidoObject === component }
             to_be_created        = components - already_created
-            @properties[comp_type] = already_created
+            set_property(comp_type, already_created)
 
             to_be_created.each do |component|
                 @core.db.create(@core, component, params.merge(
