@@ -1,4 +1,4 @@
-require './math/noise'
+require './lib/noise'
 require './graphics/png'
 
 class NoiseMap

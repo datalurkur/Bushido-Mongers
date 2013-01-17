@@ -1,11 +1,13 @@
-require 'erb'
-require 'haml'
 require 'socket'
 require 'thread'
 require './net/http_protocol'
 require './net/defaults'
 require './util/compression'
 require './util/log'
+require 'erb'
+
+require 'rubygems'
+require 'haml'
 
 class HTTPReader
     def initialize

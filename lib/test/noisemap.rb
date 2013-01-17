@@ -1,4 +1,4 @@
-require './math/noisemap'
+require './lib/noise'
 
 size = 128
 n = NoiseMap.new(size)

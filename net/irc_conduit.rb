@@ -1,4 +1,3 @@
-require 'rubygems'
 require 'socket'
 require 'openssl'
 require './util/log'

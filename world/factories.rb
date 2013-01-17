@@ -1,5 +1,5 @@
 require './world/world'
-require './math/noisemap'
+require './lib/noisemap'
 require './util/timer'
 
 class WorldFactory
