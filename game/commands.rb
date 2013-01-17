@@ -34,13 +34,12 @@ module Commands
             when :inventory
                 return [] unless agent.uses?(Equipment)
                 # First, look through the basic items.
-                (agent.all_grasped_objects + agent.all_worn_objects).select do |object|
+                list = (agent.all_grasped_objects + agent.all_worn_objects).select do |object|
                     object.matches(:type => type, :name => name)
                 end
                 # Then try searching in all the containers.
-                return [] unless agent.uses?(Equipment)
                 # First, look through the basic items.
-                agent.containers_in_inventory.select do |cont|
+                list += agent.containers_in_inventory.select do |cont|
                     cont.internal_objects(true) do |object|
                         object.matches(:type => type, :name => name)
                     end
@@ -61,7 +60,7 @@ module Commands
             potentials = []
             locations.each do |location|
                 results = filter_objects(agent, location, type_class, object)
-                potentials.concat(results) unless results.nil?
+                potentials.concat(results)
                 break unless potentials.empty?
             end
 
@@ -123,12 +122,31 @@ module Commands
 
     module Get
         def self.stage(core, params)
-            # Can get all items
-            params[:target] = Commands.lookup_object(params[:agent], :item, params[:target], [:position, :inventory])
+            params[:target] = Commands.lookup_object(
+                params[:agent],
+                core.db.info_for(:inspect, :target),
+                params[:target],
+                [:position, :inventory]
+            )
         end
 
         def self.do(core, params)
             params[:agent].stash(params[:target])
+        end
+    end
+
+    module Drop
+        def self.stage(core, params)
+            params[:target] = Commands.lookup_object(
+                params[:agent],
+                core.db.info_for(:drop, :target),
+                params[:target],
+                [:inventory]
+            )
+        end
+
+        def self.do(core, params)
+            params[:target].move_to(params[:agent].absolute_position)
         end
     end
 

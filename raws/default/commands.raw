@@ -35,7 +35,14 @@ command get {
     invocation get;
 }
 
-/* stash/put/place, drop/ditch */
+/* stash/put/place */
+
+/* drop/ditch */
+command drop {
+    target item;
+
+    invocation drop;
+}
 
 abstract command construct {
     invocation construct;
