@@ -1,7 +1,10 @@
 require 'erb'
 require 'socket'
+require 'thread'
 require './net/http_protocol'
+require './net/defaults'
 require './util/compression'
+require './util/log'
 
 class HTTPReader
     def initialize
@@ -14,9 +17,14 @@ class HTTPReader
         begin
             buffer = socket.read_nonblock(DEFAULT_BUFFER_SIZE)
             raise Errno::ECONNRESET if buffer.empty?
-        rescue
+        rescue Errno::EWOULDBLOCK,Errno::EAGAIN
             IO.select([socket])
             retry
+        rescue EOFError => e
+            raise e
+        rescue Exception => e
+            Log.debug(["Error reading data", e.message, e.backtrace])
+            raise e
         end
 
         @buffer += buffer
@@ -26,9 +34,7 @@ class HTTPReader
             @buffer = @buffer[(index+2)..-1]
             if @current_request
                 if line.empty?
-                    #Log.debug("End of headers")
                     if @current_request.method.match(/get/i)
-                        #Log.debug("End of Get request")
                         ret, @current_request = [@current_request, nil]
                         return ret
                     else
@@ -55,13 +61,11 @@ class HTTPReader
         method, uri, version_string = line.split(/\s+/)
         version = version_string.split(/\//).last.to_f
         raise "HTTP version mismatch #{version} / #{HTTP::VERSION}" unless version == HTTP::VERSION
-        #Log.debug(["Creating new HTTP request", [method, uri, version_string]])
         return HTTP::Request.new(method, nil, uri)
     end
 
     def parse_header(line)
         k,v = line.split(/:\s+/)
-        #Log.debug("Setting header #{k.inspect} to #{v.inspect}")
         @current_request.headers[k] = v
         @current_request.host = v if k.match(/host/i)
     end
@@ -93,13 +97,16 @@ class HTTPServer
         @accept_socket = TCPServer.new(@port)
         @listen_thread = Thread.new do 
             Log.name_thread("http-a")
-            Log.debug("Web service listening")
+            Log.debug("Web service listening", 5)
             while(true)
                 begin
                     # Accept the new connection
                     socket = @accept_socket.accept
                     Log.debug("Incoming HTTP connection from #{socket.addr.last}", 6)
-                    process_exchanges(socket)
+                    thread = process_exchanges(socket)
+                    @client_mutex.synchronize do
+                        @clients[socket] = thread
+                    end
                 rescue Exception => e
                     Log.debug(["Failed to accept connection",e.message,e.backtrace])
                 end
@@ -112,8 +119,7 @@ class HTTPServer
         if @listen_thread
             @listen_thread.kill
             @listen_thread = nil
-        end
-        if @accept_socket
+
             @accept_socket.close
             @accept_socket = nil
         end
@@ -128,7 +134,7 @@ class HTTPServer
     end
 
     def process_exchanges(socket)
-        client_thread = Thread.new do
+        Thread.new do
             begin
                 reader = HTTPReader.new
                 while true
@@ -140,10 +146,11 @@ class HTTPServer
                         socket.write(response)
                         sent = Time.now
                         Log.debug("Responded to request in #{sent - start} seconds (Processed in #{processed - start} seconds, send in #{sent - processed} seconds)", 6)
+                        break
                     end
                 end
-            rescue Errno::ECONNRESET
-                Log.debug("Client disconnected", 8)
+            rescue Errno::ECONNRESET,EOFError
+                Log.debug("Client disconnected", 7)
             rescue Exception => e
                 Log.debug(["Thread exited abnormally", e.message, e.backtrace])
             end
@@ -152,11 +159,6 @@ class HTTPServer
                 socket.close unless socket.closed?
                 @clients.delete(socket)
             end
-            Log.debug("HTTP Request thread exiting")
-        end
-
-        @client_mutex.synchronize do
-            @clients[socket] = client_thread
         end
     end
 
@@ -194,16 +196,31 @@ class HTTPServer
     end
 
     def process_template(template_name, object_binding, args=[])
-        begin
-            template_filename = File.join(@web_root, template_name)
-            template_data     = File.read(template_filename)
-            data              = ERB.new(template_data).result(object_binding)
-            type              = "text/html"
-            return [data, type]
-        rescue Exception => e
-            Log.error(["Failed to process template #{template_name}", e.message, e.backtrace])
-            return [nil, nil]
+        template_filename = File.join(@web_root, template_name)
+        return nil unless File.exist?(template_filename)
+        template_data     = File.read(template_filename)
+        return nil unless template_data
+        data              = erb_protect(template_data, object_binding)
+        return data ? [data, "text/html"] : nil
+    end
+
+    # Runs an ERB template evaluation in its own thread to protect the caller
+    def erb_protect(template_data, bindings)
+        return_value = nil
+
+        sandbox = Thread.new(return_value) do |return_value|
+            begin
+                return_value = ERB.new(template_data).result(bindings)
+            rescue Exception => e
+                Log.warning(["Caught exception from ERB", e.message, e.backtrace])
+            end
         end
+
+        # Wait for the erb thread to finish with a 5-second timeout
+        status = sandbox.join(5)
+        sandbox.kill unless status
+
+        return_value
     end
 
     def find_file(filename)

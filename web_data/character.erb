@@ -5,13 +5,10 @@
     map_name     = "map.png"
     map_location = File.join(directory_for(username), map_name)
     map_uri      = File.join(uri_for(username), map_name)
-    unless File.exist?(map_location)
-        map_data = @game_core.world.get_map({character.absolute_position => :red})
-        f = File.open(map_location, 'w')
-        f.write(map_data)
-        f.close
-    end
-
+    map_data     = @game_core.world.get_map({character.absolute_position => :red})
+    f = File.open(map_location, 'w')
+    f.write(map_data)
+    f.close
 %>
 
 <!DOCTYPE HTML>
