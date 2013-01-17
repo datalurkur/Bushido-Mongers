@@ -88,6 +88,7 @@ inside_zone dungeon {}
 inside_zone tavern {}
 inside_zone inn {}
 inside_zone temple {}
+
 /*
 zone temple_that_serves_as_the_final_bastion_of_light_in_an_otherwise_evil_forest {
     depth_range 0 1;

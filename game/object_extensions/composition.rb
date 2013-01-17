@@ -166,7 +166,7 @@ module Composition
         raise "Cannot modify #{type} composition of #{monicker}!" unless self.mutable_container_classes.include?(type)
         remove_weight(object)
         remove_value(object) if self.added_value_container_classes.include?(type)
-        set_property(type, get_property(type).delete(object))
+        get_property(type).delete(object)
     end
 
     def add_weight(object)

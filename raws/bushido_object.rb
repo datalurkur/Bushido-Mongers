@@ -130,6 +130,14 @@ class BushidoObject
     end
 
     def set_property(key, value)
+        # TODO - Properly check type of value based on raw type information
+=begin
+        if !@properties[key].nil? &&
+                value.class != @properties[key].class &&
+                !(Numeric === value.class && Numeric === @properties[key].class)
+            Log.warning("Changing class of property #{key}: from #{@properties[key].class} to #{value.class}")
+        end
+=end
         @properties[key] = value
     end
 
@@ -164,19 +172,19 @@ class SafeBushidoObject < BushidoObject
     attr_reader :destroyed
 
     def initialize(*args)
-        @destroyed = false
         super(*args)
+        @properties[:destroyed] = false
     end
 
     def check_destroyed
-        Log.warning(["Destroyed object #{@type} being used!", caller]) if @destroyed
+        Log.warning(["Destroyed object #{@type} being used!", caller]) if @properties[:destroyed]
     end
 
     def destroy(*args)
         Log.info("Destroying #{@type} (#{object_id})", 8)
         check_destroyed
         super(*args)
-        @destroyed = true
+        @properties[:destroyed] = true
     end
 
     def monicker

@@ -100,6 +100,6 @@ module Equipment
             end
         end
         # TEST FUNCTIONALITY
-        # Now, insert rocks until we can't anymore.
+        # TODO - insert rocks until we can't anymore.
     end
 end

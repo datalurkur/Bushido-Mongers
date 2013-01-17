@@ -44,6 +44,7 @@ module WordParser
                 db.add_keyword_family(keyword, {type => line.chomp})
             end
         end
+
         load_file(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/) do |line, match|
             part_of_speech = match[1].to_sym
             family = line.split(/\s+/).collect { |word| {part_of_speech => word} }
