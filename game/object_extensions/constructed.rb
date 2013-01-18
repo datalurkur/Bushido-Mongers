@@ -13,10 +13,10 @@ module Constructed
 
             # Created object quality depends on the quality of its components as well
             avg_component_quality = params[:components].inject(0.0) { |s,i|
-                s + Quality.index(i.is_type?(:constructed) ? i.quality : :standard)
+                s + Quality.index_of(i.is_type?(:constructed) ? i.quality : :standard)
             } / params[:components].size
-            quality = (Quality.index(params[:quality]) + avg_component_quality) / 2.0
-            quality_level = Quality.levels[quality.ceil]
+            quality = (Quality.index_of(params[:quality]) + avg_component_quality) / 2.0
+            quality_level = Quality.value_at(quality.ceil)
 
             instance.set_property(:quality,    quality_level)
             instance.set_property(:incidental, params[:components])

@@ -3,8 +3,12 @@ require './util/log'
 module Ability
     class << self
         def at_creation(instance, params)
-            instance.set_property(:skill,       instance.class_info(:default_skill))
-            instance.set_property(:familiarity, instance.class_info(:default_familiarity))
+            initial_skill       = instance.class_info(:default_skill)       + (params[:skill_bonus]       || 0)
+            initial_familiarity = instance.class_info(:default_familiarity) + (params[:familiarity_bonus] || 0)
+
+            instance.set_property(:skill,       initial_skill)
+            instance.set_property(:familiarity, initial_familiarity)
+
             instance.start_listening_for(:core)
         end
 
