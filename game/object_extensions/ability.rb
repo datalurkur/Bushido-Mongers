@@ -25,7 +25,7 @@ module Ability
         last_used = current_tick
 
         result = make_check
-        # FIXME - Perform a lookup to determine whether or not the result surpasses the difficulty
+        return result > Difficulty.value_of(difficulty)
     end
 
     def tick

@@ -44,6 +44,24 @@ module DataTables
     end
 end
 
+module Difficulty
+    def self.raw_values; [
+        [:trivial,     0.05],
+        [:pedestrian,  0.1],
+        [:easy,        0.2],
+        [:simple,      0.3]
+        [:normal,      0.4],
+        [:challenging, 0.5],
+        [:difficult,   0.6],
+        [:demanding,   0.7],
+        [:formidable,  0.9],
+        [:dicey,       0.9],
+        [:impossible,  1.0]
+    ]; end
+    def self.standard; :standard; end
+    extend DataTables
+end
+
 module Quality
     def self.raw_values; [
         [:atrocious,   0.1],
