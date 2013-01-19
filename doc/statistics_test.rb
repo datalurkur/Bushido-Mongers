@@ -1,3 +1,6 @@
+require 'rubygems'
+require 'gnuplot'
+
 class Float
     def pretty
         "%.3f" % self
@@ -37,6 +40,7 @@ def do_test_with(a,s,f)
     }
 end
 
+=begin
 stats_of(10000) { rand()*(0.5) }
 
 puts "=" * 100
@@ -68,3 +72,37 @@ puts "High skill / high familiarity"
 do_test_with(0.1, 0.75, 0.75)
 do_test_with(0.2, 0.75, 0.75)
 do_test_with(0.5, 0.75, 0.75)
+=end
+
+def familiarity_after(initial, scale, ticks, &block)
+    f = initial
+    datapoints = [f]
+    ticks.times do |i|
+        if block_given?
+            f = block.call(f, i)
+        end
+        f *= scale
+        datapoints << f
+    end
+    datapoints
+end
+
+size = 100
+Gnuplot.open do |gp|
+    Gnuplot::Plot.new(gp) do |plot|
+        plot.terminal 'png'
+        plot.output 'test.png'
+
+        plot.title  "Familiarity Loss"
+        plot.xlabel "ticks"
+        plot.ylabel "familiarity"
+
+        x = (0..size).to_a
+        y = familiarity_after(0.5, 0.99, size)
+
+        plot.data << Gnuplot::DataSet.new([x, y]) do |ds|
+            ds.title = "1% loss per tick"
+            ds.with = "linespoints"
+        end
+    end
+end

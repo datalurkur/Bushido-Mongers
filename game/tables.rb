@@ -36,12 +36,28 @@ module DataTables
     end
 
     def adjust(value, relative_value)
-        offset       = index_of(relative_value) - index_of(standard)
+        offset       = difference(standard, relative_value)
         normal_index = index_of(value)
 
         new_level = [[normal_index + offset, 0].max, @num_values.size].min
         value_at(new_level)
     end
+
+    def difference(base_value, relative_value)
+        index_of(relative_value) - index_of(base_value)
+    end
+end
+
+module Speed
+    def self.raw_values; [
+        [:glacial,   0.1],
+        [:slow,      0.5],
+        [:normal,    1.0],
+        [:fast,      2.0],
+        [:breakneck, 10.0]
+    ]; end
+    def self.standard; :normal; end
+    extend DataTables
 end
 
 module Difficulty
@@ -49,7 +65,7 @@ module Difficulty
         [:trivial,     0.05],
         [:pedestrian,  0.1],
         [:easy,        0.2],
-        [:simple,      0.3]
+        [:simple,      0.3],
         [:normal,      0.4],
         [:challenging, 0.5],
         [:difficult,   0.6],
@@ -58,7 +74,7 @@ module Difficulty
         [:dicey,       0.9],
         [:impossible,  1.0]
     ]; end
-    def self.standard; :standard; end
+    def self.standard; :normal; end
     extend DataTables
 end
 

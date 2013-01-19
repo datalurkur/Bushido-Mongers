@@ -2,10 +2,29 @@ abstract root ability {
     has float skill;
     has float familiarity;
 
-    class float default_skill;
-    class float default_familiarity;
+    /* Familiarity begins to degrade after this many ticks */
+    has int familiarity_loss;
+    familiarity_loss 10;
 
-    has int familiarity_loss; /* Familiarity begins to degrade after this many ticks */
+    /* The rate at which familiarity is lost (as a percentage) */
+    has float familiarity_loss_rate;
+    familiarity_loss_rate 0.1;
+
+    /* Gain this much familiarity every time you do the thing */
+    has float familiarity_gain_rate;
+    familiarity_gain_rate 0.02;
+
+    class optional sym associated_attribute;
+    class optional float attribute_scaling;
+
+    class float default_skill;
+    default_skill 0.2;
+
+    class float default_familiarity;
+    default_familiarity 0.0;
+
+    class float variance;
+    variance 0.2;
 
     uses ability;
 }
@@ -13,11 +32,9 @@ abstract root ability {
 ability hide {
     default_skill 0.2;
     default_familiarity 0.0;
-    familiarity_loss 100;
 }
 
 ability attack {
     default_skill 0.2;
     default_familiarity 0.0;
-    familiarity_loss 100;
 }
