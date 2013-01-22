@@ -89,7 +89,7 @@ module Commands
                     params[:agent],
                     params[:"#{p}_type_class"] || core.db.info_for(params[:command], p),
                     params[p],
-                    lookup_locs || []
+                    lookup_locs
                 )
             end
         end
@@ -103,7 +103,7 @@ module Commands
                 # TODO - there should be multiple ways to specify this.
                 params[:target] = params[:agent]
             elsif params[:target]
-                Commands.find_objects(core, params.merge(:needed = {:target => [:inventory, :position, :body]}))
+                Commands.find_objects(core, params.merge(:needed => {:target => [:inventory, :position, :body]}))
             else
                 # Assume the player wants a broad overview of what he can see, describe the room
                 params[:target] = params[:agent].absolute_position
@@ -166,6 +166,22 @@ module Commands
 
         def self.do(core, params)
             params[:agent].move_to(params[:target])
+        end
+    end
+
+    module Hide
+        def self.stage(core, params); end
+
+        def self.do(core, params)
+            params[:agent].set_property(actively_hiding, true)
+        end
+    end
+
+    module Unhide
+        def self.stage(core, params); end
+
+        def self.do(core, params)
+            params[:agent].set_property(actively_hiding, true)
         end
     end
 
