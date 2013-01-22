@@ -44,6 +44,14 @@ command drop {
     invocation drop;
 }
 
+command hide {
+    invocation hide;
+}
+
+command unhide {
+    invocation unhide;
+}
+
 abstract command construct {
     invocation construct;
 }

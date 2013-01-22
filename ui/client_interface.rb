@@ -124,7 +124,7 @@ module VerboseInterface
                     end
                 when :move
                     return Words.gen_move_description(message.properties)
-                when :attack, :get, :drop
+                when :attack, :get, :drop, :hide, :unhide
                     return Words.gen_sentence(message.properties)
                 else
                     return "I don't know how to express the results of a(n) #{message.properties[:command]}, pester zphobic to work on this"

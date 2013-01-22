@@ -173,7 +173,11 @@ module Commands
         def self.stage(core, params); end
 
         def self.do(core, params)
-            params[:agent].set_property(actively_hiding, true)
+            if params[:agent].get_property(:hidden)
+                raise "You are already hidden."
+            else
+                params[:agent].set_property(:hidden, true)
+            end
         end
     end
 
@@ -181,7 +185,11 @@ module Commands
         def self.stage(core, params); end
 
         def self.do(core, params)
-            params[:agent].set_property(actively_hiding, true)
+            if params[:agent].get_property(:hidden)
+                params[:agent].set_property(:hidden, false)
+            else
+                raise "You are not in hiding."
+            end
         end
     end
 

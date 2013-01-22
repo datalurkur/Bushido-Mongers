@@ -1,5 +1,8 @@
-karmic,aligned,corporeal,position character {
+karmic,aligned,corporeal,position,has_aspects character {
     uses character equipment;
+
+    attributes strength agility;
+    skills hide hammer_fighting;
 
     needs name;
 

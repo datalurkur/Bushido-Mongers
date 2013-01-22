@@ -10,3 +10,5 @@ move
 inspect
 destroy
 drop
+hide
+unhide

@@ -1,0 +1,26 @@
+abstract root aspect {
+    has float intrinsic;
+
+    class float default_intrinsic;
+    default_intrinsic 0.2;
+
+    class optional sym associated_attribute;
+    class optional float attribute_scaling;
+
+    class float variance;
+    variance 0.2;
+
+    uses aspect;
+}
+
+abstract root has_aspects {
+    has_many optional sym attributes;
+    has_many optional sym skills;
+
+    uses has_aspects;
+}
+
+abstract aspect attribute {}
+
+attribute strength {}
+attribute agility {}
