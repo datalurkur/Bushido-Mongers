@@ -74,21 +74,36 @@ module Commands
                 raise "Ambiguous: There are too many #{type_class} objects!"
             end
         end
+
+        # Requires standard param values: agent, command.
+        # Requires a parameter value :needed, which is a hash:
+        #  key: parameter to lookup.
+        #  value: where to look for the object, in order.
+        # Takes optional parameter value :'key'_type_class, where 'key' is a key of :needed.
+        def find_objects(core, params)
+            locations = Array(locations)
+            SharedObjectExtensions.check_required_params(params, params[:needed].keys + [:agent, :command])
+
+            params[:needed].each do |p, lookup_locs|
+                params[p] = Commands.lookup_object(
+                    params[:agent],
+                    params[:"#{p}_type_class"] || core.db.info_for(params[:command], p),
+                    params[p],
+                    lookup_locs || []
+                )
+            end
+        end
     end
 
     module Inspect
         def self.stage(core, params)
-            if params[:target]
+            Log.debug(params)
+            if params[:target] == :self || params[:target] == params[:agent].monicker
                 # Examine the agent.
                 # TODO - there should be multiple ways to specify this.
-                params[:target] = params[:agent] if params[:target] == :self
-
-                params[:target] = Commands.lookup_object(
-                    params[:agent],
-                    core.db.info_for(:inspect, :target),
-                    params[:target],
-                    [:position, :inventory, :body]
-                )
+                params[:target] = params[:agent]
+            elsif params[:target]
+                Commands.find_objects(core, params.merge(:needed = {:target => [:inventory, :position, :body]}))
             else
                 # Assume the player wants a broad overview of what he can see, describe the room
                 params[:target] = params[:agent].absolute_position
@@ -100,10 +115,8 @@ module Commands
 
     module Consume
         def self.stage(core, params)
-            SharedObjectExtensions.check_required_params(params, [:target])
-
-            edible_types    = (params[:agent].class_info(:consumes) || :consumable)
-            params[:target] = Commands.lookup_object(params[:agent], edible_types, params[:target], [:inventory, :position])
+            params[:target_type_class] = (params[:agent].class_info(:consumes) || core.db.info_for(params[:command], :target))
+            Commands.find_objects(core, params.merge(:needed => {:target => [:inventory, :position]}))
         end
 
         def self.do(core, params)
@@ -122,12 +135,7 @@ module Commands
 
     module Get
         def self.stage(core, params)
-            params[:target] = Commands.lookup_object(
-                params[:agent],
-                core.db.info_for(:inspect, :target),
-                params[:target],
-                [:position, :inventory]
-            )
+            Commands.find_objects(core, params.merge(:needed => {:target => [:position, :inventory]}))
         end
 
         def self.do(core, params)
@@ -137,12 +145,7 @@ module Commands
 
     module Drop
         def self.stage(core, params)
-            params[:target] = Commands.lookup_object(
-                params[:agent],
-                core.db.info_for(:drop, :target),
-                params[:target],
-                [:inventory]
-            )
+            Commands.find_objects(core, params.merge(:needed => {:target => [:inventory]}))
         end
 
         def self.do(core, params)
@@ -171,12 +174,8 @@ module Commands
             SharedObjectExtensions.check_required_params(params, [:target])
 
             # The target is an object and needs to be resolved
-            params[:target] = Commands.lookup_object(
-                params[:agent],
-                core.db.info_for(:attack, :target),
-                params[:target],
-                [:position]
-            )
+            params[:needed] = { :target => [:position] }
+            Commands.find_objects(core, params.merge(:needed => {:target => [:position]}))
         end
 
         def self.do(core, params)
