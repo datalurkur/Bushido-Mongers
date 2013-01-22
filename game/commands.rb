@@ -24,57 +24,6 @@ module Commands
             mod.do(core, params)
         end
 
-        def filter_objects(agent, location, type=nil, name=nil)
-            case location
-            when :position
-                # A player tied to a long pole can still grab apples
-                agent.absolute_position.objects.select do |object|
-                    object.matches(:type => type, :name => name)
-                end
-            when :inventory
-                return [] unless agent.uses?(Equipment)
-                # First, look through the basic items.
-                list = (agent.all_grasped_objects + agent.all_worn_objects).select do |object|
-                    object.matches(:type => type, :name => name)
-                end
-                # Then try searching in all the containers.
-                # First, look through the basic items.
-                list += agent.containers_in_inventory.select do |cont|
-                    cont.internal_objects(true) do |object|
-                        object.matches(:type => type, :name => name)
-                    end
-                end
-#            when :body
-                # FIXME: Search through all resident corporeals' bodies.
-#                []
-            else
-                Log.warning("#{location} lookups not implemented")
-                []
-            end
-        end
-
-        def lookup_object(agent, type_class, object, locations)
-            return object if (BushidoObject === object)
-
-            # Sort through the potentials and find out which ones match the query
-            potentials = []
-            locations.each do |location|
-                results = filter_objects(agent, location, type_class, object)
-                potentials.concat(results)
-                break unless potentials.empty?
-            end
-
-            case potentials.size
-            when 0
-                raise "No object #{object} found"
-            when 1
-                return potentials.first
-            else
-                # TODO - We should try re-searching here based on other descriptive information/heuristics.
-                raise "Ambiguous: There are too many #{type_class} objects!"
-            end
-        end
-
         # Requires standard param values: agent, command.
         # Requires a parameter value :needed, which is a hash:
         #  key: parameter to lookup.
@@ -85,8 +34,7 @@ module Commands
             SharedObjectExtensions.check_required_params(params, params[:needed].keys + [:agent, :command])
 
             params[:needed].each do |p, lookup_locs|
-                params[p] = Commands.lookup_object(
-                    params[:agent],
+                params[p] = params[:agent].find_object(
                     params[:"#{p}_type_class"] || core.db.info_for(params[:command], p),
                     params[p],
                     lookup_locs
@@ -97,7 +45,6 @@ module Commands
 
     module Inspect
         def self.stage(core, params)
-            Log.debug(params)
             if params[:target] == :self || params[:target] == params[:agent].monicker
                 # Examine the agent.
                 # TODO - there should be multiple ways to specify this.
@@ -173,10 +120,10 @@ module Commands
         def self.stage(core, params); end
 
         def self.do(core, params)
-            if params[:agent].get_property(:hidden)
+            if params[:agent].skill(:hide).get_property(:hidden)
                 raise "You are already hidden."
             else
-                params[:agent].set_property(:hidden, true)
+                params[:agent].skill(:hide).set_property(:hidden, true)
             end
         end
     end
@@ -185,8 +132,8 @@ module Commands
         def self.stage(core, params); end
 
         def self.do(core, params)
-            if params[:agent].get_property(:hidden)
-                params[:agent].set_property(:hidden, false)
+            if params[:agent].skill(:hide).get_property(:hidden)
+                params[:agent].skill(:hide).set_property(:hidden, false)
             else
                 raise "You are not in hiding."
             end

@@ -2,7 +2,7 @@
 abstract karmic,aligned,position npc {
     has optional sym behavior;
 
-    uses npc_behavior;
+    uses npc_behavior perception;
 
     class_many sym spawns_in;
 

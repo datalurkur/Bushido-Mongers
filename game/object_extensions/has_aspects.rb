@@ -1,8 +1,6 @@
 module HasAspects
     class << self
         def at_creation(instance, params)
-            Log.debug([instance.attributes, instance.skills])
-
             # These are the two kinds of aspects right now. Later there might be more.
             instance.attributes.each do |attribute|
                 instance.add_attribute(attribute)
@@ -10,8 +8,6 @@ module HasAspects
             instance.skills.each do |skill|
                 instance.add_skill(skill)
             end
-
-            Log.debug([instance.attributes, instance.skills])
         end
     end
 
@@ -30,16 +26,24 @@ module HasAspects
         @skills[skill] = @core.db.create(@core, skill_raw_name)
     end
 
+    def has_attribute?(attribute)
+        @attributes.has_key?(attribute)
+    end
+
     def attribute(attribute)
         raise "Not an attribute: #{attribute}" unless @core.db.is_type?(attribute, :attribute)
-        raise "Doesn't have attribute: #{attribute}" unless @attributes[attribute]
+        Log.warning("Doesn't have attribute: #{attribute}") unless @attributes[attribute]
         @attributes[attribute]
+    end
+
+    def has_skill?(skill)
+        @skills.has_key?(skill.to_s.gsub(/_skill$/, '').to_sym)
     end
 
     def skill(skill)
         skill_raw_name = (skill.to_s.match(/_skill$/) ? skill : "#{skill}_skill".to_sym)
         raise "Not a skill: #{skill}" unless @core.db.is_type?(skill_raw_name, :skill)
-        raise "Doesn't have skill: #{skill}" unless @skills[skill]
+        Log.warning("Doesn't have skill: #{skill}") unless @skills[skill]
         @skills[skill]
     end
 end

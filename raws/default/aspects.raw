@@ -24,3 +24,4 @@ abstract aspect attribute {}
 
 attribute strength {}
 attribute agility {}
+attribute perception {}

@@ -1,5 +1,5 @@
 karmic,aligned,corporeal,position,has_aspects character {
-    uses character equipment;
+    uses character perception equipment;
 
     attributes strength agility;
     skills hide hammer_fighting;
