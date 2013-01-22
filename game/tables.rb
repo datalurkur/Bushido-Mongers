@@ -144,4 +144,22 @@ module Size
     extend DataTables
 end
 
+module GenericAspect
+    def self.raw_values; [
+        [:atrocious,  0.05],
+        [:laughable,  0.1],
+        [:terrible,   0.2],
+        [:pathetic,   0.3],
+        [:mediocre,   0.4],
+        [:decent,     0.5],
+        [:good,       0.6],
+        [:excellent,  0.7],
+        [:great,      0.8],
+        [:superb,     0.9],
+        [:stupendous, 0.95]
+    ]; end
+    def self.standard; :decent; end
+    extend DataTables
+end
+
 DataTables.setup
