@@ -42,13 +42,11 @@ class BushidoObject
                 if @properties[property].empty? && !type_info[:has][property][:optional]
                     raise "Property #{property.inspect} has no values for #{@type}"
                 end
-            else
-                unless @properties[property]
-                    if type_info[:has][property][:optional]
-                        @properties[property] = nil
-                    else
-                        raise "Property #{property.inspect} has no value for #{@type}"
-                    end
+            elsif @properties[property].nil?
+                if type_info[:has][property][:optional]
+                    @properties[property] = nil
+                else
+                    raise "Property #{property.inspect} has no value for #{@type}"
                 end
             end
         end
