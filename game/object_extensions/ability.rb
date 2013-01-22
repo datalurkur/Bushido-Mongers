@@ -93,7 +93,7 @@ module Ability
     def languish
         # Exponentially decrease familiarity
         #  (familiarity loss slows as time spent away from a task increases)
-        new_level = clamp(get_property(:familiarity) *= (1.0 - get_property(:familiarity_loss_rate)))
+        new_level = clamp(get_property(:familiarity) * (1.0 - get_property(:familiarity_loss_rate)))
         set_property(:familiarity, new_level)
     end
 

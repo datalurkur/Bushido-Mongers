@@ -70,7 +70,7 @@ module Difficulty
         [:challenging, 0.5],
         [:difficult,   0.6],
         [:demanding,   0.7],
-        [:formidable,  0.9],
+        [:formidable,  0.8],
         [:dicey,       0.9],
         [:impossible,  1.0]
     ]; end
