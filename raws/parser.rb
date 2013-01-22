@@ -164,8 +164,8 @@ module ObjectRawParser
                             parent, type = statement_pieces[0..1]
                             abstract = false
                         end
-                        if typed_objects_hash.has_key?(type)
-                            Log.debug(["Ignoring duplicate type #{type}", statement, data])
+                        if typed_objects_hash.has_key?(type.to_sym)
+                            Log.warning(["Ignoring duplicate type #{type}", statement])
                             next
                         end
                         typed_objects_hash[type.to_sym] = {

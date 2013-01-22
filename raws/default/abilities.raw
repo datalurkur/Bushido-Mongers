@@ -1,9 +1,31 @@
-abstract root ability {
-    has float skill;
+abstract root aspect {
+    has float intrinsic;
+
+    class float default_intrinsic;
+    default_intrinsic 0.2;
+
+    class optional sym associated_attribute;
+    class optional float attribute_scaling;
+
+    class float variance;
+    variance 0.2;
+
+    uses aspect;
+}
+
+abstract aspect attribute {}
+
+attribute strength {}
+attribute agility {}
+
+abstract aspect skill {
     has float familiarity;
 
+    class float default_familiarity;
+    default_familiarity 0.0;
+
     /* Familiarity begins to degrade after this many ticks */
-    has int familiarity_loss;
+    class int familiarity_loss;
     familiarity_loss 10;
 
     /* The rate at which familiarity is lost (as a percentage) */
@@ -14,27 +36,21 @@ abstract root ability {
     has float familiarity_gain_rate;
     familiarity_gain_rate 0.02;
 
-    class optional sym associated_attribute;
-    class optional float attribute_scaling;
-
-    class float default_skill;
-    default_skill 0.2;
-
-    class float default_familiarity;
-    default_familiarity 0.0;
-
-    class float variance;
-    variance 0.2;
-
-    uses ability;
+    uses skill;
 }
 
-ability hide {
-    default_skill 0.2;
+skill hide {
+    default_intrinsic 0.2;
     default_familiarity 0.0;
+
+    associated_attribute agility;
+    attribute_scaling 0.2;
 }
 
-ability attack {
-    default_skill 0.2;
+skill hammer_fighting {
+    default_intrinsic 0.2;
     default_familiarity 0.0;
+
+    associated_attribute strength;
+    attribute_scaling 0.2;
 }
