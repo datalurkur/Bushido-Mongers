@@ -1,18 +1,3 @@
-/* Must be of type npc to spawn */
-abstract karmic,aligned,position npc {
-    has optional sym behavior;
-
-    uses npc_behavior perception;
-
-    class_many sym spawns_in;
-
-    /* Maybe use eventually? */
-    /* class_many sym never_spawn_in; */
-
-    class sym spawn_chance;
-    spawn_chance coin_toss;
-}
-
 abstract npc monster {
     factions enemy;
 }

@@ -21,11 +21,3 @@ abstract root has_aspects {
 }
 
 abstract aspect attribute {}
-
-attribute strength {}
-attribute perception {}
-attribute endurance {}
-attribute charisma {}
-attribute intelligence {}
-attribute agility {}
-attribute luck {}

@@ -1,0 +1,7 @@
+attribute strength {}
+attribute perception {}
+attribute endurance {}
+attribute charisma {}
+attribute intelligence {}
+attribute agility {}
+attribute luck {}

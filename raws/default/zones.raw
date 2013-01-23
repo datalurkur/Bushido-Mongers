@@ -1,27 +1,3 @@
-abstract root zone {
-    /* How deep in the world hierarchy the zone can be created. */
-    class_many int depth_range;
-    depth_range 0;
-
-    /* Acceptable sub-zones */
-    class_many optional sym child_zones;
-
-    has_many sym keywords;
-/*    needs keywords; */
-
-    class_many optional sym optional_keywords;
-
-    /* Can spawn NPCs */
-    class_many optional sym spawn_npcs;
-
-    /* Can spawn items */
-    class_many optional sym spawn_items;
-    spawn_items rock;
-
-    class sym sideness;
-    sideness outside;
-}
-
 zone haven {
     depth_range 1 2 3;
     keywords peaceful;
@@ -95,23 +71,3 @@ zone temple_that_serves_as_the_final_bastion_of_light_in_an_otherwise_evil_fores
     keywords shiny joke_zone;
 }
 */
-
-post_process {
-    name = :spawn_npcs
-    self.find_subtypes(:zone, {}, true).each do |zone|
-        unless list = info_for(zone, name).empty?
-            set_info(zone, name,
-                modify_info(zone, name, []).map { |spawns| types_of(spawns) }.flatten.uniq
-            )
-        end
-    end
-    self.find_subtypes(:npc, {}, true).each do |npc|
-        if spawns_in = info_for(npc, :spawns_in)
-            spawns_in.each do |zone|
-                set_info(zone, name,
-                    (modify_info(zone, name, []) + [npc]).uniq
-                )
-            end
-        end
-    end
-}

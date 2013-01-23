@@ -1,8 +1,3 @@
-abstract composition container {
-    mutable_container_classes     internal            external;
-    preserved_container_classes   internal            external;
-}
-
 abstract equipment,container backpack {
     slot humanoid_body;
     size medium;

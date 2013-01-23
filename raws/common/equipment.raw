@@ -1,0 +1,32 @@
+abstract item equipment {
+    class sym slot;
+
+    /* Protection can be based on a modifier manipulated by the material properties */
+    class int protection;
+    protection 0;
+
+    size small;
+}
+
+abstract root weapon {
+    /* TODO - Work out the slot (or slots) a weapon can go in based on its handedness */
+    class sym handedness;
+    class sym type;
+}
+
+abstract weapon melee_weapon {}
+
+abstract weapon ranged_weapon {}
+
+abstract root ammunition {}
+
+post_process {
+    self.find_subtypes(:equipment, {}, true).each do |equipment|
+        Log.debug("Propagating slot information for #{equipment}")
+        propagate_recursive(info_for(equipment, :slot)) do |subtype|
+            raise "Can't equip on unequippable part #{subtype}!" unless is_type?(subtype, :body_part_can_wear)
+            Log.debug("#{subtype} can equip #{equipment}")
+            modify_info(subtype, :can_equip, []) << equipment
+        end
+    end
+}

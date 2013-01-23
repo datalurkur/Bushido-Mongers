@@ -1,0 +1,61 @@
+/*
+    A corporeal is a special type of thing that is incidentally composed of a body.
+    Doing damage to the corporeal damages the body, and upon death the incidental composition
+      is dropped into the world as a corpse
+    TODO : Figure out how to impart the corpse with some of the information of the NPC / character
+*/
+abstract composition_root corporeal {
+    has sym size;
+    class sym body_type;
+    class optional sym consumes;
+    class optional proc on_consume;
+
+    /* The body is the incidental. */
+    container_classes             incidental;
+    preserved_container_classes   incidental;
+    has_many optional sym         incidental;
+
+    uses corporeal;
+}
+
+abstract root adjustable_size {
+    class sym typical_size;
+    needs relative_size;
+
+    uses adjustable_size;
+}
+
+abstract item,composition,adjustable_size body_part {
+    has int hp;
+
+    /* Body parts are worthless by default */
+    value 0;
+}
+
+/* An extra container class for worn objects, since they've got some special semantics. */
+abstract body_part body_part_can_wear {
+    container_classes           worn;
+    mutable_container_classes   worn;
+    /* Worn objects always preserved through destruction? */
+    preserved_container_classes worn;
+    has_many optional sym worn;
+}
+
+/* An extra container class for grasped objects, since they've got some special semantics. */
+abstract body_part_can_wear grasping_body_part {
+    container_classes           grasped;
+    mutable_container_classes   grasped;
+    /* Grasped objects always preserved through destruction */
+    preserved_container_classes grasped;
+    has_many optional sym grasped;
+}
+
+/* This is for parts that can hold but can't wear anything, e.g. a mouth. */
+abstract body_part holding_body_part {
+    container_classes           grasped;
+    mutable_container_classes   grasped;
+    /* Grasped objects always preserved through destruction */
+    preserved_container_classes grasped;
+    has_many optional sym grasped;
+}
+

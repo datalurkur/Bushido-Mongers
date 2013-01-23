@@ -135,13 +135,16 @@ module ObjectRawParser
         end
 
         def raws_list(group)
-            group_dir = File.join(RAWS_LOCATION, group)
-            unless File.exists?(group_dir)
-                raise "No object group #{group} exists"
+            group_dir  = File.join(RAWS_LOCATION, group)
+            common_dir = File.join(RAWS_LOCATION, "common")
+            get_raws_from_dir(group_dir) + get_raws_from_dir(common_dir)
+        end
+
+        def get_raws_from_dir(dir)
+            unless File.exists?(dir)
+                raise "No object directory #{dir} exists"
             end
-            Dir.entries(group_dir).select { |file| file.match(/\.raw$/) }.collect do |file|
-                File.join(group_dir, file)
-            end
+            Dir.glob(File.join(dir, "*")).select { |file| file.match(/\.raw$/) }
         end
 
         def collect_raws_metadata(group)
