@@ -1,6 +1,8 @@
 require 'socket'
 require 'openssl'
+require './net/defaults'
 require './util/log'
+require './util/message_buffer'
 
 $ruby_irc_version = "NinjaBot v0.1"
 
@@ -17,8 +19,8 @@ class IRCConduit
             @version          = $ruby_irc_version
 
             @primary_callback = primary_callback
-            @mutexes          = {}
             @buffers          = {}
+            @pipes            = {}
 
             setup_ssl("data/cert.crt")
             connect
@@ -28,15 +30,30 @@ class IRCConduit
             send_raw_message "PRIVMSG #{target} :#{message}"
         end
 
+        def first_message_from?(target)
+            @users ||= Set.new
+            if @users.include?(target)
+                return false
+            else
+                @users.add(target)
+                return true
+            end
+        end
+        def get_buffer(target); (@buffers[target] ||= MessageBuffer.new); end
+        def read_pipe(target);  (@pipes[target] ||= IO.pipe).first; end
+        def write_pipe(target); (@pipes[target] ||= IO.pipe).last; end
+        def close_pipe(target)
+            @pipes[target].each(&:close)
+            @pipes.delete(target)
+        end
+
         # Blocking
         def gets(target)
             message = nil
-            while message.nil?
-                @mutexes[target].synchronize do
-                    unless @buffers[target].empty?
-                        message = @buffers.shift
-                    end
-                end
+            until message
+                Log.debug("Getting IRC response", 6)
+                data = read_pipe(target).read_nonblock(DEFAULT_BUFFER_SIZE)
+                message = get_buffer(target).unpack_message(data)
             end
             message
         end
@@ -82,20 +99,20 @@ class IRCConduit
                 @listen_thread = Thread.new do
                     begin
                         Log.name_thread("IRC")
-                        while true
-                            read_buffer = @primary_socket.gets
-                            if read_buffer.length > 0
-                                process_raw_message(read_buffer)
+                        begin
+                            while true
+                                data = @primary_socket.gets
+                                process_raw_message(data) if data.length > 0
                             end
+                        rescue Exception => e
+                            Log.error(["Processing error - #{e.message}", e.backtrace])
                         end
                         Log.debug("Thread exiting")
-                    rescue Exception => e
-                        Log.debug(["Thread exited abnormally",e.message,e.backtrace])
+                        disconnect
                     end
                 end
 
                 Log.debug("Thread is listening")
-
                 identify
             else
                 Log.debug("IRC instance #{self.inspect} is already connected!")
@@ -106,10 +123,13 @@ class IRCConduit
             if @connected
                 Log.debug("Disconnecting from IRC")
 
-                @sockets_to_close.each { |socket|
+                @users.each do |user|
+                    close_pipe(user)
+                end
+                @sockets_to_close.each do |socket|
                     Log.debug("Closing socket #{socket.inspect}",3)
                     socket.close
-                }
+                end
                 @connected = false
             else
                 Log.debug("IRC instance #{self.inspect} is not connected")
@@ -141,7 +161,6 @@ class IRCConduit
 
         def send_raw_message(message)
             if @connected
-                #Log.debug("Sent: #{message}")
                 @primary_socket.puts(message)
             end
         end
@@ -211,17 +230,16 @@ class IRCConduit
                     case to_parse[:type]
                     when :whisper
                         user = to_parse[:params][:agent]
-                        unless @mutexes[user]
-                            @mutexes[user] = Mutex.new
-                            @buffers[user] = []
+                        if first_message_from?(user)
                             @primary_callback.new_irc_user(user)
                         end
-                        @mutexes[user].synchronize { @buffers[user] << message }
+                        data = get_buffer(user).pack_message(message)
+                        write_pipe(user).write(data)
                     else
                         Log.debug("Ignoring message type #{to_parse[:type]}")
                     end
                 rescue Exception => e
-                    Log.debug("Failed to parse message - #{e.message}")
+                    Log.debug(["Failed to parse message - #{e.message}", e.backtrace])
                 end
             end
         end

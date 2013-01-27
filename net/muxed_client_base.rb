@@ -21,7 +21,6 @@ class MuxedClientBase
     end
 
     def connect(ip, port)
-        raise "Can't attempt to connect until client has started" unless @setup
         @socket = TCPSocket.new(ip,port)
     end
 
