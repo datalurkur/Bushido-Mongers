@@ -83,3 +83,11 @@ class Object
         end
     end
 end
+
+def time_block(name, &block)
+    i   = Time.now
+    ret = yield
+    j   = Time.now
+    Log.debug("#{name} in #{j - i} seconds")
+    ret
+end

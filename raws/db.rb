@@ -10,8 +10,10 @@ class ObjectDB
                 # TODO - Implement some caching scheme so that we don't have to parse the raws every time
                 #      - Parse the raws and then re-save them as a parsed Marshalled hash with a checksum to validate whether the parsed data is current)
 
-                @object_groups[group] = ObjectRawParser.fetch(group)
-                verify_class_values(@object_groups[group])
+                time_block("Raws fetched") do
+                    @object_groups[group] = ObjectRawParser.fetch(group)
+                    verify_class_values(@object_groups[group])
+                end
             end
             @object_groups[group]
         end

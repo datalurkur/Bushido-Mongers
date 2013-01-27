@@ -22,7 +22,7 @@ Log.debug(["Number of types of items:", db.types_of(:item).size])
 # Basic item creation tests
 test_item_type = :helmet
 Log.debug("Creating a #{test_item_type}")
-test_item_args = {:quality => :fine, :components => [db.create($core, :iron_ingot)], :position => FakeRoom.new}
+test_item_args = {:quality => :fine, :components => [db.create($core, :iron)], :position => FakeRoom.new}
 test_item = db.create($core, test_item_type, test_item_args)
 Log.debug("Test item is a metal? #{test_item.is_type?(:metal)}")
 Log.debug("Test item is a constructable? #{test_item.is_type?(:constructed)}")

@@ -32,8 +32,10 @@ abstract item,composition,adjustable_size body_part {
     value 0;
 }
 
+abstract body_part body {}
+
 /* An extra container class for worn objects, since they've got some special semantics. */
-abstract body_part body_part_can_wear {
+extension_of body_part can_wear {
     container_classes           worn;
     mutable_container_classes   worn;
     /* Worn objects always preserved through destruction? */
@@ -42,20 +44,10 @@ abstract body_part body_part_can_wear {
 }
 
 /* An extra container class for grasped objects, since they've got some special semantics. */
-abstract body_part_can_wear grasping_body_part {
+extension_of body_part can_grasp {
     container_classes           grasped;
     mutable_container_classes   grasped;
     /* Grasped objects always preserved through destruction */
     preserved_container_classes grasped;
     has_many optional sym grasped;
 }
-
-/* This is for parts that can hold but can't wear anything, e.g. a mouth. */
-abstract body_part holding_body_part {
-    container_classes           grasped;
-    mutable_container_classes   grasped;
-    /* Grasped objects always preserved through destruction */
-    preserved_container_classes grasped;
-    has_many optional sym grasped;
-}
-

@@ -37,15 +37,18 @@ constructed,melee_weapon dagger {
 constructed,melee_weapon hammer {
     type blunt;
     handedness one;
+    required_components wood metal leather;
     technique craft;
 }
 
 constructed,ranged_weapon bow {
     type piercing;
     handedness two;
+    required_components thread wood;
     technique bowmaking;
 }
 
 constructed,ammunition arrow {
+    required_components wood metal feather;
     technique fletching;
 }

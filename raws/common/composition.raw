@@ -1,8 +1,27 @@
+abstract root symmetry_type {
+    has_many string primary_directions;
+    has_many optional string secondary_directions;
+    has_many optional string tertiary_directions;
+}
+
+symmetry_type balanced_axial {
+    primary_directions left right;
+    secondary_directions front rear;
+    tertiary_directions interior anterior;
+}
+
 abstract root composition_root {
     has_many sym container_classes;
     has_many optional sym mutable_container_classes;
     has_many optional sym preserved_container_classes;
     has_many optional sym added_value_container_classes;
+
+    has_many optional map symmetric {
+        int count;
+        sym container_class;
+        sym object_type;
+        sym symmetry_type;
+    }
 
     uses composition;
 }
@@ -36,7 +55,12 @@ abstract composition constructed {
 post_process {
     Log.debug("Propagating component information for constructed objects", 7)
     types_of(:constructed, true).each do |constructed|
-        info_for(constructed, :required_components).each do |component|
+        components = info_for(constructed, :required_components)
+        if components.nil?
+            Log.error("No components present for #{constructed.inspect}")
+            next
+        end
+        components.each do |component|
             propagate_recursive(component) do |subtype|
                 Log.debug("#{subtype} is used in #{constructed}", 7)
                 name = :used_in

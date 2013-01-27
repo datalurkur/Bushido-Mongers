@@ -5,8 +5,13 @@ abstract material metal {
 }
 
 abstract material leather {}
+abstract material wood {}
+abstract material thread {}
 
-abstract metal iron {
+metal iron {
+    weight 10;
+    value 5;
+    size small;
     melting_point 1538;
 }
 
@@ -22,8 +27,26 @@ leather leather_scrap {
     size tiny;
 }
 
-iron iron_ingot {
+wood alder {
     value 10;
-    weight 5;
+    weight 2;
     size small;
 }
+
+thread silk {
+    value 50;
+    weight 0.1;
+    size tiny;
+}
+
+material feather {
+    value 5;
+    weight 0.1;
+    size tiny;
+}
+
+material,constructed ingot {
+    required_components metal;
+    technique forge;
+}
+

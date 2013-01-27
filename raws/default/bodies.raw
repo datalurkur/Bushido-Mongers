@@ -3,71 +3,55 @@ consumable,adjustable_size flesh {
     weight 1;
 }
 
-abstract root body {}
-abstract body biped {}
-abstract body quadriped {}
-abstract body octiped {}
+extension_of body biped {
+    symmetric {
+        object_type leg;
+        container_class external;
+        symmetry_type balanced_axial;
+        count 2;
+    }
+}
 
-post_process {
-    duplicate_object(:arm, :left_arm)
-    duplicate_object(:arm, :right_arm)
-    duplicate_object(:leg, :left_leg)
-    duplicate_object(:leg, :right_leg)
-    Log.debug("Adding limbs to bipeds")
-    types_of(:biped).each do |biped|
-        modify_info(biped, :external).concat([
-            :left_arm,
-            :right_arm,
-            :left_leg,
-            :right_leg
-        ])
-    end
+extension_of body quadriped {
+    symmetric {
+        object_type leg;
+        container_class external;
+        symmetry_type balanced_axial;
+        count 4;
+    }
+}
 
-    duplicate_object(:leg, :left_front_leg)
-    duplicate_object(:leg, :left_rear_leg)
-    duplicate_object(:leg, :right_front_leg)
-    duplicate_object(:leg, :right_rear_leg)
-    types_of(:quadriped).each do |qp|
-        modify_info(qp, :external).concat([
-            :left_front_leg,
-            :left_rear_leg,
-            :right_front_leg,
-            :right_rear_leg
-        ])
-    end
-
-    duplicate_object(:leg, :left_front_anterior_leg)
-    duplicate_object(:leg, :left_front_posterior_leg)
-    duplicate_object(:leg, :left_rear_anterior_leg)
-    duplicate_object(:leg, :left_rear_posterior_leg)
-    duplicate_object(:leg, :right_front_anterior_leg)
-    duplicate_object(:leg, :right_front_posterior_leg)
-    duplicate_object(:leg, :right_rear_anterior_leg)
-    duplicate_object(:leg, :right_rear_posterior_leg)
-    types_of(:octiped).each do |op|
-        modify_info(op, :external).concat([
-            :left_front_anterior_leg,
-            :left_front_posterior_leg,
-            :left_rear_anterior_leg,
-            :left_rear_posterior_leg,
-            :right_front_anterior_leg,
-            :right_front_posterior_leg,
-            :right_rear_anterior_leg,
-            :right_rear_posterior_leg
-        ])
-    end
+extension_of body octiped {
+    symmetric {
+        object_type leg;
+        container_class external;
+        symmetry_type balanced_axial;
+        count 8;
+    }
 }
 
 /* Basically, this is the equivalent of a torso */
-biped,body_part_can_wear humanoid_body {
+body,biped,can_wear humanoid_body {
     weight 15;
     incidental flesh;
     typical_size medium;
     internal liver;
     external head;
+    symmetric {
+        object_type arm;
+        container_class external;
+        symmetry_type balanced_axial;
+        count 2;
+    }
+    symmetric {
+        object_type kidney;
+        container_class internal;
+        symmetry_type balanced_axial;
+        count 2;
+    }
 }
 
-octiped,body_part arachnoid_body {
+body,octiped arachnoid_body {
     weight 10;
     incidental flesh;
     typical_size medium;
@@ -75,58 +59,58 @@ octiped,body_part arachnoid_body {
     external carapace;
 }
 
-quadriped,body_part rodent_body {
+body,quadriped rodent_body {
     weight 2;
     incidental flesh;
     typical_size small;
     external head tail;
 }
 
-quadriped,body_part ungulate_body {
+body,quadriped ungulate_body {
     weight 200;
     incidental flesh;
     typical_size large;
     external head tail;
 }
 
-body_part_can_wear head {
+body_part,can_wear head {
     weight 4;
     typical_size small;
     external mouth;
 }
 
-holding_body_part mouth {
+body_part,can_grasp mouth {
     weight 0.5;
     typical_size tiny;
 }
 
-body_part_can_wear arm {
+body_part,can_wear arm {
     weight 5;
     incidental flesh;
     typical_size small;
     external hand;
 }
 
-grasping_body_part hand {
+body_part,can_wear,can_grasp hand {
     weight 2;
     incidental flesh;
     typical_size small;
 }
 
-body_part_can_wear leg {
+body_part,can_wear leg {
     weight 10;
     incidental flesh;
     typical_size small;
     external foot;
 }
 
-body_part_can_wear foot {
+body_part,can_wear foot {
     weight 4;
     incidental flesh;
     typical_size small;
 }
 
-body_part_can_wear carapace {
+body_part,can_wear carapace {
     weight 15;
     incidental flesh;
     typical_size small;
@@ -146,6 +130,12 @@ body_part tail {
 
 body_part liver {
     weight 3;
+    incidental flesh;
+    typical_size small;
+}
+
+body_part kidney {
+    weight 2;
     incidental flesh;
     typical_size small;
 }

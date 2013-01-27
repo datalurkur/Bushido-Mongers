@@ -30,9 +30,11 @@ Defines a block of ruby code to be executed once the database has been completel
 
 OBJECT STATEMENTS
 =================
-Format: [abstract] <parent type(s)> <type>
+Format: [abstract / extension_of] <parent type(s)> <type>
 
 An "abstract" object is an object not to be instantiated, but to provide a means of categorizing a group of common objects and specifying properties and default values for those objects.
+
+An "extension_of" object is an object not to be instantiated, but to provide a means of adding certain properties to another object of the parent type.  Such an object can never be the parent of an object that does not also share its parent object.  Care should be taken when constructing extension objects, since they potentially present a diamond-problem scenario whose behavior is undefined. Extensions are implicitly abstract
 
 An object inherits all the properties, necessary parameters, creation procs, and default values of its parent object(s) (note that this is recursive). Multiple parent objects are delimited using commas (note that whitespace is not allowed within the comma-delimited list).
 
@@ -56,7 +58,7 @@ Description: None
     The "class" variants indicate that the property is class information only and is not to be propagated into instantiated objects.  Note that property names must still be unique across "has" and "class".
     The "optional" tag indicates that this property does not necessarily contain a value.
 Format: "has" / "has_many" [optional] <property type> <property name>
-Description: None
+Description: None (except for the "map" type, which has a list of property assignments)
 
 "needs"
     Indicates that, in order to be instantiated, this object must be given the arguments listed.
@@ -120,7 +122,11 @@ module ObjectRawParser
             Log.debug("Performing #{post_processes.size} post-processing steps on database")
             db = ObjectDB.new(object_database, group_hash(group))
             post_processes.each do |raw_code|
-                eval(raw_code, db.get_binding, __FILE__, __LINE__)
+                begin
+                    eval(raw_code, db.get_binding, __FILE__, __LINE__)
+                rescue Exception => e
+                    Log.error(["Failed to evaluate post-processing code", raw_code, e.message, e.backtrace])
+                end
             end
             db
         end
@@ -154,47 +160,59 @@ module ObjectRawParser
                 Log.debug("Parsing file #{raw_file}")
                 raw_data = File.read(raw_file)
                 raw_data.gsub!(/\/\*(.*?)\*\//m, '')
-                raw_chunks = separate_lexical_chunks(raw_data)
-                raw_chunks.each do |statement, data|
-                    statement_pieces = statement.split(/\s+/)
-                    if statement_pieces[0] == "post_process"
+                separate_lexical_chunks(raw_data).each do |statement, data|
+                    chunks = statement.split(/\s+/)
+                    if chunks[0] == "post_process"
                         post_processes << data
-                    else
-                        if statement_pieces[0] == "abstract"
-                            parent, type = statement_pieces[1..2]
-                            abstract = true
-                        else
-                            parent, type = statement_pieces[0..1]
-                            abstract = false
-                        end
-                        if typed_objects_hash.has_key?(type.to_sym)
-                            Log.warning(["Ignoring duplicate type #{type}", statement])
-                            next
-                        end
-                        typed_objects_hash[type.to_sym] = {
-                            :abstract => abstract,
-                            :is_type  => parent.split(/,/).collect { |p| p.to_sym },
-                            :data     => data,
-                        }
+                        next
                     end
+
+                    case chunks[0]
+                    when "abstract"
+                        abstract     = true
+                        parents      = chunks[1].split(/,/).collect(&:to_sym)
+                        type         = chunks[2].to_sym
+                    when "extension_of"
+                        abstract     = true
+                        extension_of = chunks[1].to_sym
+                        parents      = [:root]
+                        type         = chunks[2].to_sym
+                    else
+                        parents      = chunks[0].split(/,/).collect(&:to_sym)
+                        type         = chunks[1].to_sym
+                    end
+
+                    if typed_objects_hash.has_key?(type)
+                        Log.warning(["Ignoring duplicate type #{type}", statement])
+                        next
+                    end
+
+                    object_metadata = {
+                        :is_type  => parents,
+                        :data     => data,
+                    }
+                    object_metadata[:abstract]     = true         if abstract
+                    object_metadata[:extension_of] = extension_of if extension_of
+
+                    typed_objects_hash[type] = object_metadata
                 end
             end
             [typed_objects_hash, post_processes]
         end
 
         # FIXME - Eventually, we'll want to handle the exceptions in this method gracefully rather than crashing
-        def parse_object(next_object, unparsed_objects, metadata, object_database)
-            Log.debug("Parsing object #{next_object.inspect}", 8)
+        def parse_object(object_type, unparsed_objects, metadata, object_database)
+            Log.debug("Parsing object #{object_type.inspect}", 8)
 
             # Do some sanity checking
-            unless metadata.has_key?(next_object)
-                raise "Object metadata not found for #{next_object.inspect}"
+            unless metadata.has_key?(object_type)
+                raise "Object metadata not found for #{object_type.inspect}"
             end
-            if object_database.has_key?(next_object)
-                raise "Database information already exists for #{next_object}"
+            if object_database.has_key?(object_type)
+                raise "Database information already exists for #{object_type}"
             end
 
-            object_metadata = metadata[next_object]
+            object_metadata = metadata[object_type]
 
             # Ensure parents have already been parsed all the way up to the root object
             object_metadata[:is_type].each do |parent|
@@ -202,6 +220,13 @@ module ObjectRawParser
                     unparsed_objects.delete(parent)
                     parse_object(parent, unparsed_objects, metadata, object_database)
                 end
+            end
+
+            # If this object is an extension, make sure the object it extends has been loaded as well
+            extension_of = object_metadata[:extension_of]
+            if extension_of && !object_database.has_key?(extension_of)
+                unparsed_objects.delete(extension_of)
+                parse_object(extension_of, unparsed_objects, metadata, object_database)
             end
 
             # Check for duplicate parent classes
@@ -219,13 +244,14 @@ module ObjectRawParser
                 duplicate_elements = inheritance_list.select do |parent|
                     inheritance_list.index(parent) != inheritance_list.rindex(parent)
                 end.uniq
-                Log.warning(["Object #{next_object} has duplicate parents in its inheritance list", duplicate_elements])
+                Log.warning(["Object #{object_type} has duplicate parents in its inheritance list", duplicate_elements])
                 raise "Object has duplicate parents"
             end
 
             # Begin accumulating object data for the database
             object_data = {
                 :abstract       => object_metadata[:abstract],
+                :extension_of   => object_metadata[:extension_of],
                 :is_type        => object_metadata[:is_type].dup,
                 :uses           => [],
                 :has            => {},
@@ -242,118 +268,118 @@ module ObjectRawParser
             # Since this happens for every object (including abstract objects) we only need to do it for one level of parents
             # Do this backwards to respect parent ordering (most significant first)
             object_data[:is_type].reverse.each do |parent|
-                #Log.debug("Merging properties of #{parent} into #{next_object}", 8)
-                unless parent == :root
-                    parent_object = object_database[parent]
-                    raise "Parent object type '#{parent}' not abstract!" unless parent_object[:abstract]
+                next if parent == :root
+                parent_object = object_database[parent]
+                raise "Parent object type '#{parent}' not abstract!" unless parent_object[:abstract]
 
-                    [:uses, :has, :needs, :class_values].each do |key|
-                        # Just dup isn't enough here, because occasionally we have an array within a hash that doesn't get duped properly
-                        dup_data = Marshal.load(Marshal.dump(parent_object[key]))
-                        #Log.debug(["Dup data is ", dup_data], 8)
-                        case dup_data
-                        when Array
-                            object_data[key].concat(dup_data)
-                            object_data[key].uniq!
-                        when Hash
-                            object_data[key].merge!(dup_data)
-                        else
-                            raise "Parser doesn't know how to merge attributes of type #{dup_data.class}"
-                        end
-                    end
-
-                    parent_object[:subtypes] << next_object
+                [:uses, :has, :needs, :class_values].each do |key|
+                    object_data[key] = merge_complex(object_data[key], parent_object[key])
                 end
+
+                parent_object[:subtypes] << object_type
             end
 
             if object_metadata[:data]
                 # Chunk up the lexical pieces of this object definition and deal with them one-by-one
                 separate_lexical_chunks(object_metadata[:data]).each do |statement, data|
-                    statement_pieces = statement.split(/\s+/)
-                    case statement_pieces[0]
-                    when "uses"
-                        Log.debug("#{next_object} uses #{statement_pieces[1..-1].inspect}", 8)
-                        raise "Insufficient arguments in #{statement.inspect}" unless statement_pieces.size >= 2
-                        modules = statement_pieces[1..-1].collect do |m|
+                    chunks          = statement.split(/\s+/)
+                    expression_type = chunks.shift.to_sym
+
+                    case expression_type
+                    when :uses
+                        Log.debug("#{object_type} uses #{chunks.inspect}", 8)
+                        raise "Insufficient arguments in #{statement.inspect}" if chunks.empty?
+
+                        modules = chunks.collect do |m|
                             begin
                                 m.to_caml.to_const
                             rescue
                                 raise "Failed to load object extension #{m.inspect}"
                             end
                         end.compact
+
                         object_data[:uses].concat(modules)
-                    when "has","has_many","class","class_many"
-                        class_only, multiple = case statement_pieces[0]
-                        when "has";        [false, false]
-                        when "has_many";   [false, true]
-                        when "class";      [true,  false]
-                        when "class_many"; [true,  true]
+                    when :has, :has_many, :class, :class_many
+                        class_only, multiple = case expression_type
+                        when :has;        [false, false]
+                        when :has_many;   [false, true]
+                        when :class;      [true,  false]
+                        when :class_many; [true,  true]
                         end
-                        optional = (statement_pieces[1] == "optional")
-                        min_args = (optional ? 4 : 3)
-                        unless statement_pieces.size >= min_args
-                            raise "Insufficient arguments in #{statement.inspect}" 
+                        if chunks.first == "optional"
+                            optional = true
+                            chunks.shift
                         end
-                        type, field = if optional
-                            statement_pieces[2..3]
-                        else
-                            statement_pieces[1..2]
-                        end.collect(&:to_sym)
-                        object_data[:has][field] = {
-                            :class_only => class_only,
-                            :type       => type
-                        }
-                        object_data[:has][field][:optional] = true if optional
+                        property_type, property = chunks.shift(2).collect(&:to_sym)
+                        raise "Insufficient arguments in #{statement.inspect}" if property_type.nil? || property.nil?
+                        object_data[:has][property] = {:type => property_type}
 
-                        if multiple
-                            object_data[:has][field][:multiple] = true
-                            object_data[:class_values][field] ||= []
+                        # Perform the optional key assignments this way so we don't pollute the has with keys that have nil values
+                        object_data[:has][property][:optional]   = true if optional
+                        object_data[:has][property][:class_only] = true if class_only
+                        object_data[:has][property][:multiple]   = true if multiple
+
+                        if optional && multiple
+                            object_data[:class_values][property] ||= []
                         end
 
-                        #Log.debug(["Added property #{field}", object_data])
-                    when "needs"
-                        raise "Insufficient arguments in #{statement.inspect}" unless statement_pieces.size >= 2
-                        object_data[:needs].concat(statement_pieces[1..-1].collect { |piece| piece.to_sym })
-                    else
-                        field = statement_pieces[0].to_sym
-                        unless object_data[:has].has_key?(field)
-                            raise "Property #{field.inspect} not found for object #{next_object.inspect}"
-                        end
-
-                        field_type = object_data[:has][field][:type]
-                        raw_values = case field_type
-                        when :proc; [data]
-                        else;       statement_pieces[1..-1]
-                        end
-                        values     = raw_values.collect do |piece|
-                            case field_type
-                            when :string,:proc
-                                piece
-                            when :sym
-                                piece.to_sym
-                            when :int
-                                piece.to_i
-                            when :float
-                                piece.to_f
-                            when :bool
-                                (piece == "true")
-                            else
-                                raise "Unsupported property type #{object_data[:has][field][:type].inspect}"
+                        case property_type
+                        when :map
+                            # Parse the key / value definitions
+                            object_data[:has][property][:keys] ||= {}
+                            separate_lexical_chunks(data).each do |substatement, subdata|
+                                key_type, key = substatement.split(/\s+/).collect(&:to_sym)
+                                if key.nil? || key_type.nil?
+                                    Log.warning("Skipping malformed map key definition #{substatement.inspect}")
+                                    next
+                                end
+                                object_data[:has][property][:keys][key] = key_type
                             end
                         end
+                    when :needs
+                        raise "Insufficient arguments in #{statement.inspect}" if chunks.empty?
+                        object_data[:needs].concat(chunks.collect { |chunk| chunk.to_sym })
+                    else
+                        property      = expression_type
+                        property_info = object_data[:has][property]
+                        if object_data[:extension_of]
+                            Log.debug("#{object_type} is an extension of #{object_data[:extension_of]}")
+                            property_info ||= object_database[object_data[:extension_of]][:has][property]
+                        end
+                        if property_info.nil?
+                            raise "Property #{property.inspect} not found for object #{object_type.inspect}"
+                        end
+                        property_type = property_info[:type]
 
-                        if object_data[:has][field][:multiple]
-                            object_data[:class_values][field].concat(values)
+                        values = case property_type
+                        when :proc
+                            [data]
+                        when :map
+                            map_data = {}
+                            separate_lexical_chunks(data).each do |substatement, subdata|
+                                sub_chunks    = substatement.split(/\s+/)
+                                key           = sub_chunks[0].to_sym
+                                key_type      = property_info[:keys][key]
+                                map_data[key] = extract_property_values(key_type, sub_chunks[1..-1])[0]
+                            end
+                            [map_data]
                         else
-                            Log.debug(["Ignoring extra values supplied for field #{field.inspect} in #{next_object.inspect}", values]) if values.size > 1
-                            object_data[:class_values][field] = values[0]
+                            extract_property_values(property_type, chunks)
+                        end
+
+                        if property_info[:multiple]
+                            object_data[:class_values][property] ||= []
+                            object_data[:class_values][property].concat(values)
+                        else
+                            Log.debug(["Ignoring extra values supplied for property #{property.inspect} in #{object_type.inspect}", values]) if values.size > 1
+                            object_data[:class_values][property] = values[0]
                         end
                     end
                 end
             end
 
-            Log.debug(["Adding object #{next_object.inspect}", object_data], 6)
-            object_database[next_object] = object_data
+            Log.debug(["Adding object #{object_type.inspect}", object_data], 6)
+            object_database[object_type] = object_data
         end
 
         def separate_lexical_chunks(raw_data, end_char=";", open_char="{", close_char="}")
@@ -398,6 +424,51 @@ module ObjectRawParser
                 end
             end
             chunks
+        end
+
+        def extract_property_values(property_type, chunks)
+            chunks.collect do |raw_value|
+                case property_type
+                when :string
+                    raw_value
+                when :sym
+                    raw_value.to_sym
+                when :int
+                    raw_value.to_i
+                when :float
+                    raw_value.to_f
+                when :bool
+                    (raw_value == :true)
+                else
+                    raise "Unsupported property type #{property_type.inspect}"
+                end
+            end
+        end
+
+        def merge_complex(dest, source)
+            if dest.class != source.class
+                Log.error("Can't merge differently typed objects #{dest[key].class} and #{source[key].class}")
+                return dest
+            end
+
+            result = case dest
+            when Hash
+                result_hash = Marshal.load(Marshal.dump(dest))
+                source.keys.each do |key|
+                    result_hash[key] = if dest.has_key?(key)
+                        merge_complex(dest[key], source[key])
+                    else
+                        Marshal.load(Marshal.dump(source[key]))
+                    end
+                end
+                result_hash
+            when Array
+                (dest + source).uniq
+            else
+                raise "Can't merge params of type #{dest[key].class} and #{source[key].class}"
+            end
+
+            result
         end
     end
 end

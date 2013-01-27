@@ -24,7 +24,7 @@ post_process {
     self.find_subtypes(:equipment, {}, true).each do |equipment|
         Log.debug("Propagating slot information for #{equipment}")
         propagate_recursive(info_for(equipment, :slot)) do |subtype|
-            raise "Can't equip on unequippable part #{subtype}!" unless is_type?(subtype, :body_part_can_wear)
+            raise "Can't equip on unequippable part #{subtype}!" unless is_type?(subtype, :can_wear)
             Log.debug("#{subtype} can equip #{equipment}")
             modify_info(subtype, :can_equip, []) << equipment
         end

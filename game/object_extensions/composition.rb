@@ -27,6 +27,23 @@ module Composition
     end
 
     def initial_composure(params)
+        self.symmetric.each do |symmetric_part|
+            unless container_classes.include?(symmetric_part[:container_class])
+                Log.error("No container class #{symmetric_part[:container_class].inspect} found for #{monicker}")
+                next
+            end
+            # FIXME - Generate symmetric part names
+            symmetric_names = []
+
+            symmetric_part[:count].times do |i|
+                # FIXME - Actually use the symmetry class to assign names here
+                symmetric_params = {
+                    :position      => self,
+                    :position_type => symmetric_part[:container_class],
+                }
+                @core.db.create(@core, symmetric_part[:object_type], params.merge(symmetric_params))
+            end
+        end
         self.container_classes.each do |comp_type|
             raise "Container class #{comp_type} specified but not created!" if get_property(comp_type).nil?
             components           = get_property(comp_type).dup
