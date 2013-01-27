@@ -273,7 +273,7 @@ module ObjectRawParser
                 raise "Parent object type '#{parent}' not abstract!" unless parent_object[:abstract]
 
                 [:uses, :has, :needs, :class_values].each do |key|
-                    object_data[key] = merge_complex(object_data[key], parent_object[key])
+                    merge_complex(object_data[key], parent_object[key])
                 end
 
                 parent_object[:subtypes] << object_type
@@ -451,24 +451,21 @@ module ObjectRawParser
                 return dest
             end
 
-            result = case dest
+            case dest
             when Hash
-                result_hash = Marshal.load(Marshal.dump(dest))
                 source.keys.each do |key|
-                    result_hash[key] = if dest.has_key?(key)
+                    if dest.has_key?(key)
                         merge_complex(dest[key], source[key])
                     else
-                        Marshal.load(Marshal.dump(source[key]))
+                        dest[key] = Marshal.load(Marshal.dump(source[key]))
                     end
                 end
-                result_hash
             when Array
-                (dest + source).uniq
+                dest.concat(source)
+                dest.uniq!
             else
-                raise "Can't merge params of type #{dest[key].class} and #{source[key].class}"
+                raise "Can't merge params of type #{dest.class}"
             end
-
-            result
         end
     end
 end
