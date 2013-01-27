@@ -25,15 +25,15 @@ module Commands
         end
 
         # Requires standard param values: agent, command.
-        # Requires a parameter value :needed, which is a hash:
+        # Requires parameter 'filters', which is a hash:
         #  key: parameter to lookup.
         #  value: where to look for the object, in order.
         # Takes optional parameter value :'key'_type_class, where 'key' is a key of :needed.
-        def find_objects(core, params)
+        def find_objects(core, params, filters)
             locations = Array(locations)
-            SharedObjectExtensions.check_required_params(params, params[:needed].keys + [:agent, :command])
+            SharedObjectExtensions.check_required_params(params, filters.keys + [:agent, :command])
 
-            params[:needed].each do |p, lookup_locs|
+            filters.each do |p, lookup_locs|
                 params[p] = params[:agent].find_object(
                     params[:"#{p}_type_class"] || core.db.info_for(params[:command], p),
                     params[p],
@@ -50,7 +50,7 @@ module Commands
                 # TODO - there should be multiple ways to specify this.
                 params[:target] = params[:agent]
             elsif params[:target]
-                Commands.find_objects(core, params.merge(:needed => {:target => [:inventory, :position, :body]}))
+                Commands.find_objects(core, params, {:target => [:inventory, :position, :body]})
             else
                 # Assume the player wants a broad overview of what he can see, describe the room
                 params[:target] = params[:agent].absolute_position
@@ -63,7 +63,7 @@ module Commands
     module Consume
         def self.stage(core, params)
             params[:target_type_class] = (params[:agent].class_info(:consumes) || core.db.info_for(params[:command], :target))
-            Commands.find_objects(core, params.merge(:needed => {:target => [:inventory, :position]}))
+            Commands.find_objects(core, params, {:target => [:inventory, :position]})
         end
 
         def self.do(core, params)
@@ -82,7 +82,7 @@ module Commands
 
     module Get
         def self.stage(core, params)
-            Commands.find_objects(core, params.merge(:needed => {:target => [:position, :inventory]}))
+            Commands.find_objects(core, params, {:target => [:position, :inventory]})
         end
 
         def self.do(core, params)
@@ -92,7 +92,7 @@ module Commands
 
     module Drop
         def self.stage(core, params)
-            Commands.find_objects(core, params.merge(:needed => {:target => [:inventory]}))
+            Commands.find_objects(core, params, {:target => [:inventory]})
         end
 
         def self.do(core, params)
@@ -145,8 +145,7 @@ module Commands
             SharedObjectExtensions.check_required_params(params, [:target])
 
             # The target is an object and needs to be resolved
-            params[:needed] = { :target => [:position] }
-            Commands.find_objects(core, params.merge(:needed => {:target => [:position]}))
+            Commands.find_objects(core, params, {:target => [:position]})
         end
 
         def self.do(core, params)
