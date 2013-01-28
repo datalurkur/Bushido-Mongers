@@ -26,7 +26,7 @@ test_item_args = {:quality => :fine, :components => [db.create($core, :iron)], :
 test_item = db.create($core, test_item_type, test_item_args)
 Log.debug("Test item is a metal? #{test_item.is_type?(:metal)}")
 Log.debug("Test item is a constructable? #{test_item.is_type?(:constructed)}")
-Log.debug("Test item is a headgear? #{test_item.is_type?(:headgear)}")
+Log.debug("Test item is a head armor? #{test_item.is_type?(:hear_armor)}")
 
 # NPC tests
 Log.debug(["Types of NPCs:", db.types_of(:npc)])

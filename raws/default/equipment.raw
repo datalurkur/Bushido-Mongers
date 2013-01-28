@@ -1,16 +1,17 @@
-abstract equipment headgear {
+abstract equipment head_armor {
     slot head;
 }
 
 abstract equipment body_armor {
+    /* FIXME - Make this torso or something */
     slot humanoid_body;
 }
 
-abstract equipment bracer {
+abstract equipment arm_armor {
     slot arm;
 }
 
-abstract equipment glove {
+abstract equipment hand_armor {
     slot hand;
 }
 
@@ -18,7 +19,7 @@ abstract equipment leg_armor {
     slot leg;
 }
 
-abstract equipment boots {
+abstract equipment foot_armor {
     slot foot;
 }
 

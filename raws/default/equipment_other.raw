@@ -1,9 +1,9 @@
-bracer,constructed pauldrons {
+arm_armor,constructed pauldrons {
     required_components metal;
     technique forge;
 }
 
-glove,constructed gauntlet {
+hand_armor,constructed gauntlet {
     required_components metal;
     technique forge;
 }
@@ -13,7 +13,7 @@ leg_armor,constructed leggings {
     technique forge;
 }
 
-boots,constructed high_boot {
+foot_armor,constructed high_boot {
     required_components metal;
     technique forge;
 }

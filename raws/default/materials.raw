@@ -7,6 +7,14 @@ abstract material metal {
 abstract material leather {}
 abstract material wood {}
 abstract material thread {}
+abstract material fabric {}
+abstract material organic {}
+
+organic chitin {
+    weight 0.5;
+    value 2;
+    size small;
+}
 
 metal iron {
     weight 10;
@@ -39,6 +47,15 @@ thread silk {
     size tiny;
 }
 
+constructed,fabric silk_swatch {
+    value 100;
+    weight 0.2;
+    size small;
+
+    required_components silk;
+    technique crafting;
+}
+
 material feather {
     value 5;
     weight 0.1;
@@ -50,3 +67,7 @@ material,constructed ingot {
     technique forge;
 }
 
+constructed buckle {
+    required_components metal;
+    technique forge;
+}

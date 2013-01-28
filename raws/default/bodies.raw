@@ -73,6 +73,48 @@ body,quadriped ungulate_body {
     external head tail;
 }
 
+body sewer_kraken_body {
+    weight 400;
+    incidental flesh;
+    typical_size gargantuan;
+    external beak;
+    symmetric {
+        object_type tentacle;
+        container_class external;
+        symmetry_type balanced_axial;
+        count 8;
+    }
+}
+
+body,quadriped lizard_body {
+    weight 1;
+    incidental flesh;
+    typical_size small;
+    external head tail;
+}
+
+body snake_body {
+    weight 6;
+    incidental flesh;
+    typical_size small;
+    external head tail;
+    internal venom_gland;
+}
+
+body,can_wear mutant_tortoise_body {
+    weight 250;
+    incidental flesh;
+    typical_size medium;
+    external head mouth arm hand leg foot carapace; 
+    internal liver;
+}
+
+body swarm_body {
+    weight 1;
+    typical_size medium;
+    external swarm_husk;
+}
+
 body_part,can_wear head {
     weight 4;
     typical_size small;
@@ -112,7 +154,7 @@ body_part,can_wear foot {
 
 body_part,can_wear carapace {
     weight 15;
-    incidental flesh;
+    incidental chitin;
     typical_size small;
 }
 
@@ -138,4 +180,27 @@ body_part kidney {
     weight 2;
     incidental flesh;
     typical_size small;
+}
+
+body_part venom_gland {
+    weight 0.2;
+    typical_size tiny;
+}
+
+body_part tentacle {
+    weight 1;
+    incidental flesh;
+    typical_size small;
+}
+
+body_part beak {
+    weight 0.5;
+    incidental chitin;
+    typical_size small;
+}
+
+body_part swarm_husk {
+    weight 1;
+    incidental chitin;
+    typical_size tiny;
 }

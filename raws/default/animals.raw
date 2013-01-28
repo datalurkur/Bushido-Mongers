@@ -2,32 +2,79 @@ abstract npc animal {
     factions neutral;
 }
 
+/***********************************************************/
+/* SEWER */
+
 animal,corporeal rat {
     size tiny;
     body_type rodent_body;
     spawns_in sewer dock;
-    spawn_chance likely;
+    spawn_rarity common;
 }
+
+monster,corporeal giant_spider {
+    size medium;
+    body_type arachnoid_body;
+    spawns_in sewer;
+    spawn_rarity common;
+}
+
+monster,corporeal sewer_kraken {
+    size gargantuan;
+    body_type sewer_kraken_body;
+    spawns_in sewer;
+    spawn_rarity singular;
+}
+
+animal,corporeal snake {
+    size small;
+    body_type snake_body;
+    spawns_in sewer meadow mountain forest jungle swamp desert;
+    spawn_rarity common;
+}
+
+animal,corporeal poison_gecko {
+    size small;
+    body_type lizard_body;
+    spawns_in sewer forest jungle swamp dungeon;
+    spawn_rarity unusual;
+}
+
+monster,corporeal swarm_of_flesh_eating_scarabs {
+    size medium;
+    body_type swarm_body;
+    spawns_in sewer dungeon;
+    spawn_rarity rare;
+}
+
+monster,corporeal adolescent_mutant_ninja_tortoise {
+    size medium;
+    body_type mutant_tortoise;
+    spawns_in sewer;
+    spawn_rarity rare;
+}
+
+
+/***********************************************************/
+/* MEADOW */
 
 animal,corporeal mouse {
     size tiny;
     body_type rodent_body;
     spawns_in meadow;
-    spawn_chance likely;
+    spawn_rarity common;
+}
+
+animal,corporeal deer {
+    size medium;
+    body_type ungulate_body;
+    spawns_in meadow;
+    spawn_rarity common;
 }
 
 animal,corporeal goat {
     size large;
     body_type ungulate_body;
     spawns_in meadow forest;
-    spawn_chance likely;
+    spawn_rarity common;
 }
-
-
-monster,corporeal giant_spider {
-    size medium;
-    body_type arachnoid_body;
-    spawns_in sewer;
-    spawn_chance likely;
-}
-

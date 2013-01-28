@@ -6,7 +6,7 @@ monster,corporeal oni {
     size medium;
     body_type humanoid_body;
     spawns_in mountain;
-    spawn_chance unusual;
+    spawn_rarity unusual;
 }
 
 monster,corporeal jikininki {
@@ -26,14 +26,14 @@ monster,corporeal giant {
     size enormous;
     body_type humanoid_body;
     spawns_in mountain;
-    spawn_chance unusual;
+    spawn_rarity unusual;
 }
 
 monster,corporeal dwarf {
     size small;
     body_type humanoid_body;
     spawns_in mountain;
-    spawn_chance uncommon;
+    spawn_rarity uncommon;
 }
 
 abstract npc guard {
@@ -51,4 +51,11 @@ npc,corporeal merchant {
     size medium;
     body_type humanoid_body;
     factions peaceful;
+}
+
+npc,corporeal thug {
+    size medium;
+    body_type humanoid_body;
+    spawns_in sewer meadow mountain dungeon dock pier;
+    spawn_rarity unusual;
 }

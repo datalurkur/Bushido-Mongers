@@ -6,3 +6,102 @@ body_armor,constructed leather_armor {
     required_components leather;
     technique craft;
 }
+
+body_armor,constructed cloth_armor {
+    value 20;
+    weight 1;
+    size medium;
+
+    required_components fabric;
+    technique craft;
+}
+
+head_armor,constructed leather_helm {
+	value 10;
+	weight 2;
+	size medium;
+
+	required_components leather;
+	technique craft;
+}
+
+head_armor,constructed hood {
+	value 5;
+	weight 1;
+	size medium;
+
+	required_components fabric;
+	technique craft;
+}
+
+hand_armor,constructed leather_gloves {
+	value 5;
+	weight 1;
+	size medium;
+
+	required_components leather;
+	technique craft;
+}
+
+hand_armor,constructed cloth_gloves {
+	value 2;
+	weight 1;
+	size medium;
+
+	required_components fabric;
+	technique craft;
+}
+
+arm_armor,constructed leather_bracers {
+	value 5;
+	weight 1;
+	size medium;
+
+	required_components leather;
+	technique craft;
+}
+
+arm_armor,constructed cloth_sleeves {
+	value 3;
+	weight 1;
+	size medium;
+
+	required_components fabric;
+	technique craft;
+}
+
+leg_armor,constructed leather_pants {
+	value 20;
+	weight 5;
+	size medium;
+
+	required_components leather;
+	technique craft;
+}
+
+leg_armor,constructed cloth_pants {
+	value 15;
+	weight 2;
+	size medium;
+
+	required_components fabric;
+	technique craft;
+}
+
+foot_armor,constructed leather_boots {
+	value 20;
+	weight 5;
+	size medium;
+
+	required_components leather;
+	technique craft;
+}
+
+foot_armor,constructed slippers {
+	value 10;
+	weight 1;
+	size medium;
+
+	required_components fabric;
+	technique craft;
+}

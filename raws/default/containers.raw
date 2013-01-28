@@ -1,9 +1,13 @@
 abstract equipment,container backpack {
-    slot humanoid_body;
+    /* FIXME - This needs to be more generic (torso, for example) */
+    slot humanoid_body mutant_tortoise_body;
     size medium;
     value 1;
 }
 
 backpack leather_backpack {
+    /* FIXME - Make these out of more generic materials
+        ("backpack",  made of fabric and buckle, with generic types) */
     incidental leather_scrap;
+    incidental buckle;
 }
