@@ -40,7 +40,7 @@ class BushidoObject
         type_info[:has].keys.each do |property|
             next if type_info[:has][property][:class_only]
             if type_info[:has][property][:multiple]
-                if @properties[property].empty? && !type_info[:has][property][:optional]
+                if @properties[property].nil? || (@properties[property].empty? && !type_info[:has][property][:optional])
                     raise(StandardError, "Property #{property.inspect} has no values for #{@type}.")
                 end
             elsif @properties[property].nil?

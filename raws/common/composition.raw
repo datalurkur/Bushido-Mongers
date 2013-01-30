@@ -46,9 +46,6 @@ abstract composition constructed {
     class sym technique;
 
     has sym quality;
-
-    needs components quality;
-
     uses constructed;
 }
 

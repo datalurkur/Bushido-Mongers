@@ -75,24 +75,9 @@ module Equipment
         external_body_parts.each do |part|
             if part.has_property?(:can_equip) && !part.can_equip.empty?
                 Log.debug("Looking for equipment worn on #{part.monicker}")
-                rand_type = @core.db.random(part.can_equip.rand)
-
-                creation_hash = {}
-
-                # Pick random component type
-                components = @core.db.info_for(rand_type, :required_components)
-                if components
-                    components.map! do |comp|
-                        @core.db.create(@core, @core.db.random(comp))
-                    end
-                    creation_hash[:components] = components
-                end
-
-                creation_hash[:quality] = :standard
-                creation_hash[:position] = $nowhere
-
-                Log.debug("Wearing new #{rand_type} on #{part.type}")
-                wear(part, @core.db.create(@core, rand_type, creation_hash))
+                equipment_type = @core.db.random(part.can_equip.rand)
+                equipment_piece = @core.db.create(@core, equipment_type, {:randomize => true})
+                wear(part, equipment_piece)
             end
         end
         # TEST FUNCTIONALITY

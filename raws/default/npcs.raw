@@ -58,4 +58,5 @@ npc,corporeal thug {
     body_type humanoid_body;
     spawns_in sewer meadow mountain dungeon dock pier;
     spawn_rarity unusual;
+    factions enemy;
 }

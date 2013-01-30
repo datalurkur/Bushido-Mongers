@@ -10,6 +10,10 @@ module DataTables
         end
     end
 
+    def random
+        raw_values.rand.first
+    end
+
     def setup
         @indices = {}
         @values  = {}
@@ -118,17 +122,19 @@ end
 module Rarity
     def self.raw_values; [
         [:extinct,    0.0],
-        [:singular,   0.0001],
-        [:rare,       0.1],
-        [:unusual,    0.3],
-        [:uncommon,   1.0],
-        [:common,     2.5],
-        [:thriving,   5.0],
-        [:teeming,    10.0],
-        [:ubiquitous, 100.0]
+        [:singular,   0.001],
+        [:rare,       0.01],
+        [:unusual,    0.1],
+        [:uncommon,   0.2],
+        [:common,     0.4],
+        [:thriving,   0.8],
+        [:teeming,    0.9],
+        [:ubiquitous, 1.0]
     ]; end
     def self.standard; :common; end
     extend DataTables
+
+    def self.roll(level); return (Kernel.rand < value_of(level)); end
 end
 
 module Size

@@ -90,9 +90,7 @@ module Position
 
     private
     def _set_position(new_position)
-        safe_position
-
-        @position.remove_object(self)
+        @position.remove_object(self) if @position
         @position = new_position
     end
 

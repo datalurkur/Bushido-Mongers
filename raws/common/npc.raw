@@ -10,5 +10,5 @@ abstract karmic,aligned,position npc {
     /* class_many sym never_spawn_in; */
 
     class sym spawn_rarity;
-    spawn_rarity coin_toss;
+    spawn_rarity uncommon;
 }
