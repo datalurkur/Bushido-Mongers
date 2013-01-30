@@ -19,7 +19,7 @@ class Descriptor
                 h[k] = Descriptor.describe(v, observer)
             end
             h
-        else;               raise "Indescribable class #{object.class}"
+        else; raise(NotImplementedError, "Cannot describe objects of type #{object.class}.")
         end
     end
 

@@ -76,7 +76,7 @@ class MuxedClientBase
         begin
             begin
                 data = @socket.read_nonblock(@config[:buffer_size])
-                raise Errno::ECONNRESET if data.empty?
+                raise(Errno::ECONNRESET) if data.empty?
                 new_messages = @message_buffer.unpack_messages(data)
                 messages.concat(new_messages)
             rescue Errno::EWOULDBLOCK,Errno::EAGAIN
@@ -96,7 +96,7 @@ class MuxedClientBase
         messages = []
         begin
             if @setup && input = get_from_client
-                raise RuntimeError, "Received non-message #{input.inspect} from client!" unless Message === input
+                raise(StandardError, "Received non-message #{input.inspect} from client!") unless Message === input
                 messages << input
             end
         rescue Exception => e

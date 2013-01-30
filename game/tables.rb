@@ -21,17 +21,17 @@ module DataTables
     end
 
     def value_of(item)
-        raise "No item #{item} found in #{self.inspect}" unless @values.has_key?(item)
+        raise(ArgumentError, "No item #{item.inspect} found in #{self.inspect}.") unless @values.has_key?(item)
         @values[item]
     end
 
     def value_at(index)
-        raise "Index out of range" if index < 0 || index >= @num_values
+        raise(ArgumentError, "Index out of range.") if index < 0 || index >= @num_values
         raw_values[index].first
     end
 
     def index_of(item)
-        raise "No item #{item} found in #{self.inspect}" unless @indices.has_key?(item)
+        raise(ArgumentError, "No item #{item} found in #{self.inspect}.") unless @indices.has_key?(item)
         @indices[item]
     end
 
@@ -103,6 +103,7 @@ module Chance
         [:unusual,    0.022],
         [:uncommon,   0.158],
         [:coin_toss,  0.5],
+        [:common,     0.7],
         [:likely,     0.842],
         [:probable,   0.978],
         [:certain,    0.999],

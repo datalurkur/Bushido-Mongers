@@ -67,7 +67,7 @@ class Log
 
         # THREADSAFE
         def name_thread(name)
-            raise "Logging system never initialized" unless @logging_setup
+            raise(StandardError, "Logging system never initialized.") unless @logging_setup
             @log_mutex.synchronize do
                 @source_threads[Thread.current] = name
                 @longest_thread_name = [@longest_thread_name,name.length].max
@@ -97,11 +97,11 @@ class Log
 
         private
         def log_internal(msg, level, color=:white)
-            raise "Logging system never initialized" unless @logging_setup
+            raise(StandardError, "Logging system never initialized.") unless @logging_setup
 
             file,line = caller[1].split(/:/)
             @source_files[file] ||= @max_log_level
-            raise TypeError, "Bad log level: #{level}" unless Numeric === level
+            raise(TypeError, "#{level} is not a valid log level.") unless Numeric === level
             return unless level <= @source_files[file] || @logfile_behavior == :verbose
 
             thread_name = @source_threads[Thread.current] || @default_thread_name

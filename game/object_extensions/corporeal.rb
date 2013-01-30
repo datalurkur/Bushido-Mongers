@@ -1,4 +1,5 @@
 require './util/log'
+require './util/exceptions'
 
 module Corporeal
     class << self
@@ -45,7 +46,7 @@ module Corporeal
         # If this has multiple values, I don't know what the fuck we're doing
         # That would mean that this corporeal thing has multiple independent bodies
         # How do you even describe such a thing?
-        raise "Wat" if get_property(:incidental).size > 1
+        raise(UnexpectedBehaviorError, "Multiple independent bodies provided for #{monicker}.") if get_property(:incidental).size > 1
     end
 
     def all_body_parts(type = [:internal, :external])

@@ -4,7 +4,7 @@ module Commands
     class << self
         def get_command_module(core, command)
             unless core.db.has_type?(command)
-                raise "I don't know how to #{command}"
+                raise(InvalidCommandError, "Command #{command.inspect} not found.")
             end
 
             invocation = core.db.info_for(command, :invocation)
@@ -64,6 +64,10 @@ module Commands
         def self.stage(core, params)
             params[:target_type_class] = (params[:agent].class_info(:consumes) || core.db.info_for(params[:command], :target))
             Commands.find_objects(core, params, {:target => [:inventory, :position]})
+
+            unless params[:agent].class_info(:on_consume) || params[:target].is_type?(:consumable)
+                raise(FailedCommandError, "#{params[:agent].monicker} doesn't know how to eat a(n) #{params[:target].monicker}")
+            end
         end
 
         def self.do(core, params)
@@ -73,8 +77,6 @@ module Commands
             elsif params[:target].is_type?(:consumable)
                 # Do normal consumption
                 Log.info("#{agent.monicker} eats #{params[:target].monicker} like a normal person.")
-            else
-                raise "#{agent.monicker} doesn't know how to eat a #{params[:target].type}"
             end
             params[:target].destroy(agent)
         end
@@ -105,7 +107,7 @@ module Commands
             SharedObjectExtensions.check_required_params(params, [:target])
 
             position = params[:agent].absolute_position
-            raise "You're trapped in a #{position.monicker}!" unless Room === position
+            raise(NotImplementedError, "You're trapped in a #{position.monicker}!") unless Room === position
 
             # This method raises an exception if the direction is invalid, so no need to check it
             params[:target] = position.get_adjacent(params[:target])
@@ -117,26 +119,26 @@ module Commands
     end
 
     module Hide
-        def self.stage(core, params); end
+        def self.stage(core, params)
+            if params[:agent].skill(:hide).get_property(:hidden)
+                raise(FailedCommandError, "You are already hidden.")
+            end
+        end
 
         def self.do(core, params)
-            if params[:agent].skill(:hide).get_property(:hidden)
-                raise "You are already hidden."
-            else
-                params[:agent].skill(:hide).set_property(:hidden, true)
-            end
+            params[:agent].skill(:hide).set_property(:hidden, true)
         end
     end
 
     module Unhide
-        def self.stage(core, params); end
+        def self.stage(core, params)
+            unless params[:agent].skill(:hide).get_property(:hidden)
+                raise(FailedCommandError, "You are not in hiding.")
+            end
+        end
 
         def self.do(core, params)
-            if params[:agent].skill(:hide).get_property(:hidden)
-                params[:agent].skill(:hide).set_property(:hidden, false)
-            else
-                raise "You are not in hiding."
-            end
+            params[:agent].skill(:hide).set_property(:hidden, false)
         end
     end
 
@@ -162,10 +164,12 @@ module Commands
     module Construct
         def self.stage(core, params)
             #FIXME
+            raise(NotImplementedError)
         end
 
         def self.do(core, params)
             #FIXME
+            raise(NotImplementedError)
         end
     end
 end

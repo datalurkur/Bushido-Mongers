@@ -1,6 +1,7 @@
 require './raws/parser'
 require './raws/bushido_object'
 require './util/timer'
+require './util/exceptions'
 
 class ObjectDB
     class << self
@@ -24,7 +25,7 @@ class ObjectDB
                 db[type][:has].each do |k,v|
                     if v[:class_only]
                         has_value = v[:multiple] ? !db[type][:class_values].empty? : db[type][:class_values].has_key?(k)
-                        raise "Class value #{k.inspect} missing from #{type.inspect}" unless has_value || v[:optional]
+                        raise(StandardError, "Class value #{k.inspect} missing from #{type.inspect}.") unless has_value || v[:optional]
                     end
                 end
             end
@@ -47,7 +48,7 @@ class ObjectDB
     end
 
     def raw_info_for(type)
-        raise "#{type.inspect} not defined as db type" unless @db.has_key?(type)
+        raise(UnknownType, "#{type.inspect} not defined as db type") unless @db.has_key?(type)
         @db[type]
     end
 
@@ -122,8 +123,8 @@ class ObjectDB
     end
 
     def create(core, type, params={})
-        raise "#{type.inspect} not defined as db type" unless @db[type]
-        raise "#{type.inspect} is not instantiable" if @db[type][:abstract]
+        raise(UnknownType, "#{type.inspect} not defined as db type.") unless @db[type]
+        raise(ArgumentError, "#{type.inspect} is not instantiable.") if @db[type][:abstract]
 
         # When no longer in debug mode, go back to using BushidoObject
         #BushidoObject.new(core, type, params)
@@ -180,7 +181,7 @@ class ObjectDB
     private
     # We don't want users calling this, since the static class methods do the actual database population
     def initialize(db, hash)
-        raise "Incorrect database format"  unless Hash === db
+        raise(ArgumentError, "Incorrect database format") unless Hash === db
         @db   = db
         @hash = hash
     end
@@ -194,7 +195,7 @@ class ObjectDB
             when Hash
                 new_object[k].merge!(v)
             else
-                raise "DB doesn't know how to merge attributes of type #{v.class}"
+                raise(NotImplementedError, "DB doesn't know how to merge attributes of type #{v.class}.")
             end
         end
         new_object[:is_type].each do |parent_type|

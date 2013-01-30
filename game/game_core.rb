@@ -3,6 +3,7 @@ require './game/tables'
 require './game/object_extensions'
 require './raws/db'
 require './message'
+require './util/exceptions'
 
 class GameCore
     attr_reader :world, :db
@@ -59,7 +60,7 @@ class GameCore
             already_ticking = @ticking
             @ticking = true
         }
-        raise "Already ticking" if already_ticking
+        raise(StateError, "Already ticking.") if already_ticking
         Thread.new do
             Log.name_thread("Tick")
             begin

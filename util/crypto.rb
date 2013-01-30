@@ -16,7 +16,7 @@ module LameCrypto
         when :md5_and_xor
             LameCrypto.md5_and_xor(password, server_hash)
         else
-            raise "Unrecognized hashing method #{method} requested by server"
+            raise(ArgumentError, "Unrecognized hashing method #{method} requested by server.")
         end
     end
 

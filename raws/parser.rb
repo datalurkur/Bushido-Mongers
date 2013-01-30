@@ -1,5 +1,6 @@
 require './util/log'
 require './util/basic'
+require './util/exceptions'
 
 =begin
 
@@ -148,7 +149,7 @@ module ObjectRawParser
 
         def get_raws_from_dir(dir)
             unless File.exists?(dir)
-                raise "No object directory #{dir} exists"
+                raise(ArgumentError, "No object directory #{dir} exists.")
             end
             Dir.glob(File.join(dir, "*")).select { |file| file.match(/\.raw$/) }
         end
@@ -206,10 +207,10 @@ module ObjectRawParser
 
             # Do some sanity checking
             unless metadata.has_key?(object_type)
-                raise "Object metadata not found for #{object_type.inspect}"
+                raise(ParserError, "Object metadata not found for #{object_type.inspect}.")
             end
             if object_database.has_key?(object_type)
-                raise "Database information already exists for #{object_type}"
+                raise(ParserError, "Database information already exists for #{object_type}.")
             end
 
             object_metadata = metadata[object_type]
@@ -245,7 +246,7 @@ module ObjectRawParser
                     inheritance_list.index(parent) != inheritance_list.rindex(parent)
                 end.uniq
                 Log.warning(["Object #{object_type} has duplicate parents in its inheritance list", duplicate_elements])
-                raise "Object has duplicate parents"
+                raise(ParserError, "Object has duplicate parents.")
             end
 
             # Begin accumulating object data for the database
@@ -270,7 +271,7 @@ module ObjectRawParser
             object_data[:is_type].reverse.each do |parent|
                 next if parent == :root
                 parent_object = object_database[parent]
-                raise "Parent object type '#{parent}' not abstract!" unless parent_object[:abstract]
+                raise(ParserError, "Parent object type '#{parent}' not abstract!") unless parent_object[:abstract]
 
                 [:uses, :has, :needs, :class_values].each do |key|
                     merge_complex(object_data[key], parent_object[key])
@@ -288,13 +289,13 @@ module ObjectRawParser
                     case expression_type
                     when :uses
                         Log.debug("#{object_type} uses #{chunks.inspect}", 8)
-                        raise "Insufficient arguments in #{statement.inspect}" if chunks.empty?
+                        raise(ParserError, "Insufficient arguments in #{statement.inspect}.") if chunks.empty?
 
                         modules = chunks.collect do |m|
                             begin
                                 m.to_caml.to_const
                             rescue
-                                raise "Failed to load object extension #{m.inspect}"
+                                raise(ParserError, "Failed to load object extension #{m.inspect}.")
                             end
                         end.compact
 
@@ -311,7 +312,7 @@ module ObjectRawParser
                             chunks.shift
                         end
                         property_type, property = chunks.shift(2).collect(&:to_sym)
-                        raise "Insufficient arguments in #{statement.inspect}" if property_type.nil? || property.nil?
+                        raise(ParserError, "Insufficient arguments in #{statement.inspect}.") if property_type.nil? || property.nil?
                         object_data[:has][property] = {:type => property_type}
 
                         # Perform the optional key assignments this way so we don't pollute the has with keys that have nil values
@@ -337,7 +338,7 @@ module ObjectRawParser
                             end
                         end
                     when :needs
-                        raise "Insufficient arguments in #{statement.inspect}" if chunks.empty?
+                        raise(ParserError, "Insufficient arguments in #{statement.inspect}.") if chunks.empty?
                         object_data[:needs].concat(chunks.collect { |chunk| chunk.to_sym })
                     else
                         property      = expression_type
@@ -347,7 +348,7 @@ module ObjectRawParser
                             property_info ||= object_database[object_data[:extension_of]][:has][property]
                         end
                         if property_info.nil?
-                            raise "Property #{property.inspect} not found for object #{object_type.inspect}"
+                            raise(ParserError, "Property #{property.inspect} not found for object #{object_type.inspect}.")
                         end
                         property_type = property_info[:type]
 
@@ -392,7 +393,7 @@ module ObjectRawParser
                 if first_end.nil? && first_open.nil?
                     # Check to see if all that's left is whitespace and finish up
                     if raw_data[start..-1].match(/\S/)
-                        raise "Syntax error in raw data: unterminated phrase - #{raw_data[start..-1].inspect}"
+                        raise(ParserError, "Syntax error in raw data: unterminated phrase - #{raw_data[start..-1].inspect}.")
                     end
                     break
                 elsif first_open && (first_end.nil? || (first_open < first_end))
@@ -406,7 +407,7 @@ module ObjectRawParser
                         regex = "[#{open_char}#{close_char}]"
                         last_scope = raw_data[start..-1].index(/#{regex}/)
                         if last_scope.nil?
-                            raise "Syntax error in raw data: unterminated phrase - #{raw_data[start..-1].inspect}"
+                            raise(ParserError, "Syntax error in raw data: unterminated phrase - #{raw_data[start..-1].inspect}.")
                         end
 
                         if raw_data[(start + last_scope), 1] == open_char
@@ -440,7 +441,7 @@ module ObjectRawParser
                 when :bool
                     (raw_value == :true)
                 else
-                    raise "Unsupported property type #{property_type.inspect}"
+                    raise(ParserError, "Unsupported property type #{property_type.inspect}.")
                 end
             end
         end
@@ -464,7 +465,7 @@ module ObjectRawParser
                 dest.concat(source)
                 dest.uniq!
             else
-                raise "Can't merge params of type #{dest.class}"
+                raise(NotImplementedError, "Can't merge params of type #{dest.class}.")
             end
         end
     end

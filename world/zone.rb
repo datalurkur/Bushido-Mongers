@@ -1,5 +1,6 @@
 require './util/math'
 require './util/log'
+require './util/exceptions'
 require './words/words'
 
 class Zone
@@ -44,7 +45,7 @@ class Zone
             end
 
             type = potential_zones.rand
-            raise "Found invalid child zone type #{type} in #{parent.type}!\n" unless db[type]
+            raise(UnexpectedBehaviorError, "Found invalid child zone type #{type} in #{parent.type}!") unless db[type]
             return type
         end
 
@@ -88,7 +89,7 @@ class Zone
     # Returns an array containin [direction from a to b, direction from b to a]
     def directions_between(coords_a, coords_b)
         diff = [coords_a.x - coords_b.x, coords_a.y - coords_b.y]
-        raise "Coordinates #{coords_a.inspect} and #{coords_b.inspect} are not adjacent" if (diff[0].abs + diff[1].abs) != 1
+        raise(ArgumentError, "Coordinates #{coords_a.inspect} and #{coords_b.inspect} are not adjacent.") if (diff[0].abs + diff[1].abs) != 1
         if    diff[0] > 0 
             [:west, :east]
         elsif diff[0] < 0
@@ -114,7 +115,7 @@ class Zone
         Log.debug("\t#{adjacent_coords.inspect}", 7)
 
         if adjacent_coords.x < 0 || adjacent_coords.x >= @size || adjacent_coords.y < 0 || adjacent_coords.y >= @size
-            raise "Reached the edge of the world looking for leaves in #{@name}" if @parent.nil?
+            raise(UnexpectedBehaviorError, "Reached the edge of the world looking for leaves in #{@name}.") if @parent.nil?
             @parent.find_neighbor_leaves_upwards(dir, upwards_history + [@offset])
         else
             if has_zone?(*adjacent_coords)
@@ -183,7 +184,7 @@ class ZoneContainer < Zone
         p = positions.first
         subzone = zone_at(p.x, p.y)
         if positions.size == 1
-            raise "Found a non-leaf zone" unless ZoneLeaf === subzone
+            raise(UnexpectedBehaviorError, "Found a non-leaf zone.") unless ZoneLeaf === subzone
             subzone
         else
             subzone.get_zone(positions[1..-1])
@@ -191,12 +192,12 @@ class ZoneContainer < Zone
     end
 
     def zone_at(x, y)
-        raise "No zone at #{[x,y].inspect} in #{@name}" if @zones[x][y].nil?
+        raise(ArgumentError, "No zone at #{[x,y].inspect} in #{@name}.") if @zones[x][y].nil?
         @zones[x][y]
     end
 
     def set_zone(x, y, zone)
-        raise "Zone at #{[x,y].inspect} being overwritten in #{@name}" unless @zones[x][y].nil?
+        raise(UnexpectedBehaviorError, "Zone at #{[x,y].inspect} being overwritten in #{@name}.") unless @zones[x][y].nil?
         @zones[x][y]        = zone
         @zonemap[zone.name] = zone
         zone.set_parent(self, [x,y])
@@ -204,13 +205,13 @@ class ZoneContainer < Zone
 
     # TODO - Remove this method, hashing zones by name is dangerous
     def zone_location(zone_name)
-        raise "No zone #{zone_name} found in #{@name}" unless @zonemap.has_key?(zone_name)
+        raise(ArgumentError, "No zone #{zone_name} found in #{@name}.") unless @zonemap.has_key?(zone_name)
         @zonemap[zone_name].offset
     end
 
     # TODO - Remove this method, hashing zones by name is dangerous
     def zone_named(zone_name)
-        raise "No zone #{zone_name} found in #{@name}" unless @zonemap.has_key?(zone_name)
+        raise(ArgumentError, "No zone #{zone_name} found in #{@name}.") unless @zonemap.has_key?(zone_name)
         @zonemap[zone_name]
     end
 
@@ -313,12 +314,12 @@ class ZoneLeaf < Zone
 
     def connected_leaf(direction)
         Log.debug("Finding leaf connected to the #{direction} of #{@name} (#{@offset.inspect})", 5)
-        raise "Can't traverse to the #{direction} from #{@name}" unless connected_to?(direction)
+        raise(ArgumentError, "Can't traverse to the #{direction} from #{@name}.") unless connected_to?(direction)
         connected_leaves = connectable_leaves(direction).select { |leaf| leaf.connected_to?(Zone.direction_opposite(direction)) }
         if connected_leaves.size == 0
-            raise "Could not find a leaf connected to the #{direction} of #{@name}"
+            raise(NoMatchError, "Could not find a leaf connected to the #{direction} of #{@name}.")
         elsif connected_leaves.size > 1
-            raise "Found multiple connections for a single leaf"
+            raise(AmbiguousMatchError, "Found multiple connections for a single leaf.")
         else
             connected_leaves.first
         end
@@ -328,13 +329,13 @@ class ZoneLeaf < Zone
         @connections.keys.select { |d| @connections[d] }.each do |dir|
             other = connected_leaf(dir)
             unless other.connected_leaf(Zone.direction_opposite(dir)) == self
-                raise "Zone connection consistency check failed - #{@name} does not connect uniquely to the #{dir} with #{other.name}"
+                raise(UnexpectedBehaviorError, "Zone connection consistency check failed - #{@name} does not connect uniquely to the #{dir} with #{other.name}.")
             end
         end
     end
 
     def resolve_connections
-        raise "Connections are already resolved!" if @resolved
+        raise(StateError, "Connections are already resolved!") if @resolved
         @connections.each do |direction,value|
             if TrueClass === value
                 @connections[direction] = connected_leaf(direction)
@@ -348,7 +349,7 @@ class ZoneLeaf < Zone
     end
 
     def get_adjacent(direction)
-        raise "Connections not resolved!" unless @resolved
+        raise(StateError, "Connections not resolved!") unless @resolved
         @connections[direction]
     end
 end

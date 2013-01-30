@@ -19,7 +19,7 @@ class LobbyState < State
             when :generate_game
                 @client.send_to_server(Message.new(:generate_game))
             when :create_character
-                raise "This really needs its own menu, even apart from the character selection sub-menu that already needs to exist (and doesn't)"
+                raise(NotImplementedError)
             when :select_character
                 begin_exchange(@select_character_exchange)
             when :start_game

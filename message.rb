@@ -5,8 +5,8 @@ require './util/log'
 class Message
     class << self
         def define(type, message_class, required_args=[], text=nil)
-            raise "Message class must be a symbol, #{message_class.class} provided"      unless (Symbol === message_class)
-            raise "Required arguments must be an array, #{required_args.class} provided" unless (Array === required_args)
+            raise(ArgumentError, "Message class must be a symbol, #{message_class.class} provided")      unless (Symbol === message_class)
+            raise(ArgumentError, "Required arguments must be an array, #{required_args.class} provided") unless (Array === required_args)
             types[type] = {
                 :required_args => required_args,
                 :message_class => message_class || type,
@@ -64,17 +64,17 @@ class Message
         end
 
         def check_message(type, args)
-            raise "Unknown message type #{type}" unless type_defined?(type)
+            raise(ArgumentError, "Unknown message type #{type}") unless type_defined?(type)
             required_args(type).each do |arg|
                 unless args.has_key?(arg) && args[arg]
-                    raise "#{arg} required for message type #{type.inspect}"
+                    raise(ArgumentError, "#{arg} required for message type #{type.inspect}.")
                 end
             end
         end
 
         def match_message(message, hash)
-            raise "Not a message: #{message.inspect}" unless Message === message
-            raise "Unknown message type #{type}" unless type_defined?(message.type)
+            raise(ArgumentError, "Not a message: #{message.inspect}.") unless Message === message
+            raise(ArgumentError, "Unknown message type #{type}.")      unless type_defined?(message.type)
             return false if hash[:type] && message.type != hash[:type]
             return hash.keys.reject { |k| k == :type }.all? { |k| (message.has_param?(k) && message.send(k) == hash[k]) }
         end
@@ -115,7 +115,7 @@ class Message
 
     def method_missing(name, *args)
         unless @args[name]
-            raise "No parameter #{name} for message type #{type}"
+            raise(StandardError, "No parameter #{name} for message type #{type}.")
         end
         @args[name]
     end

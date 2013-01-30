@@ -34,7 +34,7 @@ class Range
         when Fixnum
             self.to_a & [other]
         else
-            raise "Unsupported union between Range and #{other.class}"
+            raise(ArgumentError, "Unsupported union between Range and #{other.class}.")
         end
     end
 
@@ -82,7 +82,7 @@ class String
         when :yellow
             "\e[1;33m#{self}\e[0m"
         else
-            raise "Unhandled color #{c}"
+            raise(ArgumentError, "Unhandled color #{c}.")
         end
     end
 end

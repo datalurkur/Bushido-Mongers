@@ -22,7 +22,7 @@ module TextInterface
                     message.text
                 end
             else
-                raise "Unhandled client message type #{message.type} : #{message.params.inspect}"
+                raise(ArgumentError, "Unhandled client message type #{message.type} : #{message.params.inspect}.")
             end
         end
     end
@@ -45,7 +45,7 @@ module TextInterface
                 Message.new(:invalid_input)
             end
         else
-            raise "Unhandled client message type #{context.type}"
+            raise(ArgumentError, "Unhandled client message type #{context.type}.")
         end
     end
 
@@ -55,7 +55,7 @@ module TextInterface
         when :number
             (0...list.size).collect { |i| "(#{i+1}) #{list[i]}" }
         when :letter
-            raise "Feature unimplemented"
+            raise(NotImplementedError)
         when :bullet
             list.collect { |i| "-#{i}" }
         end

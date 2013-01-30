@@ -1,4 +1,5 @@
 require './util/log'
+require './util/exceptions'
 
 module Position
     class << self
@@ -50,7 +51,7 @@ module Position
         Log.debug("Clearing position of #{monicker}", 6)
         # This should only be called on a character object prior to saving
         # This is to avoid storing any instance-specific data in a saved character which may be ported to other instances
-        raise "See comment at game/object_extensions/position.rb:19" unless is_type?(:character)
+        raise(UnexpectedBehaviorError) unless is_type?(:character)
         @position.remove_object(self)
         @position      = nil
         @position_type = nil
@@ -96,9 +97,6 @@ module Position
     end
 
     def safe_position
-        unless has_position?
-            Log.error(["Object #{self.type} with no position being queried for its position", caller])
-            raise Exception
-        end
+        raise(UnexpectedBehaviorError) unless has_position?
     end
 end

@@ -1,4 +1,5 @@
 require './message'
+require './util/exceptions'
 
 # Provides a set of tools for maintaining a state stack and state variables
 module StateMaintainer
@@ -7,7 +8,7 @@ module StateMaintainer
     end
 
     def current_state
-        raise "#{self.class} is stateless!" if @state_stack.empty?
+        raise(StateError, "#{self.class} is stateless!") if @state_stack.empty?
         @state_stack.last
     end
 
@@ -20,7 +21,7 @@ module StateMaintainer
     end
 
     def pop_state
-        raise "State stack is empty!" if @state_stack.empty?
+        raise(StateError, "State stack is empty!") if @state_stack.empty?
         @state_stack.pop
     end
 
@@ -109,7 +110,7 @@ class State
     end
 
     def begin_exchange(id)
-        raise "Undefined data exchange #{id}" unless @exchanges[id]
+        raise(ArgumentError, "Undefined data exchange #{id}.") unless @exchanges[id]
         set_exchange_context(id, @previous_result)
         if get_exchange_target == :client
             @client.send_to_client(get_exchange_context)
@@ -123,12 +124,12 @@ class State
         @current_exchange = case params[:type]
         when :text_field
             unless params.has_key?(:field)
-                raise "Text fields must be given an identifier"
+                raise(StandardError, "Text fields must be given an identifier.")
             end
             Message.new(:text_field, {:field => params[:field]})
         when :choose_from_list
             unless params.has_key?(:field)
-                raise "Choice fields must be given an identifier"
+                raise(StandardError, "Choice fields must be given an identifier.")
             end
             choices = if params[:choices_from]
                 previous_result[params[:choices_from]]
@@ -140,7 +141,7 @@ class State
             Log.debug(["Querying server with params", params], 5)
             Message.new(params[:query_method], params[:query_params] || {})
         else
-            raise "Unhandled exchange type #{params[:type]}"
+            raise(StandardError, "Unhandled exchange type #{params[:type]}.")
         end
 
         @exchange_id     = id

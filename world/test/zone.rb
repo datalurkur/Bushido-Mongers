@@ -78,7 +78,7 @@ root.set_zone(0,0,c)
 root.set_zone(1,0,d)
 
 def assert(condition)
-    raise "Assert failed" unless condition
+    raise(StandardError, "Assert failed") unless condition
 end
 
 puts "1) Check that Zones at the same depth connect accurately (b10 <-> d11)"

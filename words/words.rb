@@ -88,7 +88,7 @@ module Words
             when 3, 4, 5
                 person
             else
-                raise "Not in State.person field: #{person}"
+                raise(StandardError, "Not in State.person field: #{person}.")
             end
         end
 
@@ -106,7 +106,7 @@ module Words
                 @person == other.person &&
                 @voice  == other.voice
             else
-                raise "Can't compare word state to #{other.class}"
+                raise(NotImplementedError, "Can't compare word state to #{other.class}.")
             end
         end
 
@@ -142,7 +142,7 @@ module Words
             attr_accessor :children
 
             def initialize(*children)
-                raise "Can't instantiate PTNode class!" if self.class == PTNode
+                raise(StandardError, "Can't instantiate PTNode class!") if self.class == PTNode
                 @children = children.flatten
             end
 
@@ -287,7 +287,7 @@ module Words
             end
 
             def add_adjectives(*adjectives)
-                raise "Don't know which noun to adjectivize of #{self.inspect}!" if @list
+                raise(StandardError, "Don't know which noun to adjectivize of #{self.inspect}!") if @list
                 # Insert adjectives between (potential) article but before the noun
                 adjectives.each do |adj|
                     adj = Adjective.new(adj) unless adj.is_a?(Adjective)
@@ -353,10 +353,10 @@ module Words
                     when :passive
                         [conjugate(:be, be_state), past_participle(verb)]
                     else
-                        raise "Invalid voice #{state.voice}!"
+                        raise(StandardError, "Invalid voice #{state.voice}!")
                     end
                 else
-                    raise NotImplementedError
+                    raise(NotImplementedError)
                 end
             end
 
@@ -384,7 +384,7 @@ module Words
                     infinitive += 'ed'
                 when :future
                     # Handled in state_conjugate.
-                    raise NotImplementedError
+                    raise(NotImplementedError)
                 end
             end
 
@@ -584,7 +584,7 @@ module Words
             args[:state].plural_person!
         end
 
-        raise unless verb
+        raise(StandardError) unless verb
 
         # Use an associated verb, if any exist.
         associated_verbs = Words.db.get_related_words(verb.to_sym)
@@ -760,7 +760,7 @@ module Words
             when 1
                 command = matching_commands.first
             else
-                raise "'#{verb}' has too many command synonyms: #{matching_commands.inspect}"
+                raise(StandardError, "'#{verb}' has too many command synonyms: #{matching_commands.inspect}")
             end
         end
 

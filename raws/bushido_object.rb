@@ -1,4 +1,5 @@
 require './util/log'
+require './util/exceptions'
 require './game/object_extensions'
 
 class BushidoObject
@@ -16,7 +17,7 @@ class BushidoObject
         type_info = @core.db.raw_info_for(@type)
 
         type_info[:needs].each do |k|
-            raise "Required argument #{k.inspect} missing during creation of #{@type}" unless params[k]
+            raise(ArgumentError, "Required argument #{k.inspect} missing during creation of #{@type}.") unless params[k]
         end
 
         type_info[:class_values].each do |k,v|
@@ -40,13 +41,13 @@ class BushidoObject
             next if type_info[:has][property][:class_only]
             if type_info[:has][property][:multiple]
                 if @properties[property].empty? && !type_info[:has][property][:optional]
-                    raise "Property #{property.inspect} has no values for #{@type}"
+                    raise(StandardError, "Property #{property.inspect} has no values for #{@type}.")
                 end
             elsif @properties[property].nil?
                 if type_info[:has][property][:optional]
                     @properties[property] = nil
                 else
-                    raise "Property #{property.inspect} has no value for #{@type}"
+                    raise(StandardError, "Property #{property.inspect} has no value for #{@type}.")
                 end
             end
         end
@@ -119,7 +120,7 @@ class BushidoObject
         if @properties.has_key?(method_name)
             @properties[method_name]
         else
-            raise "Property #{method_name.inspect} not found for #{@type}"
+            raise(ArgumentError, "Property #{method_name.inspect} not found for #{@type}.")
         end
     end
 
@@ -203,5 +204,9 @@ class SafeBushidoObject < BushidoObject
     def process_message(*args)
         check_destroyed
         super(*args)
+    end
+
+    def filter_objects(location, type, name)
+        raise(MissingObjectExtensionError, "The perception extension is required to filter objects") unless uses?(Perception)
     end
 end

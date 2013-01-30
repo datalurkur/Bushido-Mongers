@@ -115,7 +115,7 @@ class Server
                 while(true)
                     begin
                         data = socket.read_nonblock(@config[:buffer_size])
-                        raise Errno::ECONNRESET if data.empty?
+                        raise(Errno::ECONNRESET) if data.empty?
                         messages = @message_buffer.unpack_messages(data)
                         messages.each do |message|
                             process_client_message(message, socket)
@@ -124,7 +124,7 @@ class Server
                         IO.select([socket])
                         retry
                     rescue EOFError => e
-                        raise e
+                        raise(e)
                     rescue Exception => e
                         Log.error(["Processing error - #{e.message}", e.backtrace])
                     end

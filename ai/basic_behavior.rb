@@ -1,3 +1,5 @@
+require 'util/exceptions'
+
 Behavior.define(:random_movement) do |actor|
     position = actor.absolute_position
 
@@ -15,7 +17,6 @@ Behavior.define(:random_movement) do |actor|
 end
 
 Behavior.define(:flee) do |actor|
-    raise "Cannot flee without perceiving." unless actor.uses?(Perception)
     aligned_list = actor.filter_objects(:position, :aligned)
     enemies = aligned_list.select { |npc| Behavior.are_enemies?(npc, actor) }
     if enemies.empty?
@@ -38,7 +39,6 @@ Behavior.define(:flee) do |actor|
 end
 
 Behavior.define(:attack) do |actor|
-    raise "Cannot attack without perceiving." unless actor.uses?(Perception)
     aligned_list = actor.filter_objects(:position, :aligned)
     enemies = aligned_list.select { |npc| Behavior.are_enemies?(npc, actor) }
     if enemies.empty?
@@ -52,8 +52,6 @@ Behavior.define(:attack) do |actor|
 end
 
 Behavior.define(:consume) do |actor|
-    raise "Cannot consume without perceiving." unless actor.uses?(Perception)
-
     consumable_type = actor.class_info(:consumes) || :consumable
     consumables = [:position, :inventory].collect do |location|
         actor.filter_objects(location, consumable_type)

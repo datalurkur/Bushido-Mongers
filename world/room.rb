@@ -4,7 +4,7 @@ require './world/zone'
 module ZoneWithKeywords
     # The instantiated zone, a BushidoObject.
     def zone
-        raise "Zone not defined!" unless @params[:zone]
+        raise(StandardError, "Zone not defined!") unless @params[:zone]
         @params[:zone]
     end
 

@@ -19,15 +19,15 @@ class HTTPReader
         buffer = ""
         begin
             buffer = socket.read_nonblock(DEFAULT_BUFFER_SIZE)
-            raise Errno::ECONNRESET if buffer.empty?
+            raise(Errno::ECONNRESET) if buffer.empty?
         rescue Errno::EWOULDBLOCK,Errno::EAGAIN
             IO.select([socket])
             retry
         rescue EOFError => e
-            raise e
+            raise(e)
         rescue Exception => e
             Log.debug(["Error reading data", e.message, e.backtrace])
-            raise e
+            raise(e)
         end
 
         @buffer += buffer
@@ -41,7 +41,7 @@ class HTTPReader
                         ret, @current_request = [@current_request, nil]
                         return ret
                     else
-                        raise "Put / Post requests not supported"
+                        raise(NotImplementedError, "Put / Post requests not supported.")
                     end
                 else
                     # Assume we're parsing headers, since we don't support put / post yet
@@ -51,7 +51,7 @@ class HTTPReader
                 new_request = parse_query(line)
                 unless new_request
                     Log.warning("Malformed HTTP query - #{line.inspect}")
-                    raise "Malformed data received from client"
+                    raise(StandardError, "Malformed data received from client.")
                 end
                 @current_request = new_request
             end
@@ -63,7 +63,7 @@ class HTTPReader
     def parse_query(line)
         method, uri, version_string = line.split(/\s+/)
         version = version_string.split(/\//).last.to_f
-        raise "HTTP version mismatch #{version} / #{HTTP::VERSION}" unless version == HTTP::VERSION
+        raise(StandardError, "HTTP version mismatch #{version} / #{HTTP::VERSION}.") unless version == HTTP::VERSION
         return HTTP::Request.new(method, nil, uri)
     end
 
@@ -217,7 +217,7 @@ class HTTPServer
                 return_value = case type
                 when "erb";  ERB.new(template_data).result(bindings)
                 when "haml"; Haml::Engine.new(template_data).render(bindings)
-                else;        raise "Unrecognized template type #{type.inspect}"
+                else;        raise(ArgumentError, "Unrecognized template type #{type.inspect}.")
                 end
             rescue Exception => e
                 Log.warning(["Caught exception from template rendering", e.message, e.backtrace])

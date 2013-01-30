@@ -104,7 +104,7 @@ class DerpyPNG
         when :white; index_and_set(x,y,255,255,255)
         when :black; index_and_set(x,y,0,0,0)
         else
-            raise "Unknown color #{color}"
+            raise(ArgumentError, "Unknown color #{color}.")
         end
     end
 
@@ -112,7 +112,7 @@ class DerpyPNG
         color_index = @colors.index([r,g,b])
         unless color_index
             if @colors.size >= 256
-                raise "Max number of colors reached for indexed color"
+                raise(StandardError, "Max number of colors reached for indexed color.")
             end
             color_index = @colors.size
             @colors << [r,g,b]

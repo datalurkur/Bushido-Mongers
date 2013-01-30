@@ -5,7 +5,7 @@ require './util/timer'
 class WorldFactory
 class << self
     def generate(config={})
-        raise "No core object given to #{self.class}" unless config[:core]
+        raise(ArgumentError, "No core object given to #{self.class}.") unless config[:core]
 
         config[:world_size]         ||= 3
         config[:world_depth]        ||= 3

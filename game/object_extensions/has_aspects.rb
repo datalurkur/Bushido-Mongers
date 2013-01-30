@@ -1,3 +1,5 @@
+require './util/exceptions'
+
 module HasAspects
     class << self
         def at_creation(instance, params)
@@ -13,14 +15,14 @@ module HasAspects
 
     def add_attribute(attribute)
         @attributes ||= {}
-        raise "Not an attribute: #{attribute}" unless @core.db.is_type?(attribute, :attribute)
+        raise(UnknownType, "#{attribute} is not an attribute.") unless @core.db.is_type?(attribute, :attribute)
         @attributes[attribute] = @core.db.create(@core, attribute)
     end
 
     def add_skill(skill)
         @skills ||= {}
         skill_raw_name = (skill.to_s.match(/_skill$/) ? skill : "#{skill}_skill".to_sym)
-        raise "Not a skill: #{skill}" unless @core.db.is_type?(skill_raw_name, :skill)
+        raise(UnknownType, "#{skill} is not a skill.") unless @core.db.is_type?(skill_raw_name, :skill)
 
         # TODO - mod bonuses based on attributes
         @skills[skill] = @core.db.create(@core, skill_raw_name)
@@ -31,7 +33,7 @@ module HasAspects
     end
 
     def attribute(attribute)
-        raise "Not an attribute: #{attribute}" unless @core.db.is_type?(attribute, :attribute)
+        raise(UnknownType, "#{attribute} is not an attribute.") unless @core.db.is_type?(attribute, :attribute)
         Log.warning("Doesn't have attribute: #{attribute}") unless @attributes[attribute]
         @attributes[attribute]
     end
@@ -42,7 +44,7 @@ module HasAspects
 
     def skill(skill)
         skill_raw_name = (skill.to_s.match(/_skill$/) ? skill : "#{skill}_skill".to_sym)
-        raise "Not a skill: #{skill}" unless @core.db.is_type?(skill_raw_name, :skill)
+        raise(UnknownType, "#{skill} is not a skill.") unless @core.db.is_type?(skill_raw_name, :skill)
         Log.warning("Doesn't have skill: #{skill}") unless @skills[skill]
         @skills[skill]
     end

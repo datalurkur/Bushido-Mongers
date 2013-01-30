@@ -29,7 +29,7 @@ class AutomationStack
     def clear_state;      @state = nil;   end
 
     def specify_response_for(type, args={}, &block)
-        raise "No response proc given" unless block_given?
+        raise(ArgumentError, "Block required for response definition.") unless block_given?
         data_hash = args.merge(:type => type)
         @response_procs[data_hash] = block
     end

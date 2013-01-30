@@ -1,4 +1,5 @@
 require './util/basic'
+require './util/exceptions'
 require './world/room'
 require './graphics/png'
 
@@ -16,7 +17,7 @@ class World < Area
     end
 
     def random_starting_location
-        raise "No starting locations!" if starting_locations.empty?
+        raise(StateError, "No starting locations!") if starting_locations.empty?
         starting_locations.rand
     end
 

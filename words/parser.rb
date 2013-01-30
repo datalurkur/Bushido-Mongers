@@ -34,7 +34,7 @@ end
 module WordParser
     # The de-facto Words initializer.
     def self.load(dict_dir = './words/dict')
-        raise "Cannot find #{dict_dir}" unless File.exists?(dict_dir) && File.directory?(dict_dir)
+        raise(ArgumentError, "Cannot find #{dict_dir}.") unless File.exists?(dict_dir) && File.directory?(dict_dir)
         db = WordDB.new
 
         Words::TYPES.each do |type|

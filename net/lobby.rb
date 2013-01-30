@@ -24,9 +24,7 @@ class Lobby
         @game_args      = {}
 
         # How the lobby sends messages back to clients (while still using the thread-safe mutexes and methods)
-        unless block_given?
-            raise "Lobby has no means with which to send client data"
-        end
+        raise(ArgumentError, "No send callback passed to lobby (block required).") unless block_given?
         @send_callback = block
     end
 

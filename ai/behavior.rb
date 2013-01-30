@@ -6,13 +6,13 @@ class Behavior
 
         # <Symbol:behavior> is possible when <Proc:criteria> is met, and is defined by <Proc:action>
         def define(behavior, &block)
-            raise ArgumentError unless block_given?
+            raise(ArgumentError, "No block given for behavior definition.")  unless block_given?
             actions[behavior] = block
         end
 
         def act(behavior, actor)
             unless actions.has_key?(behavior)
-                raise ArgumentError, "#{behavior.inspect} not found in list of behaviors"
+                raise(ArgumentError, "#{behavior.inspect} not found in list of behaviors")
             end
             actions[behavior].call(actor)
         end

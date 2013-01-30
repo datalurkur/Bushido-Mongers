@@ -1,4 +1,5 @@
 require './util/log'
+require './util/exceptions'
 require './game/tables'
 
 =begin
@@ -20,7 +21,7 @@ module Aspect
             instance.set_property(:intrinsic, initial_intrinsic)
 
             if instance.has_property?(:associated_attribute)
-                raise "Associated attribute has no scaling value" unless instance.has_property?(:attribute_scaling)
+                raise(MissingProperty, "Associated attribute has no scaling value.") unless instance.has_property?(:attribute_scaling)
             end
 
             instance.start_listening_for(:core)
@@ -91,7 +92,7 @@ module Aspect
     def improve(difficulty)
         # Use the difficulty of the training / task being performed to determine intrinsic gain
         # FIXME
-        raise "NOT IMPLEMENTED"
+        raise(NotImplementedError)
         set_property(:intrinsic, clamp(get_property(:intrinsic) + amount))
     end
 
@@ -104,7 +105,7 @@ module Skill
     class << self
         def at_creation(instance, params)
             # Check to make sure this thing is also an aspect
-            raise "Skills must use the Aspect module" unless Aspect === instance
+            raise(MissingObjectExtensionError, "Skills must use the Aspect module.") unless Aspect === instance
 
             initial_familiarity = instance.class_info(:default_familiarity) + (params[:familiarity_bonus] || 0)
             instance.set_property(:familiarity, initial_familiarity)

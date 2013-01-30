@@ -1,3 +1,5 @@
+require './util/exceptions'
+
 module Perception
     def perceivable_objects_of(list)
         list.select { |obj| can_perceive?(obj) }
@@ -51,12 +53,12 @@ module Perception
 
         case potentials.size
         when 0
-            raise "No object #{object} found"
+            raise(NoMatchError, "No object #{object} found.")
         when 1
             return potentials.first
         else
             # TODO - We should try re-searching here based on other descriptive information/heuristics.
-            raise "Ambiguous: There are too many #{type_class} objects!"
+            raise(AmbiguousMatchError, "Multiple #{type_class} objects found.")
         end
     end
 end

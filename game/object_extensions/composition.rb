@@ -1,4 +1,5 @@
 require './util/log'
+require './util/exceptions'
 
 module Composition
     class << self
@@ -44,8 +45,9 @@ module Composition
                 @core.db.create(@core, symmetric_part[:object_type], params.merge(symmetric_params))
             end
         end
+
         self.container_classes.each do |comp_type|
-            raise "Container class #{comp_type} specified but not created!" if get_property(comp_type).nil?
+            raise(MissingProperty, "Container class #{comp_type} specified but not created.") if get_property(comp_type).nil?
             components           = get_property(comp_type).dup
             already_created      = components.select { |component| BushidoObject === component }
             to_be_created        = components - already_created
@@ -67,32 +69,27 @@ module Composition
     # TODO - check for relative size / max carry number / other restrictions
     def add_object(object, type=:internal)
         Log.debug("Assembling #{monicker} - #{object.monicker} added to list of #{type} parts", 6)
-        raise "Invalid composition type: #{type}" unless self.container_classes.include?(type)
         _add_object(object, type, false)
     end
 
     # TODO - check for relative size / max carry number / other restrictions
     def insert_object(object)
-        raise "Can't insert into #{type}" unless self.container_classes.include?(:internal)
         Log.debug("Inserting #{object.monicker} into #{monicker}", 6)
         _add_object(object, :internal)
     end
 
     # TODO - check for relative size / max carry number / other restrictions
     def attach_object(object)
-        raise "Can't attach to #{type}" unless self.container_classes.include?(:external)
         Log.debug("Attaching #{object.monicker} to #{monicker}", 6)
         _add_object(object, :external)
     end
 
     def wear(object)
-        raise "Can't wear #{object.monicker} on #{monicker}!" unless self.container_classes.include?(:worn)
         Log.debug("Equipping #{object.monicker} on #{monicker}", 6)
         _add_object(object, :worn)
     end
 
     def grasp(object)
-        raise "Can't grasp #{object.monicker} in #{monicker}!" unless self.container_classes.include?(:grasped)
         Log.debug("Grasping #{object.monicker} in #{monicker}", 6)
         _add_object(object, :grasped)
     end
@@ -104,7 +101,7 @@ module Composition
                 return _remove_object(object, type)
             end
         end
-        raise "No matching object #{object.monicker} found."
+        raise(NoMatchError, "No matching object #{object.monicker} found.")
     end
 
     def full?(type=:internal)
@@ -172,7 +169,8 @@ module Composition
 
     private
     def _add_object(object, type, respect_mutable=true)
-        raise "Cannot modify #{type} composition of #{monicker}!" if respect_mutable && !self.mutable_container_classes.include?(type)
+        raise(ArgumentError, "Invalid container class #{type}.") unless self.container_classes.include?(type)
+        raise(ArgumentError, "Cannot modify #{type} composition of #{monicker}!") if respect_mutable && !self.mutable_container_classes.include?(type)
         add_weight(object)
         add_value(object) if self.added_value_container_classes.include?(type)
         set_property(type, get_property(type) << object)
@@ -180,7 +178,8 @@ module Composition
     end
 
     def _remove_object(object, type)
-        raise "Cannot modify #{type} composition of #{monicker}!" unless self.mutable_container_classes.include?(type)
+        raise(ArgumentError, "Invalid container class #{type}.") unless self.container_classes.include?(type)
+        raise(ArgumentError, "Cannot modify #{type} composition of #{monicker}!") unless self.mutable_container_classes.include?(type)
         remove_weight(object)
         remove_value(object) if self.added_value_container_classes.include?(type)
         get_property(type).delete(object)

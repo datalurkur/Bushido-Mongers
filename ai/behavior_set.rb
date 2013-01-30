@@ -16,7 +16,7 @@ class BehaviorSet
     end
 
     def initialize(behavior_set)
-        raise ArgumentError, "Expected Hash, received #{behavior_set.class}" unless Hash === behavior_set
+        raise(ArgumentError, "Expected Hash, received #{behavior_set.class}") unless Hash === behavior_set
         @behavior_set = behavior_set
     end
 

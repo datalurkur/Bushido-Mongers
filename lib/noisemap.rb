@@ -13,9 +13,9 @@ class NoiseMap
     end
 
     def populate(granularity = (1.0 / 2.0**6))
-        raise "You probably want granularity to be a float" unless Float === granularity
+        raise(ArgumentError, "You probably want granularity to be a float.") unless Float === granularity
         dimension_scalar = @size / (@noise.noise_size * granularity)
-        raise "You probably don't want to scale your dimensions by #{dimension_scalar}, try a granularity in the range (0.0, 1.0]" if dimension_scalar == 0.0
+        raise(ArgumentError, "You probably don't want to scale your dimensions by #{dimension_scalar}, try a granularity in the range (0.0, 1.0].") if dimension_scalar == 0.0
         (0...@size).each do |x|
             (0...@size).each do |y|
                 scaled_x = x / dimension_scalar
@@ -29,23 +29,23 @@ class NoiseMap
     end
 
     def max
-        raise "NoiseMap not populated" unless @populated
+        raise(StandardError, "NoiseMap not populated") unless @populated
         @max
     end
 
     def min
-        raise "NoiseMap not populated" unless @populated
+        raise(StandardError, "NoiseMap not populated") unless @populated
         @min
     end
 
     def get(x, y)
-        raise "NoiseMap not populated" unless @populated
-        raise "Coordinates #{[x,y].inspect} out of bounds" unless x >= 0 && y >= 0 && x < @size && y < @size
+        raise(StandardError, "NoiseMap not populated") unless @populated
+        raise(ArgumentError, "Coordinates #{[x,y].inspect} out of bounds.") unless x >= 0 && y >= 0 && x < @size && y < @size
         @map[x][y]
     end
 
     def get_scaled(x, y, new_min, new_max)
-        raise "NoiseMap not populated" unless @populated
+        raise(StandardError, "NoiseMap not populated.") unless @populated
         preshrunk_range = (@max - @min)
         shrunk = if preshrunk_range == 0
             0.0

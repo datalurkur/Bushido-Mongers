@@ -5,18 +5,16 @@
 16:55 <@datalurkur> And the inventory will just be a list of equipment attached to slots along with the contents of any of that equipment that happens to be a container.
 =end
 
+require './util/exceptions'
+
 module Inventory
     def wear(part, equipment)
-        if part.full?(:worn)
-            raise "Can't wear #{equipment.monicker}; already wearing #{part.worn_objects}"
-        end
+        raise(FailedCommandError, "Can't wear #{equipment.monicker}; already wearing #{part.worn_objects}") if part.full?(:worn)
         equipment.equip_on(part)
     end
 
     def grasp(part, object)
-        if part.full?(:grasped)
-            raise "Can't hold #{object.monicker}; already holding #{part.grasped_objects}"
-        end
+        raise(FailedCommandError, "Can't hold #{object.monicker}; already holding #{part.grasped_objects}") if part.full?(:graped)
         object.grasped_by(part)
     end
 
@@ -64,9 +62,7 @@ module Equipment
 
     class << self
         def at_creation(instance, params)
-            unless instance.uses?(Corporeal)
-                raise "Equipment can only be used on a corporeal!"
-            end
+            raise(MissingObjectExtensionError, "Equipment can only be used on a corporeal!") unless Corporeal === instance
             instance.random_equipment
         end
 

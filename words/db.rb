@@ -34,13 +34,13 @@ class WordDB
             nil
         when WordGroup
             # Necessary? Ideally. But not implemented yet.
-            raise NotImplementedError
+            raise(NotImplementedError)
         when Hash
             matching = @groups.select do |group|
 #                Log.debug(["Analyzing:", word, group])
                 word.any? { |pos, w| group.has?(pos) && group[pos] == w }
             end
-            raise "Duplicate word groups found in #{self.class} for #{word.inspect}" unless matching.size < 2
+            raise(StandardError, "Duplicate word groups found in #{self.class} for #{word.inspect}.") unless matching.size < 2
             Log.debug("No word group '#{word.inspect}' found!") if matching.size <= 0 && verbose
             matching.first
         else
@@ -160,7 +160,7 @@ class WordDB
                 end
             end
         else
-            raise "Wrong number of conjugation terms: #{list}"
+            raise(StandardError, "Wrong number of conjugation terms: #{list}.")
         end
     end
 
@@ -174,11 +174,11 @@ class WordDB
             matching.first
         when WordGroup, Hash
             matching = @groups.select { |group| group == word.to_sym }
-            raise "Duplicate word groups found in #{self.class} for #{word.inspect}" unless matching.size < 2
+            raise(StandardError, "Duplicate word groups found in #{self.class} for #{word.inspect}.") unless matching.size < 2
             Log.debug("No word group '#{word.inspect}' found!") if matching.size <= 0 && verbose
             matching.first
         else
-            raise "Can't find groups given type #{word.class}"
+            raise(ArgumentError, "Can't find groups given type #{word.class}.")
         end
     end
 end
@@ -202,7 +202,7 @@ class WordGroup
     end
 
     def part_of_speech(word)
-        raise "#{word} is not a member of #{parts_of_speech.inspect}" unless contains?(word)
+        raise(ArgumentError, "#{word} is not a member of #{parts_of_speech.inspect}.") unless contains?(word)
         parts_of_speech.find { |k,v| v == word }.first
     end
 
@@ -221,7 +221,7 @@ class WordGroup
         when Hash
             parts_of_speech == other
         else
-            raise "Can't compare wordgroup to #{other.class}"
+            raise(NotImplementedError, "Can't compare wordgroup to #{other.class}.")
         end
     end
 
