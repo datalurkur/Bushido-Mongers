@@ -3,13 +3,14 @@ require './util/log'
 module Constructed
     class << self
         def at_creation(instance, params)
+            Log.debug(["Constructing a #{instance.monicker} with params", params], 8)
             components = params[:components]
             quality    = params[:quality]
             randomized = false
             if params[:randomize]
                 unless components
                     randomized = true
-                    components = instance.get_random_components
+                    components = instance.get_random_components(params)
                 end
                 quality ||= Quality.random
             else
@@ -30,16 +31,17 @@ module Constructed
                 s + Quality.index_of(i.is_type?(:constructed) ? i.quality : :standard)
             } / components.size
             quality_value = (Quality.index_of(quality) + avg_component_quality) / 2.0
-            quality_level = Quality.value_at(quality_value.ceil)
+            quality_level = Quality.value_at(Quality.clamp_index(quality_value.ceil))
 
             instance.set_property(:quality,    quality_level)
             instance.set_property(:incidental, components)
         end
     end
 
-    def get_random_components
+    def get_random_components(params)
+        p = params.reject { |k,v| k == :components || k == :quality || k == :position }
         class_info(:required_components).collect do |component|
-            @core.db.create(@core, @core.db.random(component), {:randomize => true})
+            @core.db.create(@core, @core.db.random(component), p)
         end
     end
 end

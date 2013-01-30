@@ -65,6 +65,7 @@ material feather {
 material,constructed ingot {
     required_components metal;
     technique forge;
+    size small;
 }
 
 constructed buckle {

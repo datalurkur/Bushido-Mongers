@@ -40,9 +40,10 @@ class ObjectDB
         @db.has_key?(name)
     end
 
-    def each_type(&block)
+    def each_type(instantiable_only=false, &block)
         return unless block_given?
         @db.keys.each do |type|
+            next if instantiable_only && raw_info_for(type)[:abstract]
             block.call(type)
         end
     end
@@ -116,6 +117,17 @@ class ObjectDB
         end
         Log.debug("No!", 8)
         return false
+    end
+
+    def ancestry_of(type)
+        types   = []
+        current = [type]
+        until current.empty?
+            types.concat(current)
+            current = current.collect { |t| raw_info_for(t)[:is_type] }.flatten.uniq
+            current.reject! { |t| t == :root }
+        end
+        types
     end
 
     def random(type)

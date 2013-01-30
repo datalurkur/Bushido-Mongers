@@ -76,29 +76,31 @@ class Log
 
         # THREADSAFE
         def error(msg, level=1)
+            raise(StandardError, "Logging system never initialized.") unless @logging_setup
             return unless @channels[:error]
             log_internal(msg, level, :red)
         end
 
         def warning(msg, level=1)
+            raise(StandardError, "Logging system never initialized.") unless @logging_setup
             return unless @channels[:warning]
             log_internal(msg, level, :yellow)
         end
 
         def debug(msg, level=1)
+            raise(StandardError, "Logging system never initialized.") unless @logging_setup
             return unless @channels[:debug]
             log_internal(msg, level, :white)
         end
 
         def info(msg, level=1)
+            raise(StandardError, "Logging system never initialized.") unless @logging_setup
             return unless @channels[:info]
             log_internal(msg, level, :green)
         end
 
         private
         def log_internal(msg, level, color=:white)
-            raise(StandardError, "Logging system never initialized.") unless @logging_setup
-
             file,line = caller[1].split(/:/)
             @source_files[file] ||= @max_log_level
             raise(TypeError, "#{level} is not a valid log level.") unless Numeric === level

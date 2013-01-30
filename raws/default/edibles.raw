@@ -6,8 +6,7 @@ consumable carrot {
     weight 1;
 }
 
-constructed,consumable cooked_carrot {
-    required_components carrot;
-    technique cook;
+consumable cooked_carrot {
+    size tiny;
     weight 0.5;
 }

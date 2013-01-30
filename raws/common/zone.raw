@@ -6,7 +6,7 @@ abstract root zone {
     /* Acceptable sub-zones */
     class_many optional sym child_zones;
 
-    has_many sym keywords;
+    has_many optional sym keywords;
 /*    needs keywords; */
 
     class_many optional sym optional_keywords;

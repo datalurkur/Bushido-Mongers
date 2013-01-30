@@ -1,3 +1,4 @@
 item anvil {
+    size medium;
     weight 100;
 }

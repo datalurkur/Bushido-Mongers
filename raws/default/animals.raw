@@ -48,8 +48,8 @@ monster,corporeal swarm_of_flesh_eating_scarabs {
 }
 
 monster,corporeal adolescent_mutant_ninja_tortoise {
-    size medium;
-    body_type mutant_tortoise;
+    size large;
+    body_type tortoise_body;
     spawns_in sewer;
     spawn_rarity rare;
 }

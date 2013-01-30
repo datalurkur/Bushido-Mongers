@@ -101,11 +101,17 @@ body snake_body {
     internal venom_gland;
 }
 
-body,can_wear mutant_tortoise_body {
-    weight 250;
+body,biped,can_wear tortoise_body {
+    weight 10;
     incidental flesh;
-    typical_size medium;
-    external head mouth arm hand leg foot carapace; 
+    typical_size small;
+    external head carapace; 
+    symmetric {
+        object_type arm;
+        container_class external;
+        symmetry_type balanced_axial;
+        count 2;
+    }
     internal liver;
 }
 

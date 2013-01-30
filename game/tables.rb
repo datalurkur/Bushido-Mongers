@@ -43,12 +43,16 @@ module DataTables
         offset       = difference(standard, relative_value)
         normal_index = index_of(value)
 
-        new_level = [[normal_index + offset, 0].max, @num_values.size].min
+        new_level = [[normal_index + offset, 0].max, @num_values-1].min
         value_at(new_level)
     end
 
     def difference(base_value, relative_value)
         index_of(relative_value) - index_of(base_value)
+    end
+
+    def clamp_index(index)
+        [[index, 0].max, @num_values-1].min
     end
 end
 

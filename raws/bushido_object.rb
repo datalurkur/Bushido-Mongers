@@ -106,14 +106,7 @@ class BushidoObject
     end
 
     def type_ancestry
-        types   = []
-        current = [@type]
-        until current.empty?
-            types.concat(current)
-            current = current.collect { |t| @core.db.raw_info_for(t)[:is_type] }.flatten.uniq
-            current.reject! { |t| t == :root }
-        end
-        types
+        @core.db.ancestry_of(@type)
     end
 
     def method_missing(method_name, *args, &block)

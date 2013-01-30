@@ -41,6 +41,7 @@ module Composition
                 symmetric_params = {
                     :position      => self,
                     :position_type => symmetric_part[:container_class],
+                    :randomize     => true
                 }
                 @core.db.create(@core, symmetric_part[:object_type], params.merge(symmetric_params))
             end
@@ -56,7 +57,8 @@ module Composition
             to_be_created.each do |component|
                 @core.db.create(@core, component, params.merge(
                     :position      => self,
-                    :position_type => comp_type
+                    :position_type => comp_type,
+                    :randomize     => true
                 ))
             end
         end

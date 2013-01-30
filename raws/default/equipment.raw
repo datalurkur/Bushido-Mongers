@@ -23,7 +23,8 @@ abstract equipment foot_armor {
     slot foot;
 }
 
-constructed dagger_blade {
+constructed,item dagger_blade {
+    size tiny;
     required_components metal;
     technique forge;
 }
