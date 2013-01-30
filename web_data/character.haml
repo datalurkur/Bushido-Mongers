@@ -1,6 +1,3 @@
--username  = args.first.unescape
--character = @game_core.get_character(username)
-
 !!! 5
 %head
     %title Bushido Mongers
@@ -11,7 +8,7 @@
             %h1=username
         #core.clearfix
             %section#map.clearfix
-                %img{:src => File.join(uri_for(username), "map.png")}
+                %img{:src => lobby.map_uri_for(username)}
             %section#data.clearfix
                 %h2=character.monicker
         %footer

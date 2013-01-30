@@ -1,10 +1,13 @@
 require './net/server'
 require './net/web_enabled_lobby'
+require './net/web_renderer'
 
 # GameServer is responsible for handling client communications above the socket layer and delegating them where appropriate
 # Handles logins and authentication
 # Handles lobby creation, maintenance, and destruction
 class GameServer < Server
+    include WebRenderer
+
     def initialize(config={})
         super(config)
         @config[:web_port] = (@config[:web_port] || DEFAULT_HTTP_PORT).to_i
@@ -19,11 +22,19 @@ class GameServer < Server
         @web_server  = HTTPServer.new(@config[:web_root], @config[:web_port])
 
         # Allow files at the root to be accessed
-        @web_server.add_route(/\/#{@web_server.wildcard}$/i) do |args|
-            @web_server.find_file(args.first)
+        @web_server.add_route(/\/#{wildcard}$/i) do |args|
+            get_file(File.join(@web_server.web_root, args.first))
         end
         @web_server.add_route(/\/$/) do
-            @web_server.process_template("index.haml", binding)
+            get_template(File.join(@web_server.web_root, "index.haml"), {:game_server => self})
+        end
+    end
+
+    def each_lobby(&block)
+        @lobby_mutex.synchronize do
+            @lobbies.each do |lobby|
+                yield(lobby)
+            end
         end
     end
 

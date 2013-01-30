@@ -8,11 +8,11 @@
             %h1 Bushido Mongers
         #core.clearfix
             %section#map.clearfix
-                %img{:src => File.join(web_uri, "map.png")}
+                %img{:src => lobby.map_uri}
             %section#data.clearfix
                 %h2 Users
                 %ul
-                    -@users.keys.each do |username|
+                    -lobby.user_list.each do |user|
                         %li
-                            %a{:href => uri_for(username)}=username
+                            %a{:href => lobby.uri_for(user)}=user
         %footer

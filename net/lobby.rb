@@ -28,6 +28,10 @@ class Lobby
         @send_callback = block
     end
 
+    def user_list
+        @users.keys
+    end
+
     def is_admin?(username)
         @users[username][:admin]
     end

@@ -4,10 +4,6 @@ require './net/http_protocol'
 require './net/defaults'
 require './util/compression'
 require './util/log'
-require 'erb'
-
-require 'rubygems'
-require 'haml'
 
 class HTTPReader
     def initialize
@@ -190,77 +186,7 @@ class HTTPServer
         return HTTP::Response::NotFound.new.pack
     end
 
-    def wildcard
-        "([^\/]*)"
-    end
-
     def add_route(uri_regex, &block)
         @responses[uri_regex] = block
-    end
-
-    def process_template(template_name, object_binding, args=[])
-        template_filename = File.join(@web_root, template_name)
-        return nil unless File.exist?(template_filename)
-        template_ext      = template_filename.split(/\./).last
-        template_data     = File.read(template_filename)
-        return nil unless template_data
-        data = template_protect(template_data, object_binding, template_ext)
-        return data ? [data, "text/html"] : nil
-    end
-
-    # Runs an ERB template evaluation in its own thread to protect the caller
-    def template_protect(template_data, bindings, type)
-        return_value = nil
-
-        sandbox = Thread.new(return_value) do |return_value|
-            begin
-                return_value = case type
-                when "erb";  ERB.new(template_data).result(bindings)
-                when "haml"; Haml::Engine.new(template_data).render(bindings)
-                else;        raise(ArgumentError, "Unrecognized template type #{type.inspect}.")
-                end
-            rescue Exception => e
-                Log.warning(["Caught exception from template rendering", e.message, e.backtrace])
-            end
-        end
-
-        # Wait for the erb thread to finish with a 5-second timeout
-        status = sandbox.join(5)
-        sandbox.kill unless status
-
-        return_value
-    end
-
-    def find_file(filename)
-        begin
-            file_request   = File.join(@web_root, filename)
-            unless File.exist?(file_request)
-                Log.debug("#{file_request} does not exist", 7)
-                return nil
-            end
-            if File.directory?(file_request)
-                Log.debug("#{file_request} is a directory", 7)
-                return nil
-            end
-            Log.debug("Loading #{file_request}", 7)
-            data           = File.read(file_request)
-
-            file_extension = file_request.split(/\./).last
-            type = case file_extension
-            when "ico";        "image/x-icon"
-            when "png";        "image/png"
-            when "jpg","jpeg"; "image/jpeg"
-            when "css";        "text/css"
-            when "html";       "text/html"
-            when "ttf";        "font/ttf"
-            else
-                Log.warning("Unrecognized extension #{file_extension}")
-                "text/plain"
-            end
-            [data, type]
-        rescue Exception => e
-            Log.debug(["Failed to load data from #{filename}", e.message, e.backtrace])
-            nil
-        end
     end
 end
