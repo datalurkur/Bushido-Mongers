@@ -48,7 +48,7 @@ monster,corporeal swarm_of_flesh_eating_scarabs {
 }
 
 monster,corporeal adolescent_mutant_ninja_tortoise {
-    size large;
+    size medium;
     body_type tortoise_body;
     spawns_in sewer;
     spawn_rarity rare;
@@ -73,7 +73,7 @@ animal,corporeal deer {
 }
 
 animal,corporeal goat {
-    size large;
+    size medium;
     body_type ungulate_body;
     spawns_in meadow forest;
     spawn_rarity common;

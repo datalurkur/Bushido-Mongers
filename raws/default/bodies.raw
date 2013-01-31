@@ -69,7 +69,7 @@ body,quadriped rodent_body {
 body,quadriped ungulate_body {
     weight 200;
     incidental flesh;
-    typical_size large;
+    typical_size medium;
     external head tail;
 }
 
