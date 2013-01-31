@@ -21,51 +21,58 @@ class World < Area
         starting_locations.rand
     end
 
-    def get_map(colored_rooms={}, cell_size=30, corridor_size=6, default_color=:white)
+    def get_room_layout(total_size, corridor_ratio)
         depth_powers   = (0..@depth-1).collect { |n| @size ** n }.reverse
         cells_per_side = depth_powers.first
-        png_size       = cell_size * cells_per_side
-        cell_sizes     = depth_powers.reverse.collect { |p| png_size / p }
-        Log.debug("Preliminary depth power computation: #{depth_powers.inspect}", 5)
-        Log.debug("Preliminary png cell size computation: #{cell_sizes.inspect}", 5)
-        png = DerpyPNG.new(png_size, png_size)
+        cell_size      = total_size / cells_per_side
+        corridor_size  = (cell_size * corridor_ratio).to_i
+        cell_sizes     = depth_powers.reverse.collect { |p| total_size / p }
+
+        room_layout    = {
+            :corridor_size => corridor_size,
+            :rooms         => {}
+        }
 
         leaves.each do |leaf|
-            leaf_coords = leaf.get_full_coordinates
-            Log.debug("Writing data for #{leaf.name} at #{leaf_coords.inspect}", 7)
+            leaf_data = {}
 
-            # Compute the coordinates of this leaf
-            png_coords  = [0,png_size-1]
-            leaf_coords.each_with_index do |c,i|
-                Log.debug("\tMultiplying coordinates #{c.inspect} by #{depth_powers[i]} and cell size #{cell_size}", 9)
-                png_coords[0] += (c[0] * depth_powers[i+1] * cell_size)
-                png_coords[1] -= (c[1] * depth_powers[i+1] * cell_size)
+            base_coords = leaf.get_full_coordinates
+
+            # Compute the position and dimension of this room
+            local_cell_size = cell_sizes[base_coords.size]
+            room_size       = local_cell_size - (corridor_size * 2)
+            room_coords     = [0, total_size - 1]
+            base_coords.each_with_index do |c,i|
+                room_coords[0] += (c[0] * depth_powers[i+1] * cell_size)
+                room_coords[1] -= (c[1] * depth_powers[i+1] * cell_size)
             end
-            Log.debug("\tPNG coordinates computed to be #{png_coords.inspect}", 7)
 
-            # Compute the size of this leaf
-            local_cell_size = cell_sizes[leaf_coords.size]
-            png_room_size   = local_cell_size - (corridor_size * 2)
-            Log.debug("\tPNG Cell/Room size computed to be #{local_cell_size}/#{png_room_size}", 7)
+            leaf_data[:room_size]   = room_size
+            leaf_data[:cell_size]   = local_cell_size
+            leaf_data[:room_coords] = [
+                room_coords.x + corridor_size,
+                room_coords.y - corridor_size - room_size
+            ]
+            leaf_data[:cell_coords] = [
+                room_coords.x,
+                room_coords.y - local_cell_size
+            ]
 
-            room_color = colored_rooms.has_key?(leaf) ? colored_rooms[leaf] : default_color
-            png.fill_box(png_coords.x + corridor_size, png_coords.y - corridor_size - png_room_size, png_room_size, png_room_size, room_color)
-
-            Log.debug("\tDrawing corridors", 7)
+            # Compute the positions and dimensions of the corridors
+            leaf_data[:connections] = {}
             leaf.connected_directions.each do |dir|
-                other = leaf.get_adjacent(dir)
-                other_coords = other.get_full_coordinates
-                Log.debug("\t\tCorridor to the #{dir} is connected to #{other.name}", 9)
+                other           = leaf.get_adjacent(dir)
+                other_coords    = other.get_full_coordinates
 
                 corridor_offset = [0,0]
                 shift_cell_size = local_cell_size
 
-                if other_coords.size > leaf_coords.size
-                    # This leaf is higher than its connection in the heirarchy, shift the hallway in the appropriate direction
-                    (leaf_coords.size...other_coords.size).each do |i|
+                if other_coords.size > base_coords.size
+                    # This leaf is higher than its connection in the heirarchy,
+                    #  shift the hallway in the appropriate direction
+                    (base_coords.size...other_coords.size).each do |i|
                         diff_coords    = other_coords[i]
                         diff_cell_size = cell_sizes[i+1]
-                        Log.debug("\t\tShifting coordinates by #{diff_coords.inspect} * #{diff_cell_size}", 9)
 
                         case dir
                         when :north, :south
@@ -77,7 +84,7 @@ class World < Area
                     shift_cell_size = cell_sizes[other_coords.size]
                 end
 
-                half_shift = ((shift_cell_size - corridor_size) / 2)
+                half_shift = (shift_cell_size - corridor_size) / 2
                 edge_shift = (local_cell_size - corridor_size)
 
                 case dir
@@ -88,9 +95,40 @@ class World < Area
                     (corridor_offset[0] += edge_shift) if (dir == :east)
                      corridor_offset[1] += half_shift
                 end
-                Log.debug("\t\tOffset found to be #{corridor_offset.inspect}", 9)
 
-                png.fill_box(png_coords.x + corridor_offset.x, png_coords.y - corridor_offset.y - corridor_size, corridor_size, corridor_size, default_color)
+                leaf_data[:connections][dir] = {
+                    :coords => [
+                        room_coords.x + corridor_offset.x,
+                        room_coords.y - corridor_offset.y - corridor_size
+                    ],
+                    :connection => other
+                }
+            end
+
+            room_layout[:rooms][leaf] = leaf_data
+        end
+
+        room_layout
+    end
+
+    def get_map_layout(png_size, corridor_ratio, colored_rooms={}, default_color=:white)
+        layout        = get_room_layout(png_size, corridor_ratio)
+        corridor_size = layout[:corridor_size]
+
+        png = DerpyPNG.new(png_size, png_size)
+
+        layout[:rooms].keys.each do |room|
+            room_data      = layout[:rooms][room]
+            room_coords    = room_data[:room_coords]
+            room_size      = room_data[:room_size]
+            png_room_color = colored_rooms.has_key?(room) ? colored_rooms[room] : default_color
+
+            png.fill_box(room_coords.x, room_coords.y, room_size, room_size, png_room_color)
+
+            room_data[:connections].keys.each do |dir|
+                coords = room_data[:connections][dir][:coords]
+
+                png.fill_box(coords.x, coords.y, corridor_size, corridor_size, default_color)
             end
         end
 

@@ -29,7 +29,7 @@ class Lobby
     end
 
     def user_list
-        @users.keys
+        @users.keys.select { |user| is_playing?(user) }
     end
 
     def is_admin?(username)
