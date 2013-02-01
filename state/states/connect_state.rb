@@ -2,8 +2,8 @@ require './state/state'
 require './state/states/login_state'
 
 class ConnectState < State
-    def initialize(client, method)
-        super(client, method)
+    def initialize(client)
+        super(client)
 
         @connect_exchange = define_exchange_chain([
             [:text_field, {:field => :server_hostname}],
@@ -24,7 +24,7 @@ class ConnectState < State
         begin
             @client.connect(@client.get(:server_hostname), @client.get(:server_port).to_i)
             Log.debug("Connection successful")
-            LoginState.new(@client, :set)
+            LoginState.new(@client)
         rescue Exception => e
             Log.debug(["Failed to connect", e.message])
             begin_exchange(@connect_exchange)

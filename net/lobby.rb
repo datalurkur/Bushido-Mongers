@@ -32,6 +32,10 @@ class Lobby
         @users.keys.select { |user| is_playing?(user) }
     end
 
+    def game_state
+        @game_state
+    end
+
     def is_admin?(username)
         @users[username][:admin]
     end

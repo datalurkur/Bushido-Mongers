@@ -26,11 +26,12 @@ module WebRenderer
 
             file_extension = filename.split(/\./).last
             type = case file_extension
-            when "ico";        "image/x-icon"
-            when "png";        "image/png"
-            when "jpg","jpeg"; "image/jpeg"
             when "css";        "text/css"
             when "html";       "text/html"
+            when "ico";        "image/x-icon"
+            when "jpg","jpeg"; "image/jpeg"
+            when "js";         "text/javascript"
+            when "png";        "image/png"
             when "ttf";        "font/ttf"
             else
                 Log.warning("Unrecognized extension #{file_extension}")

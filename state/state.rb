@@ -74,7 +74,7 @@ class State
         when :connection_reset
             pass_to_client(message)
             @client.disconnect
-            ConnectState.new(@client, :set)
+            ConnectState.new(@client)
         else
             unless process_exchange(message, :server)
                 Log.warning("Unhandled message #{message.type} encountered during server processing for #{self.class}")

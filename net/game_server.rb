@@ -73,12 +73,6 @@ class GameServer < Server
     end
 
     def process_server_menu_message(message, socket)
-        @user_mutex.synchronize {
-            if @user_info[socket][:state] != :server_menu
-                debug("Invalid message - #{@user_info[socket][:username]} is not in the server menu")
-                return
-            end
-        }
         case message.type
         when :get_motd
             send_to_client(socket, Message.new(:motd,{:text=>@config[:motd]}))
@@ -88,13 +82,19 @@ class GameServer < Server
             }
             send_to_client(socket, Message.new(:lobby_list,{:lobbies=>lobbies}))
         when :join_lobby
-            lobby         = nil
             username      = nil
+            user_state    = nil
             password_hash = nil
             @user_mutex.synchronize {
                 username      = @user_info[socket][:username]
+                user_state    = @user_info[socket][:state]
                 password_hash = message.lobby_password.xor(@user_info[socket][:server_hash])
             }
+            if user_state != :server_menu
+                send_to_client(socket, Message.new(:join_fail, {:reason => :not_in_server_menu}))
+            end
+
+            lobby = nil
             @lobby_mutex.synchronize {
                 lobby = @lobbies.find { |lobby| lobby.name == message.lobby_name }
             }
@@ -112,16 +112,38 @@ class GameServer < Server
             else
                 send_to_client(socket, Message.new(:join_fail, {:reason => :incorrect_password}))
             end
+        when :leave_lobby
+            username   = nil
+            user_state = nil
+            lobby      = nil
+            @user_mutex.synchronize {
+                username   = @user_info[socket][:username]
+                user_state = @user_info[socket][:state]
+                lobby      = @user_info[socket][:lobby]
+            }
+            if user_state != :lobby || lobby.nil?
+                Log.error("User #{username} is not in a lobby")
+            else
+                lobby.remove_user(username)
+                @user_mutex.synchronize {
+                    @user_info[socket][:state] = :server_menu
+                    @user_info[socket].delete(:lobby)
+                }
+            end
         when :create_lobby
             password_hash = nil
             username      = nil
+            user_state    = nil
             @user_mutex.synchronize {
                 password_hash = message.lobby_password.xor(@user_info[socket][:server_hash])
                 username      = @user_info[socket][:username]
+                user_state    = @user_info[socket][:state]
             }
             @lobby_mutex.synchronize {
                 if @lobbies.find { |lobby| lobby.name == message.lobby_name }
                     send_to_client(socket, Message.new(:create_fail, {:reason => :lobby_exists}))
+                elsif user_state != :server_menu
+                    send_to_client(socket, Message.new(:join_fail, {:reason => :not_in_server_menu}))
                 else
                     lobby = WebEnabledLobby.new(message.lobby_name, password_hash, username, @web_server) do |user, message|
                         socket = get_socket_for_user(user)

@@ -1,4 +1,5 @@
 require './state/state'
+require './state/states/server_menu_state'
 require './state/states/playing_state'
 
 class LobbyState < State
@@ -24,6 +25,12 @@ class LobbyState < State
                 begin_exchange(@select_character_exchange)
             when :start_game
                 @client.send_to_server(Message.new(:start_game))
+            when :leave_lobby
+                @client.send_to_server(Message.new(:leave_lobby))
+                @client.unset(:lobby_name)
+                @client.unset(:lobby_password)
+                @client.unset(:server_menu_autocmd)
+                @client.set_state(ServerMenuState.new(@client))
             end
         end
 
@@ -31,7 +38,7 @@ class LobbyState < State
     end
 
     # FIXME - This menu needs to be refined and broken up into categories (game administration, character selection, etc)
-    def lobby_menu_choices; [:get_game_params, :generate_game, :create_character, :select_character, :start_game]; end
+    def lobby_menu_choices; [:get_game_params, :generate_game, :create_character, :select_character, :start_game, :leave_lobby]; end
 
     def from_server(message)
         case message.type

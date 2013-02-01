@@ -2,8 +2,8 @@ require './state/state'
 require './util/crypto'
 
 class ServerMenuState < State
-    def initialize(client, method)
-        super(client, method)
+    def initialize(client)
+        super(client)
 
         @server_menu_exchange = define_exchange(:choose_from_list, {:field => :server_menu, :choices => server_menu_choices}) do |choice|
             case choice

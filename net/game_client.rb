@@ -20,7 +20,7 @@ class GameClient < MuxedClientBase
     def start(initial_state=ConnectState)
         return if @running
         super()
-        initial_state.new(self, :set)
+        initial_state.new(self)
         @running = true
         @running_thread = start_main_loop
     end

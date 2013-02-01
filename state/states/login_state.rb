@@ -4,8 +4,8 @@ require './state/states/server_menu_state'
 require './util/crypto'
 
 class LoginState < State
-    def initialize(client, method)
-        super(client, method)
+    def initialize(client)
+        super(client)
 
         @username_exchange = define_exchange(:text_field, {:field => :username}) do
             send_login_request
@@ -33,7 +33,7 @@ class LoginState < State
             return
         when :auth_accept
             pass_to_client(message)
-            ServerMenuState.new(@client, :set)
+            ServerMenuState.new(@client)
             return
         end
 
