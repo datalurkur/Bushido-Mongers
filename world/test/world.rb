@@ -79,4 +79,4 @@ end
 Log.setup("Main", "world_test")
 
 w = test_world_2
-png_data = w.get_map
+png_data = w.get_map_layout(512, 0.2)
