@@ -29,6 +29,7 @@ class World < Area
         cell_sizes     = depth_powers.reverse.collect { |p| total_size / p }
 
         room_layout    = {
+            :total_size    => total_size,
             :corridor_size => corridor_size,
             :rooms         => {}
         }

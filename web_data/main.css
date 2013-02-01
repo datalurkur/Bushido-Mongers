@@ -67,8 +67,9 @@ div.control ul li a {
 div.content {
     padding-top: 5px;
     padding-bottom: 5px;
+    padding-left: 5px;
 
-    margin-left: 160px;
+    margin-left: 165px;
 }
 
 div.hiddentab {

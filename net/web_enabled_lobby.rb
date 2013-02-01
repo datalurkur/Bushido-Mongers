@@ -32,10 +32,16 @@ class WebEnabledLobby < Lobby
     end
 
     def create_lobby_map
+        # FIXME - Cache the map so we don't have to recreate it every damn time
         map_data = @game_core.world.get_map_layout(256, 0.2)
         f = File.open(map_location, 'w')
         f.write(map_data)
         f.close
+    end
+
+    def get_room_layout
+        # FIXME - Cache the layout so we don't have to recreate it every damn time
+        @game_core.world.get_room_layout(256, 0.2)
     end
 
     def create_map_for(username)
@@ -51,7 +57,10 @@ class WebEnabledLobby < Lobby
 
         # The lobby landing page
         @web_server.add_route(/#{web_uri}$/i) do |args|
-            get_template(File.join(web_root, "lobby.haml"), {:lobby => self})
+            get_template(File.join(web_root, "lobby.haml"), {
+                :lobby       => self,
+                :room_layout => get_room_layout
+            })
         end
 
         # Lobby map
