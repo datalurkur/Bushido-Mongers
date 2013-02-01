@@ -1,17 +1,40 @@
 !!! 5
 %head
     %title Bushido Mongers
-    %link{:rel => "stylesheet", :href=>"main.css", :type=>"text/css"}
-%body
-    #wrapper
-        %header
+    %link{:rel => "stylesheet", :href => "main.css", :type => "text/css"}
+%body{:onload => "init('default')"}
+    %script{:type => "text/javascript", :src => "index.js"}
+    .wrapper
+        .header
             %h1 Bushido Mongers
-        #core.clearfix
-            %h2 Game Lobbies
-            -game_server.each_lobby do |lobby|
-                -if WebEnabledLobby === lobby
-                    %li
-                        %a{:href=>lobby.web_uri}=lobby.name
-                -else
-                    %li=lobby.name
-        %footer
+        .core
+            .control
+                %h3 Game Lobbies
+                %ul
+                    -game_server.each_lobby do |lobby|
+                        -if WebEnabledLobby === lobby
+                            %li
+                                %a{:href => "javascript:void(0)", :onclick => "focusTab('#{lobby.name}');"}=lobby.name
+                        -else
+                            %li=lobby.name
+            .content
+                %div.tabs
+                    %div.hiddentab#default Choose a lobby for more information
+                    -game_server.each_lobby do |lobby|
+                        -if WebEnabledLobby === lobby
+                            %div.hiddentab{:id => lobby.name}
+                                %table
+                                    %tr
+                                        %td Users
+                                        %td= lobby.user_list.size
+                                    %tr
+                                        %td State
+                                        %td= lobby.game_state
+                                    %tr
+                                        %td Link
+                                        %td
+                                            %a{:href => lobby.web_uri}= lobby.web_uri
+        .footer
+            %ul.navlist
+                %li
+                    %a{:href => "/"} Home

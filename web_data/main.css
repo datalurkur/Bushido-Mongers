@@ -10,64 +10,98 @@
 }
 
 body {
-    background: #000000;
-    color: #aaaaaa;
+    background: black;
+    color: white;
     font-family: 'Ninja Naruto', 'Arial', sans-serif;
-    margin: 50px;
-    padding: 0;
-    text-align: left;
 }
 
-div#wrapper {
-    background: rgba(55, 50, 50, 1.0);
-    color:      rgba(100, 100, 100, 1.0);
-    border-radius: 3px;
-    padding: 10px;
+div.wrapper {
+    width: 100%;
+    margin: 0px;
+    padding: 0px;
+    border: 2px solid rgb(64,64,64);
 }
 
-header {
-    text-align: center;
-}
-
-div#core {
-    background: rgba(10, 10, 10, 0.2);
-    /*color: #000000;*/
+div.header, div.footer {
     padding: 5px;
-    box-shadow: 0px 0px 4px #000;
+    margin: 0px;
+    clear: left;
+
+    background: rgb(64,64,64);
+    color: white;
 }
 
-footer {
-}
-
-section#map {
+div.core {
     float: left;
+    margin: 0px;
+    padding: 0px;
+    background: rgb(16,16,16);
+    width: 100%;
 }
 
-section#data {
-    float: right;
+div.control {
+    margin-right:5px;
+
+    padding-left: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    width: 160px;
+
+    float: left;
+    overflow: hidden;
+
+    border-right: 2px solid rgb(64,64,64);
 }
 
-a:link {
-    color: rgba(100, 100, 100, 1.0);
-    text-decoration: none;
-}
-a:hover   { color: rgba(150, 150, 150, 1.0); }
-a:visited { color: rgba(100, 100, 100, 1.0); }
-a:active  { color: rgba(100, 100, 100, 1.0); }
-
-li {
+div.control ul {
     list-style-type: none;
 }
 
-.clearfix:after {
-    content: ".";
-    display: block;
-    clear: both;
-    visibility: hidden;
-    line-height: 0;
-    height: 0;
+div.control ul li {
+    margin-bottom: 20px;
 }
 
-.clearfix {
-    display: inline-block;
+div.control ul li a {
+}
+
+div.content {
+    padding-top: 5px;
+    padding-bottom: 5px;
+
+    margin-left: 160px;
+}
+
+div.hiddentab {
+    display: none;
+}
+
+div.tab {
+}
+
+ul.navlist {
+    padding: 0;
+    list-style-type: none;
+}
+
+ul.navlist li {
+    display: inline;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+a:link {
+    color: white;
+    text-decoration: none;
+}
+
+a:hover {
+    color: white;
+}
+
+a:visited {
+    color: white;
+}
+
+a:active {
+    color: white;
 }

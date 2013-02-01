@@ -2,13 +2,19 @@
 %head
     %title Bushido Mongers
     %link{:rel => "stylesheet", :href=>"main.css", :type=>"text/css"}
-%body
-    #wrapper
-        %header
+%body{:onload => "init('default')"}
+    %script{:type => "text/javascript", :src => "index.js"}
+    .wrapper
+        .header
             %h1=username
-        #core.clearfix
-            %section#map.clearfix
-                %img{:src => lobby.map_uri_for(username)}
-            %section#data.clearfix
+        .core
+            .control
+            .content
                 %h2=character.monicker
-        %footer
+                %img{:src => lobby.map_uri_for(username)}
+        .footer
+            %ul.navlist
+                %li
+                    %a{:href => "/"} Home
+                %li
+                    %a{:href => lobby.web_uri} Lobby
