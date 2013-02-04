@@ -17,6 +17,10 @@ class Descriptor
             object.each do |k,v|
                 next if v.nil?
                 h[k] = Descriptor.describe(v, observer)
+                if k == :agent
+                    # Drop non-essential agent body information, since it's gigantic
+                    h[k][:properties].delete(:incidental)
+                end
             end
             h
         else; raise(NotImplementedError, "Cannot describe objects of type #{object.class}.")
