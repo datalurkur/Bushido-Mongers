@@ -33,6 +33,7 @@ class MuxedClientBase
 
     def teardown
         disconnect
+        @message_buffer.report
     end
 
     def send_to_server(message)

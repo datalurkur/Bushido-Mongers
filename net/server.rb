@@ -80,6 +80,7 @@ class Server
         if @config[:irc_enabled] == "1"
             IRCConduit.stop
         end
+        @message_buffer.report
     end
 
     def terminate_client(socket)

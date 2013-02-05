@@ -60,6 +60,7 @@ class IRCConduit
 
         def stop
             disconnect
+            @message_buffer.report
         end
 
         private

@@ -19,6 +19,7 @@ class AutomationStack
     def teardown
         @read_pipe.close;  @read_pipe = nil
         @write_pipe.close; @write_pipe = nil
+        @message_buffer.report
     end
 
     def set_config(config); @config = config; end
