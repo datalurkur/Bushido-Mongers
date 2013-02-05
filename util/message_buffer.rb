@@ -26,17 +26,17 @@ class MessageBuffer
         @stats = {
             :in => {
                 :max                => 0,
-                :min                => 0,
-                :total              => 0,
-                :compressed         => 0,
+                :min                => COMPRESSION_MASK,
+                :throughput         => 0,
+                :transmitted        => 0,
                 :count              => 0,
                 :compressed_count   => 0
             },
             :out => {
                 :max                => 0,
-                :min                => 0,
-                :total              => 0,
-                :compressed         => 0,
+                :min                => COMPRESSION_MASK,
+                :throughput         => 0,
+                :transmitted        => 0,
                 :count              => 0,
                 :compressed_count   => 0
             }
@@ -70,9 +70,11 @@ class MessageBuffer
                     data_size       = data_block.size
 
                     if @track_stats
-                        @stats[:in][:compressed]       += compressed_size
+                        @stats[:in][:transmitted]      += compressed_size
                         @stats[:in][:compressed_count] += 1
                     end
+                else
+                    @stats[:in][:transmitted] += data_size
                 end
 
                 message = Marshal.load(data_block)
@@ -80,7 +82,7 @@ class MessageBuffer
 
                 if @track_stats
                     @stats[:in][:count]      += 1
-                    @stats[:in][:total]      += data_size
+                    @stats[:in][:throughput] += data_size
                     @stats[:in][:max] = [@stats[:in][:max], data_size].max
                     @stats[:in][:min] = [@stats[:in][:min], data_size].min
                 end
@@ -123,16 +125,20 @@ class MessageBuffer
             header = [compressed_size | COMPRESSION_MASK].pack("N")
 
             if @track_stats
-                @stats[:out][:compressed]       += compressed_size
+                @stats[:out][:transmitted]      += compressed_size
                 @stats[:out][:compressed_count] += 1
             end
         else
             #Log.info("Packing a message withOUT compression")
             header = [data_size].pack("N")
+
+            if @track_stats
+                @stats[:out][:transmitted] += data_size
+            end
         end
 
         if @track_stats
-            @stats[:out][:total]      += data_size
+            @stats[:out][:throughput] += data_size
             @stats[:out][:count]      += 1
             @stats[:out][:max] = [@stats[:out][:max], data_size].max
             @stats[:out][:min] = [@stats[:out][:min], data_size].min
@@ -142,10 +148,20 @@ class MessageBuffer
     end
 
     def report
-        @stats[:out][:avg]            = @stats[:out][:total]      / @stats[:out][:count] unless @stats[:out][:count] == 0
-        @stats[:out][:compressed_avg] = @stats[:out][:compressed] / @stats[:out][:compressed_count] unless @stats[:out][:compressed_count] == 0
-        @stats[:in][:avg]             = @stats[:in][:total]       / @stats[:in][:count] unless @stats[:in][:count] == 0
-        @stats[:in][:compressed_avg]  = @stats[:in][:compressed]  / @stats[:in][:compressed_count] unless @stats[:in][:compressed_count] == 0
+        unless @stats[:out][:count] == 0
+            @stats[:out][:avg_message_size]   = @stats[:out][:throughput]       / @stats[:out][:count]
+            @stats[:out][:avg_payload_size]   = @stats[:out][:transmitted]      / @stats[:out][:count]
+            @stats[:out][:percent_compressed] = @stats[:out][:compressed_count] / @stats[:out][:count]
+            @stats[:out][:compression_ratio]  = @stats[:out][:transmitted].to_f / @stats[:out][:throughput]
+        end
+
+        unless @stats[:in][:count] == 0
+            @stats[:in][:avg_message_size]   = @stats[:in][:throughput]       / @stats[:in][:count]
+            @stats[:in][:avg_payload_size]   = @stats[:in][:transmitted]      / @stats[:in][:count]
+            @stats[:in][:percent_compressed] = @stats[:in][:compressed_count] / @stats[:in][:count]
+            @stats[:in][:compression_ratio]  = @stats[:in][:transmitted].to_f / @stats[:in][:throughput]
+        end
+
         Log.info(["Message buffer summary for #{caller[0]}", @stats])
         clear_stats
     end
