@@ -48,10 +48,17 @@ class Descriptor
             #d[:class_properties] = Descriptor.describe(object.class_properties, observer)
 
             # Drop some non-informative values.
-            [:incidental, :external, :internal].each do |prop|
+            [:incidental, :external, :internal, :symmetric].each do |prop|
                 if d[:properties][prop] && d[:properties][prop].empty?
                     d[:properties].delete(prop)
                 end
+            end
+
+            # The user doesn't need to know any of this. If they do, we can deal with it on a case-by-case basis.
+            [:target_of, :used_in, :can_equip,
+             :added_value_container_classes, :preserved_container_classes,
+             :container_classes, :mutable_container_classes].each do |prop|
+                d[:properties].delete(prop)
             end
 
             # FIXME - Add more things
