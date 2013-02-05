@@ -1,56 +1,51 @@
-abstract equipment head_armor {
-    slot head;
-}
-
-abstract equipment body_armor {
-    /* FIXME - Make this torso or something */
-    slot humanoid_body;
-}
-
-abstract equipment arm_armor {
-    slot arm;
-}
-
-abstract equipment hand_armor {
-    slot hand;
-}
-
-abstract equipment leg_armor {
-    slot leg;
-}
-
-abstract equipment foot_armor {
-    slot foot;
+abstract adjustable_size,equipment armor {
+    /* FIXME - Probably include an armor module to determine armor value based on material */
+    /* FIXME - We need to deal with armor sizing requiring more components */
 }
 
 constructed,item dagger_blade {
     size tiny;
-    required_components metal;
-    technique forge;
+
+    recipes {
+        technique forge;
+        components metal;
+    }
 }
 
 constructed,melee_weapon dagger {
     type piercing;
     handedness one;
-    required_components dagger_blade leather;
-    technique craft;
+
+    recipes {
+        technique craft;
+        components dagger_blade leather;
+    }
 }
 
 constructed,melee_weapon hammer {
     type blunt;
     handedness one;
-    required_components wood metal leather;
-    technique craft;
+
+    recipes {
+        technique craft;
+        components wood metal leather;
+    }
 }
 
 constructed,ranged_weapon bow {
     type piercing;
     handedness two;
-    required_components thread wood;
-    technique bowmaking;
+
+    recipes {
+        technique bowmaking;
+        components thread wood;
+    }
 }
 
 constructed,ammunition arrow {
-    required_components wood metal feather;
-    technique fletching;
+    recipes {
+        technique fletching;
+        components wood metal feather;
+        duplicates 10;
+    }
 }

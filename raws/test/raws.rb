@@ -20,9 +20,9 @@ $core = FakeCore.new(db)
 Log.debug(["Number of types of items:", db.types_of(:item).size])
 
 # Basic item creation tests
-test_item_type = :helmet
+test_item_type = :head_armor
 Log.debug("Creating a #{test_item_type}")
-test_item_args = {:quality => :fine, :components => [db.create($core, :iron)], :position => FakeRoom.new}
+test_item_args = {:relative_size => :medium, :quality => :fine, :components => [db.create($core, :iron)], :position => FakeRoom.new}
 test_item = db.create($core, test_item_type, test_item_args)
 Log.debug("Test item is a metal? #{test_item.is_type?(:metal)}")
 Log.debug("Test item is a constructable? #{test_item.is_type?(:constructed)}")
@@ -54,7 +54,7 @@ hb = db.create($core, :arachnoid_body, :relative_size => :tiny)
 
 # Recipe and command tests
 Log.debug("How do I produce a dagger?")
-Log.debug(db.info_for(:dagger, :technique))
+Log.debug(db.info_for(:dagger, :recipes))
 
 Log.debug("What can I produce with iron?")
 Log.debug(db.info_for(:iron, :used_in))
@@ -63,7 +63,7 @@ Log.debug("What can I produce at an anvil?")
 anvil_commands = db.info_for(:anvil, :location_of)
 Log.debug(["Verbs that happen at an anvil:", anvil_commands])
 selected_command = anvil_commands.first
-anvil_products = db.find_subtypes(:constructed, {:technique => selected_command})
+anvil_products = db.find_subtypes(:constructed, {:recipes => {:technique => selected_command}})
 Log.debug(["Things produced at an anvil by means of #{selected_command}", anvil_products])
 
 Log.debug("What can I do with a hammer?")

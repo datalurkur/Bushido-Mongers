@@ -18,13 +18,6 @@ abstract composition_root corporeal {
     uses corporeal;
 }
 
-abstract root adjustable_size {
-    class sym typical_size;
-    needs relative_size;
-
-    uses adjustable_size;
-}
-
 abstract item,composition,adjustable_size body_part {
     has int hp;
 

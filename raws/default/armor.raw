@@ -1,107 +1,138 @@
-body_armor,constructed leather_armor {
-    value 30;
-    weight 10;
-    size medium;
+constructed,armor head_armor {
+    slot head;
+    typical_size small;
 
-    required_components leather;
-    technique craft;
+    recipes {
+        technique craft;
+        components fabric;
+        called hood;
+    }
+
+    recipes {
+        technique craft;
+        components leather;
+        called cap;
+    }
+
+    recipes {
+        technique forge;
+        components metal;
+        called helm;
+    }
 }
 
-body_armor,constructed cloth_armor {
-    value 20;
-    weight 1;
-    size medium;
+constructed,armor body_armor {
+    /* FIXME - Make this torso or something */
+    slot humanoid_body;
+    typical_size small;
 
-    required_components fabric;
-    technique craft;
+    recipes {
+        technique craft;
+        components fabric fabric fabric;
+        called shirt;
+    }
+
+    recipes {
+        technique craft;
+        components leather leather leather;
+        called cuirass;
+    }
+
+    recipes {
+        technique forge;
+        components metal metal metal;
+        called breastplate;
+    }
 }
 
-head_armor,constructed leather_helm {
-	value 10;
-	weight 2;
-	size medium;
+constructed,armor arm_armor {
+    slot arm;
+    typical_size small;
 
-	required_components leather;
-	technique craft;
+    recipes {
+        technique craft;
+        components fabric fabric;
+        called sleeves;
+    }
+
+    recipes {
+        technique craft;
+        components leather leather;
+        called sleeves;
+    }
+
+    recipes {
+        technique forge;
+        components metal metal;
+        called pauldrons;
+    }
 }
 
-head_armor,constructed hood {
-	value 5;
-	weight 1;
-	size medium;
+constructed,armor hand_armor {
+    slot hand;
+    typical_size tiny;
 
-	required_components fabric;
-	technique craft;
+    recipes {
+        technique craft;
+        components fabric;
+        called gloves;
+    }
+
+    recipes {
+        technique craft;
+        components leather;
+        called gloves;
+    }
+
+    recipes {
+        technique forge;
+        components metal;
+        called gauntlets;
+    }
 }
 
-hand_armor,constructed leather_gloves {
-	value 5;
-	weight 1;
-	size medium;
+constructed,armor leg_armor {
+    slot leg;
+    typical_size small;
 
-	required_components leather;
-	technique craft;
+    recipes {
+        technique craft;
+        components fabric fabric;
+        called pants;
+    }
+
+    recipes {
+        technique craft;
+        components leather leather;
+        called leggings;
+    }
+
+    recipes {
+        technique forge;
+        components metal metal;
+        called greaves;
+    }
 }
 
-hand_armor,constructed cloth_gloves {
-	value 2;
-	weight 1;
-	size medium;
+constructed,armor foot_armor {
+    slot foot;
+    typical_size tiny;
 
-	required_components fabric;
-	technique craft;
-}
+    recipes {
+        technique craft;
+        components fabric;
+        called shoes;
+    }
 
-arm_armor,constructed leather_bracers {
-	value 5;
-	weight 1;
-	size medium;
+    recipes {
+        technique craft;
+        components leather;
+        called boots;
+    }
 
-	required_components leather;
-	technique craft;
-}
-
-arm_armor,constructed cloth_sleeves {
-	value 3;
-	weight 1;
-	size medium;
-
-	required_components fabric;
-	technique craft;
-}
-
-leg_armor,constructed leather_pants {
-	value 20;
-	weight 5;
-	size medium;
-
-	required_components leather;
-	technique craft;
-}
-
-leg_armor,constructed cloth_pants {
-	value 15;
-	weight 2;
-	size medium;
-
-	required_components fabric;
-	technique craft;
-}
-
-foot_armor,constructed leather_boots {
-	value 20;
-	weight 5;
-	size medium;
-
-	required_components leather;
-	technique craft;
-}
-
-foot_armor,constructed slippers {
-	value 10;
-	weight 1;
-	size medium;
-
-	required_components fabric;
-	technique craft;
+    recipes {
+        technique forge;
+        components metal;
+        called boots;
+    }
 }

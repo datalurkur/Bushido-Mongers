@@ -47,13 +47,15 @@ thread silk {
     size tiny;
 }
 
-constructed,fabric silk_swatch {
+constructed,fabric swatch {
     value 100;
     weight 0.2;
     size small;
 
-    required_components silk;
-    technique crafting;
+    recipes {
+        technique craft;
+        components thread;
+    }
 }
 
 material feather {
@@ -63,12 +65,17 @@ material feather {
 }
 
 material,constructed ingot {
-    required_components metal;
-    technique forge;
     size small;
+
+    recipes {
+        technique forge;
+        components metal;
+    }
 }
 
 constructed buckle {
-    required_components metal;
-    technique forge;
+    recipes {
+        technique forge;
+        components metal;
+    }
 }

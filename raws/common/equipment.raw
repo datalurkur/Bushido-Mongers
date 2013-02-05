@@ -1,5 +1,5 @@
 abstract item equipment {
-    class sym slot;
+    class_many sym slot;
 
     /* Protection can be based on a modifier manipulated by the material properties */
     class int protection;

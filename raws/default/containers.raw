@@ -1,6 +1,6 @@
 abstract equipment,container backpack {
     /* FIXME - This needs to be more generic (torso, for example) */
-    slot humanoid_body mutant_tortoise_body;
+    slot humanoid_body tortoise_body;
     size medium;
     value 1;
 }

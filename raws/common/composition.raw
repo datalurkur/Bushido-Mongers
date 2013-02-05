@@ -42,26 +42,33 @@ abstract composition_root composition {
 }
 
 abstract composition constructed {
-    class_many sym required_components;
-    class sym technique;
+    class_many map recipes {
+        sym technique;
+        many sym components;
+        int duplicates;
+        string called;
+    }
 
     has sym quality;
     uses constructed;
 }
 
 post_process {
-    Log.debug("Propagating component information for constructed objects", 7)
+    Log.debug("Propagating component information for constructed objects", 1)
     types_of(:constructed, true).each do |constructed|
-        components = info_for(constructed, :required_components)
-        if components.nil?
-            Log.error("No components present for #{constructed.inspect}")
-            next
-        end
-        components.each do |component|
-            propagate_recursive(component) do |subtype|
-                Log.debug("#{subtype} is used in #{constructed}", 7)
-                name = :used_in
-                modify_info(subtype, name, []) << constructed
+        recipes = info_for(constructed, :recipes)
+        Log.error("No recipes found for #{constructed.inspect}") if recipes.empty?
+        recipes.each do |recipe|
+            components = recipe[:components]
+            Log.error("No components found for recipe #{recipe}") if components.empty?
+            components.each do |component|
+                propagate_recursive(component) do |subtype|
+                    Log.debug("#{subtype} is used in #{constructed}", 1)
+                    name = :used_in
+                    # This is going to become a performance issue later
+                    modify_info(subtype, name, []) << constructed
+                    modify_info(subtype, name).uniq!
+                end
             end
         end
     end

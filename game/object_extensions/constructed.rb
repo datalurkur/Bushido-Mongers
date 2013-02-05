@@ -40,7 +40,9 @@ module Constructed
 
     def get_random_components(params)
         p = params.reject { |k,v| k == :components || k == :quality || k == :position }
-        class_info(:required_components).collect do |component|
+        # Choose a random recipe
+        recipe = class_info(:recipes).rand
+        recipe[:components].collect do |component|
             @core.db.create(@core, @core.db.random(component), p)
         end
     end

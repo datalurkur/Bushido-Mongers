@@ -329,12 +329,17 @@ module ObjectRawParser
                             # Parse the key / value definitions
                             object_data[:has][property][:keys] ||= {}
                             separate_lexical_chunks(data).each do |substatement, subdata|
-                                key_type, key = substatement.split(/\s+/).collect(&:to_sym)
+                                pieces        = substatement.split(/\s+/).collect(&:to_sym)
+                                many          = (pieces[0] == :many)
+                                key_type, key = (many ? pieces[1,2] : pieces[0,2])
                                 if key.nil? || key_type.nil?
                                     Log.warning("Skipping malformed map key definition #{substatement.inspect}")
                                     next
                                 end
-                                object_data[:has][property][:keys][key] = key_type
+                                object_data[:has][property][:keys][key] = {
+                                    :type => key_type,
+                                    :many => many
+                                }
                             end
                         end
                     when :needs
@@ -357,11 +362,19 @@ module ObjectRawParser
                             [data]
                         when :map
                             map_data = {}
+                            property_info[:keys].each do |k,v|
+                                map_data[k] = [] if v[:many]
+                            end
                             separate_lexical_chunks(data).each do |substatement, subdata|
                                 sub_chunks    = substatement.split(/\s+/)
                                 key           = sub_chunks[0].to_sym
-                                key_type      = property_info[:keys][key]
-                                map_data[key] = extract_property_values(key_type, sub_chunks[1..-1])[0]
+                                key_type      = property_info[:keys][key][:type]
+                                values        = extract_property_values(key_type, sub_chunks[1..-1])
+                                if property_info[:keys][key][:many]
+                                    map_data[key].concat(values)
+                                else
+                                    map_data[key] = values[0]
+                                end
                             end
                             [map_data]
                         else
@@ -372,7 +385,7 @@ module ObjectRawParser
                             object_data[:class_values][property] ||= []
                             object_data[:class_values][property].concat(values)
                         else
-                            Log.debug(["Ignoring extra values supplied for property #{property.inspect} in #{object_type.inspect}", values]) if values.size > 1
+                            Log.error(["Ignoring extra values supplied for property #{property.inspect} in #{object_type.inspect}", values]) if values.size > 1
                             object_data[:class_values][property] = values[0]
                         end
                     end

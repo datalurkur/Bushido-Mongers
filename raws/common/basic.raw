@@ -23,3 +23,8 @@ abstract root karmic {
 abstract root position {
     uses position;
 }
+
+abstract root adjustable_size {
+    class sym typical_size;
+    uses adjustable_size;
+}
