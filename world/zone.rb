@@ -66,7 +66,8 @@ class Zone
         end
     end
 
-    attr_reader :name, :offset
+    attr_accessor :name
+    attr_reader :offset
     def initialize(name)
         @name = name
     end
@@ -198,24 +199,52 @@ class ZoneContainer < Zone
 
     def set_zone(x, y, zone)
         raise(UnexpectedBehaviorError, "Zone at #{[x,y].inspect} being overwritten in #{@name}.") unless @zones[x][y].nil?
+        while @zonemap.has_key?(zone.name)
+            Log.error("Ambiguous zone name, '#{zone.name}', found.")
+            zone.name += "_"
+        end
         @zones[x][y]        = zone
         @zonemap[zone.name] = zone
         zone.set_parent(self, [x,y])
     end
 
-    # TODO - Remove this method, hashing zones by name is dangerous
     def zone_location(zone_name)
         raise(ArgumentError, "No zone #{zone_name} found in #{@name}.") unless @zonemap.has_key?(zone_name)
         @zonemap[zone_name].offset
     end
 
-    # TODO - Remove this method, hashing zones by name is dangerous
     def zone_named(zone_name)
         raise(ArgumentError, "No zone #{zone_name} found in #{@name}.") unless @zonemap.has_key?(zone_name)
         @zonemap[zone_name]
     end
 
-    # TODO - Remove this method, hashing zones by name is dangerous
+    def find_zone_named(zone_name)
+        Log.info("Looking for #{zone_name} in #{name}")
+        if name == zone_name
+            return self
+        elsif @zonemap.has_key?(zone_name)
+            Log.info("Found via zonemap")
+            return @zonemap[zone_name]
+        else
+            @zones.each do |row|
+                row.each do |subzone|
+                    if ZoneContainer === subzone
+                        result = subzone.find_zone_named(zone_name)
+                        return result if result
+                    elsif ZoneLeaf === subzone
+                        if subzone.name == zone_name
+                            Log.info("Found via subzone name")
+                            return subzone
+                        end
+                    else
+                        Log.error("How the fuck did a #{subzone.class} get into the world zone heirarchy?")
+                    end
+                end
+            end
+            return nil
+        end
+    end
+
     def connect_zones(zone_a, zone_b)
         coords_a = zone_location(zone_a)
         coords_b = zone_location(zone_b)
