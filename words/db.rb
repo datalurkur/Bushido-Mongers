@@ -79,12 +79,13 @@ class WordDB
 
     # Similar to add_keyword_family, but associate_groups is not called, because
     # we don't want all associated groups to be connected to the preposition as well.
-    def add_preposition(preposition, *list_of_words)
-        Log.debug("Adding preposition family #{preposition}, #{list_of_words.inspect}", 6)
+    def add_preposition(preposition, type, *list_of_words)
+        Log.debug("Adding preposition #{preposition} #{type} #{list_of_words.inspect}", 6)
         list_of_groups = collect_groups(*list_of_words)
 
-        @prepositions[preposition] ||= []
-        @prepositions[preposition].concat(list_of_groups)
+        @prepositions[type] ||= {}
+        @prepositions[type][preposition] ||= []
+        @prepositions[type][preposition].concat(list_of_groups)
     end
 
     # Get a list of related groups
@@ -118,10 +119,12 @@ class WordDB
 
     # Check whether a word is associated with a preposition
     def get_preposition(word)
-        @prepositions.each do |prep, list_of_groups|
-            list_of_groups.each do |group|
-                if group.contains?(word)
-                    return prep
+        @prepositions.each do |prep_case, prep_groups|
+            prep_groups.each do |prep, list_of_groups|
+                list_of_groups.each do |group|
+                    if group.contains?(word)
+                        return prep
+                    end
                 end
             end
         end
