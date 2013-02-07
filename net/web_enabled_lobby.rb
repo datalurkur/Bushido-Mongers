@@ -13,6 +13,7 @@ class WebEnabledLobby < Lobby
 
     def web_root;                   @web_server.web_root;                       end
     def web_uri;                    "/#{@name.escape}";                         end
+    def not_found_page;             "#{web_root}/404.haml";                     end
     def web_directory;              "#{web_root}/#{@name.escape}";              end
     def map_uri;                    "#{web_uri}/map.png";                       end
     def map_location;               "#{web_directory}/map.png";                 end
@@ -21,6 +22,8 @@ class WebEnabledLobby < Lobby
     def uri_for(username);          "#{characters_uri}/#{username.escape}";     end
     def map_uri_for(username);      "#{uri_for(username)}/map.png";             end
     def map_location_for(username); "#{directory_for(username)}/map.png";       end
+    def rooms_uri;                  "#{web_uri}/rooms";                         end
+    def room_uri_for(room);         "#{rooms_uri}/#{room.escape}";              end
 
     def directory_for(username)
         ensure_directory_exists("#{characters_directory}/#{username.escape}")
@@ -72,20 +75,40 @@ class WebEnabledLobby < Lobby
         # User pages
         @web_server.add_route(/#{characters_uri}\/#{wildcard}$/i) do |args|
             username = args[0].unescape
-            return nil unless @users.has_key?(username)
-            get_template(File.join(web_root, "character.haml"), {
-                :lobby     => self,
-                :username  => username,
-                :character => @game_core.get_character(username)
-            })
+            if @users.has_key?(username)
+                get_template(File.join(web_root, "character.haml"), {
+                    :lobby     => self,
+                    :username  => username,
+                    :character => @game_core.get_character(username)
+                })
+            else
+                get_template(not_found_page)
+            end
         end
 
         # Maps within user directories
         @web_server.add_route(/#{characters_uri}\/#{wildcard}\/map\.png/i) do |args|
             username = args[0].unescape
-            return nil unless @users.has_key?(username)
-            create_map_for(username)
-            get_file(map_location_for(username))
+            if @users.has_key?(username)
+                create_map_for(username)
+                get_file(map_location_for(username))
+            else
+                get_template(not_found_page)
+            end
+        end
+
+        @web_server.add_route(/#{rooms_uri}\/#{wildcard}$/i) do |args|
+            room_name = args[0].unescape
+            room      = @game_core.world.find_zone_named(room_name)
+            if room
+                get_template(File.join(web_root, "room.haml"), {
+                    :room      => room,
+                    :lobby     => self
+                })
+            else
+                Log.info("#{room_name} not found")
+                get_template(not_found_page)
+            end
         end
     end
 

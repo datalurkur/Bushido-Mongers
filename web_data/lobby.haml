@@ -1,9 +1,9 @@
 !!! 5
 %head
     %title Bushido Mongers
-    %link{:rel => "stylesheet", :href=>"main.css", :type=>"text/css"}
+    %link{:rel => "stylesheet", :href=>"/main.css", :type=>"text/css"}
 %body{:onload => "init('default')"}
-    %script{:type => "text/javascript", :src => "index.js"}
+    %script{:type => "text/javascript", :src => "/index.js"}
     .wrapper
         .header
             %h1 Bushido Mongers
@@ -43,7 +43,9 @@
                             %div{:style => "position:relative;"}
                                 %img{:src => lobby.map_uri, :style => "position:relative;"}
                                 -room_layout[:rooms].each do |room, info|
-                                    %div{:style => "left:#{info[:cell_coords].x}px; top:#{info[:cell_coords].y}px; width:#{info[:cell_size]}px; height:#{info[:cell_size]}px; position:absolute; border:1px solid red;", :onclick => "alert('#{room.name}')"}
+                                    %div{:style => "left:#{info[:cell_coords].x}px; top:#{info[:cell_coords].y}px; width:#{info[:cell_size]}px; height:#{info[:cell_size]}px; position:absolute; border:1px solid red;"}
+                                        %a{:href => lobby.room_uri_for(room.name)}
+                                            %span{:style => "width:100%;height:100%;position:absolute;left:0;top:0;"}
                     -lobby.user_list.each do |user|
                         %div.hiddentab{:id => user}="Info for #{user}"
         .footer

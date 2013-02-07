@@ -1,0 +1,19 @@
+!!! 5
+%head
+    %title Bushido Mongers
+    %link{:rel => "stylesheet", :href=>"/main.css", :type=>"text/css"}
+%body{:onload => "init('default')"}
+    %script{:type => "text/javascript", :src => "/index.js"}
+    .wrapper
+        .header
+            %h1=room.name
+        .core
+            .control
+            .content
+                %h2=room.name
+        .footer
+            %ul.navlist
+                %li
+                    %a{:href => "/"} Home
+                %li
+                    %a{:href => lobby.web_uri} Lobby
