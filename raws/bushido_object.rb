@@ -51,8 +51,6 @@ class BushidoObject
                 end
             end
         end
-
-        self
     end
 
     def destroy(destroyer)

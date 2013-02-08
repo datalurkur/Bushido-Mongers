@@ -2,13 +2,13 @@ abstract root aspect {
     has float intrinsic;
 
     class float default_intrinsic;
-    default_intrinsic 0.2;
+    default_intrinsic 0.5;
 
     class optional sym associated_attribute;
     class optional float attribute_scaling;
 
     class float variance;
-    variance 0.2;
+    variance 0.1;
 
     uses aspect;
 }
@@ -18,6 +18,16 @@ abstract root has_aspects {
     has_many optional sym skills;
 
     uses has_aspects;
+}
+
+abstract root has_random_aspects {
+    has_many optional sym attributes;
+    has_many optional sym skills;
+
+    class float random_variance;
+    random_variance 0.1;
+
+    uses has_random_aspects;
 }
 
 abstract aspect attribute {}

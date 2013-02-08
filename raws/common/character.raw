@@ -1,4 +1,4 @@
-karmic,aligned,corporeal,position,has_aspects character {
+karmic,aligned,corporeal,position,has_random_aspects character {
     uses character perception equipment;
 
     attributes strength agility;

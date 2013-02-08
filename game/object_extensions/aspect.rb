@@ -69,9 +69,9 @@ module Aspect
     end
 
     def current_tick;        @current_tick ||= 0;   end
-    def current_tick=(val);  @current_tick=val;     end
+    def current_tick=(val);  @current_tick = val;   end
     def last_used;           @last_used    ||= 0;   end
-    def last_used=(val);     @last_used=val;        end
+    def last_used=(val);     @last_used = val;      end
 
     def make_check(intrinsic, variance, familiarity)
         clamp(
