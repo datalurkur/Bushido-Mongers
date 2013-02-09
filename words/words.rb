@@ -328,19 +328,19 @@ module Words
                     return [monicker]
                 end
 
-                if determiner = Determiner.new_for_noun(noun)
-                    children << determiner
-                end
-
                 if noun[:adjectives]
                     noun[:adjectives].each do |adj|
                         adj = Adjective.new(adj) unless adj.is_a?(Adjective)
                         children << adj
                     end
                 end
-                # TODO: correct a/an for appropriate adjectives.
 
                 children << Noun.new(monicker)
+
+                if determiner = Determiner.new_for_noun(noun, children.first)
+                    children.insert(0, determiner)
+                end
+
                 children
             end
         end
@@ -569,11 +569,11 @@ module Words
 
         class Determiner < ParseTree::PTLeaf
             class << self
-                def new_for_noun(noun)
+                def new_for_noun(noun, first_word)
                     if noun[:possessor_info]
                         Possessive.new(noun[:possessor_info])
                     elsif Noun.needs_article?(noun[:monicker])
-                        Article.new(noun[:monicker])
+                        Article.new(noun[:monicker], first_word)
                     else
                         nil
                     end
@@ -620,18 +620,34 @@ module Words
         end
 
         class Article < Determiner
-            def initialize(noun)
+            def initialize(noun, first_word=nil)
+                first_word = noun unless first_word
                 if Article.article?(noun)
                     super(noun)
                 elsif Noun.definite?(noun)
                     super(:the)
                 else
                     # TODO - 'some' for plural nouns
-                    if noun.to_s.match(/^[aeiouy]/)
+                    if Article.use_an?(first_word)
                         super(:an)
                     else
                         super(:a)
                     end
+                end
+            end
+
+            def definite?
+                return true if @children == [:the]
+            end
+
+            def self.use_an?(word)
+                case word.to_sym
+                when :honorable, :honest
+                    true
+                when :union, :united, :unicorn, :used, :one
+                    false
+                else
+                    !!word.to_s.match(/^[aeiouy]/)
                 end
             end
 
