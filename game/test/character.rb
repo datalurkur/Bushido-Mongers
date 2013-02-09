@@ -14,4 +14,17 @@ def recreate_test_character(username, raw_group, clean=true)
     Log.debug("Creating test character using fake state")
     c = db.create(fake_core, :character, {:position => fake_room, :name => "Test Character"})
     Character.save(username, c)
+    c
+end
+
+if $0 == __FILE__
+    Log.setup("Main", "abilities")
+    c = recreate_test_character("test_user", "default")
+
+    Log.debug(c)
+
+    c.instance_exec {
+        Log.debug(@attributes)
+        Log.debug(@skills)
+    }
 end
