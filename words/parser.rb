@@ -86,10 +86,6 @@ module WordParser
             db.add_conjugation_by_person(infinitive, state, words.map(&:to_sym))
         end
 
-        db.instance_exec {
-            Log.debug(@conjugations, 8)
-        }
-
         Words.register_db(db)
         db
     end

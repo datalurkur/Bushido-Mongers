@@ -233,7 +233,7 @@ module Words
 
         # Four kinds of adjectives:
         # attributive: part of the NP. "happy people". Could be a premodifier (adj) or postmodifier (usually adj phrase)
-        # predicative: uses linking copula (usually noun) to attach to noun.
+        # predicative: uses linking copula (usually noun) to attach to noun. "The people are happy."
         # absolute: separate from noun; typically modifies subject or closest noun.
         # nominal: act almost as nouns; when noun is elided or replaces noun; "the meek shall inherit"
 
@@ -260,6 +260,7 @@ module Words
                 if args[:subject_complement]
                     # FIXME: Technically we're not supposed to insert symbol children into PTInternalNode, but hack it.
                     # Subject complements can be adjectives or nouns (or NPs). How should we distinguish?
+                    # Maybe generate during copula creation...
                     @children += Array(args[:subject_complement])
                 end
 
@@ -270,20 +271,24 @@ module Words
         class NounPhrase < ParseTree::PTInternalNode
             include Listable
             def initialize(nouns)
-                # Descriptor composition
-                noun_args = {}
-                if Hash === nouns
-                    nouns = nouns[:monicker]
-                    # TODO - parse hash for noun descriptors to insert into noun_args
-                    noun_args
-                end
-
                 nouns = Array(nouns)
 
                 if nouns.all? { |n| n.is_a?(ParseTree::PTNode) }
                     # Nouns already created; just attach them.
                     @children = nouns
                     return
+                end
+
+                # Decompose descriptor hashes into noun name and modifiers.
+                noun_args = {}
+                nouns.map! do |noun|
+                    if Hash === noun
+                        # TODO - parse hash for noun descriptors to insert into noun_args
+                        noun_args
+                        noun[:monicker]
+                    else
+                        noun
+                    end
                 end
 
                 if @list = (nouns.size > 1)
@@ -595,9 +600,12 @@ module Words
                 elsif Noun.definite?(noun)
                     super(:the)
                 else
-                    # TODO - check for 'an' case - starts with a vowel or silent H
                     # TODO - 'some' for plural nouns
-                    super(:a)
+                    if noun.to_s.match(/^[aeiouy]/)
+                        super(:an)
+                    else
+                        super(:a)
+                    end
                 end
             end
 
@@ -618,10 +626,9 @@ module Words
 
     # TODO - action descriptors: The generic ninja generically slices the goat with genericness.
     def self.gen_sentence(args = {})
-        agent = args[:agent]
-        args.delete(:agent)
-        Log.debug(args, 6)
-        args[:agent] = agent
+        to_print = args.dup
+        to_print.delete(:agent)
+        Log.debug(to_print, 6)
 
         args[:state] ||= State.new
 
@@ -666,20 +673,18 @@ module Words
         # TODO - Add more information about abilities, features, etc.
     end
 
-    def self.describe_stats(target)
-        # Describe the corporeal body
-        body = target[:properties][:incidental].first
-        sentences = [gen_copula(:target=>body[:monicker])]
-        sentences << describe_composition(body)
-
-        # TODO - Add more information about abilities, features, etc.
+    def self.describe_stats(args)
+        Log.debug(args)
+        stats = args[:target]
+        attributes = stats.first
+        skills     = stats.last
     end
 
     def self.describe_list(list, verb, target_monicker, state = State.new)
         sentences = []
         if list && !list.empty?
             sentences << gen_sentence(
-                            :subject => list.collect { |p| p[:monicker] },
+                            :subject => list.dup,
                             :verb    => verb,
                             :target  => target_monicker,
                             :state   => state)
@@ -687,7 +692,7 @@ module Words
                 if part[:is_type].include?(:composition_root)
                     describe_composition(part)
                 else
-                    gen_copula(:target => part[:monicker])
+                    gen_copula(:target => part)
                 end
             end
         end
