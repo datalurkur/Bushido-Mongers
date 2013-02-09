@@ -55,6 +55,14 @@ module Commands
         def self.do(core, params); end
     end
 
+    module Help
+        def self.stage(core, params)
+            params[:target] = core.db.types_of(:command)
+        end
+
+        def self.do(core, params); end
+    end
+
     module Inspect
         def self.stage(core, params)
             if params[:target] == :self || params[:target] == params[:agent].monicker

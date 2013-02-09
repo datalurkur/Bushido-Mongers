@@ -21,7 +21,7 @@ module Composition
                     # All components set to a new location. Clear the local references.
                     instance.set_property(key, [])
                 else
-                    Log.debug("#{instance.monicker} does not preserve #{key} components")
+                    Log.debug("#{instance.monicker} does not preserve #{key} components", 8)
                 end
             end
         end

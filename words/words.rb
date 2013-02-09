@@ -326,7 +326,6 @@ module Words
 
             private
             def generate_children(noun)
-                Log.debug(noun)
                 monicker = noun[:monicker]
                 children = []
 
@@ -753,6 +752,12 @@ module Words
         end
 
         sentences.flatten.join(" ")
+    end
+
+    # Yeah, I don't want to auto-generate this info.
+    def self.describe_help(args)
+        "Basic commands: #{args[:target].join(" ")}\n" +
+        "There are synonyms of these commands. Experiment!"
     end
 
     def self.describe_composition(target)

@@ -57,6 +57,10 @@ command unhide {
     invocation unhide;
 }
 
+command help {
+    invocation help;
+}
+
 abstract command construct {
     invocation construct;
 }

@@ -128,6 +128,8 @@ module VerboseInterface
                     return Words.gen_sentence(message.properties)
                 when :stats
                     return Words.describe_stats(message.properties)
+                when :help
+                    return Words.describe_help(message.properties)
                 else
                     return "I don't know how to express the results of a(n) #{message.properties[:command]}, pester zphobic to work on this"
                 end
