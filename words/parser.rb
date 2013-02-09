@@ -20,7 +20,7 @@ I you he we you they
 
 =end
 
-def load_file(dir, glob_str, regex = //, &block)
+def load_files(dir, glob_str, regex = //, &block)
     Dir.glob("#{dir}/#{glob_str}").each do |file|
         Log.debug("Reading #{file}", 7)
         match = file.match(regex)
@@ -38,32 +38,34 @@ module WordParser
         db = WordDB.new
 
         Words::TYPES.each do |type|
-            load_file(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/) do |line, match|
+            load_files(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/) do |line, match|
                 keyword = match[1].to_sym
 
                 db.add_keyword_family(keyword, {type => line.chomp})
             end
         end
 
-        load_file(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/) do |line, match|
+        load_files(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/) do |line, match|
             part_of_speech = match[1].to_sym
             family = line.split(/\s+/).collect { |word| {part_of_speech => word} }
             db.add_family(*family)
         end
 
         # TODO - Add distinctions between preposition types, i.e. store match somewhere.
-        load_file(dict_dir, "prepositions_*.txt", /^.*prepositions_(.*).txt/) do |line, match|
+        load_files(dict_dir, "prepositions_*.txt", /^.*prepositions_(.*).txt/) do |line, match|
             words = line.split(/\s+/).map(&:to_sym)
             preposition = words.shift
+            prep_type = match[1].to_sym
+            Log.debug([preposition, prep_type, words])
             words.each do |verb|
                 # add infinitive as a verb
                 family = {:verb => verb}
                 db.add_family(family)
-                db.add_preposition(preposition, family)
+                db.add_preposition(preposition, prep_type, family)
             end
         end
 
-        load_file(dict_dir, "conjugations.txt") do |line, match|
+        load_files(dict_dir, "conjugations.txt") do |line, match|
             words = line.split(/\s+/)
             infinitive = words.shift.to_sym
 
@@ -100,9 +102,15 @@ module WordParser
             db.add_keyword_family(:command, {:verb => comm})
         end
         Log.debug("Found #{db.get_keyword_groups(:command).size} commands.")
+
         raws_db.types_of(:item).each do |item|
             db.add_keyword_family(:item, {:noun => item})
         end
         Log.debug("Found #{db.get_keyword_groups(:item).size} item types.")
+
+        raws_db.types_of(:material).each do |mat|
+            db.add_keyword_family(:material, {:adjective => mat})
+        end
+        Log.debug("Found #{db.get_keyword_groups(:material).size} materials.")
     end
 end
