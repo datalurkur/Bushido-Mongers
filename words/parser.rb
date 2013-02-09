@@ -56,7 +56,6 @@ module WordParser
             words = line.split(/\s+/).map(&:to_sym)
             preposition = words.shift
             prep_type = match[1].to_sym
-            Log.debug([preposition, prep_type, words])
             words.each do |verb|
                 # add infinitive as a verb
                 family = {:verb => verb}

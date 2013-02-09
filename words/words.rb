@@ -272,7 +272,7 @@ module Words
             include Listable
             def initialize(nouns)
                 if Hash === nouns
-                    nouns = [nouns]
+                    nouns = [nouns] # can't call Array(hash) because it decomposes to tuples
                 else
                     nouns = Array(nouns)
                 end
@@ -284,27 +284,34 @@ module Words
                 end
 
                 # Decompose descriptor hashes into noun name and modifiers.
-                noun_args = {}
                 nouns.map! do |noun|
-                    if Hash === noun
+                    hash = {}
+                    case noun
+                    when Hash
                         # TODO - parse hash for noun descriptors to insert into noun_args
-                        noun_args
-                        noun[:monicker]
+                        hash[:monicker] = noun[:monicker]
+                        Log.debug(["possessed!", noun[:possessor_info]]) if noun[:possessor_info]
+                        hash[:possessor_info] = noun[:possessor_info]if noun[:possessor_info]
                     else
-                        noun
+                        hash[:monicker] = noun
                     end
+                    hash
                 end
+
+                Log.debug(nouns)
 
                 if @list = (nouns.size > 1)
                     @children = nouns.map do |noun|
-                        children = noun_with_determiner(noun)
+                        children = noun_with_determiner(noun[:monicker], noun)
                         children.size > 1 ? NounPhrase.new(children) : children.first
                     end
                 else
-                    @children = noun_with_determiner(nouns.first, noun_args)
+                    noun = nouns.first
+                    @children = noun_with_determiner(noun[:monicker], noun)
                 end
             end
 
+            # TODO: correct a/an for appropriate adjectives.
             def add_adjectives(*adjectives)
                 raise(StandardError, "Don't know which noun to adjectivize of #{self.inspect}!") if @list
                 # Insert adjectives between (potential) article but before the noun
@@ -551,7 +558,7 @@ module Words
         class Determiner < ParseTree::PTLeaf
             class << self
                 def new_for_noun(noun, noun_args)
-                    if noun_args[:possessed]
+                    if noun_args[:possessor_info]
                         Possessive.new(noun_args)
                     elsif Noun.needs_article?(noun)
                         Article.new(noun)
@@ -565,15 +572,15 @@ module Words
         class Possessive < Determiner
             def initialize(noun_args)
                 # Possessive picked based on a) person and b) gender.
-                super(
-                case noun_args[:possessor_person]
+                @children = [
+                case noun_args[:possessor_info][:person]
                 # Mirroring State's :person field here.
                 when :first
                     :my
                 when :second, :second_plural
                     :your
                 when :third
-                    case noun_args[:possessor_gender]
+                    case noun_args[:possessor_info][:gender]
                     when :male
                         :his
                     when :female
@@ -588,7 +595,7 @@ module Words
                 when :third_plural
                     :their
                 end
-                )
+                ]
             end
 
             # N.B. There's overlap between certain pronouns and certain possessive determiners.
@@ -671,10 +678,22 @@ module Words
         Sentence.new(subject_np, verb_np).to_s
     end
 
-    def self.describe_corporeal(target)
+    private
+    def self.possessor_info(possessor)
+        person = :third
+        gender = :inanimate
+        person = :second if possessor[:monicker] == :you
+        gender = possessor[:gender] if possessor[:gender]
+        { :person => person, :gender => gender }
+    end
+    public
+
+    def self.describe_corporeal(corporeal)
         # Describe the corporeal body
-        body = target[:properties][:incidental].first
-        sentences = [gen_copula(:target=>body[:monicker])]
+        body = corporeal[:properties][:incidental].first
+        sentences = [gen_sentence(:subject => corporeal, :verb => :have, :target => body)]
+        body[:possessor_info] = possessor_info(corporeal)
+        Log.debug("Done copulaing: #{sentences}")
         sentences << describe_composition(body)
 
         # TODO - Add more information about abilities, features, etc.
@@ -685,6 +704,21 @@ module Words
         stats = args[:target]
         attributes = stats.first
         skills     = stats.last
+
+        sentences = []
+
+        stats.each do |list|
+            list.each do |stat|
+                stat[:possessor] = args[:agent]
+            end
+            sentences << gen_sentence(
+                :subject => args[:agent],
+                :verb    => :have,
+                :target  => list
+            )
+        end
+
+        sentences.flatten.join(" ")
     end
 
     def self.describe_composition(target)
@@ -703,10 +737,13 @@ module Words
 
         comp_types.each do |verb, list|
             if list && !list.empty?
+                list.each do |part|
+                    part[:possessor_info] = target[:possessor_info]
+                end
                 sentences << gen_sentence(
                                 :subject => list.dup,
                                 :verb    => verb,
-                                :target  => target[:monicker],
+                                :target  => target,
                                 :state   => state)
                 sentences += list.collect do |part|
                     if part[:is_type].include?(:composition_root)
