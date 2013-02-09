@@ -290,15 +290,12 @@ module Words
                     when Hash
                         # TODO - parse hash for noun descriptors to insert into noun_args
                         hash[:monicker] = noun[:monicker]
-                        Log.debug(["possessed!", noun[:possessor_info]]) if noun[:possessor_info]
                         hash[:possessor_info] = noun[:possessor_info]if noun[:possessor_info]
                     else
                         hash[:monicker] = noun
                     end
                     hash
                 end
-
-                Log.debug(nouns)
 
                 if @list = (nouns.size > 1)
                     @children = nouns.map do |noun|
@@ -693,7 +690,6 @@ module Words
         body = corporeal[:properties][:incidental].first
         sentences = [gen_sentence(:subject => corporeal, :verb => :have, :target => body)]
         body[:possessor_info] = possessor_info(corporeal)
-        Log.debug("Done copulaing: #{sentences}")
         sentences << describe_composition(body)
 
         # TODO - Add more information about abilities, features, etc.
