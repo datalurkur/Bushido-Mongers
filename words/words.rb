@@ -257,6 +257,12 @@ module Words
                     AdverbPhrase.new(arg, args)
                 end
 
+                if args[:subject_complement]
+                    # FIXME: Technically we're not supposed to insert symbol children into PTInternalNode, but hack it.
+                    # Subject complements can be adjectives or nouns (or NPs). How should we distinguish?
+                    @children += Array(args[:subject_complement])
+                end
+
                 @list = (verbs.size > 1)
             end
         end
@@ -265,9 +271,11 @@ module Words
             include Listable
             def initialize(nouns)
                 # Descriptor composition
-                # TODO - parse hash for noun descriptors
+                noun_args = {}
                 if Hash === nouns
                     nouns = nouns[:monicker]
+                    # TODO - parse hash for noun descriptors to insert into noun_args
+                    noun_args
                 end
 
                 nouns = Array(nouns)
@@ -278,12 +286,14 @@ module Words
                     return
                 end
 
-                @list = (nouns.size > 1)
-
-                @children = nouns.map do |noun|
-                    noun_with_article(noun)
+                if @list = (nouns.size > 1)
+                    @children = nouns.map do |noun|
+                        children = noun_with_determiner(noun)
+                        children.size > 1 ? NounPhrase.new(children) : children.first
+                    end
+                else
+                    @children = noun_with_determiner(nouns.first, noun_args)
                 end
-                @children.flatten!
             end
 
             def add_adjectives(*adjectives)
@@ -296,20 +306,13 @@ module Words
             end
 
             private
-            def noun_with_article(noun)
+            def noun_with_determiner(noun, noun_args={})
                 if noun.is_a?(ParseTree::PTNode)
-                    noun
-                elsif Noun.needs_article?(noun)
-                    children = [Article.new(noun), Noun.new(noun)]
-                    # If it's a list, stuff the article-plus-noun into a sub-NP.
-                    # Otherwise, just return the child array, which will be flattened out.
-                    if @list
-                        NounPhrase.new(children)
-                    else
-                        children
-                    end
+                    [noun]
+                elsif determiner = Determiner.new_for_noun(noun, noun_args)
+                    [determiner, Noun.new(noun)]
                 else
-                    Noun.new(noun)
+                    [Noun.new(noun)]
                 end
             end
         end
@@ -491,15 +494,19 @@ module Words
             # http://en.wikipedia.org/wiki/Pro-form
             # TODO: We'll want to stand in pronouns for certain words (based
             # on previous usage) to avoid repetition. Maybe. Not even DF does this.
+            # N.B. There's overlap between certain pronouns and certain possessive determiners.
             def self.pronoun?(noun)
                 # If it's e.g. a BushidoObject then it's not a pronoun.
                 return false unless noun.respond_to?(:to_sym)
                 case noun.to_sym
                 # Subject person pronouns.
-                when :I, :we, :you, :he, :she, :it, :they, :who
+                when :I, :you, :he, :she, :it, :we, :they, :who
+                    true
+                # Possessive pronouns.
+                when :mine, :yours, :his, :hers, :its, :ours, :theirs
                     true
                 # Object person pronouns.
-                when :me, :us, :you, :him, :her, :it, :them, :whom
+                when :me, :you, :him, :her, :it, :us, :them, :whom
                     true
                 # Existentials.
                 when :someone, :somebody, :one, :some
@@ -529,16 +536,68 @@ module Words
             end
         end
 
-        class Article < ParseTree::PTLeaf
+        class Determiner < ParseTree::PTLeaf
+            class << self
+                def new_for_noun(noun, noun_args)
+                    if noun_args[:possessed]
+                        Possessive.new(noun_args)
+                    elsif Noun.needs_article?(noun)
+                        Article.new(noun)
+                    else
+                        nil
+                    end
+                end
+            end
+        end
+
+        class Possessive < Determiner
+            def initialize(noun_args)
+                # Possessive picked based on a) person and b) gender.
+                super(
+                case noun_args[:possessor_person]
+                # Mirroring State's :person field here.
+                when :first
+                    :my
+                when :second, :second_plural
+                    :your
+                when :third
+                    case noun_args[:possessor_gender]
+                    when :male
+                        :his
+                    when :female
+                        :her
+                    when :neutral
+                        :zir
+                    when :inanimate
+                        :its
+                    end
+                when :first_plural
+                    :our
+                when :third_plural
+                    :their
+                end
+                )
+            end
+
+            # N.B. There's overlap between certain pronouns and certain possessive determiners.
+            def self.possessive?(det)
+                case det.to_sym
+                when :my, :your, :his, :her, :its, :our, :their
+                    true
+                end
+            end
+        end
+
+        class Article < Determiner
             def initialize(noun)
                 if Article.article?(noun)
                     super(noun)
                 elsif Noun.definite?(noun)
-                    super("the")
+                    super(:the)
                 else
                     # TODO - check for 'an' case - starts with a vowel or silent H
                     # TODO - 'some' for plural nouns
-                    super("a")
+                    super(:a)
                 end
             end
 
@@ -607,7 +666,16 @@ module Words
         # TODO - Add more information about abilities, features, etc.
     end
 
-    def self.describe_list(list, verb, target_monicker, state)
+    def self.describe_stats(target)
+        # Describe the corporeal body
+        body = target[:properties][:incidental].first
+        sentences = [gen_copula(:target=>body[:monicker])]
+        sentences << describe_composition(body)
+
+        # TODO - Add more information about abilities, features, etc.
+    end
+
+    def self.describe_list(list, verb, target_monicker, state = State.new)
         sentences = []
         if list && !list.empty?
             sentences << gen_sentence(
@@ -650,7 +718,7 @@ module Words
             args[:verb]    = :be
         end
 
-        args[:subj_complement] = args[:adjective] || args[:complement]
+        args[:subject_complement] = Array(args[:adjective]) + Array(args[:complement]) + Array(args[:keywords])
 
         # TODO - Use expletive / inverted copula construction
         # TODO - expletive more often for second person
@@ -796,6 +864,7 @@ module Words
     # Note that this method modifies the pieces array
     def self.decompose_phrase(pieces, preposition)
         if (index = pieces.index(preposition))
+            # TODO - march through, detecting adjectives or adjective phrases, until we hit a noun.
             pieces.slice!(index,2).last
         end
     end
