@@ -283,13 +283,14 @@ module Words
                     return
                 end
 
-                # Decompose descriptor hashes into noun name and modifiers.
+                # Decompose descriptor hashes into noun name, modifiers, and possession info.
                 nouns.map! do |noun|
                     hash = {}
                     case noun
                     when Hash
                         # TODO - parse hash for noun descriptors to insert into noun_args
                         hash[:monicker] = noun[:monicker]
+                        hash[:adjectives] = noun[:properties][:adjectives] || []
                         hash[:possessor_info] = noun[:possessor_info]if noun[:possessor_info]
                     else
                         hash[:monicker] = noun
@@ -299,12 +300,11 @@ module Words
 
                 if @list = (nouns.size > 1)
                     @children = nouns.map do |noun|
-                        children = noun_with_determiner(noun[:monicker], noun)
+                        children = generate_children(noun)
                         children.size > 1 ? NounPhrase.new(children) : children.first
                     end
                 else
-                    noun = nouns.first
-                    @children = noun_with_determiner(noun[:monicker], noun)
+                    @children = generate_children(nouns.first)
                 end
             end
 
@@ -319,14 +319,29 @@ module Words
             end
 
             private
-            def noun_with_determiner(noun, noun_args={})
-                if noun.is_a?(ParseTree::PTNode)
-                    [noun]
-                elsif determiner = Determiner.new_for_noun(noun, noun_args)
-                    [determiner, Noun.new(noun)]
-                else
-                    [Noun.new(noun)]
+            def generate_children(noun)
+                monicker = noun[:monicker]
+                children = []
+
+                if monicker.is_a?(ParseTree::PTNode)
+                    # Just return the PTNode.
+                    return [monicker]
                 end
+
+                if determiner = Determiner.new_for_noun(noun)
+                    children << determiner
+                end
+
+                if noun[:adjectives]
+                    noun[:adjectives].each do |adj|
+                        adj = Adjective.new(adj) unless adj.is_a?(Adjective)
+                        children << adj
+                    end
+                end
+                # TODO: correct a/an for appropriate adjectives.
+
+                children << Noun.new(monicker)
+                children
             end
         end
 
@@ -554,11 +569,11 @@ module Words
 
         class Determiner < ParseTree::PTLeaf
             class << self
-                def new_for_noun(noun, noun_args)
-                    if noun_args[:possessor_info]
-                        Possessive.new(noun_args)
-                    elsif Noun.needs_article?(noun)
-                        Article.new(noun)
+                def new_for_noun(noun)
+                    if noun[:possessor_info]
+                        Possessive.new(noun[:possessor_info])
+                    elsif Noun.needs_article?(noun[:monicker])
+                        Article.new(noun[:monicker])
                     else
                         nil
                     end
@@ -567,17 +582,17 @@ module Words
         end
 
         class Possessive < Determiner
-            def initialize(noun_args)
+            def initialize(possessor_info)
                 # Possessive picked based on a) person and b) gender.
                 @children = [
-                case noun_args[:possessor_info][:person]
+                case possessor_info[:person]
                 # Mirroring State's :person field here.
                 when :first
                     :my
                 when :second, :second_plural
                     :your
                 when :third
-                    case noun_args[:possessor_info][:gender]
+                    case possessor_info[:gender]
                     when :male
                         :his
                     when :female
