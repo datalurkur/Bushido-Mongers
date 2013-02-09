@@ -271,7 +271,11 @@ module Words
         class NounPhrase < ParseTree::PTInternalNode
             include Listable
             def initialize(nouns)
-                nouns = Array(nouns)
+                if Hash === nouns
+                    nouns = [nouns]
+                else
+                    nouns = Array(nouns)
+                end
 
                 if nouns.all? { |n| n.is_a?(ParseTree::PTNode) }
                     # Nouns already created; just attach them.
@@ -386,7 +390,10 @@ module Words
                     end
                 when :past
                     # Double the ending letter, if necessary.
-                    infinitive.gsub!(/([nbpt])$/, '\1\1')
+                    # TODO - add exceptions to dictionary rather than hard-coding here.
+                    unless infinitive == :inspect
+                        infinitive.gsub!(/([nbpt])$/, '\1\1')
+                    end
                     # drop any ending 'e'
                     infinitive.sub!(/e$/, '')
                     infinitive += 'ed'
@@ -628,7 +635,7 @@ module Words
     def self.gen_sentence(args = {})
         to_print = args.dup
         to_print.delete(:agent)
-        Log.debug(to_print, 6)
+#        Log.debug(to_print, 6)
 
         args[:state] ||= State.new
 
@@ -680,25 +687,6 @@ module Words
         skills     = stats.last
     end
 
-    def self.describe_list(list, verb, target_monicker, state = State.new)
-        sentences = []
-        if list && !list.empty?
-            sentences << gen_sentence(
-                            :subject => list.dup,
-                            :verb    => verb,
-                            :target  => target_monicker,
-                            :state   => state)
-            sentences += list.collect do |part|
-                if part[:is_type].include?(:composition_root)
-                    describe_composition(part)
-                else
-                    gen_copula(:target => part)
-                end
-            end
-        end
-        sentences
-    end
-
     def self.describe_composition(target)
         state = State.new
         # Description is a currently-progressing state, so passive progressive.
@@ -707,9 +695,28 @@ module Words
 
         sentences = []
 
-        sentences << describe_list(target[:properties][:external], :attach, target[:monicker], state)
-        sentences << describe_list(target[:properties][:worn],     :wear,   target[:monicker], state)
-        sentences << describe_list(target[:properties][:grasped],  :grasp,  target[:monicker], state)
+        comp_types = {
+            :attach => target[:properties][:external],
+            :wear   => target[:properties][:worn],
+            :grasp  => target[:properties][:grasped],
+        }
+
+        comp_types.each do |verb, list|
+            if list && !list.empty?
+                sentences << gen_sentence(
+                                :subject => list.dup,
+                                :verb    => verb,
+                                :target  => target[:monicker],
+                                :state   => state)
+                sentences += list.collect do |part|
+                    if part[:is_type].include?(:composition_root)
+                        describe_composition(part)
+                    else
+                        gen_copula(:target => part)
+                    end
+                end
+            end
+        end
 
         sentences.flatten.join(" ")
     end
