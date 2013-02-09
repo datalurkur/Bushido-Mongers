@@ -7,6 +7,11 @@ abstract root command {
     class sym invocation;
 }
 
+/* Info commands. */
+command stats {
+    invocation stats;
+}
+
 command attack {
     target corporeal;
     tool weapon;

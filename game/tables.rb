@@ -29,6 +29,12 @@ module DataTables
         @values[item]
     end
 
+    def value_below(value)
+        less_than = @values.select { |k, v| v <= value }
+        raise(ArgumentError, "No value less than #{value} found in #{self.inspect}.") if less_than.empty?
+        less_than.min_by { |k, v| value - v }.first
+    end
+
     def value_at(index)
         raise(ArgumentError, "Index out of range.") if index < 0 || index >= @num_values
         raw_values[index].first
@@ -70,6 +76,7 @@ end
 
 module Difficulty
     def self.raw_values; [
+        [:effortless,  0.0],
         [:trivial,     0.05],
         [:pedestrian,  0.1],
         [:easy,        0.2],

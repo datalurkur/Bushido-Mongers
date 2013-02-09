@@ -43,6 +43,18 @@ module Commands
         end
     end
 
+    module Stats
+        def self.stage(core, params)
+            # Reach into agent and pull out stat details.
+            list = []
+            list << params[:agent].attributes.collect { |name| params[:agent].attribute(name) }
+            list << params[:agent].skills.collect     { |name| params[:agent].skill(name) }
+            params[:target] = list
+        end
+
+        def self.do(core, params); end
+    end
+
     module Inspect
         def self.stage(core, params)
             if params[:target] == :self || params[:target] == params[:agent].monicker

@@ -61,6 +61,13 @@ class Descriptor
                 d[:properties].delete(prop)
             end
 
+            if object.is_type?(:aspect)
+                # Send an adjective to the user, not a number.
+                d[:properties][:adjectives] ||= []
+                d[:properties][:adjectives] << GenericAspect.value_below(d[:properties][:intrinsic])
+                d[:properties].delete(:intrinsic)
+            end
+
             # FIXME - Add more things
 
             d
