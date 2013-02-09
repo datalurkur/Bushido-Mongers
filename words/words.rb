@@ -288,9 +288,15 @@ module Words
                     hash = {}
                     case noun
                     when Hash
-                        # TODO - parse hash for noun descriptors to insert into noun_args
                         hash[:monicker] = noun[:monicker]
-                        hash[:adjectives] = noun[:properties][:adjectives] || []
+
+                        hash[:adjectives] = Array(noun[:adjectives])
+                        if noun[:properties]
+                            hash[:adjectives] += Array(noun[:properties][:adjectives])
+                        end
+
+                        hash[:definite] == noun[:definite] if noun[:definite]
+
                         hash[:possessor_info] = noun[:possessor_info]if noun[:possessor_info]
                     else
                         hash[:monicker] = noun
@@ -320,6 +326,7 @@ module Words
 
             private
             def generate_children(noun)
+                Log.debug(noun)
                 monicker = noun[:monicker]
                 children = []
 
@@ -337,7 +344,7 @@ module Words
 
                 children << Noun.new(monicker)
 
-                if determiner = Determiner.new_for_noun(noun, children.first)
+                if determiner = Determiner.new_for_noun(noun, children.first, noun[:definite])
                     children.insert(0, determiner)
                 end
 
@@ -495,7 +502,7 @@ module Words
 
             # Determine whether noun is definite (e.g. uses 'the') or indefinite (e.g. a/an)
             # http://en.wikipedia.org/wiki/Definiteness
-            # FIXME: Base this on noun lookups?
+            # TODO - store always-definite words in dictionary
             def self.definite?(noun)
                 return false unless noun.respond_to?(:to_sym)
                 case noun.to_sym
@@ -569,11 +576,11 @@ module Words
 
         class Determiner < ParseTree::PTLeaf
             class << self
-                def new_for_noun(noun, first_word)
+                def new_for_noun(noun, first_word, definite)
                     if noun[:possessor_info]
                         Possessive.new(noun[:possessor_info])
                     elsif Noun.needs_article?(noun[:monicker])
-                        Article.new(noun[:monicker], first_word)
+                        Article.new(noun[:monicker], first_word, definite)
                     else
                         nil
                     end
@@ -620,14 +627,14 @@ module Words
         end
 
         class Article < Determiner
-            def initialize(noun, first_word=nil)
-                first_word = noun unless first_word
+            def initialize(noun, first_word=nil, definite=nil)
                 if Article.article?(noun)
                     super(noun)
-                elsif Noun.definite?(noun)
+                elsif definite || Noun.definite?(noun)
                     super(:the)
                 else
                     # TODO - 'some' for plural nouns
+                    first_word = noun unless first_word
                     if Article.use_an?(first_word)
                         super(:an)
                     else
@@ -851,15 +858,8 @@ module Words
     end
 
     def self.gen_area_name(args = {})
-        article = Sentence::Article.new(:the)
-        noun    = Sentence::Noun.new(args[:type])
-        name    = Sentence::NounPhrase.new([article, noun])
-        keywords = args[:keywords]
-
-        if keywords && !keywords.empty?
-            name.add_adjectives(keywords.rand)
-        end
-
+        noun    = { :monicker => args[:type], :adjectives => args[:keywords], :definite => true }
+        name    = Sentence::NounPhrase.new(noun)
 #        descriptor = db.get_keyword_words(:abstract, :noun).rand
 
         name.to_s.title
