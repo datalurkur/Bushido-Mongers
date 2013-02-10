@@ -733,7 +733,6 @@ module Words
     end
 
     def self.describe_stats(args)
-        Log.debug(args)
         stats = args[:target]
         attributes = stats.first
         skills     = stats.last

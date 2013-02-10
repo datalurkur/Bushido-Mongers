@@ -21,7 +21,7 @@ module Commands
 
         def do(core, command, params)
             mod = get_command_module(core, command)
-            mod.do(core, params)
+            mod.do(core, params) if mod.respond_to?(:do)
         end
 
         # Requires standard param values: agent, command.
@@ -51,16 +51,12 @@ module Commands
             list << params[:agent].skills.collect     { |name| params[:agent].skill(name) }
             params[:target] = list
         end
-
-        def self.do(core, params); end
     end
 
     module Help
         def self.stage(core, params)
             params[:target] = core.db.types_of(:command)
         end
-
-        def self.do(core, params); end
     end
 
     module Inspect
@@ -76,8 +72,6 @@ module Commands
                 params[:target] = params[:agent].absolute_position
             end
         end
-
-        def self.do(core, params); end
     end
 
     module Consume
