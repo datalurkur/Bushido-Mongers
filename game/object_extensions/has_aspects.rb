@@ -3,13 +3,44 @@ require './util/exceptions'
 module HasAspects
     class << self
         def at_creation(instance, params)
-            # These are the two kinds of aspects right now. Later there might be more.
-            instance.attributes.each do |attribute|
-                instance.add_attribute(attribute)
+            variances = if instance.class_info(:random_attributes)
+                random_attribute_variances(instance, params)
+            else
+                Array.new(instance.attributes.size, 0)
             end
-            instance.skills.each do |skill|
-                instance.add_skill(skill)
+
+            instance.attributes.each_with_index do |name, i|
+                instance.add_attribute(name, :intrinsic_bonus => variances[i])
             end
+
+            variances = if instance.class_info(:random_skills)
+                random_skill_variances(instance, params)
+            else
+                Array.new(instance.skills.size, 0)
+            end
+
+            instance.skills.each_with_index do |name, i|
+                Log.debug("Adding #{name} with modifier #{variances[i]}")
+                instance.add_skill(name, :intrinsic_bonus => variances[i])
+            end
+        end
+
+        private
+        def random_attribute_variances(instance, params)
+            default_values = instance.get_attribute_defaults(instance.attributes)
+            relative_offset = instance.class_info(:attribute_offset) || 0
+            variance_per_value = instance.class_info(:random_variance)
+
+            instance.generate_variances(default_values, variance_per_value, relative_offset)
+        end
+
+        def random_skill_variances(instance, params)
+            default_values = instance.get_skill_defaults(instance.skills)
+            relative_offset = instance.class_info(:skill_offset) || 0
+            # FIXME: this should probably be different for attributes and skills.
+            variance_per_value = instance.class_info(:random_variance)
+
+            instance.generate_variances(default_values, variance_per_value, relative_offset)
         end
     end
 
@@ -47,36 +78,6 @@ module HasAspects
         raise(UnknownType, "#{skill} is not a skill.") unless @core.db.is_type?(skill_raw_name, :skill)
         Log.warning("Doesn't have skill: #{skill}") unless @skills[skill]
         @skills[skill]
-    end
-end
-
-module HasRandomAspects
-    include HasAspects
-
-    class << self
-        def at_creation(instance, params)
-            Log.debug([instance.attributes, instance.skills])
-            default_values = instance.get_attribute_defaults(instance.attributes)
-            relative_offset = instance.class_info(:attribute_offset) || 0
-            variance_per_value = instance.class_info(:random_variance)
-
-            variances = instance.generate_variances(default_values, variance_per_value, relative_offset)
-
-            instance.attributes.each_with_index do |name, i|
-                instance.add_attribute(name, :intrinsic_bonus => variances[i])
-            end
-
-            default_values = instance.get_skill_defaults(instance.skills)
-            relative_offset = instance.class_info(:skill_offset) || 0
-            # FIXME: this should probably be different for attributes and skills.
-            variance_per_value = instance.class_info(:random_variance)
-
-            variances = instance.generate_variances(default_values, variance_per_value, relative_offset)
-
-            instance.skills.each_with_index do |name, i|
-                instance.add_skill(name, :intrinsic_bonus => variances[i])
-            end
-        end
     end
 
     # Find a list of modifiers to the default attributes whose total fits within the range.
