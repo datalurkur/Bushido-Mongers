@@ -20,7 +20,6 @@ module HasAspects
             end
 
             instance.skills.each_with_index do |name, i|
-                Log.debug("Adding #{name} with modifier #{variances[i]}")
                 instance.add_skill(name, :intrinsic_bonus => variances[i])
             end
         end
