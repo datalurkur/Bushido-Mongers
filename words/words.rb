@@ -653,7 +653,7 @@ module Words
                 when :union, :united, :unicorn, :used, :one
                     false
                 else
-                    !!word.to_s.match(/^[aeiouy]/)
+                    !(Words::CONSONANTS - ['y']).include?(word.to_s[0].chr)
                 end
             end
 
