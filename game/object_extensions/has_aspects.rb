@@ -62,6 +62,8 @@ module HasAspects
         @attributes.has_key?(attribute)
     end
 
+    def attribute_list; @attributes.keys; end
+
     def attribute(attribute)
         raise(UnknownType, "#{attribute} is not an attribute.") unless @core.db.is_type?(attribute, :attribute)
         Log.warning("Doesn't have attribute: #{attribute}") unless @attributes[attribute]
@@ -71,6 +73,8 @@ module HasAspects
     def has_skill?(skill)
         @skills.has_key?(skill.to_s.gsub(/_skill$/, '').to_sym)
     end
+
+    def skill_list; @skills.keys; end
 
     def skill(skill)
         skill_raw_name = (skill.to_s.match(/_skill$/) ? skill : "#{skill}_skill".to_sym)
