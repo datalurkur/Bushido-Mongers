@@ -1,6 +1,6 @@
 require './net/defaults'
 require './net/game_client'
-require './net/web_socket_reader'
+require './http/web_socket_reader'
 require './ui/client_interface'
 require './util/message_buffer'
 
@@ -49,6 +49,8 @@ class WebSocketClient < GameClient
             data    = super(message)
             payload = WebSocketPayload.new(data).pack
             @web_socket.write_nonblock(payload)
+            Log.info("To websocket: #{data.inspect}", 8)
+            Log.debug(payload.inspect, 9)
         end
     end
 
@@ -63,6 +65,7 @@ class WebSocketClient < GameClient
             data = @read_pipe.read_nonblock(DEFAULT_BUFFER_SIZE)
             message = @message_buffer.unpack_message(data)
         end
+        Log.info("From websocket: #{message.inspect}", 8)
         super(message)
     end
 end

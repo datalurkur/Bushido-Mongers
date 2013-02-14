@@ -1,7 +1,7 @@
 require 'socket'
 require 'thread'
 
-require './net/http_reader'
+require './http/http_reader'
 
 class HTTPServer
     attr_reader :web_root, :port
@@ -75,10 +75,11 @@ class HTTPServer
                 while true
                     data = reader.read(socket)
                     if data
-                        start = Time.now
                         response, close_socket = [nil, nil]
                         case data.method
                         when /get/i
+                            start = Time.now
+
                             Log.debug(["Get request for #{data.uri}", data.headers], 8)
                             match_result = match_response(data.uri)
                             response_match, match_data = match_result
@@ -103,6 +104,7 @@ class HTTPServer
                                     break if data.headers["Connection"] && data.headers["Connection"].match(/close/i)
                                 end
                             end
+                            Log.info("Responded to #{data.uri} in #{Time.now - start} seconds")
                         #when /post/i
                         #when /put/i
                         else
@@ -126,7 +128,7 @@ class HTTPServer
     end
  
     def match_response(uri)
-        @route_order.each do |regex|
+        @route_order.reverse.each do |regex|
             m = uri.match(regex)
             return [@responses[regex], m.captures] if m
         end

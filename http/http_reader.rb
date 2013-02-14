@@ -1,4 +1,4 @@
-require './net/http_protocol'
+require './http/http_protocol'
 require './net/defaults'
 require './util/compression'
 require './util/log'

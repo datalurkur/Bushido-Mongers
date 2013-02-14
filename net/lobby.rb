@@ -1,6 +1,6 @@
 require './game/game_core'
 require './game/descriptors'
-require './net/http_server'
+require './http/http_server'
 
 # Lobbies group players together with a Game and facilitate communications between the game and the client sockets
 class Lobby
@@ -79,7 +79,7 @@ class Lobby
             return
         end
 
-        Log.info("#{username} joining #{name}")
+        Log.info("#{username} added to #{name}")
         broadcast(Message.new(:user_joins, {:result => username}), [username])
         @users[username] = {}
 
@@ -101,7 +101,7 @@ class Lobby
             @game_core.remove_character(username)
         end
         @users.delete(username)
-        Log.info("#{username} has left #{name}")
+        Log.info("#{username} was removed from #{name}")
         broadcast(Message.new(:user_leaves, {:result => username}))
     end
 

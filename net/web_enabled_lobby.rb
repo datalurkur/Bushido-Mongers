@@ -1,5 +1,5 @@
 require './net/lobby'
-require './net/web_renderer'
+require './http/web_renderer'
 
 class WebEnabledLobby < Lobby
     include WebRenderer

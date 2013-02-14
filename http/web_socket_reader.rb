@@ -34,7 +34,7 @@ class WebSocketPayload
             [
                 @mask ? (126 | 0x80) : 126,
                 @length
-            ].pack("CS")
+            ].pack("Cn")
         else
             [
                 @mask ? (127 | 0x80) : 127,
@@ -101,7 +101,7 @@ class WebSocketReader
                 @state  = @has_mask ? :mask_bytes : :payload
             when :two_byte_length
                 break if @buffer.size < 2
-                @length = @buffer.slice!(0,2).unpack("S").first
+                @length = @buffer.slice!(0,2).unpack("n").first
                 @state  = @has_mask ? :mask_bytes : :payload
             when :mask_bytes
                 @mask  = @buffer.slice!(0,4)

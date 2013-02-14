@@ -1,4 +1,6 @@
 var webSocket;
+var consoleContents = [];
+var maxConsoleLength = 50;
 
 function init() {
     if ("WebSocket" in window) {
@@ -8,27 +10,38 @@ function init() {
             append_console_data(event.data);
         }
         webSocket.onopen = function(event) {
-            console.log("Sending data");
-            webSocket.send("Test data woot!");
+            console.log("Socket opened");
             append_console_data("Web socket open");
         }
+        webSocket.onclose = function() {
+            console.log("Socket closed");
+            append_console_data("Web socket closed");
+        }
+
+        document.getElementById("input_field").focus();
     } else {
+        alert("Your browser does not support WebSockets");
         // Websocket not supported
     }
 }
 
 function send_data() {
-    webSocket.send(document.getElementById("input_field").value);
+    var input_field_data = document.getElementById("input_field").value;
     clear_input_field();
-}
-
-function format_console_line(data) {
-    return "<li>" + data + "</li>";
+    webSocket.send(input_field_data);
+    append_console_data(input_field_data);
 }
 
 function append_console_data(data) {
-    var old_value = document.getElementById("console").innerHTML;
-    document.getElementById("console").innerHTML = old_value + format_console_line(data);
+    var lines  = data.split(/\n/);
+
+    consoleContents = consoleContents.concat(lines);
+    var overflow = consoleContents.length - maxConsoleLength;
+    if(overflow > 0) {
+        consoleContents = consoleContents.slice(overflow);
+    }
+    
+    document.getElementById("console").innerHTML = "<li>" + consoleContents.join("</li><li>") + "</li>";
 }
 
 function clear_input_field() {

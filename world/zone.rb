@@ -379,6 +379,7 @@ class ZoneLeaf < Zone
 
     def get_adjacent(direction)
         raise(StateError, "Connections not resolved!") unless @resolved
+        raise(ArgumentError, "No connection to the #{direction} for #{name}") unless @connections[direction]
         @connections[direction]
     end
 end
