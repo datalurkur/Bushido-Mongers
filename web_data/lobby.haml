@@ -14,8 +14,6 @@
                     %li
                         %a{:href => "#default", :onclick => "focusTab('default')"} General Info
                     %li
-                        %a{:href => "#map", :onclick => "focusTab('map')"} Map
-                    %li
                         %a{:href => "#interactive_map", :onclick => "focusTab('interactive_map')"} Interactive Map
                 %h3 User List
                 %ul
@@ -33,8 +31,6 @@
                                 %td State
                                 %td= lobby.game_state
                     -if lobby.game_state == :playing || lobby.game_state == :ready
-                        %div.hiddentab#map
-                            %img{:src => lobby.map_uri}
                         %div.hiddentab#interactive_map
                             %div{:style => "position:relative;"}
                                 %img{:src => lobby.map_uri, :style => "position:relative;"}

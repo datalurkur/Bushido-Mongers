@@ -14,7 +14,7 @@ module Composition
                 if instance.preserved_container_classes.include?(key)
                     # Drop these components at the location where this object is
                     instance.get_property(key).each do |component|
-                        Log.debug("Dropping #{component.monicker} at #{instance.absolute_position.name}")
+                        Log.debug("Dropping #{component.monicker} at #{instance.absolute_position.name}", 6)
                         # Force the new position.
                         component.set_position(instance.absolute_position, :internal, true)
                     end

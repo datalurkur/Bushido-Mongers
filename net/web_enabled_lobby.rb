@@ -59,7 +59,7 @@ class WebEnabledLobby < Lobby
         [web_directory, characters_directory].each { |dir| ensure_directory_exists(dir) }
 
         # The lobby landing page
-        @web_server.add_route(/#{web_uri}$/i) do |args|
+        @web_server.add_route(/^#{web_uri}$/i) do |args|
             get_template(File.join(web_root, "lobby.haml"), {
                 :lobby       => self,
                 :room_layout => get_room_layout
@@ -67,13 +67,13 @@ class WebEnabledLobby < Lobby
         end
 
         # Lobby map
-        @web_server.add_route(/#{map_uri}$/i) do |args|
+        @web_server.add_route(/^#{map_uri}$/i) do |args|
             create_lobby_map
             get_file(map_location)
         end
 
         # User pages
-        @web_server.add_route(/#{characters_uri}\/#{wildcard}$/i) do |args|
+        @web_server.add_route(/^#{characters_uri}\/#{wildcard}$/i) do |args|
             username = args[0].unescape
             if @users.has_key?(username)
                 get_template(File.join(web_root, "character.haml"), {
@@ -87,7 +87,7 @@ class WebEnabledLobby < Lobby
         end
 
         # Maps within user directories
-        @web_server.add_route(/#{characters_uri}\/#{wildcard}\/map\.png/i) do |args|
+        @web_server.add_route(/^#{characters_uri}\/#{wildcard}\/map\.png/i) do |args|
             username = args[0].unescape
             if @users.has_key?(username)
                 create_map_for(username)
@@ -97,7 +97,7 @@ class WebEnabledLobby < Lobby
             end
         end
 
-        @web_server.add_route(/#{rooms_uri}\/#{wildcard}$/i) do |args|
+        @web_server.add_route(/^#{rooms_uri}\/#{wildcard}$/i) do |args|
             room_name = args[0].unescape
             room      = @game_core.world.find_zone_named(room_name)
             if room

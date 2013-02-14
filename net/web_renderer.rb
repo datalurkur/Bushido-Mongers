@@ -4,7 +4,7 @@ module WebRenderer
     include TemplateRenderer
 
     def wildcard
-        "([^\/]*)"
+        "([^\/]+)"
     end
 
     def get_template(template_name, locals={})

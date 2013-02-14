@@ -103,6 +103,10 @@ ul.navlist li {
     padding-right: 30px;
 }
 
+ul#console li {
+    list-style-type: none;
+}
+
 a:link {
     color: white;
     text-decoration: none;

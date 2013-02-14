@@ -10,6 +10,12 @@ class IRCClient < GameClient
     end
 
     def send_to_client(message)
+        if message.type == :connection_reset
+            @listen_thread.kill
+            stop
+            return
+        end
+
         text = super(message)
         IRCConduit.puts(get(:username), text)
     end

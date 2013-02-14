@@ -1,0 +1,19 @@
+!!! 5
+%head
+    %title Bushido Mongers
+    %link{:rel => "stylesheet", :href => "/main.css", :type => "text/css"}
+%body{:onload => "init()"}
+    %script{:type => "text/javascript", :src => "/console.js"}
+    .wrapper
+        .header
+            %h1 Bushido Mongers
+        .core
+            %ul#console
+                %li Test
+            %input#input_field{:type => 'text'}
+            %input{:type => 'button', :id => 'send_input_field', :value => 'Send', :onclick => 'send_data();'}
+            %script= "function searchKeyPress(e) { if(typeof e == 'undefined' && window.event) { e = window.event; } if(e.keyCode == 13) { document.getElementById('send_input_field').click(); } }"
+        .footer
+            %ul.navlist
+                %li
+                    %a{:href => "/"} Home

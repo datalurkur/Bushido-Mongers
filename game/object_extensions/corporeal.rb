@@ -12,7 +12,7 @@ module Corporeal
             case message.type
             when :unit_attacks
                 if message.defender == instance
-                    Log.debug("#{instance.monicker} is being attacked!")
+                    Log.debug("#{instance.monicker} is being attacked!", 7)
 
                     # TODO - extract damage from attacker, tool, etc.
                     damage = 1

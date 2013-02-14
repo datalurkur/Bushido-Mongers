@@ -1,6 +1,7 @@
 require './net/server'
 require './net/web_enabled_lobby'
 require './net/web_renderer'
+require './net/web_socket_client'
 
 # GameServer is responsible for handling client communications above the socket layer and delegating them where appropriate
 # Handles logins and authentication
@@ -21,11 +22,23 @@ class GameServer < Server
 
         @web_server  = HTTPServer.new(@config[:web_root], @config[:web_port])
 
+        @web_server.add_route(/^\/console_websocket$/) do |socket|
+            Log.debug("Attempting to create WebSocketClient")
+            if TCPSocket === socket
+                Log.debug("Successs")
+                WebSocketClient.new(socket, @config[:listen_port])
+            else
+                Log.error("Can't create WebSocketClient with #{socket.class}")
+            end
+        end
+        @web_server.add_route(/^\/console$/) do
+            get_template(File.join(@web_server.web_root, "console.haml"))
+        end
         # Allow files at the root to be accessed
-        @web_server.add_route(/\/#{wildcard}$/i) do |args|
+        @web_server.add_route(/^\/#{wildcard}$/i) do |args|
             get_file(File.join(@web_server.web_root, args.first))
         end
-        @web_server.add_route(/\/$/) do
+        @web_server.add_route(/^\/$/) do
             get_template(File.join(@web_server.web_root, "index.haml"), {:game_server => self})
         end
     end

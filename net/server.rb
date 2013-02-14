@@ -130,11 +130,11 @@ class Server
                         Log.error(["Processing error - #{e.message}", e.backtrace])
                     end
                 end
-            rescue Errno::ECONNRESET,EOFError
+            rescue Errno::ECONNRESET,EOFError,IOError
                 Log.debug("Client disconnected")
                 socket.close
             rescue Exception => e
-                Log.debug("Thread exited abnormally (#{e.class} : #{e.message})")
+                Log.error("Thread exited abnormally (#{e.class} : #{e.message})")
             end
             clear_client_info(socket)
         end
