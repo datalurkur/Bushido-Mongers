@@ -416,7 +416,7 @@ module Words
                 when :past
                     # Double the ending letter, if necessary.
                     # TODO - add exceptions to dictionary rather than hard-coding here.
-                    unless infinitive == :inspect
+                    unless [:inspect, :grasp].include?(infinitive.to_sym)
                         infinitive.gsub!(/([nbpt])$/, '\1\1')
                     end
                     # drop any ending 'e'
