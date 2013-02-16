@@ -1,0 +1,3 @@
+on mountain boat desert tundra pier
+in indoor
+out outdoor
