@@ -23,7 +23,7 @@ I you he we you they
 def load_files(dir, glob_str, regex = //, &block)
     Dir.glob("#{dir}/#{glob_str}").each do |file|
         Log.debug("Reading #{file}", 7)
-        match = file.match(regex)
+        match = file.match(regex)[1].to_sym
 
         File.readlines(file).each do |line|
             block.call(line, match)
@@ -39,14 +39,11 @@ module WordParser
 
         Words::TYPES.each do |type|
             load_files(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/) do |line, match|
-                keyword = match[1].to_sym
-
                 db.add_keyword_family(keyword, {type => line.chomp})
             end
         end
 
         load_files(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/) do |line, match|
-            part_of_speech = match[1].to_sym
             family = line.split(/\s+/).collect { |word| {part_of_speech => word} }
             db.add_family(*family)
         end
@@ -55,7 +52,6 @@ module WordParser
         load_files(dict_dir, "prepositions_*.txt", /^.*prepositions_(.*).txt/) do |line, match|
             words = line.split(/\s+/).map(&:to_sym)
             preposition = words.shift
-            prep_type = match[1].to_sym
             words.each do |verb|
                 # add infinitive as a verb
                 family = {:verb => verb}
