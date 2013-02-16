@@ -452,7 +452,7 @@ module ObjectRawParser
                 when :float
                     raw_value.to_f
                 when :bool
-                    (raw_value == :true)
+                    (raw_value.to_sym == :true)
                 else
                     raise(ParserError, "Unsupported property type #{property_type.inspect}.")
                 end

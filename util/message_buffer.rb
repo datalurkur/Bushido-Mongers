@@ -19,7 +19,7 @@ class MessageBuffer
         @queued_messages = []
         @buffer = ""
 
-        clear_stats
+        #clear_stats
     end
 
     def clear_stats
@@ -74,7 +74,7 @@ class MessageBuffer
                         @stats[:in][:compressed_count] += 1
                     end
                 else
-                    @stats[:in][:transmitted] += data_size
+                    @stats[:in][:transmitted] += data_size if @track_stats
                 end
 
                 message = Marshal.load(data_block)
@@ -148,6 +148,8 @@ class MessageBuffer
     end
 
     def report
+        return unless @track_stats
+
         unless @stats[:out][:count] == 0
             @stats[:out][:avg_message_size]   = @stats[:out][:throughput]       / @stats[:out][:count]
             @stats[:out][:avg_payload_size]   = @stats[:out][:transmitted]      / @stats[:out][:count]

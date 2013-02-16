@@ -2,7 +2,7 @@
 %head
     %title Bushido Mongers
     %link{:rel => "stylesheet", :href=>"/main.css", :type=>"text/css"}
-%body{:onload => "init('default')"}
+%body{:onload => "init()"}
     %script{:type => "text/javascript", :src => "/index.js"}
     .wrapper
         .header
@@ -12,11 +12,9 @@
                 %h3 Lobby Info
                 %ul
                     %li
-                        %a{:href => "javascript:void(0)", :onclick => "focusTab('default')"} General Info
+                        %a{:href => "#default", :onclick => "focusTab('default')"} General Info
                     %li
-                        %a{:href => "javascript:void(0)", :onclick => "focusTab('map')"} Map
-                    %li
-                        %a{:href => "javascript:void(0)", :onclick => "focusTab('interactive_map')"} Interactive Map
+                        %a{:href => "#interactive_map", :onclick => "focusTab('interactive_map')"} Interactive Map
                 %h3 User List
                 %ul
                     -lobby.user_list.each do |user|
@@ -33,22 +31,16 @@
                                 %td State
                                 %td= lobby.game_state
                     -if lobby.game_state == :playing || lobby.game_state == :ready
-                        %div.hiddentab#map
-                            %img{:src => lobby.map_uri}
                         %div.hiddentab#interactive_map
-                            -#%img{:src => lobby.map_uri, :usemap => "img_map"}
-                            -#%map{:name => "img_map"}
-                                -#room_layout[:rooms].each do |room, info|
-                                    -#%area{:shape => "rect", :coords => "#{info[:cell_coords].join(",")},#{([info[:cell_size]]*2).join(",")}", :href => "javascript:void(0)", :onclick => "alert('#{room.name}')", :alt => room.name}
                             %div{:style => "position:relative;"}
                                 %img{:src => lobby.map_uri, :style => "position:relative;"}
                                 -room_layout[:rooms].each do |room, info|
-                                    %div{:style => "left:#{info[:cell_coords].x}px; top:#{info[:cell_coords].y}px; width:#{info[:cell_size]}px; height:#{info[:cell_size]}px; position:absolute; border:1px solid red;"}
+                                    %div{:style => "left:#{info[:cell_coords].x}px; top:#{info[:cell_coords].y}px; width:#{info[:cell_size]}px; height:#{info[:cell_size]}px; position:absolute;"}
                                         %a{:href => lobby.room_uri_for(room.name)}
                                             %span{:style => "width:100%;height:100%;position:absolute;left:0;top:0;"}
-                    -lobby.user_list.each do |user|
-                        %div.hiddentab{:id => user}="Info for #{user}"
         .footer
             %ul.navlist
                 %li
                     %a{:href => "/"} Home
+                %li
+                    %a{:href => "/console"} Console

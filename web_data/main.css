@@ -79,6 +79,19 @@ div.hiddentab {
 div.tab {
 }
 
+div.progress {
+    border: 1px solid rgb(64,64,64);
+    height: 10px;
+    width: 100px;
+}
+
+div.progress span {
+    display: block;
+    background: rgb(64,64,64);
+    height: 100%;
+    position: relative;
+}
+
 ul.navlist {
     padding: 0;
     list-style-type: none;
@@ -88,6 +101,10 @@ ul.navlist li {
     display: inline;
     padding-left: 30px;
     padding-right: 30px;
+}
+
+ul#console li {
+    list-style-type: none;
 }
 
 a:link {

@@ -61,28 +61,28 @@ module Position
     # TODO - make generators for these functions.
 
     def grasped_by(new_position)
-        Log.debug("#{monicker} grasped by #{new_position.monicker}")
+        Log.debug("#{monicker} grasped by #{new_position.monicker}", 5)
         _set_position(new_position)
         @position_type = :grasped
         @position.grasp(self)
     end
 
     def equip_on(new_position)
-        Log.debug("#{monicker} equipped on #{new_position.monicker}")
+        Log.debug("#{monicker} equipped on #{new_position.monicker}", 5)
         _set_position(new_position)
         @position_type = :worn
         @position.wear(self)
     end
 
     def move_to(new_position)
-        Log.debug("#{monicker} moved to #{new_position.monicker}")
+        Log.debug("#{monicker} moved to #{new_position.monicker}", 5)
         _set_position(new_position)
         @position_type = :internal
         @position.add_object(self)
     end
 
     def attach_to(new_position)
-        Log.debug("#{monicker} attached to #{new_position.monicker}")
+        Log.debug("#{monicker} attached to #{new_position.monicker}", 5)
         _set_position(new_position)
         @position_type = :external
         @position.attach_object(self)

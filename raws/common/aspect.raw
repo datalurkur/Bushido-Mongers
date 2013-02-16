@@ -18,12 +18,16 @@ abstract root has_aspects {
     has_many optional sym skills;
 
     uses has_aspects;
-}
 
-abstract root has_random_aspects {
-    has_many optional sym attributes;
-    has_many optional sym skills;
+    /* random generation parameters */
 
+    class bool random_attributes;
+    random_attributes true;
+
+    class bool random_skills;
+    random_skills true;
+
+    /* currently applies to both attributes and skills */
     class float random_variance;
     random_variance 0.05;
 
@@ -32,8 +36,6 @@ abstract root has_random_aspects {
 
     class float skill_offset;
     skill_offset 0.0;
-
-    uses has_random_aspects;
 }
 
 abstract aspect attribute {}

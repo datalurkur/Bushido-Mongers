@@ -85,13 +85,13 @@ class Server
 
     def terminate_client(socket)
         Log.debug("Terminating client socket")
-        @sockets_mutex.synchronize {
+        @sockets_mutex.synchronize do
             unless @client_sockets[socket].nil?
                 @client_sockets[socket].kill if @client_sockets[socket].alive?
                 socket.close unless socket.closed?
                 @client_sockets.delete(socket)
             end
-        }
+        end
     end
 
     def set_client_info(socket,info)
@@ -130,11 +130,11 @@ class Server
                         Log.error(["Processing error - #{e.message}", e.backtrace])
                     end
                 end
-            rescue Errno::ECONNRESET,EOFError
+            rescue Errno::ECONNRESET,EOFError,IOError
                 Log.debug("Client disconnected")
                 socket.close
             rescue Exception => e
-                Log.debug("Thread exited abnormally (#{e.class} : #{e.message})")
+                Log.error("Thread exited abnormally (#{e.class} : #{e.message})")
             end
             clear_client_info(socket)
         end
