@@ -26,8 +26,16 @@ module Words
 
         attr_accessor :aspect, :tense, :mood, :person, :voice
 
-        def initialize
+        # properties => e.g. [:perfect, :present, :passive]
+        def initialize(properties=[])
             set_default_state
+            properties.each do |prop|
+                FIELDS.each do |field, list|
+                    if list.include?(prop)
+                        self.send("#{field}=", prop)
+                    end
+                end
+            end
         end
 
         def set_default_state

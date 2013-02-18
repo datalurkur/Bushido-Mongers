@@ -5,8 +5,10 @@ class WordDB
         @groups       = []
         @associations = {}
         @keywords     = {}
-        @prepositions = {}
         @conjugations = {}
+
+        @prepositions = {}
+        @prep_cases   = {}
     end
 
     def collect_groups(*list_of_words)
@@ -37,7 +39,7 @@ class WordDB
             raise(NotImplementedError)
         when Hash
             matching = @groups.select do |group|
-#                Log.debug(["Analyzing:", word, group])
+                Log.debug(["Analyzing:", word, group], 9)
                 word.any? { |pos, w| group.has?(pos) && group[pos] == w }
             end
             raise(StandardError, "Duplicate word groups found in #{self.class} for #{word.inspect}.") unless matching.size < 2
@@ -48,7 +50,7 @@ class WordDB
         end
     end
 
-    # requirements: matched is a WordGroup, word is a Hash
+    # requirements: mergee is a WordGroup, merger is a Hash
     def merge(mergee, merger)
         Log.debug(["Merging:", mergee, merger])
         merger.each { |k, v| mergee[k] = v }
@@ -77,15 +79,11 @@ class WordDB
         @keywords[keyword].concat(list_of_groups)
     end
 
-    # Similar to add_keyword_family, but associate_groups is not called, because
-    # we don't want all associated groups to be connected to the preposition as well.
-    def add_preposition(preposition, type, *list_of_words)
-        Log.debug("Adding preposition #{preposition} #{type} #{list_of_words.inspect}", 6)
-        list_of_groups = collect_groups(*list_of_words)
-
-        @prepositions[type] ||= {}
-        @prepositions[type][preposition] ||= []
-        @prepositions[type][preposition].concat(list_of_groups)
+    # Basically the reason this isn't a keyword_family is because we don't know
+    # which part of speech the word is.
+    def add_preposition(preposition, *list_of_words)
+        @prepositions[preposition] ||= []
+        @prepositions[preposition].concat(list_of_words)
     end
 
     # Get a list of related groups
@@ -118,13 +116,17 @@ class WordDB
     end
 
     # Check whether a word is associated with a preposition
-    def get_preposition(word)
-        @prepositions.each do |prep_case, prep_groups|
-            prep_groups.each do |prep, list_of_groups|
-                list_of_groups.each do |group|
-                    if group.contains?(word)
+    def get_preposition(word, prep_case=nil)
+        @prepositions.each do |prep, list|
+            if list.include?(word)
+                # Found a preposition.
+                if prep_case
+                    # See if it's in the requested case.
+                    if get_keyword_words(prep_case, :preposition).include?(prep)
                         return prep
                     end
+                else
+                    return prep
                 end
             end
         end
@@ -148,22 +150,18 @@ class WordDB
     #  Words::State::FIELDS[:person] => [:first, :second, :third, :first_plural, :second_plural, :third_plural],
     def add_conjugation_by_person(infinitive, state, list)
         first_person = list.first
-        case list.size
-        when 1, 2, 3, 6
-            Words::State::FIELDS[:person].each do |person|
-                curr_state = state.dup
-                curr_state.person = person
+        Words::State::FIELDS[:person].each do |person|
+            curr_state = state.dup
 
-                expr = list.shift
-                if expr
-                    add_conjugation(infinitive, curr_state, expr)
-                else
-                    # If the list is unfilled, use the first person as default.
-                    add_conjugation(infinitive, curr_state, first_person)
-                end
+            curr_state.person = person
+
+            expr = list.shift
+            if expr
+                add_conjugation(infinitive, curr_state, expr)
+            else
+                # If the list is unfilled, use the first person as default.
+                add_conjugation(infinitive, curr_state, first_person)
             end
-        else
-            raise(StandardError, "Wrong number of conjugation terms: #{list}.")
         end
     end
 

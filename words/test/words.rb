@@ -23,8 +23,8 @@ Log.debug(Words.gen_room_description(:zone => :mountain, :keywords => [:beautifu
 
 
 def john_and_mary(state)
-    Log.debug(Words.gen_sentence(:agent => :John, :target => :west, :command => :move, :state=>state))
-    Log.debug(Words.gen_sentence(:agent => :John, :action => :see,  :target  => :Mary, :state=>state))
+    Log.debug(Words.gen_sentence(:agent => :John, :location => :west, :command => :move, :state=>state))
+    Log.debug(Words.gen_sentence(:agent => :John, :action   => :see,  :target  => :Mary, :state=>state))
 end
 
 s = Words::State.new

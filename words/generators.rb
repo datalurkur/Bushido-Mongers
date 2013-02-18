@@ -152,18 +152,10 @@ module Words
         room = args[:target]
 
         move_args = args.dup
-        move_args[:target] = gen_room_phrase(room)
+        move_args[:target] = {:monicker => room[:zone], :adjectives => (room[:keywords].rand || :boring)}
         room[:room_mentioned] = true
 
         [self.gen_sentence(move_args), gen_room_description(room)].join(" ")
-    end
-
-    def self.gen_room_phrase(args)
-        if args[:keywords].empty?
-            "boring #{args[:zone]}"
-        else
-            "#{args[:keywords].rand.to_s} #{args[:zone]}"
-        end
     end
 
     # Required/expected arg values: keywords objects exits
@@ -176,7 +168,8 @@ module Words
         args[:state].person = :second
 
         unless args[:room_mentioned]
-            sentences << Words.gen_sentence(args.merge(:target => gen_room_phrase(args)))
+            target = {:monicker => args[:zone], :adjectives => (args[:keywords].rand || :boring)}
+            sentences << Words.gen_sentence(args.merge(:target => target))
         end
 
         if args[:objects] && !args[:objects].empty?

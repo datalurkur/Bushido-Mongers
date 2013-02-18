@@ -3,12 +3,9 @@ Grammar in Bushido Mongers uses concepts from phrase structure grammar, generall
 
 http://en.wikipedia.org/wiki/Constituent_(linguistics)
 
-PTNodes are the nodes of the tree, with further differentiation between internal nodes (nodes with node children) and leaf nodes. Internal nodes should not have
-non-node (i.e. symbol) children, and leaf nodes should not have node children, but in practice this is not strictly enforced.
+PTNodes are the nodes of the tree, with further differentiation between internal nodes (nodes with node children) and leaf nodes. Internal nodes should not have non-node (i.e. symbol) children, and leaf nodes should not have node children, but in practice this is not strictly enforced.
 
-The sentence structures so far have been designed to be as flexible as possible. For example, descriptor hashes (see ./game/descriptors) or symbols can be passed in as nouns
-in any context, and many placements will also accept pre-created parts of speech (all the PTNode subclasses defined under Sentence). Verb conjugation is dependent on both
-abnormal word knowledge and generic rules, which work for most cases.
+The sentence structures have been designed to be as flexible as possible given their current basic nature. For example, descriptor hashes (see ./game/descriptors) or symbols can be passed in as nouns in any context, and many placements will also accept pre-created parts of speech (all the PTNode subclasses defined under Sentence). Verb conjugation is dependent on both abnormal word knowledge and generic rules, which work for most cases.
 =end
 
 module Words
@@ -16,6 +13,16 @@ module Words
     class ParseTree
         attr_accessor :root
         class PTNode
+=begin
+            The nominative case indicates the subject of a finite verb: We went to the store.
+            The accusative case indicates the direct object of a verb: The clerk remembered us.
+            The dative case indicates the indirect object of a verb: The clerk gave us a discount. or The clerk gave a discount to us.
+            The ablative case indicates movement from something, or cause: The victim went from us to see the doctor. and He was unhappy because of depression.
+            The genitive case, which roughly corresponds to English's possessive case and preposition of, indicates the possessor of another noun: John's book was on the table. and The pages of the book turned yellow.
+            The vocative case indicates an addressee: John, are you all right? or simply Hello, John!
+            The locative case indicates a location: We live in China.
+            The instrumental case indicates an object used in performing an action: We wiped the floor with a mop. and Written by hand.
+=end
             CASE = [:nominative, :accusative, :dative, :genitive, :vocative, :ablative, :locative, :instrumental]
             attr_accessor :case
             TYPE = [:sentence, :noun_phrase, :verb_phrase, :noun, :verb, :determiner]
@@ -77,24 +84,42 @@ module Words
         class RelativeClause < ParseTree::PTInternalNode
         end
 
+        class Preposition < ParseTree::PTLeaf; end
+
+        class PrepositionalPhrase < ParseTree::PTInternalNode
+        end
+
         # Types: prepositional (during), infinitive (to work hard)
         # adpositions: preposition (by jove), circumpositions (from then on).
         class AdverbPhrase < ParseTree::PTInternalNode
-            USED_ARGS = [:target, :tool, :result]
+            USED_ARGS = [:target, :tool, :location, :result]
 
             # The type is the part of the args being used to generate an adverb phrase.
             # args must be defined.
             def initialize(type, args)
-                @children = []
                 handled = false
 
                 # Based on noun and argument information, decide which preposition to use, if any.
                 case type
                 when :target
-                    @children << NounPhrase.new(args[type])
+                    prep = Words.db.get_preposition(args[:verb], :accusative)
+                    Log.debug([:target, args[:verb], prep], 6)
+                    if prep
+                        super(prep, NounPhrase.new(args[type]))
+                    else
+                        super(NounPhrase.new(args[type]))
+                    end
                     handled = true
                 when :tool
-                    @children = [:with, NounPhrase.new(args[type])]
+                    prep = Words.db.get_preposition(args[:verb], :instrumental) || :with
+                    Log.debug([:tool, args[:verb], prep], 6)
+                    super(prep, NounPhrase.new(args[type]))
+                    handled = true
+                when :location
+                    # TODO - Add enough context to know 'to' or 'from'
+                    prep = Words.db.get_preposition(args[:verb], :locative) || :to
+                    Log.debug([:location, args[:verb], prep], 6)
+                    super(prep, NounPhrase.new(args[type]))
                     handled = true
                 when :result
                     # Eventually this will be more complex, and describe either
@@ -102,9 +127,9 @@ module Words
                     # or how and where the blow hit.
                     case args[type]
                     when :hit
-                        @children = [:",", :hitting]
+                        super(:",", :hitting)
                     when :miss
-                        @children = [:",", :missing]
+                        super(:",", :missing)
                     end
                 end
 
@@ -128,7 +153,6 @@ module Words
             # modal auxiliary: will, has
             # modal semi-auxiliary: be going to
             # TODO - add modals based on tense/aspect
-            attr_accessor :modal
             def initialize(verbs, args = {})
                 verbs = Array(verbs)
                 @children = verbs.map do |verb|
@@ -136,7 +160,7 @@ module Words
                 end
 
                 @children += AdverbPhrase::USED_ARGS.select { |arg| args.has_key?(arg) }.collect do |arg|
-                    AdverbPhrase.new(arg, args)
+                    AdverbPhrase.new(arg, args.merge(:verb=>verbs.last))
                 end
 
                 if args[:subject_complement]
@@ -146,12 +170,14 @@ module Words
                     @children += Array(args[:subject_complement])
                 end
 
+                # FIXME - listing won't work while AdverbPhrases are children of VerbPhrase. Add to last V to form second VP?
                 @list = (verbs.size > 1)
             end
         end
 
         class NounPhrase < ParseTree::PTInternalNode
             include Listable
+
             def initialize(nouns)
                 if Hash === nouns
                     nouns = [nouns] # can't call Array(hash) because it decomposes to tuples
@@ -161,7 +187,7 @@ module Words
 
                 if nouns.all? { |n| n.is_a?(ParseTree::PTNode) }
                     # Nouns already created; just attach them.
-                    @children = nouns
+                    super(nouns)
                     return
                 end
 
@@ -171,6 +197,7 @@ module Words
                     when Hash
                         # Decompose descriptor hashes into noun name, modifiers, and possession info.
                         hash[:monicker] = noun[:monicker]
+                        raise TypeError unless [String, Symbol].include?(hash[:monicker].class)
 
                         hash[:adjectives] = Array(noun[:adjectives])
                         if noun[:properties]
@@ -187,22 +214,14 @@ module Words
                 end
 
                 if @list = (nouns.size > 1)
-                    @children = nouns.map do |noun|
+                    super(
+                    nouns.map do |noun|
                         children = generate_children(noun)
                         children.size > 1 ? NounPhrase.new(children) : children.first
                     end
+                    )
                 else
-                    @children = generate_children(nouns.first)
-                end
-            end
-
-            # TODO: correct a/an for appropriate adjectives.
-            def add_adjectives(*adjectives)
-                raise(StandardError, "Don't know which noun to adjectivize of #{self.inspect}!") if @list
-                # Insert adjectives between (potential) article but before the noun
-                adjectives.each do |adj|
-                    adj = Adjective.new(adj) unless adj.is_a?(Adjective)
-                    @children.insert(-2, adj)
+                    super(generate_children(nouns.first))
                 end
             end
 
@@ -241,14 +260,7 @@ module Words
         # http://www.verbix.com/webverbix/English/have.html
         class Verb < ParseTree::PTLeaf
             def initialize(verb, args = {})
-                state = args[:state]
-                @children = Verb.state_conjugate(verb, state)
-
-                # Insert a direct preposition, if it exists for the verb.
-                if args[:target]
-                    preposition = Words.db.get_preposition(verb)
-                    @children << preposition if preposition
-                end
+                super(Verb.state_conjugate(verb, args[:state]))
             end
 
             # Used for adding modals, aspects, etc.
@@ -298,7 +310,7 @@ module Words
                 when :past
                     # Double the ending letter, if necessary.
                     # TODO - add exceptions to dictionary rather than hard-coding here.
-                    unless infinitive == :inspect
+                    unless [:detect, :inspect, :grasp].include?(infinitive.to_sym)
                         infinitive.gsub!(/([nbpt])$/, '\1\1')
                     end
                     # drop any ending 'e'
@@ -472,7 +484,7 @@ module Words
         class Possessive < Determiner
             def initialize(possessor_info)
                 # Possessive picked based on a) person and b) gender.
-                @children = [
+                super(
                 case possessor_info[:person]
                 # Mirroring State's :person field here.
                 when :first
@@ -495,7 +507,7 @@ module Words
                 when :third_plural
                     :their
                 end
-                ]
+                )
             end
 
             # N.B. There's overlap between certain pronouns and certain possessive determiners.

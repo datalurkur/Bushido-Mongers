@@ -7,8 +7,10 @@ sneak
 charge
 run
 move
+walk
 inspect
 destroy
 drop
 hide
 unhide
+attach
