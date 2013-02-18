@@ -20,10 +20,12 @@ I you he we you they
 
 =end
 
-def load_files(dir, glob_str, regex = //, &block)
+def load_files(dir, glob_str, regex = /(.*)/, &block)
     Dir.glob("#{dir}/#{glob_str}").each do |file|
         Log.debug("Reading #{file}", 7)
-        match = file.match(regex)
+        if match = file.match(regex)
+            match = match[1].to_sym
+        end
 
         File.readlines(file).each do |line|
             block.call(line, match)
@@ -38,29 +40,22 @@ module WordParser
         db = WordDB.new
 
         Words::TYPES.each do |type|
-            load_files(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/) do |line, match|
-                keyword = match[1].to_sym
-
-                db.add_keyword_family(keyword, {type => line.chomp})
+            load_files(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/) do |line, keyword|
+                db.add_keyword_family(keyword, type => line.chomp)
             end
         end
 
-        load_files(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/) do |line, match|
-            part_of_speech = match[1].to_sym
-            family = line.split(/\s+/).collect { |word| {part_of_speech => word} }
+        load_files(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/) do |line, pos|
+            family = line.split(/\s+/).collect { |word| {pos => word} }
             db.add_family(*family)
         end
 
-        # TODO - Add distinctions between preposition types, i.e. store match somewhere.
-        load_files(dict_dir, "prepositions_*.txt", /^.*prepositions_(.*).txt/) do |line, match|
+        load_files(dict_dir, "prepositions_*.txt", /^.*prepositions_(.*).txt/) do |line, prep_case|
             words = line.split(/\s+/).map(&:to_sym)
             preposition = words.shift
-            prep_type = match[1].to_sym
-            words.each do |verb|
-                # add infinitive as a verb
-                family = {:verb => verb}
-                db.add_family(family)
-                db.add_preposition(preposition, prep_type, family)
+            db.add_keyword_family(prep_case, :preposition => preposition)
+            words.each do |word|
+                db.add_preposition(preposition, word)
             end
         end
 
@@ -73,14 +68,7 @@ module WordParser
 
             # Convert properties ("present,second") into a State
             properties = words.shift.split(",").map(&:to_sym)
-            state = Words::State.new
-            properties.each do |prop|
-                Words::State::FIELDS.each do |field, list|
-                    if list.include?(prop)
-                        state.send("#{field}=", prop)
-                    end
-                end
-            end
+            state = Words::State.new(properties)
 
             db.add_conjugation_by_person(infinitive, state, words.map(&:to_sym))
         end
@@ -94,17 +82,17 @@ module WordParser
     # Can only happen on the server side.
     def self.read_raws(db, raws_db)
         raws_db.types_of(:command).each do |comm|
-            db.add_keyword_family(:command, {:verb => comm})
+            db.add_keyword_family(:command, :verb => comm)
         end
         Log.debug("Found #{db.get_keyword_groups(:command).size} commands.")
 
         raws_db.types_of(:item).each do |item|
-            db.add_keyword_family(:item, {:noun => item})
+            db.add_keyword_family(:item, :noun => item)
         end
         Log.debug("Found #{db.get_keyword_groups(:item).size} item types.")
 
         raws_db.types_of(:material).each do |mat|
-            db.add_keyword_family(:material, {:adjective => mat})
+            db.add_keyword_family(:material, :adjective => mat)
         end
         Log.debug("Found #{db.get_keyword_groups(:material).size} materials.")
     end
