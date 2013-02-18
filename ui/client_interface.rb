@@ -72,7 +72,8 @@ module SlimInterface
         end
 
         def list(items, field=nil, style=:number)
-            "=#{field.title}= " + decorate(items, style).join(" ")
+            title = field ? "=#{field.title}= " : ""
+            title + decorate(items, style).join(" ")
         end
 
         def properties(message)
@@ -100,7 +101,8 @@ module VerboseInterface
         end
 
         def list(items, field=nil, style=:number)
-            "=#{field.title}=\n" + decorate(items, style).join("\n")
+            title = field ? "=#{field.title}=\n" : ""
+            title + decorate(items, style).join("\n")
         end
 
         def properties(message)
