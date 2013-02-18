@@ -292,6 +292,7 @@ class Lobby
             # Basically, this is the event that triggers the character to be saved and used
             # The server isn't involved in the character creation dialog at all, only the committing of that data
             begin
+                raise "You must create a game before creatinga a character" unless @game_core
                 # TODO - Add a check for a character with the same name
                 @game_core.create_character(username, message.attributes)
                 send_to_user(username, Message.new(:character_ready))
