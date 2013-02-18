@@ -1,18 +1,7 @@
-/* Sending fonts is really slow :( */
-@font-face {
-    font-family: 'Beginning Yoga';
-    src: url('beginning_yoga.ttf');
-}
-
-@font-face {
-    font-family: 'Ninja Naruto';
-    src: url('ninja_naruto.ttf');
-}
-
 body {
     background: black;
     color: white;
-    font-family: 'Ninja Naruto', 'Arial', sans-serif;
+    font-family: 'Lucida Console', 'Arial';
 }
 
 div.wrapper {
@@ -55,10 +44,12 @@ div.control {
 
 div.control ul {
     list-style-type: none;
+    padding-left: 0px;
 }
 
 div.control ul li {
     margin-bottom: 20px;
+    margin-left: 20px;
 }
 
 div.control ul li a {
@@ -99,8 +90,8 @@ ul.navlist {
 
 ul.navlist li {
     display: inline;
-    padding-left: 30px;
-    padding-right: 30px;
+    padding-left: 0px;
+    padding-right: 10px;
 }
 
 ul#console li {
