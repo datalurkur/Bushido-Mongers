@@ -277,11 +277,27 @@ class Lobby
             send_to_user(username, Message.new(:game_params, {:params=>{}}))
         when :generate_game
             generate_game(username)
+        when :get_character_opts
+            # This is a query for a list of character options
+            opts = case message.property
+            # TODO - Read these from the raws
+            when :gender; [:male, :female, :neutral]
+            when :race;   [:humanoid]
+            else
+                Log.warning("Unknown character options property #{message.property}")
+                []
+            end
+            send_to_user(username, Message.new(:character_opts, {:options => opts}))
         when :create_character
             # Basically, this is the event that triggers the character to be saved and used
             # The server isn't involved in the character creation dialog at all, only the committing of that data
-            Log.warning("UNIMPLEMENTED")
-            send_to_user(username, Message.new(:character_not_ready, {:reason => "Feature unimplemented"}))
+            begin
+                # TODO - Add a check for a character with the same name
+                @game_core.create_character(username, message.attributes)
+                send_to_user(username, Message.new(:character_ready))
+            rescue Exception => e
+                send_to_user(username, Message.new(:character_not_ready, {:reason => e.message}))
+            end
         when :list_characters
             if @game_state == :genesis
                 send_to_user(username, Message.new(:no_characters, {:reason => "Game not yet generated"}))

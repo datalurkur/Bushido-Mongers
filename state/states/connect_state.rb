@@ -2,16 +2,16 @@ require './state/state'
 require './state/states/login_state'
 
 class ConnectState < State
-    def initialize(client)
-        super(client)
-
+    def setup_exchanges
         @connect_exchange = define_exchange_chain([
             [:text_field, {:field => :server_hostname}],
             [:text_field, {:field => :server_port}]
         ]) do
             attempt_connection
         end
+    end
 
+    def make_current
         if @client.get(:server_hostname) && @client.get(:server_port)
             attempt_connection
         else

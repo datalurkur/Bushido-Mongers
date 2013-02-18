@@ -27,9 +27,9 @@ module TextInterface
         end
     end
 
-    def parse(context, text)
+    def parse(context, text, target)
         text ||= ''
-        unless context
+        if !context || target == :server
             Log.debug("No context for parsing input, returning raw command", 6)
             return Message.new(:raw_command,{:command=>text.chomp})
         end
@@ -72,7 +72,7 @@ module SlimInterface
         end
 
         def list(items, field=nil, style=:number)
-            decorate(items, style).join(" ")
+            "=#{field.title}= " + decorate(items, style).join(" ")
         end
 
         def properties(message)
@@ -100,7 +100,7 @@ module VerboseInterface
         end
 
         def list(items, field=nil, style=:number)
-            decorate(items, style).to_formatted_string("", true)
+            "=#{field.title}=\n" + decorate(items, style).join("\n")
         end
 
         def properties(message)
@@ -165,8 +165,8 @@ module MetaDataInterface
             message
         end
 
-        def parse(context, text)
-            unless context
+        def parse(context, text, target)
+            if !context || target == :server
                 Log.debug("No context for parsing input, returning raw command")
                 Message.new(:raw_command,{:command=>text})
             else

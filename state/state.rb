@@ -23,6 +23,7 @@ module StateMaintainer
     def pop_state
         raise(StateError, "State stack is empty!") if @state_stack.empty?
         @state_stack.pop
+        current_state.make_current
     end
 
     def get_internal_config;      @internal_config ||= {}; end
@@ -53,6 +54,17 @@ class State
         when :set;  @client.set_state(self)
         when :push; @client.push_state(self)
         end
+
+        self.setup_exchanges
+        self.make_current
+    end
+
+    def setup_exchanges
+        Log.error("No exchange setup for #{self.class}")
+    end
+
+    def make_current
+        Log.error("No method exists for making #{self.class} current")
     end
 
     def pass_to_client(message)
@@ -60,6 +72,7 @@ class State
     end
 
     def from_client(message)
+        Log.debug(["Processing message from client", message], 8)
         unless process_exchange(message, :client)
             if message.type == :raw_command
                 Log.debug("Discarding raw command #{message.command}")
@@ -70,6 +83,7 @@ class State
     end
 
     def from_server(message)
+        Log.debug(["Processing message from server", message], 8)
         case message.type
         when :connection_reset
             pass_to_client(message)
@@ -90,7 +104,7 @@ class State
             :on_finish => on_finish,
         }
         @exchanges[id].merge!(opt_args)
-        Log.debug(["Defined exchange #{id}", @exchanges[id]], 5)
+        Log.debug(["Defined exchange #{id}", @exchanges[id]], 7)
         id
     end
 
@@ -120,6 +134,7 @@ class State
     end
 
     def set_exchange_context(id, previous_result)
+        Log.debug(["Setting current exchange to #{id}", @exchanges[id]], 8)
         params = @exchanges[id]
         @current_exchange = case params[:type]
         when :text_field
@@ -138,7 +153,7 @@ class State
             end
             Message.new(:choose_from_list, {:field => params[:field], :choices => choices})
         when :server_query
-            Log.debug(["Querying server with params", params], 5)
+            Log.debug(["Querying server with params", params], 7)
             Message.new(params[:query_method], params[:query_params] || {})
         else
             raise(StandardError, "Unhandled exchange type #{params[:type]}.")
@@ -207,7 +222,7 @@ class State
             return false
         else
             if context.has_param?(:field)
-                Log.debug("Setting client field #{context.field} to #{message.input} based on client input", 5)
+                Log.debug("Setting client field #{context.field} to #{message.input} based on client input", 7)
                 @client.set(context.field, message.input)
                 @previous_result = message.input
             end

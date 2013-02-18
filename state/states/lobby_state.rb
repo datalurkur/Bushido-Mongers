@@ -1,11 +1,10 @@
 require './state/state'
 require './state/states/server_menu_state'
 require './state/states/playing_state'
+require './state/states/create_character_state'
 
 class LobbyState < State
-    def initialize(client)
-        super(client)
-
+    def setup_exchanges
         @select_character_exchange = define_exchange_chain([
             [:server_query,     {:query_method => :list_characters}],
             [:choose_from_list, {:field => :character, :choices_from => :characters}],
@@ -20,7 +19,7 @@ class LobbyState < State
             when :generate_game
                 @client.send_to_server(Message.new(:generate_game))
             when :create_character
-                raise(NotImplementedError)
+                CreateCharacterState.new(@client, :push)
             when :select_character
                 begin_exchange(@select_character_exchange)
             when :start_game
@@ -30,10 +29,12 @@ class LobbyState < State
                 @client.unset(:lobby_name)
                 @client.unset(:lobby_password)
                 @client.unset(:server_menu_autocmd)
-                @client.set_state(ServerMenuState.new(@client))
+                ServerMenuState.new(@client)
             end
         end
+    end
 
+    def make_current
         begin_exchange(@lobby_menu_exchange)
     end
 
@@ -48,7 +49,6 @@ class LobbyState < State
         when :game_params
             @client.send_to_client(Message.new(:list, {:field=>:game_parameters, :items=>message.params}))
             begin_exchange(@lobby_menu_exchange)
-            return
         when :generation_success,
              :generation_fail,
              :start_success,
@@ -58,13 +58,11 @@ class LobbyState < State
              :no_characters
             pass_to_client(message)
             begin_exchange(@lobby_menu_exchange)
-            return
         when :begin_playing
             pass_to_client(message)
-            @client.set_state(PlayingState.new(@client))
-            return
+            PlayingState.new(@client)
+        else
+            super(message)
         end
-
-        super(message)
     end
 end

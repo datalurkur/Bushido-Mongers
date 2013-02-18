@@ -105,19 +105,12 @@ class GameCore
         return [character, failures]
     end
     def create_character(username, details)
-        begin
-            position  = @world.random_starting_location
-            character = @db.create(self, :character, details.merge(:position => position))
+        position  = @world.random_starting_location
+        character = @db.create(self, :character, details.merge(:position => position))
 
-            characters[username] = character
-            Log.info("Character #{character.name} created for #{username}")
-            Message.register_listener(self, :core, character)
-
-            return true
-        rescue Exception => e
-            Log.debug(["Failed to create new character", e.message, e.backtrace])
-            return false
-        end
+        characters[username] = character
+        Log.info("Character #{character.name} created for #{username}")
+        Message.register_listener(self, :core, character)
     end
     def get_user_characters(username)
         Character.get_characters_for(username)

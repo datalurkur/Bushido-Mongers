@@ -2,9 +2,7 @@ require './state/state'
 require './util/crypto'
 
 class ServerMenuState < State
-    def initialize(client)
-        super(client)
-
+    def setup_exchanges
         @server_menu_exchange = define_exchange(:choose_from_list, {:field => :server_menu, :choices => server_menu_choices}) do |choice|
             case choice
             when :list_lobbies; @client.send_to_server(Message.new(:list_lobbies))
@@ -20,7 +18,9 @@ class ServerMenuState < State
         ]) do
             enter_lobby(@entry_type)
         end
+    end
 
+    def make_current
         case @client.get(:server_menu_autocmd)
         when :join_lobby
             enter_lobby(:join_lobby)
@@ -44,31 +44,26 @@ class ServerMenuState < State
         when :motd
             pass_to_client(message)
             begin_exchange(@server_menu_exchange)
-            return
         when :lobby_list
             @client.send_to_client(Message.new(:list, {:field=>:available_lobbies, :items=>message.lobbies}))
             begin_exchange(@server_menu_exchange)
-            return
         when :join_success,
              :create_success
             pass_to_client(message)
             LobbyState.new(@client)
-            return
         when :join_fail,
              :create_fail
             pass_to_client(message)
             @entry_type = nil
             begin_exchange(@server_menu_exchange)
-            return
         when :admin_change
             if message.result != @client.get(:username)
                 Log.debug("Something really funky is happening - we're getting a message that the admin has been set to #{message.result} (not this user) during the server menu state.  How the hell.")
             else
                 pass_to_client(message)
             end
-            return
+        else
+            super(message)
         end
-
-        super(message)
     end
 end

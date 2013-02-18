@@ -1,9 +1,8 @@
 require './state/state'
 
 class PlayingState < State
-    def initialize(client)
-        super(client)
-    end
+    def setup_exchanges; end
+    def make_current; end
 
     def from_server(message)
         case message.type

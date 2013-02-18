@@ -65,6 +65,6 @@ class GameClient < MuxedClientBase
     end
 
     def get_from_client(text)
-        @interface.parse(current_state.get_exchange_context, text)
+        @interface.parse(current_state.get_exchange_context, text, current_state.get_exchange_target)
     end
 end
