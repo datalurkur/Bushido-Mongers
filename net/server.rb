@@ -68,7 +68,7 @@ class Server
         @sockets_mutex.synchronize do
             @client_sockets.each_key do |k|
                 # FIXME - This is not a graceful way to teardown
-                k.close
+                k.close unless k.closed?
                 @client_sockets[k].kill
             end
             @client_sockets.clear
