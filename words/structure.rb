@@ -20,7 +20,8 @@ module Words
             The ablative case indicates movement from something, or cause: The victim went from us to see the doctor. and He was unhappy because of depression.
             The genitive case, which roughly corresponds to English's possessive case and preposition of, indicates the possessor of another noun: John's book was on the table. and The pages of the book turned yellow.
             The vocative case indicates an addressee: John, are you all right? or simply Hello, John!
-            The locative case indicates a location: We live in China.
+            The locative case (loc) indicates a location: We live in China.
+            The lative case (lat) indicates motion to a location. It corresponds to the English prepositions "to" and "into".
             The instrumental case indicates an object used in performing an action: We wiped the floor with a mop. and Written by hand.
 =end
             CASE = [:nominative, :accusative, :dative, :genitive, :vocative, :ablative, :locative, :instrumental]
@@ -92,7 +93,7 @@ module Words
         # Types: prepositional (during), infinitive (to work hard)
         # adpositions: preposition (by jove), circumpositions (from then on).
         class AdverbPhrase < ParseTree::PTInternalNode
-            USED_ARGS = [:target, :tool, :location, :result]
+            USED_ARGS = [:target, :tool, :destination, :receiver, :result]
 
             # The type is the part of the args being used to generate an adverb phrase.
             # args must be defined.
@@ -103,7 +104,7 @@ module Words
                 case type
                 when :target
                     prep = Words.db.get_preposition(args[:verb], :accusative)
-                    Log.debug([:target, args[:verb], prep], 6)
+                    Log.debug([:target, args[:verb], prep], 8)
                     if prep
                         super(prep, NounPhrase.new(args[type]))
                     else
@@ -111,16 +112,19 @@ module Words
                     end
                     handled = true
                 when :tool
-                    prep = Words.db.get_preposition(args[:verb], :instrumental) || :with
-                    Log.debug([:tool, args[:verb], prep], 6)
-                    super(prep, NounPhrase.new(args[type]))
+                    super(noun_phrase_with_prep(type, args, :instrumental))
+                    handled = true
+                when :destination
+                    # TODO - s.b. 'into' when moving to indoor locations
+                    super(noun_phrase_with_prep(type, args, :lative))
                     handled = true
                 when :location
-                    # TODO - Add enough context to know 'to' or 'from'
-                    prep = Words.db.get_preposition(args[:verb], :locative) || :to
-                    Log.debug([:location, args[:verb], prep], 6)
-                    super(prep, NounPhrase.new(args[type]))
+                    super(noun_phrase_with_prep(type, args, :locative))
                     handled = true
+                when :receiver
+                    super(noun_phrase_with_prep(type, args, :dative))
+                    raise NotImplementedError
+                    # In Modern English, an indirect object is often expressed with a prepositional phrase of "to" or "for". If there is a direct object, the indirect object can be expressed by an object pronoun placed between the verb and the direct object. For example, "He gave that to me" and "He built a snowman for me" are the same as "He gave me that" and "He built me a snowman". 
                 when :result
                     # Eventually this will be more complex, and describe either
                     # how the blow was evaded (parry, blocked, hit armor, etc)
@@ -135,6 +139,13 @@ module Words
 
                 # We don't want to generate this again for other verbs and so forth.
                 args.delete(type) if handled
+            end
+
+            private
+            def noun_phrase_with_prep(type, args, prep_case)
+                prep = Words.db.get_preposition(args[:verb], prep_case) || Words.db.default_prep_for_case(prep_case)
+                Log.debug([args[type], args[:verb], prep], 8)
+                [prep, NounPhrase.new(args[type])]
             end
         end
 
@@ -179,11 +190,8 @@ module Words
             include Listable
 
             def initialize(nouns)
-                if Hash === nouns
-                    nouns = [nouns] # can't call Array(hash) because it decomposes to tuples
-                else
-                    nouns = Array(nouns)
-                end
+                # can't call Array(hash) because it decomposes to tuples
+                nouns = ((Hash === nouns) ? [nouns] : Array(nouns))
 
                 if nouns.all? { |n| n.is_a?(ParseTree::PTNode) }
                     # Nouns already created; just attach them.
