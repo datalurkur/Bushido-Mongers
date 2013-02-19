@@ -5,35 +5,28 @@ Log.setup("Vocabulary Test", "wordtest")
 
 require './words/words'
 
-japanese_names = Words.db.get_keyword_words(:japanese, :name)
-
-Log.debug("Japanese names: #{japanese_names.inspect}")
-Log.debug("Character name: #{japanese_names.rand}")
-
-see_synonyms = Words.db.get_related_words(:see)
-
-Log.debug(see_synonyms.inspect)
-Log.debug(see_synonyms.rand)
-
-Log.debug(Words.db.get_related_words(:attack).inspect)
-
 Log.debug(Words.gen_area_name({:type => :mountain, :keywords => [:beautiful]}))
+Log.debug(Time.new)
 Log.debug(Words.gen_area_name({:type => :sewer,    :keywords => [:dank]}))
+Log.debug(Time.new)
 Log.debug(Words.gen_room_description(:zone => :mountain, :keywords => [:beautiful], :objects => ["elderly beaver", "Frank the Ninja Bunny"], :exits => [:east, :north]))
-
+Log.debug(Time.new)
 
 def john_and_mary(state)
-    Log.debug(Words.gen_sentence(:agent => :John, :location => :west, :command => :move, :state=>state))
-    Log.debug(Words.gen_sentence(:agent => :John, :action   => :see,  :target  => :Mary, :state=>state))
+    Log.debug(Words.gen_sentence(:agent => :John, :command => :move, :destination => :west, :state=>state))
+    Log.debug(Words.gen_sentence(:agent => :John, :action  => :see,  :target      => :Mary, :state=>state))
 end
 
 s = Words::State.new
 s.tense = :future
 john_and_mary(s)
-s = Words::State.new
+Log.debug(Time.new)
+s.tense = :present
 john_and_mary(s)
+Log.debug(Time.new)
 s.tense = :past
 john_and_mary(s)
+Log.debug(Time.new)
 
 Log.debug(Words.gen_copula)
 Log.debug(Words.gen_copula(:adjective=>:sunny))

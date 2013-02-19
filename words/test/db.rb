@@ -23,3 +23,15 @@ Log.debug(["Related adverbs:", related_adv])
 
 nouns = db.get_related_groups(:noun)
 Log.debug(["Related to :noun", nouns])
+
+japanese_names = Words.db.get_keyword_words(:japanese, :name)
+
+Log.debug("Japanese names: #{japanese_names.inspect}")
+Log.debug("Character name: #{japanese_names.rand}")
+
+see_synonyms = Words.db.get_related_words(:see)
+
+Log.debug(see_synonyms.inspect)
+Log.debug(see_synonyms.rand)
+
+Log.debug(Words.db.get_related_words(:attack).inspect)
