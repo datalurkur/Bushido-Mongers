@@ -37,43 +37,56 @@ module WordParser
     # The de-facto Words initializer.
     def self.load(dict_dir = './words/dict')
         raise(ArgumentError, "Cannot find #{dict_dir}.") unless File.exists?(dict_dir) && File.directory?(dict_dir)
-        db = WordDB.new
 
-        Words::TYPES.each do |type|
-            load_files(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/) do |line, keyword|
-                db.add_keyword_family(keyword, type => line.chomp)
+        db = nil
+        time_block("Words loaded") do
+            db = WordDB.new
+
+            time_block("Word types parsed") do
+                Words::TYPES.each do |type|
+                    load_files(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/) do |line, keyword|
+                        db.add_keyword_family(keyword, type => line.chomp)
+                    end
+                end
             end
-        end
 
-        load_files(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/) do |line, pos|
-            family = line.split(/\s+/).collect { |word| {pos => word} }
-            db.add_family(*family)
-        end
-
-        load_files(dict_dir, "prepositions_*.txt", /^.*prepositions_(.*).txt/) do |line, prep_case|
-            words = line.split(/\s+/).map(&:to_sym)
-            preposition = words.shift
-            db.add_keyword_family(prep_case, :preposition => preposition)
-            words.each do |word|
-                db.add_preposition(preposition, word)
+            time_block("Word associations parsed") do
+                load_files(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/) do |line, pos|
+                    family = line.split(/\s+/).collect { |word| {pos => word} }
+                    db.add_family(*family)
+                end
             end
+
+            time_block("Prepositions parsed") do
+                load_files(dict_dir, "prepositions_*.txt", /^.*prepositions_(.*).txt/) do |line, prep_case|
+                    words = line.split(/\s+/).map(&:to_sym)
+                    preposition = words.shift
+                    db.add_keyword_family(prep_case, :preposition => preposition)
+                    words.each do |word|
+                        db.add_preposition(preposition, word)
+                    end
+                end
+            end
+
+            time_block("Conjugations parsed") do
+                load_files(dict_dir, "conjugations.txt") do |line, match|
+                    words = line.split(/\s+/)
+                    infinitive = words.shift.to_sym
+
+                    # add infinitive as a verb
+                    db.add_family(:verb => infinitive)
+
+                    # Convert properties ("present,second") into a State
+                    properties = words.shift.split(",").map(&:to_sym)
+                    state = Words::State.new(properties)
+
+                    db.add_conjugation_by_person(infinitive, state, words.map(&:to_sym))
+                end
+            end
+
+            Words.register_db(db)
         end
 
-        load_files(dict_dir, "conjugations.txt") do |line, match|
-            words = line.split(/\s+/)
-            infinitive = words.shift.to_sym
-
-            # add infinitive as a verb
-            db.add_family(:verb => infinitive)
-
-            # Convert properties ("present,second") into a State
-            properties = words.shift.split(",").map(&:to_sym)
-            state = Words::State.new(properties)
-
-            db.add_conjugation_by_person(infinitive, state, words.map(&:to_sym))
-        end
-
-        Words.register_db(db)
         db
     end
 
@@ -81,6 +94,8 @@ module WordParser
     # Expects certain raw classes as commands, nouns, etc.
     # Can only happen on the server side.
     def self.read_raws(db, raws_db)
+        Log.debug("Reading raws")
+
         raws_db.types_of(:command).each do |comm|
             db.add_keyword_family(:command, :verb => comm)
         end

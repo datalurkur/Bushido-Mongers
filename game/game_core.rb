@@ -14,6 +14,8 @@ class GameCore
     # TODO - Write save / load methods
 
     def setup(args)
+        Log.info("Setting up game core")
+
         @tick_rate     = args[:tick_rate] || (30)
         @ticking       = false
         @ticking_mutex = Mutex.new
