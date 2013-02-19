@@ -38,6 +38,10 @@ Behavior.define(:flee) do |actor|
     end
 end
 
+# TODO - We need to start dispatching messages when the AI is *about* to attack something
+#   This way, the players have a basic idea of when they're in danger.  It's no fun to get attacked
+#   by a guard without warning.
+#   Incidentally, this also gives us a logical place to insert taunts and challenges.
 Behavior.define(:attack) do |actor|
     aligned_list = actor.filter_objects(:position, :aligned)
     enemies = aligned_list.select { |npc| Behavior.are_enemies?(npc, actor) }
@@ -51,6 +55,8 @@ Behavior.define(:attack) do |actor|
     end
 end
 
+# TODO - Discuss how this works for vampires and how to functionally represent that drinking blood is bad.
+# Question: Can players / AI do things furtively / in secret?
 Behavior.define(:consume) do |actor|
     consumable_type = actor.class_info(:consumes) || :consumable
     consumables = [:position, :inventory].collect do |location|
