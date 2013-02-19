@@ -1,9 +1,10 @@
+require 'set'
 require './util/log'
 
 class WordDB
     def initialize
         @groups       = []
-        @associations = {}
+        @associations = []
         @keywords     = {}
         @conjugations = {}
 
@@ -53,18 +54,14 @@ class WordDB
     end
 
     def associate_groups(*list_of_groups)
-        list_of_groups.each do |group|
-            to_associate = list_of_groups - [group]
-            # Add associations for this reference
-            @associations[group] ||= []
-            @associations[group].concat(list_of_groups - [group])
-        end
+        @associations << Set.new(list_of_groups)
     end
 
     def add_family(*list_of_words)
         Log.debug("Adding family #{list_of_words.inspect}", 6)
         list_of_groups = collect_groups(*list_of_words)
         associate_groups(*list_of_groups)
+        list_of_groups
     end
 
     def add_keyword_family(keyword, *list_of_words)
@@ -86,7 +83,11 @@ class WordDB
     def get_related_groups(word_or_group)
         group = find_group_for(word_or_group)
         return nil if group.nil?
-        @associations[group]
+        @associations.each do |set|
+            if set.include?(group)
+                return set.to_a - [group]
+            end
+        end
     end
 
     # Get a list of related words with the same part of speech as the query word
@@ -94,7 +95,11 @@ class WordDB
         group = find_group_for(word)
         return nil if group.nil?
         pos = group.part_of_speech(word)
-        @associations[group].select { |g| g.has?(pos) }.collect { |g| g[pos] }
+        @associations.each do |set|
+            if set.include?(group)
+                return (set.to_a - [group]).select { |g| g.has?(pos) }.collect { |g| g[pos] }
+            end
+        end
     end
 
     # Get a list of groups attached to the keyword
