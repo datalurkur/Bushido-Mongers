@@ -1,4 +1,7 @@
-abstract item material;
+abstract item material {
+    class float hardness;
+    hardness insubstantial;
+}
 
 abstract material metal {
     class int melting_point;
@@ -14,6 +17,15 @@ organic chitin {
     weight 0.5;
     value 2;
     size small;
+    hardness keratinous;
+}
+
+metal copper {
+    weight 10;
+    value 2;
+    size small;
+    melting_point 1538;
+    hardness copper;
 }
 
 metal iron {
@@ -21,6 +33,7 @@ metal iron {
     value 5;
     size small;
     melting_point 1538;
+    hardness iron;
 }
 
 material paper {

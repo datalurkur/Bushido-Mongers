@@ -162,6 +162,27 @@ module Size
     extend DataTables
 end
 
+module Hardness
+    def self.raw_values; [
+        [:insubstantial, 0.0],
+        [:jelly,         0.01],
+        [:flesh,         0.03],
+        [:graphite,      0.1],
+        [:keratin,       0.2],
+        [:copper,        0.3],
+        [:iron,          0.4],
+        [:apatite,       0.5],
+        [:titanium,      0.6],
+        [:steel,         0.65],
+        [:quartz,        0.7],
+        [:topaz,         0.8],
+        [:corundum,      0.9],
+        [:diamond,       1.0]
+    ]; end
+    def self.standard; :graphite; end
+    extend DataTables
+end
+
 module GenericAspect
     def self.raw_values; [
         [:nonexistent, 0.0],
