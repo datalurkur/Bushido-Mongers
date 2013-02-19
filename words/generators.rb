@@ -149,10 +149,10 @@ module Words
     #:keywords=>[], :objects=>["Test NPC 23683", "Test NPC 35550", "Test Character"], :exits=>[:west], :name=>"b00"
 
     def self.gen_move_description(args = {})
-        room = args[:target]
+        room = args[:destination]
 
         move_args = args.dup
-        move_args[:target] = {:monicker => room[:zone], :adjectives => (room[:keywords].rand || :boring)}
+        move_args[:destination] = {:monicker => room[:zone], :adjectives => (room[:keywords].rand || :boring)}
         room[:room_mentioned] = true
 
         [self.gen_sentence(move_args), gen_room_description(room)].join(" ")

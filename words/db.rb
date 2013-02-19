@@ -133,6 +133,10 @@ class WordDB
         nil
     end
 
+    def default_prep_for_case(prep_case)
+        get_keyword_words(prep_case, :preposition).first
+    end
+
     # For 'special' conjugations. Basic rules are in Sentence::Verb::conjugate.
     def conjugate(infinitive, state)
         @conjugations[state][infinitive]

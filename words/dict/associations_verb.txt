@@ -2,5 +2,6 @@ attack chop slice stab strike hit
 consume eat chomp gnaw bite drink quaff
 inspect see look observe notice spot detect perceive
 search
-move go
+move go leave walk
 get fetch grab take
+use utilize manipulate

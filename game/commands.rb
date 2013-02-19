@@ -118,17 +118,17 @@ module Commands
 
     module Move
         def self.stage(core, params)
-            SharedObjectExtensions.check_required_params(params, [:target])
+            SharedObjectExtensions.check_required_params(params, [:destination])
 
             position = params[:agent].absolute_position
             raise(NotImplementedError, "You're trapped in a #{position.monicker}!") unless Room === position
 
             # This method raises an exception if the direction is invalid, so no need to check it
-            params[:target] = position.get_adjacent(params[:target])
+            params[:destination] = position.get_adjacent(params[:destination])
         end
 
         def self.do(core, params)
-            params[:agent].move_to(params[:target])
+            params[:agent].move_to(params[:destination])
         end
     end
 
@@ -172,6 +172,7 @@ module Commands
                 :chance_to_hit => 1.0, # FIXME
                 :damage        => 5,   # FIXME
             })
+            #Message.dispatch( XXX FIXME : NOTIFY EVERYTHING WITH PERCEPTION LOCALLY
         end
     end
 
