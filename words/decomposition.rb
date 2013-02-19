@@ -80,9 +80,9 @@ module Words
         end
 
         # D.O. is often preposition-less, so what remains is the target.
-        # TODO - vary this based on verb? maybe case-by-case.
+        # TODO - Store exceptions in dictionary?
         case args[:verb]
-        when :move
+        when :move, :go, :travel, :walk
             args[:destination] = pieces.slice!(0) unless args[:destination]
         else
             args[:target] = pieces.slice!(0) unless args[:target]
