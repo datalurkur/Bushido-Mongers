@@ -20,7 +20,7 @@ class HTTPReader
         rescue EOFError => e
             raise(e)
         rescue Exception => e
-            Log.debug(["Error reading data", e.message, e.backtrace])
+            Log.debug(["Error reading data", e.message])
             raise(e)
         end
 

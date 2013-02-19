@@ -50,7 +50,7 @@ class HTTP
             @data         = data
             @content_type = content_type
 
-            @use_compression = true
+            #@use_compression = :gzip
         end
 
         def pack
@@ -63,12 +63,19 @@ class HTTP
             parts = [status]
 
             if @data
-                if @use_compression
+                case @use_compression
+                when :gzip
+                    @data = @data.gzip
+                    @headers["Content-Encoding"] = "gzip"
+                when :deflate
+                    # FIXME - Broken on IE
                     @data = @data.deflate
                     @headers["Content-Encoding"] = "deflate"
+                else
+                    Log.error("Unknown compression type #{@use_compressiong}")
                 end
-                @headers["Content-Length"] = @data.length.to_s
-                @headers["Content-Type"]   = @content_type
+                @headers["Content-Length"]   = @data.length.to_s
+                @headers["Content-Type"]     = @content_type
             end
 
             parts << @headers.collect { |k,v| HTTP.pack_header(k,v) }
