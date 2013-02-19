@@ -90,7 +90,7 @@ class GameCore
     # CHARACTER MAINTENANCE
     def characters;       @characters       ||= {}; end
     def cached_positions; @cached_positions ||= {}; end
-    def load_character(username, character_name)
+    def load_character(lobby, username, character_name)
         cached_positions[username]
 
         character, failures = Character.attempt_to_load(username, character_name)
@@ -100,17 +100,21 @@ class GameCore
             characters[username] = character
             Log.info("Character #{character.name} loaded for #{username}")
             Message.register_listener(self, :core, character)
+            character.set_user_callback(lobby, username)
         end
 
         return [character, failures]
     end
-    def create_character(username, details)
+    def create_character(lobby, username, details)
         position  = @world.random_starting_location
         character = @db.create(self, :character, details.merge(:position => position))
 
         characters[username] = character
         Log.info("Character #{character.name} created for #{username}")
         Message.register_listener(self, :core, character)
+        character.set_user_callback(lobby, username)
+
+        return character
     end
     def get_user_characters(username)
         Character.get_characters_for(username)
@@ -131,6 +135,7 @@ class GameCore
         character = characters[username]
 
         Message.unregister_listener(self, :core, character)
+        character.nil_user_callback
 
         if character_dies
             cached_positions[username] = nil

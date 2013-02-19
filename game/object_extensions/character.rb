@@ -106,6 +106,36 @@ module Character
             history  = contents.select { |fdata| fdata[:character_name] == character_name }
             history.sort { |x,y| x[:timestamp] <=> y[:timestamp] }
         end
+
+        def at_message(instance, message)
+            case message.type
+            when :unit_moves
+                if (message.unit != instance) && instance.witnesses?([message.start, message.finish])
+                    instance.inform_user(message)
+                end
+            when :unit_attacks
+                locations = [message.attacker.absolute_position, message.defender.absolute_position]
+                # Make sure the user sees the attack if they're the target, even if the attacker is hidden
+                if (message.attacker != instance) && ((message.defender == instance) || instance.witnesses?(locations))
+                    instance.inform_user(message)
+                end
+            when :unit_acts
+                # TODO - Add in distance scoping for different actions (shouting can be witnessed from further away than talking)
+                if (message.unit != instance) && instance.witnesses?([message.position])
+                    instance.inform_user(message)
+                end
+            when :object_destroyed
+                if instance.witnesses?([message.position])
+                    instance.inform_user(message)
+                end
+            end
+        end
+    end
+
+    def witnesses?(locations=[], scope=:immediate)
+        # TODO - Use scope to determine if events in adjacent zones can be heard / seen
+        # TODO - Add perception checks
+        return locations.include?(absolute_position)
     end
 
     # Since this object is sometimes saved and loaded, we need to recreate it gracefully
@@ -115,5 +145,20 @@ module Character
 
     def nil_core
         @core = nil
+    end
+
+    def set_user_callback(lobby, username)
+        @lobby    = lobby
+        @username = username
+    end
+
+    def inform_user(message)
+        event_properties = message.params.merge(:event_type => message.type)
+        @lobby.send_to_user(@username, Message.new(:game_event, {:description => event_properties}))
+    end
+
+    def nil_user_callback
+        @lobby    = nil
+        @username = nil
     end
 end

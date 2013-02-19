@@ -94,7 +94,7 @@ module Words
     # TODO - add adjective detection and passthroughs, so one could e.g. say "with the big sword"
     # N.B. modifies the pieces array
     def self.slice_phrase!(pieces, preposition)
-        Log.debug([pieces, preposition])
+        Log.debug([pieces, preposition], 5)
         if (index = pieces.index(preposition))
             # TODO - march through, detecting adjectives or adjective phrases, until we hit a noun.
             # First of all, look for material adjectives.

@@ -140,7 +140,7 @@ module VerboseInterface
                 when :object_destroyed
                     return Words.gen_copula(message.properties.merge(:verb=>:destroy))
                 else
-                    return "I don't know how to express a game event of type #{message.event_type}"
+                    return "I don't know how to express a game event of type #{message.properties[:event_type]}"
                 end
             elsif message.field == :server_link
                 return "Server Link: http://#{message.properties[:host]}#{message.properties[:uri]}"

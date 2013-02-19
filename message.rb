@@ -115,7 +115,7 @@ class Message
 
     def method_missing(name, *args)
         unless @args[name]
-            raise(StandardError, "No parameter #{name} for message type #{type}.")
+            raise(StandardError, "No parameter #{name.inspect} for message type #{type.inspect}.")
         end
         @args[name]
     end

@@ -122,7 +122,7 @@ class Lobby
             return
         end
 
-        character, failures = @game_core.load_character(username, character_name)
+        character, failures = @game_core.load_character(self, username, character_name)
         if character
             if @game_state == :playing
                 send_to_user(username, Message.new(:begin_playing))
@@ -224,9 +224,6 @@ class Lobby
                 next if character.nil?
                 next unless message.position == character.absolute_position
 
-                event_properties = message.params.merge(:event_type => :object_destroyed)
-                send_to_user(username, Message.new(:game_event, {:description => event_properties}))
-
                 if message.target == character
                     Log.info("Character #{character.name} dies!")
                     @game_core.remove_character(username, true)
@@ -294,7 +291,7 @@ class Lobby
             begin
                 raise "You must create a game before creatinga a character" unless @game_core
                 # TODO - Add a check for a character with the same name
-                @game_core.create_character(username, message.attributes)
+                @game_core.create_character(self, username, message.attributes)
                 send_to_user(username, Message.new(:character_ready))
             rescue Exception => e
                 send_to_user(username, Message.new(:character_not_ready, {:reason => e.message}))
