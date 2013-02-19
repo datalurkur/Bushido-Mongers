@@ -1,16 +1,14 @@
 require './util/log'
 require './util/basic'
+require './util/timer'
 
 Log.setup("Vocabulary Test", "wordtest")
 
 require './words/words'
 
 Log.debug(Words.gen_area_name({:type => :mountain, :keywords => [:beautiful]}))
-Log.debug(Time.new)
 Log.debug(Words.gen_area_name({:type => :sewer,    :keywords => [:dank]}))
-Log.debug(Time.new)
 Log.debug(Words.gen_room_description(:zone => :mountain, :keywords => [:beautiful], :objects => ["elderly beaver", "Frank the Ninja Bunny"], :exits => [:east, :north]))
-Log.debug(Time.new)
 
 def john_and_mary(state)
     Log.debug(Words.gen_sentence(:agent => :John, :command => :move, :destination => :west, :state=>state))
@@ -20,13 +18,10 @@ end
 s = Words::State.new
 s.tense = :future
 john_and_mary(s)
-Log.debug(Time.new)
 s.tense = :present
 john_and_mary(s)
-Log.debug(Time.new)
 s.tense = :past
 john_and_mary(s)
-Log.debug(Time.new)
 
 Log.debug(Words.gen_copula)
 Log.debug(Words.gen_copula(:adjective=>:sunny))

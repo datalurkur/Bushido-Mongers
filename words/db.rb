@@ -31,20 +31,16 @@ class WordDB
 
     def find_group_matching_any(word, verbose=true)
         case word
-        when Symbol,String
-            # should've been caught by find_group_for already
-            nil
-        when WordGroup
-            # Necessary? Ideally. But not implemented yet.
-            raise(NotImplementedError)
         when Hash
-            matching = @groups.select do |group|
-                Log.debug(["Analyzing:", word, group], 9)
-                word.any? { |pos, w| group.has?(pos) && group[pos] == w }
-            end
+            # FIXME - O(n^2) for all groups
+            matching = @groups.select { |group| word.any? { |pos, w| group[pos] == w } }
             raise(StandardError, "Duplicate word groups found in #{self.class} for #{word.inspect}.") unless matching.size < 2
             Log.debug("No word group '#{word.inspect}' found!") if matching.size <= 0 && verbose
             matching.first
+        when Symbol,String, WordGroup
+            # Symbol,String should've been caught by find_group_for already
+            # WordGroup would ideally be checked, but it's not implemented yet.
+            raise(NotImplementedError)
         else
             Log.debug("Couldn't find group matching word class #{word.class}")
         end
