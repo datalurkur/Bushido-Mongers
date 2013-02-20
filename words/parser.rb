@@ -48,7 +48,7 @@ module WordParser
             time_block("Word types parsed") do
                 Words::TYPES.each do |type|
                     load_files(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/).each do |keyword, lines|
-                        lines.map(&:chomp).each { |l| db.add_keyword_family([type, keyword], type => l) }
+                        lines.map(&:chomp).each { |l| db.add_keyword_family(keyword, type => l) }
                     end
                 end
             end
@@ -111,12 +111,12 @@ module WordParser
         Log.debug("Found #{db.get_keyword_groups(:command).size} commands.")
 
         raws_db.types_of(:item).each do |item|
-            db.add_keyword_family([:noun, :item], :noun => item)
+            db.add_keyword_family(:item, :noun => item)
         end
         Log.debug("Found #{db.get_keyword_groups(:item).size} item types.")
 
         raws_db.types_of(:material).each do |mat|
-            db.add_keyword_family([:adjective, :material], :adjective => mat)
+            db.add_keyword_family(:material, :adjective => mat)
         end
         Log.debug("Found #{db.get_keyword_groups(:material).size} materials.")
     end

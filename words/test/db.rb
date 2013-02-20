@@ -22,7 +22,7 @@ Log.debug(["Adverb:", adv])
 related_adv = db.get_related_words(adv)
 Log.debug(["Related adverbs:", related_adv])
 
-nouns = db.get_keyword_words(:noun, :noun)
+nouns = db.all_pos(:noun)
 Log.debug(["Nouns", nouns])
 
 Log.debug(db.get_related_groups(:inspect))

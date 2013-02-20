@@ -47,6 +47,10 @@ class WordDB
         end
     end
 
+    def all_pos(pos)
+        @groups.select { |g| g.has?(pos) }.collect { |g| g[pos] }
+    end
+
     # requirements: mergee is a WordGroup, merger is a Hash
     def merge(mergee, merger)
         Log.debug(["Merging:", mergee, merger])
@@ -76,14 +80,12 @@ class WordDB
         list_of_groups
     end
 
-    def add_keyword_family(keywords, *list_of_words)
-        Log.debug("Adding keyword family #{keywords.inspect}, #{list_of_words.inspect}", 6)
+    def add_keyword_family(keyword, *list_of_words)
+        Log.debug("Adding keyword family #{keyword}, #{list_of_words.inspect}", 6)
         list_of_groups = add_family(*list_of_words)
 
-        Array(keywords).each do |keyword|
-            @keywords[keyword] ||= []
-            @keywords[keyword].concat(list_of_groups)
-        end
+        @keywords[keyword] ||= []
+        @keywords[keyword].concat(list_of_groups)
     end
 
     # Basically the reason this isn't a keyword_family is because we don't know
