@@ -5,12 +5,19 @@ module Words
     def self.gen_sentence(args = {})
         to_print = args.dup
         to_print.delete(:agent)
-#        Log.debug(to_print, 6)
+        Log.debug(to_print, 8)
 
         args[:state] ||= State.new
 
         subject = args[:subject] || args[:agent]
         verb    = args[:verb] || args[:action] || args[:command]
+
+        # Check event types and set verb accordingly
+        if args[:event_type] == :unit_attacks
+            verb          = :attack
+            subject       = args[:attacker]
+            args[:target] = args[:defender]
+        end
 
         # Subject is you in second person
         if !subject && args[:state].person == :second

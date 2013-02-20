@@ -139,6 +139,9 @@ module VerboseInterface
                 case message.properties[:event_type]
                 when :object_destroyed
                     return Words.gen_copula(message.properties.merge(:verb=>:destroy))
+                when :unit_attacks
+                    Log.debug(message.properties)
+                    return Words.gen_sentence(message.properties.merge(:verb=>:attack))
                 else
                     return "I don't know how to express a game event of type #{message.properties[:event_type]}"
                 end
