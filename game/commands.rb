@@ -172,10 +172,6 @@ module Commands
                 :chance_to_hit => 1.0, # FIXME
                 :damage        => 5,   # FIXME
             })
-            # TODO - This message will be picked up by all agents registered to receive core messages
-            #  We need to implement a mechanism for a character to delegate a message to its player.
-            #  This way, when a character determines that it's seen an attack (or been the target of one)
-            #  we send a message to the client.
         end
     end
 
