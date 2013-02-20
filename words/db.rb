@@ -51,9 +51,21 @@ class WordDB
     def merge(mergee, merger)
         Log.debug(["Merging:", mergee, merger])
         merger.each { |k, v| mergee[k] = v }
+        mergee
     end
 
     def associate_groups(*list_of_groups)
+        # nothing to associate
+        return if list_of_groups.size < 2
+
+        # Find and remove old associations
+        @associations.each do |set|
+            if !(set & list_of_groups).empty?
+                list_of_groups = (list_of_groups + set.to_a).uniq
+                @associations.delete(set)
+            end
+        end
+
         @associations << Set.new(list_of_groups)
     end
 
@@ -64,12 +76,14 @@ class WordDB
         list_of_groups
     end
 
-    def add_keyword_family(keyword, *list_of_words)
-        Log.debug("Adding keyword family #{keyword}, #{list_of_words.inspect}", 6)
+    def add_keyword_family(keywords, *list_of_words)
+        Log.debug("Adding keyword family #{keywords.inspect}, #{list_of_words.inspect}", 6)
         list_of_groups = add_family(*list_of_words)
 
-        @keywords[keyword] ||= []
-        @keywords[keyword].concat(list_of_groups)
+        Array(keywords).each do |keyword|
+            @keywords[keyword] ||= []
+            @keywords[keyword].concat(list_of_groups)
+        end
     end
 
     # Basically the reason this isn't a keyword_family is because we don't know
@@ -88,6 +102,7 @@ class WordDB
                 return set.to_a - [group]
             end
         end
+        nil
     end
 
     # Get a list of related words with the same part of speech as the query word
@@ -100,6 +115,7 @@ class WordDB
                 return (set.to_a - [group]).select { |g| g.has?(pos) }.collect { |g| g[pos] }
             end
         end
+        nil
     end
 
     # Get a list of groups attached to the keyword

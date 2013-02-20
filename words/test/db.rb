@@ -1,4 +1,5 @@
 require './words/words'
+require './util/timer'
 
 Log.setup("Main", "family_test")
 
@@ -16,13 +17,15 @@ Log.debug(["Related to :bad", related_groups_for_bad.inspect])
 related_to_first_relation = db.get_related_groups(related_groups_for_bad.first)
 Log.debug(["Related to #{related_groups_for_bad.first}", related_to_first_relation.inspect])
 
-adv = related_to_first_relation.first[:adverb]
-Log.debug("Adverb: #{adv}")
+adv = related_to_first_relation.find { |g| g[:adverb] }[:adverb]
+Log.debug(["Adverb:", adv])
 related_adv = db.get_related_words(adv)
 Log.debug(["Related adverbs:", related_adv])
 
-nouns = db.get_related_groups(:noun)
-Log.debug(["Related to :noun", nouns])
+nouns = db.get_keyword_words(:noun, :noun)
+Log.debug(["Nouns", nouns])
+
+Log.debug(db.get_related_groups(:inspect))
 
 japanese_names = Words.db.get_keyword_words(:japanese, :name)
 
