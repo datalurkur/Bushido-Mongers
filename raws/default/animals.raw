@@ -12,14 +12,16 @@ animal,corporeal rat {
     spawn_rarity common;
 }
 
-monster,corporeal giant_spider {
+monster,corporeal spider {
+    adjectives giant; /* It's big for a spider, all right? */
     size medium;
     body_type arachnoid_body;
     spawns_in sewer;
     spawn_rarity common;
 }
 
-monster,corporeal sewer_kraken {
+monster,corporeal kraken {
+    adjectives sewer;
     size gargantuan;
     body_type sewer_kraken_body;
     spawns_in sewer;
@@ -33,7 +35,9 @@ animal,corporeal snake {
     spawn_rarity common;
 }
 
-animal,corporeal poison_gecko {
+animal,corporeal gecko {
+    /* TODO - actually make it poisonous */
+    adjectives poisonous;
     size small;
     body_type lizard_body;
     spawns_in sewer forest jungle swamp dungeon;
@@ -47,7 +51,8 @@ monster,corporeal swarm_of_flesh_eating_scarabs {
     spawn_rarity rare;
 }
 
-monster,corporeal adolescent_mutant_ninja_tortoise {
+monster,corporeal tortoise {
+    adjectives adolescent mutant ninja;
     size medium;
     body_type tortoise_body;
     spawns_in sewer;

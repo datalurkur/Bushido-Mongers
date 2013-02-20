@@ -115,6 +115,11 @@ module WordParser
         end
         Log.debug("Found #{db.get_keyword_groups(:item).size} item types.")
 
+        raws_db.types_of(:npc).each do |comm|
+            db.add_keyword_family(:npc, :noun => comm)
+        end
+        Log.debug("Found #{db.get_keyword_groups(:npc).size} NPCs.")
+
         raws_db.types_of(:material).each do |mat|
             db.add_keyword_family(:material, :adjective => mat)
         end

@@ -4,6 +4,8 @@ abstract object,position item {
     class bool gettable;
     gettable true;
 
+    has_many optional sym adjectives;
+
     weight 0;
     value 0;
 }
