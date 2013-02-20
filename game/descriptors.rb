@@ -82,7 +82,7 @@ class Descriptor
                 :monicker  => friendly_name.to_sym,
                 :zone      => room.zone.type,
                 :keywords  => room.keywords,
-                :objects   => observer.perceivable_objects_of(room.objects - [observer]).collect(&:monicker),# ,
+                :objects   => observer.perceivable_objects_of(room.objects - [observer]).collect { |o| BushidoObjectDescriptor.describe(o, observer) },
                 :exits     => room.connected_directions,
             }
         end
