@@ -260,7 +260,32 @@ module Words
             end
         end
 
-        class Adjective < ParseTree::PTLeaf; end
+        class Adjective < ParseTree::PTLeaf
+            def self.ordered_adjectives
+                {
+                    1 => [:first,   :"1st"],
+                    2 => [:second,  :"2nd"],
+                    3 => [:third,   :"3rd"],
+                    4 => [:fourth,  :"4th"],
+                    5 => [:fifth,   :"5th"],
+                    6 => [:sixth,   :"6th"],
+                    7 => [:seventh, :"7th"],
+                    8 => [:eighth,  :"8th"],
+                    9 => [:ninth,   :"9th"]
+                }
+            end
+
+            def self.ordered?(word)
+                number = ordered_adjectives.find { |k, v| v.include?(word) }
+                Log.debug(number)
+                number
+            end
+
+            def self.adjective?(word)
+                Words.db.all_pos(:adjective).include?(word) ||
+                ordered_adjectives.any? { |k, v| v.include?(word) }
+            end
+        end
 
         # http://en.wikipedia.org/wiki/English_verbs
         # http://en.wikipedia.org/wiki/Predicate_(grammar)
@@ -430,6 +455,10 @@ module Words
                 end
             end
 
+            def self.noun?(word)
+                Words.db.all_pos(:noun).include?(word) || definite?(word) || pronoun?(word)
+            end
+
             # http://en.wikipedia.org/wiki/Pro-form
             # TODO: We'll want to stand in pronouns for certain words (based
             # on previous usage) to avoid repetition. Maybe. Not even DF does this.
@@ -439,7 +468,7 @@ module Words
                 return false unless noun.respond_to?(:to_sym)
                 case noun.to_sym
                 # Subject person pronouns.
-                when :I, :you, :he, :she, :it, :we, :they, :who
+                when :I, :i, :you, :he, :she, :it, :we, :they, :who
                     true
                 # Possessive pronouns.
                 when :mine, :yours, :his, :hers, :its, :ours, :theirs

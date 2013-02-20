@@ -13,15 +13,6 @@ module Words
 
         args = {:verb => verb}
 
-        # TODO - Join any conjunctions together
-        # The tricky part in real NLP is finding out which kind of conjunction,
-        # it is, but for now we will assume it's a noun conjunction.
-        #while (i = pieces.index(:and))
-        #    first_part = (i > 1)               ? pieces[0...(i-1)] : []
-        #    last_part  = (i < pieces.size - 2) ? pieces[(i+1)..-1] : []
-        #    first_part + [pieces[(i-1)..(i+1)]] + last_part
-        #end
-
         # Strip out articles, since they aren't necessary yet.
         # TODO - use possessives to narrow down the search space.
         pieces = pieces.select { |p| !Sentence::Article.article?(p) }
@@ -73,19 +64,19 @@ module Words
             :accusative   => :target
         }.map do |prep_case, value|
             prep = Words.db.get_preposition(args[:verb], prep_case) || Words.db.default_prep_for_case(prep_case)
-            Log.debug([prep, value], 6)
+            Log.debug([prep, value], 8)
             [prep, value]
         end + [:using, :materials]).each do |prep, value|
-            args[value] = slice_phrase!(pieces, prep)
+            args[value] = slice_prep_phrase(prep, pieces)
         end
 
         # D.O. is often preposition-less, so what remains is the target.
         # TODO - Store exceptions in dictionary?
         case args[:verb]
         when :move, :go, :travel, :walk
-            args[:destination] = pieces.slice!(0) unless args[:destination]
+            args[:destination] = slice_noun_phrase(0, pieces) unless args[:destination]
         else
-            args[:target] = pieces.slice!(0) unless args[:target]
+            args[:target] = slice_noun_phrase(0, pieces) unless args[:target]
         end
 
         args
@@ -93,14 +84,50 @@ module Words
 
     # TODO - add adjective detection and passthroughs, so one could e.g. say "with the big sword"
     # N.B. modifies the pieces array
-    def self.slice_phrase!(pieces, preposition)
+    def self.slice_prep_phrase(preposition, pieces)
         Log.debug([pieces, preposition], 5)
         if (index = pieces.index(preposition))
-            # TODO - march through, detecting adjectives or adjective phrases, until we hit a noun.
-            # First of all, look for material adjectives.
-            phrase = pieces.slice!(index, 2).last
+            noun = slice_noun_phrase(index + 1, pieces)
         end
-        Log.debug([preposition, phrase], 6) if phrase
-        phrase
+        Log.debug(noun, 6) if noun
+        noun
+    end
+
+    def self.slice_noun_phrase(index, pieces)
+        Log.debug([index, pieces])
+        if index >= pieces.size
+            return nil
+        end
+
+        adjectives = []
+        noun = nil
+        size = 0
+
+        pieces[index..-1].each do |piece|
+            if Words::Sentence::Adjective.adjective?(piece)
+                Log.debug(["found adjective", piece])
+                adjectives << piece
+                size += 1
+            elsif Words::Sentence::Noun.noun?(piece)
+                # TODO - Join any conjunctions together
+                # The tricky part in real NLP is finding out which kind of conjunction,
+                # it is, but for now we will assume it's a noun conjunction.
+                #while (i = pieces.index(:and))
+                #    first_part = (i > 1)               ? pieces[0...(i-1)] : []
+                #    last_part  = (i < pieces.size - 2) ? pieces[(i+1)..-1] : []
+                #    first_part + [pieces[(i-1)..(i+1)]] + last_part
+                #end
+                Log.debug(["found noun", piece])
+                noun = piece
+                size += 1
+            else
+                Log.debug(["invalid piece", piece])
+                break
+            end
+        end
+        pieces.slice!(index, size).last
+
+#        [noun, adjectives]
+        noun
     end
 end

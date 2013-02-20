@@ -30,7 +30,6 @@ module Commands
         #  value: where to look for the object, in order.
         # Takes optional parameter value :'key'_type_class, where 'key' is a key of :needed.
         def find_objects(core, params, filters)
-            locations = Array(locations)
             SharedObjectExtensions.check_required_params(params, filters.keys + [:agent, :command])
 
             filters.each do |p, lookup_locs|
@@ -61,7 +60,8 @@ module Commands
 
     module Inspect
         def self.stage(core, params)
-            if params[:target] == :self || params[:target] == params[:agent].monicker
+            target, adjs = params[:target]
+            if target == :self || target == params[:agent].monicker
                 # Examine the agent.
                 # TODO - there should be multiple ways to specify this.
                 params[:target] = params[:agent]
