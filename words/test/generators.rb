@@ -1,6 +1,5 @@
 require './util/log'
 require './util/basic'
-require './util/timer'
 
 Log.setup("Vocabulary Test", "wordtest")
 
@@ -24,7 +23,7 @@ s.tense = :past
 john_and_mary(s)
 
 Log.debug(Words.gen_copula)
-Log.debug(Words.gen_copula(:adjective=>:sunny))
+Log.debug(Words.gen_copula(:adjectives=>:sunny))
 
 Log.debug(
     Words.gen_sentence(

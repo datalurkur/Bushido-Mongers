@@ -29,12 +29,17 @@ module Words
             args[:state].person = :second
         end
 
+        # active is the default; otherwise, swap the subject/D.O.
+        if args[:state].voice == :passive
+            subject, args[:target] = args[:target], subject
+        end
+
         # If subject is plural and person isn't, adjust the person
         if Array === subject && subject.size > 1
             args[:state].plural_person!
         end
 
-        raise(StandardError) unless verb
+        raise unless verb
 
         # Use an associated verb, if any exist.
         associated_verbs = Words.db.get_related_words(verb.to_sym)
@@ -95,35 +100,36 @@ module Words
         "There are synonyms of these commands. Experiment!"
     end
 
-    def self.describe_composition(target)
+    def self.describe_composition(composition)
         state = State.new
         # Description is a currently-progressing state, so passive progressive.
+        # verb == :grasp => "is grasped by"
         state.voice  = :passive
         state.aspect = :progressive
 
         sentences = []
 
         comp_types = {
-            :attach => target[:properties][:external],
-            :wear   => target[:properties][:worn],
-            :grasp  => target[:properties][:grasped],
+            :attach => composition[:properties][:external],
+            :wear   => composition[:properties][:worn],
+            :grasp  => composition[:properties][:grasped],
         }
 
         comp_types.each do |verb, list|
             if list && !list.empty?
                 list.each do |part|
-                    part[:possessor_info] = target[:possessor_info]
+                    part[:possessor_info] = composition[:possessor_info]
                 end
                 sentences << gen_sentence(
-                                :subject => list.dup,
+                                :subject => composition,
                                 :verb    => verb,
-                                :target  => target,
+                                :target  => list.dup,
                                 :state   => state)
                 sentences += list.collect do |part|
                     if part[:is_type].include?(:composition_root)
                         describe_composition(part)
                     else
-                        gen_copula(:target => part)
+                        gen_copula(:subject => part)
                     end
                 end
             end
@@ -141,7 +147,11 @@ module Words
             args[:verb]    = :be
         end
 
-        args[:subject_complement] = Array(args[:adjective]) + Array(args[:complement]) + Array(args[:keywords])
+        adjectives = []
+        if Hash === args[:subject]
+            adjectives = Adjective.adjectives(noun)
+        end
+        args[:subject_complement] = adjectives + [:adjective, :adjectives, :complement, :keywords].inject([]) { |a, s| a + Array(args[s]) }
 
         # TODO - Use expletive / inverted copula construction
         # TODO - expletive more often for second person

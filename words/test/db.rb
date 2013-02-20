@@ -1,5 +1,4 @@
 require './words/words'
-require './util/timer'
 
 Log.setup("Main", "family_test")
 

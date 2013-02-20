@@ -104,7 +104,7 @@ module Words
                 case type
                 when :target
                     prep = Words.db.get_preposition(args[:verb], :accusative)
-                    Log.debug([:target, args[:verb], prep], 8)
+                    Log.debug([type, args[:verb], prep], 8)
                     if prep
                         super(prep, NounPhrase.new(args[type]))
                     else
@@ -207,13 +207,8 @@ module Words
                         hash[:monicker] = noun[:monicker]
                         raise TypeError unless [String, Symbol].include?(hash[:monicker].class)
 
-                        hash[:adjectives] = Array(noun[:adjectives])
-                        if noun[:properties]
-                            hash[:adjectives] += Array(noun[:properties][:adjectives])
-                        end
-
+                        hash[:adjectives] = Adjective.descriptor_adjectives(noun)
                         hash[:definite] == noun[:definite] if noun[:definite]
-
                         hash[:possessor_info] = noun[:possessor_info]if noun[:possessor_info]
                     else
                         hash[:monicker] = noun
@@ -261,10 +256,19 @@ module Words
         end
 
         class Adjective < ParseTree::PTLeaf
-            def self.ordered_adjectives
+            def self.descriptor_adjectives(descriptor_hash)
+                raise unless Hash === descriptor_hash
+                adjectives = Array(descriptor_hash[:adjectives])
+                if descriptor_hash[:properties]
+                    adjectives += Array(descriptor_hash[:properties][:adjectives])
+                end
+                adjectives
+            end
+
+            def self.ordinal_adjectives
                 {
                     1 => [:first,   :"1st"],
-                    2 => [:second,  :"2nd"],
+                    2 => [:second,  :"2nd", :other],
                     3 => [:third,   :"3rd"],
                     4 => [:fourth,  :"4th"],
                     5 => [:fifth,   :"5th"],
@@ -275,15 +279,15 @@ module Words
                 }
             end
 
-            def self.ordered?(word)
-                number = ordered_adjectives.find { |k, v| v.include?(word) }
+            def self.ordinal?(word)
+                number = ordinal_adjectives.find { |k, v| v.include?(word) }
                 Log.debug(number)
                 number
             end
 
             def self.adjective?(word)
                 Words.db.all_pos(:adjective).include?(word) ||
-                ordered_adjectives.any? { |k, v| v.include?(word) }
+                ordinal_adjectives.any? { |k, v| v.include?(word) }
             end
         end
 

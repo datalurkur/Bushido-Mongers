@@ -1,4 +1,5 @@
 require './words/db'
+require './util/timer'
 
 =begin
 
