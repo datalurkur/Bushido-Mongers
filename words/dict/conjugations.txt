@@ -15,3 +15,6 @@ will present will
 will past    would
 shall present shall
 shall past    should
+leave past   left
+go   present go go goes
+go   past    went

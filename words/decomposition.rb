@@ -40,7 +40,7 @@ module Words
             case matching_commands.size
             when 0
                 # Non-existent command; let the playing state handle it.
-                return args(:command => verb)
+                return args.merge(:command => verb)
             when 1
                 command = matching_commands.first
             else
