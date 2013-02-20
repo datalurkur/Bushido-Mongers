@@ -6,12 +6,12 @@ module Words
     # parameter: A whitespace-separated list of words.
     def self.decompose_command(entire_command)
         Log.debug(["entire_command: #{entire_command.inspect}"], 6)
-        pieces = entire_command.strip.split(/\s+/).collect(&:to_sym)
+        pieces = entire_command.downcase.strip.split(/\s+/).collect(&:to_sym)
 
         # Find the command/verb
         verb = pieces.slice!(0)
 
-        args = {:verb => verb}
+        args = {:verb => verb, :command => verb}
 
         # Strip out articles, since they aren't necessary yet.
         # TODO - use possessives to narrow down the search space.
@@ -19,26 +19,19 @@ module Words
 
         # Look for matching command.
         commands = self.db.get_keyword_words(:command, :verb)
-        if commands.include?(verb)
-            command = verb
-        else
-            related = self.db.get_related_words(verb)
-            if related.nil?
-                # Non-existent command; let the playing state handle it.
-                return args.merge(:command => verb)
-            end
+        unless commands.include?(verb)
+            related = self.db.get_related_words(verb) || []
             matching_commands = commands & related
-            case matching_commands.size
-            when 0
+            if related.empty? || matching_commands.empty?
                 # Non-existent command; let the playing state handle it.
-                return args.merge(:command => verb)
-            when 1
-                command = matching_commands.first
-            else
+                return args
+            end
+
+            if matching_commands.size > 1
                 raise(StandardError, "'#{verb}' has too many command synonyms: #{matching_commands.inspect}")
             end
+            args[:command] = matching_commands.first
         end
-        args[:command] = command
 
         phrase_args = decompose_phrases(args, pieces)
 
@@ -64,10 +57,12 @@ module Words
             :accusative   => :target
         }.map do |prep_case, value|
             prep = Words.db.get_preposition(args[:verb], prep_case) || Words.db.default_prep_for_case(prep_case)
-            Log.debug([prep, value], 8)
             [prep, value]
-        end + [:using, :materials]).each do |prep, value|
-            args[value] = slice_prep_phrase(prep, pieces)
+        end + [[:using, :materials]]).each do |prep, value|
+            if pieces.size > 0
+                phrase = slice_prep_phrase(prep, pieces)
+                args[value] = phrase if phrase
+            end
         end
 
         # D.O. is often preposition-less, so what remains is the target.
@@ -94,10 +89,10 @@ module Words
     end
 
     def self.slice_noun_phrase(index, pieces)
-        Log.debug([index, pieces])
         if index >= pieces.size
             return nil
         end
+        Log.debug([index, pieces], 5)
 
         adjectives = []
         noun = nil

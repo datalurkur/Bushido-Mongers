@@ -5,3 +5,4 @@ search
 move go leave walk
 get fetch grab take
 use utilize manipulate
+throw toss
