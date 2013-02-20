@@ -154,7 +154,9 @@ module Character
 
     def inform_user(message)
         event_properties = message.params.merge(:event_type => message.type)
-        @lobby.send_to_user(@username, Message.new(:game_event, {:description => event_properties}))
+        if @lobby
+            @lobby.send_to_user(@username, Message.new(:game_event, {:description => event_properties}))
+        end
     end
 
     def nil_user_callback
