@@ -71,6 +71,8 @@ module Words
         sentences << describe_composition(body)
 
         # TODO - Add more information about abilities, features, etc.
+
+        sentences.join(" ")
     end
 
     def self.describe_stats(args)
