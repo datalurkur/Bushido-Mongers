@@ -29,7 +29,7 @@ Log.debug(
     Words.gen_sentence(
         :subject => [:Billy_Bob, :beaver],
         :verb    => :walk,
-        :target  => :bar
+        :destination => :bar
     )
 )
 

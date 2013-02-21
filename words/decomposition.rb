@@ -50,29 +50,18 @@ module Words
     # Next iteration: Store in form
     # verb => [[preposition, case], [preposition, case], ...]
     def self.decompose_phrases(args, pieces)
-        ({
-            :instrumental => :tool,
-            :lative       => :destination,
-            :locative     => :location,
-            :accusative   => :target
-        }.map do |prep_case, value|
-            prep = Words.db.get_preposition(args[:verb], prep_case) || Words.db.default_prep_for_case(prep_case)
-            [prep, value]
-        end + [[:using, :materials]]).each do |prep, value|
+        Words.db.get_preps_for_verb(args[:verb]).each do |preposition, designation|
+            Log.debug([preposition, designation])
             if pieces.size > 0
-                phrase = slice_prep_phrase(prep, pieces)
-                args[value] = phrase if phrase
+                phrase = slice_prep_phrase(preposition, pieces)
+                args[designation] = phrase if phrase
             end
         end
 
-        # D.O. is often preposition-less, so what remains is the target.
-        # TODO - Store exceptions in dictionary?
-        case args[:verb]
-        when :move, :go, :travel, :walk
-            args[:destination] = slice_noun_phrase(0, pieces) unless args[:destination]
-        else
-            args[:target] = slice_noun_phrase(0, pieces) unless args[:target]
-        end
+        # What remains is stored in the nil preposition designation.
+        # This is usually the direct object.
+        designation = Words.db.get_preps_for_verb(args[:verb])[nil]
+        args[designation] = slice_noun_phrase(0, pieces) unless args[designation]
 
         args
     end
@@ -80,9 +69,10 @@ module Words
     # TODO - add adjective detection and passthroughs, so one could e.g. say "with the big sword"
     # N.B. modifies the pieces array
     def self.slice_prep_phrase(preposition, pieces)
-        Log.debug([pieces, preposition], 5)
         if (index = pieces.index(preposition))
-            noun = slice_noun_phrase(index + 1, pieces)
+            Log.debug("Detected '#{preposition}' at #{index}")
+            pieces.slice!(index, 1)
+            noun = slice_noun_phrase(index, pieces)
         end
         Log.debug(noun, 6) if noun
         noun
@@ -98,12 +88,15 @@ module Words
         noun = nil
         size = 0
 
-        pieces[index..-1].each do |piece|
+        pieces[index..-1].each_with_index do |piece, i|
+            Log.debug([piece, i])
             if Words::Sentence::Adjective.adjective?(piece)
                 Log.debug(["found adjective", piece])
                 adjectives << piece
                 size += 1
-            elsif Words::Sentence::Noun.noun?(piece)
+            elsif Words::Sentence::Noun.noun?(piece) ||
+                  (index + i) == pieces.size - 1 ||
+                  Words::Sentence::Preposition.preposition?(pieces[index + i])
                 # TODO - Join any conjunctions together
                 # The tricky part in real NLP is finding out which kind of conjunction,
                 # it is, but for now we will assume it's a noun conjunction.
@@ -122,7 +115,7 @@ module Words
         end
         pieces.slice!(index, size).last
 
-#        [noun, adjectives]
+        [noun, adjectives]
         noun
     end
 end

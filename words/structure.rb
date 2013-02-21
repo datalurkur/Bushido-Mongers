@@ -14,19 +14,19 @@ module Words
         attr_accessor :root
         class PTNode
 =begin
-            The nominative case indicates the subject of a finite verb: We went to the store.
-            The accusative case indicates the direct object of a verb: The clerk remembered us.
-            The dative case indicates the indirect object of a verb: The clerk gave us a discount. or The clerk gave a discount to us.
-            The ablative case indicates movement from something, or cause: The victim went from us to see the doctor. and He was unhappy because of depression.
-            The genitive case, which roughly corresponds to English's possessive case and preposition of, indicates the possessor of another noun: John's book was on the table. and The pages of the book turned yellow.
-            The vocative case indicates an addressee: John, are you all right? or simply Hello, John!
-            The locative case (loc) indicates a location: We live in China.
-            The lative case (lat) indicates motion to a location. It corresponds to the English prepositions "to" and "into".
-            The instrumental case indicates an object used in performing an action: We wiped the floor with a mop. and Written by hand.
+            The nominative case indicates the subject of a finite verb: We went to the store. => :subject
+            The accusative case indicates the direct object of a verb: The clerk remembered us. => :target
+            The dative case indicates the indirect object of a verb: The clerk gave us a discount. or The clerk gave a discount to us. => :hasnt_come_up_yet
+            The ablative case indicates movement from something, or cause: The victim went from us to see the doctor. and He was unhappy because of depression. => :hasnt_come_up_yet
+            The genitive case, which roughly corresponds to English's possessive case and preposition of, indicates the possessor of another noun: John's book was on the table. and The pages of the book turned yellow. => possessor_info?
+            The vocative case indicates an addressee: John, are you all right? or simply Hello, John! => :hasnt_come_up_yet
+            The locative case (loc) indicates a location: We live in China. => :location
+            The lative case (lat) indicates motion to a location. It corresponds to the English prepositions "to" and "into". => :destination
+            The instrumental case indicates an object used in performing an action: We wiped the floor with a mop. and Written by hand. => :tool, :material
 =end
-            CASE = [:nominative, :accusative, :dative, :genitive, :vocative, :ablative, :locative, :instrumental]
+            CASE = [:nominative, :accusative, :dative, :genitive, :vocative, :ablative, :locative, :lative, :instrumental]
             attr_accessor :case
-            TYPE = [:sentence, :noun_phrase, :verb_phrase, :noun, :verb, :determiner]
+            TYPE = [:sentence, :noun_phrase, :verb_phrase, :adverb_phrase, :noun, :verb, :adjective, :determiner, :possessive, :article]
 
             # Children in PTInternalNodes are other PTInternalNodes or PTLeafs. Children in PTLeaves are strings.
             attr_accessor :children
@@ -85,7 +85,11 @@ module Words
         class RelativeClause < ParseTree::PTInternalNode
         end
 
-        class Preposition < ParseTree::PTLeaf; end
+        class Preposition < ParseTree::PTLeaf
+            def self.preposition?(word)
+                Words.db.all_pos(:preposition).include?(word)
+            end
+        end
 
         class PrepositionalPhrase < ParseTree::PTInternalNode
         end
@@ -102,27 +106,12 @@ module Words
 
                 # Based on noun and argument information, decide which preposition to use, if any.
                 case type
-                when :target
-                    prep = Words.db.get_preposition(args[:verb], :accusative)
-                    Log.debug([type, args[:verb], prep], 8)
-                    if prep
-                        super(prep, NounPhrase.new(args[type]))
-                    else
-                        super(NounPhrase.new(args[type]))
-                    end
-                    handled = true
-                when :tool
-                    super(noun_phrase_with_prep(type, args, :instrumental))
-                    handled = true
-                when :destination
-                    # TODO - s.b. 'into' when moving to indoor locations
-                    super(noun_phrase_with_prep(type, args, :lative))
-                    handled = true
-                when :location
-                    super(noun_phrase_with_prep(type, args, :locative))
+                # TODO - destination preposition s.b. 'into' when moving to indoor locations
+                when :target, :tool, :destination, :location
+                    super(noun_phrase_with_prep(type, args))
                     handled = true
                 when :receiver
-                    super(noun_phrase_with_prep(type, args, :dative))
+                    super(noun_phrase_with_prep(type, args))
                     raise NotImplementedError
                     # In Modern English, an indirect object is often expressed with a prepositional phrase of "to" or "for". If there is a direct object, the indirect object can be expressed by an object pronoun placed between the verb and the direct object. For example, "He gave that to me" and "He built a snowman for me" are the same as "He gave me that" and "He built me a snowman". 
                 when :result
@@ -142,10 +131,14 @@ module Words
             end
 
             private
-            def noun_phrase_with_prep(type, args, prep_case)
-                prep = Words.db.get_preposition(args[:verb], prep_case) || Words.db.default_prep_for_case(prep_case)
+            def noun_phrase_with_prep(type, args)
+                prep = Words.db.get_prep_for_verb(args[:verb], type)
                 Log.debug([args[type], args[:verb], prep], 8)
-                [prep, NounPhrase.new(args[type])]
+                if prep
+                    return prep, NounPhrase.new(args[type])
+                else
+                    return NounPhrase.new(args[type])
+                end
             end
         end
 

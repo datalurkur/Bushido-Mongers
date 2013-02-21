@@ -63,15 +63,27 @@ module WordParser
                 end
             end
 
-            time_block("Prepositions parsed") do
-                load_files(dict_dir, "prepositions_*.txt", /^.*prepositions_(.*).txt/).each do |prep_case, lines|
+            time_block("New prepositions parsed") do
+                # nil corresponds to no preposition; i.e. usually the direct object
+                load_files(dict_dir, "preposition_base.txt").each do |match, lines|
                     lines.each do |line|
                         words = line.split(/\s+/).map(&:to_sym)
-                        preposition = words.shift
-                        db.add_keyword_family(prep_case, :preposition => preposition)
-                        words.each do |word|
-                            db.add_preposition(preposition, word)
-                        end
+                        raise "Specifier '#{words.inspect}' should be 2 words!" unless words.size == 2
+                        preposition, designation = words
+                        preposition = nil if preposition == :nil
+                        db.add_default_preposition(preposition, designation)
+                        db.add_family(:preposition => preposition) if preposition
+                    end
+                end
+
+                load_files(dict_dir, "preposition_verb.txt").each do |match, lines|
+                    lines.each do |line|
+                        words = line.split(/\s+/).map(&:to_sym)
+                        raise "Specifier '#{words.inspect}' should be 3 words!" unless words.size == 3
+                        verb, preposition, designation = words
+                        preposition = nil if preposition == :nil
+                        db.add_verb_preposition(verb, preposition, designation)
+                        db.add_family(:preposition => preposition) if preposition
                     end
                 end
             end
