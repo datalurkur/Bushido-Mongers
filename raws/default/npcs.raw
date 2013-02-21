@@ -17,9 +17,6 @@ monster,corporeal jikininki {
     behavior roam_and_consume;
 
     consumes body_part;
-    on_consume {
-        Log.info("#{params[:agent].monicker} is eating a body part!")
-    }
 }
 
 monster,corporeal giant {

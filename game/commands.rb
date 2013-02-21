@@ -89,8 +89,9 @@ module Commands
 
         def self.do(core, params)
             agent = params[:agent]
-            if agent.class_info(:on_consume)
-                eval agent.class_info(:on_consume)
+            # Special consumption.
+            if agent.class_info(:consumes)
+                Log.info("#{agent.monicker} eats a #{params[:target].monicker}!")
             elsif params[:target].is_type?(:consumable)
                 # Do normal consumption
                 Log.info("#{agent.monicker} eats #{params[:target].monicker} like a normal person.")
