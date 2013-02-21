@@ -13,5 +13,14 @@ leave for destination
 leave nil destination
 throw at destination
 attach to target
+grasp by subject
+throw by subject
 pick up target
 wear on target
+get from location
+fetch from location
+grab from location
+take from location
+pick from location
+give to receiver
+send to receiver

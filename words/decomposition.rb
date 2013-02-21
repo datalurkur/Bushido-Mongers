@@ -46,12 +46,9 @@ module Words
 
     private
 
-    # N.B. modifies its arguments
-    # Next iteration: Store in form
-    # verb => [[preposition, case], [preposition, case], ...]
+    # N.B. modifies the pieces array
     def self.decompose_phrases(args, pieces)
         Words.db.get_preps_for_verb(args[:verb]).each do |preposition, designation|
-            Log.debug([preposition, designation], 6)
             if pieces.size > 0
                 phrase = slice_prep_phrase(preposition, pieces)
                 args[designation] = phrase if phrase
@@ -66,7 +63,6 @@ module Words
         args
     end
 
-    # TODO - add adjective detection and passthroughs, so one could e.g. say "with the big sword"
     # N.B. modifies the pieces array
     def self.slice_prep_phrase(preposition, pieces)
         if (index = pieces.index(preposition))
@@ -78,6 +74,7 @@ module Words
         noun
     end
 
+    # N.B. modifies the pieces array
     def self.slice_noun_phrase(index, pieces)
         if index >= pieces.size
             return nil
@@ -116,6 +113,5 @@ module Words
         pieces.slice!(index, size).last
 
         [noun, adjectives]
-        noun
     end
 end

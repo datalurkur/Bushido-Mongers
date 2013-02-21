@@ -80,7 +80,5 @@ module Equipment
                 wear(part, equipment_piece)
             end
         end
-        # TEST FUNCTIONALITY
-        # TODO - insert rocks until we can't anymore.
     end
 end

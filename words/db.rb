@@ -157,7 +157,7 @@ class WordDB
         preps = get_preps_for_verb(verb)
         Log.debug([verb, preps, designation], 8)
         preps.each do |prep, desig|
-            return prep if desig == designation && prep != nil
+            return prep if desig == designation && !prep.nil?
         end
         nil
     end

@@ -3,6 +3,8 @@ consume eat chomp gnaw bite drink quaff
 inspect see look observe notice spot detect perceive
 search
 move go leave walk
-get fetch grab take
+get fetch grab take pick
+stash put place
+drop ditch
 use utilize manipulate
 throw toss

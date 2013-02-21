@@ -112,8 +112,8 @@ module Words
                     handled = true
                 when :receiver
                     super(noun_phrase_with_prep(type, args))
-                    raise NotImplementedError
                     # In Modern English, an indirect object is often expressed with a prepositional phrase of "to" or "for". If there is a direct object, the indirect object can be expressed by an object pronoun placed between the verb and the direct object. For example, "He gave that to me" and "He built a snowman for me" are the same as "He gave me that" and "He built me a snowman". 
+                    raise NotImplementedError
                 when :result
                     # Eventually this will be more complex, and describe either
                     # how the blow was evaded (parry, blocked, hit armor, etc)
@@ -164,7 +164,7 @@ module Words
                 end
 
                 @children += AdverbPhrase::USED_ARGS.select { |arg| args.has_key?(arg) }.collect do |arg|
-                    AdverbPhrase.new(arg, args.merge(:verb=>verbs.last))
+                    AdverbPhrase.new(arg, args.merge(:verb => verbs.last))
                 end
 
                 if args[:subject_complement]
@@ -250,7 +250,7 @@ module Words
 
         class Adjective < ParseTree::PTLeaf
             def self.descriptor_adjectives(descriptor_hash)
-                raise unless Hash === descriptor_hash
+                return [] unless Hash === descriptor_hash
                 adjectives = Array(descriptor_hash[:adjectives])
                 if descriptor_hash[:properties]
                     adjectives += Array(descriptor_hash[:properties][:adjectives])
@@ -387,6 +387,8 @@ module Words
                     :beaten
                 when :wear
                     :worn
+                when :throw
+                    :thrown
                 else
                     # Regular form.
                     state = State.new

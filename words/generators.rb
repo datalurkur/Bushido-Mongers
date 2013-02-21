@@ -55,8 +55,10 @@ module Words
 
     private
     def self.possessor_info(possessor)
+        # defaults
         person = :third
         gender = :inanimate
+        # specifics
         person = :second if possessor[:monicker] == :you
         gender = possessor[:gender] if possessor[:gender]
         { :person => person, :gender => gender }
@@ -66,6 +68,7 @@ module Words
     def self.describe_corporeal(corporeal)
         # Describe the corporeal body
         body = corporeal[:properties][:incidental].first
+        corporeal[:definite] = true
         sentences = [gen_sentence(:subject => corporeal, :verb => :have, :target => body)]
         body[:possessor_info] = possessor_info(corporeal)
         sentences << describe_composition(body)
@@ -149,10 +152,7 @@ module Words
             args[:verb]    = :be
         end
 
-        adjectives = []
-        if Hash === args[:subject]
-            adjectives = Adjective.adjectives(noun)
-        end
+        adjectives = Sentence::Adjective.descriptor_adjectives(args[:subject])
         args[:subject_complement] = adjectives + [:adjective, :adjectives, :complement, :keywords].inject([]) { |a, s| a + Array(args[s]) }
 
         # TODO - Use expletive / inverted copula construction

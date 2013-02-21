@@ -7,7 +7,7 @@ module Commands
                 raise(InvalidCommandError, "Command #{command.inspect} not found.")
             end
 
-            invocation = core.db.info_for(command, :invocation)
+            invocation = core.db.info_for(command, :invocation) || command
             invocation.to_caml.to_const(Commands)
         end
 
@@ -42,6 +42,8 @@ module Commands
         end
     end
 
+    ### HELPER COMMANDS ###
+
     module Stats
         def self.stage(core, params)
             # Reach into agent and pull out stat details.
@@ -58,15 +60,16 @@ module Commands
         end
     end
 
+    ### WORLD-INTERACTION COMMANDS ###
+
     module Inspect
         def self.stage(core, params)
             target, adjs = params[:target]
-            if target == :self || target == params[:agent].monicker
+            if !target.nil? && (params[:agent].monicker.match(target.to_s) || (Words.db.get_related_words(:self)+[:self]).include?(target))
                 # Examine the agent.
-                # TODO - there should be multiple ways to specify this.
                 params[:target] = params[:agent]
             elsif params[:target]
-                Commands.find_objects(core, params, {:target => [:inventory, :position, :body]})
+                Commands.find_objects(core, params, :target => [:inventory, :position, :body])
             else
                 # Assume the player wants a broad overview of what he can see, describe the room
                 params[:target] = params[:agent].absolute_position
@@ -77,7 +80,7 @@ module Commands
     module Consume
         def self.stage(core, params)
             params[:target_type_class] = (params[:agent].class_info(:consumes) || core.db.info_for(params[:command], :target))
-            Commands.find_objects(core, params, {:target => [:inventory, :position]})
+            Commands.find_objects(core, params, :target => [:inventory, :position])
 
             unless params[:agent].class_info(:on_consume) || params[:target].is_type?(:consumable)
                 raise(FailedCommandError, "#{params[:agent].monicker} doesn't know how to eat a(n) #{params[:target].monicker}")
@@ -98,7 +101,7 @@ module Commands
 
     module Get
         def self.stage(core, params)
-            Commands.find_objects(core, params, {:target => [:position, :inventory]})
+            Commands.find_objects(core, params, :target => [:position, :inventory])
         end
 
         def self.do(core, params)
@@ -108,7 +111,7 @@ module Commands
 
     module Drop
         def self.stage(core, params)
-            Commands.find_objects(core, params, {:target => [:inventory]})
+            Commands.find_objects(core, params, :target => [:inventory])
         end
 
         def self.do(core, params)
@@ -119,12 +122,13 @@ module Commands
     module Move
         def self.stage(core, params)
             SharedObjectExtensions.check_required_params(params, [:destination])
+            destination, adjectives = params[:destination]
 
             position = params[:agent].absolute_position
             raise(NotImplementedError, "You're trapped in a #{position.monicker}!") unless Room === position
 
             # This method raises an exception if the direction is invalid, so no need to check it
-            params[:destination] = position.get_adjacent(params[:destination])
+            params[:destination] = position.get_adjacent(destination)
         end
 
         def self.do(core, params)
@@ -161,7 +165,7 @@ module Commands
             SharedObjectExtensions.check_required_params(params, [:target])
 
             # The target is an object and needs to be resolved
-            Commands.find_objects(core, params, {:target => [:position]})
+            Commands.find_objects(core, params, :target => [:position])
         end
 
         def self.do(core, params)

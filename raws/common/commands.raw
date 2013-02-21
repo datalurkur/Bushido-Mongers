@@ -4,61 +4,47 @@ abstract root command {
     class optional sym tool;
     class optional sym location;
 
-    class sym invocation;
+    class optional sym invocation;
 }
 
 /* Info commands. */
 command stats {
-    invocation stats;
 }
 
 command attack {
     target corporeal;
     tool weapon;
-
-    invocation attack;
 }
 
 command inspect {
-    invocation inspect;
 }
 
 command move {
-    invocation move;
 }
 
 command consume {
     target consumable;
-
-    invocation consume;
 }
 
-/* fetch/grab/get/take */
 command get {
     target item;
-
-    invocation get;
 }
 
 /* stash/put/place */
+/* command stash {} */
 
 /* drop/ditch */
 command drop {
     target item;
-
-    invocation drop;
 }
 
 command hide {
-    invocation hide;
 }
 
 command unhide {
-    invocation unhide;
 }
 
 command help {
-    invocation help;
 }
 
 abstract command construct {
