@@ -42,6 +42,10 @@ module Perception
 
     def find_object(type_class, object, locations)
         return object if (BushidoObject === object)
+        object, adjectives = object if object.respond_to?(:size) && object.size == 2
+
+#        Log.debug(["Searching!", type_class, object, locations])
+#        Log.debug(["Adjectives!", adjectives]) if adjectives && !adjectives.empty?
 
         # Sort through the potentials and find out which ones match the query
         potentials = []
@@ -57,8 +61,14 @@ module Perception
         when 1
             return potentials.first
         else
-            # TODO - We should try re-searching here based on other descriptive information/heuristics.
-            raise(AmbiguousMatchError, "Multiple #{type_class} objects found.")
+            number = adjectives.map { |a| Words::Sentence::Adjective.ordinal?(a) }.flatten.first
+            if number
+                return potentials[number - 1]
+            else
+                # TODO - We should try re-searching here based on other descriptive information/heuristics.
+                Log.debug(potentials)
+                raise(AmbiguousMatchError, "Multiple #{type_class} objects found.")
+            end
         end
     end
 end
