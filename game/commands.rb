@@ -172,6 +172,7 @@ module Commands
                 :chance_to_hit => 1.0, # FIXME
                 :damage        => 5,   # FIXME
             })
+            core.destroy_flagged
         end
     end
 

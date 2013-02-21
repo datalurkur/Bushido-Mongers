@@ -23,7 +23,7 @@ class Zone
             #Log.debug("found #{args[:inherited_keywords].inspect}!") if args[:inherited_keywords]
 
             args[:depth]    = depth
-            args[:zone]     = core.db.create(core, args[:type], args)
+            args[:zone]     = core.create(args[:type], args)
             args[:keywords] = core.db.info_for(args[:type], :keywords)
 
             args.delete(:inherited_keywords) # Shouldn't need this again.

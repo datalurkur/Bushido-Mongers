@@ -56,14 +56,14 @@ class BushidoObject
     def destroy(destroyer)
         stop_listening
 
-        @extensions.each do |mod|
-            mod.at_destruction(self) if mod.respond_to?(:at_destruction)
-        end
-
         if has_position?
             Message.dispatch(@core, :object_destroyed, :agent => destroyer, :position => absolute_position, :target => self)
         else
             Log.warning("#{monicker} is being destroyed but has no position")
+        end
+
+        @extensions.each do |mod|
+            mod.at_destruction(self) if mod.respond_to?(:at_destruction)
         end
     end
 

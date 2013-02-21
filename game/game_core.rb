@@ -29,6 +29,7 @@ class GameCore
         WordParser.read_raws(@words_db, @db)
 
         setup_world(args.merge(:core => self))
+        @awaiting_destruction = []
     end
 
     def teardown
@@ -53,6 +54,17 @@ class GameCore
 
     def create(type, hash = {})
         @db.create(self, type, hash)
+    end
+
+    def flag_for_destruction(object, destroyer)
+        @awaiting_destruction << [object, destroyer]
+    end
+
+    def destroy_flagged
+        @awaiting_destruction.each do |object, destroyer|
+            object.destroy(destroyer)
+        end
+        @awaiting_destruction.clear
     end
 
     # TICK MAINTENANCE
