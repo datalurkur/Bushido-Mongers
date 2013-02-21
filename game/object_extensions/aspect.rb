@@ -30,7 +30,7 @@ module Aspect
         def at_message(instance, message)
             case message.type
             when :tick
-                instance.current_tick += 1
+                instance.current_tick = instance.current_tick + 1
             end
         end
     end
