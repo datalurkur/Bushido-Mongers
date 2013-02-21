@@ -46,30 +46,9 @@ module Aspect
         _check(difficulty, attributes)
     end
 
-    private
-    def _check(difficulty, attributes)
-        Log.debug("Attempting to perform a #{difficulty} #{monicker} check")
-        @last_used  = @current_tick
-        base_intrinsic  = get_property(:intrinsic)
-
-        # A intrinsic may or may not be affected by another intrinsic or attribute
-        associated_attribute = class_info(:associated_attribute)
-        intrinsic = if associated_attribute
-            attribute_scaling = class_info(:attribute_scaling)
-            attribute_value   = attributes[associated_attribute].check(difficulty, attributes)
-            (attribute_value * attribute_scaling) + (base_intrinsic * (1.0 - attribute_scaling))
-        else
-            base_intrinsic
-        end
-
-        # Use intrinsic as a baseline, and allow familiarity to vary the outcome based on the variance
-        roll = make_check(intrinsic, class_info(:variance), get_property(:familiarity) || 0.0)
-        Log.debug("Rolled a #{roll}")
-        roll
-    end
-
     def current_tick;        @current_tick ||= 0;   end
     def current_tick=(val);  @current_tick = val;   end
+
     def last_used;           @last_used    ||= 0;   end
     def last_used=(val);     @last_used = val;      end
 
@@ -98,6 +77,28 @@ module Aspect
         set_property(:intrinsic, clamp(get_property(:intrinsic) + amount))
     end
 
+    private
+    def _check(difficulty, attributes)
+        Log.debug("Attempting to perform a #{difficulty} #{monicker} check")
+        @last_used  = @current_tick
+        base_intrinsic  = get_property(:intrinsic)
+
+        # A intrinsic may or may not be affected by another intrinsic or attribute
+        associated_attribute = class_info(:associated_attribute)
+        intrinsic = if associated_attribute
+            attribute_scaling = class_info(:attribute_scaling)
+            attribute_value   = attributes[associated_attribute].check(difficulty, attributes)
+            (attribute_value * attribute_scaling) + (base_intrinsic * (1.0 - attribute_scaling))
+        else
+            base_intrinsic
+        end
+
+        # Use intrinsic as a baseline, and allow familiarity to vary the outcome based on the variance
+        roll = make_check(intrinsic, class_info(:variance), get_property(:familiarity) || 0.0)
+        Log.debug("Rolled a #{roll}")
+        roll
+    end
+
     def clamp(thing)
         thing = [[thing, 1.0].min, 0.0].max
     end
@@ -116,7 +117,7 @@ module Skill
         def at_message(instance, message)
             case message.type
             when :tick
-                languish if (current_tick - last_used > get_property(:familiarity_loss))
+                instance.languish if (instance.current_tick - instance.last_used > instance.class_info(:familiarity_loss))
             end
         end
     end
@@ -126,7 +127,6 @@ module Skill
         _check(difficulty, attributes)
     end
 
-    private
     # Increase familiarity
     def practice(difficulty)
         # Use the difficulty of the training / task being performed to determine familiarity gain
