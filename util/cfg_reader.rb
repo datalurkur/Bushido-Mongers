@@ -32,7 +32,14 @@ module CFGReader
         end
 
         def parse_line(line)
-            k, v = line.strip.split(/\s+/)[0,2]
+            inflection = line.index(/\s/)
+            k = line[0...inflection].strip
+            v = line[inflection..-1].strip
+            if v[0,1] == "\"" && v[-1,1] == "\""
+                v = v[1...-1]
+            else
+                v = v.to_i
+            end
             [k.to_sym, v]
         end
     end

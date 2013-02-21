@@ -9,10 +9,10 @@ require './http/web_socket_client'
 class GameServer < Server
     include WebRenderer
 
-    def initialize(config={})
-        super(config)
-        @config[:web_port] = (@config[:web_port] || DEFAULT_HTTP_PORT).to_i
-        @config[:web_root] =  @config[:web_root] || DEFAULT_WEB_ROOT
+    def initialize(config_file)
+        super(config_file)
+        @config[:web_port] ||= DEFAULT_HTTP_PORT
+        @config[:web_root] ||= DEFAULT_WEB_ROOT
 
         @user_mutex  = Mutex.new
         @user_info   = {}
@@ -70,10 +70,22 @@ class GameServer < Server
             Log.warning(["Multiple sockets found for user #{username}", @user_info])
             nil
         elsif matching_sockets.size == 0
-            Log.warning("Socket not found for user #{username}")
             nil
         else
             matching_sockets.first
+        end
+    end
+
+    def send_to_client(socket, message)
+        unless socket
+            Log.warning("Can't send data to nonexistent socket")
+        end
+
+        unless !socket.closed? && super(socket, message)
+            @user_mutex.synchronize do
+                Log.warning("Failed to send data to #{@user_info[socket][:username].inspect}, clearing socket")
+                @user_info.delete(socket)
+            end
         end
     end
 
@@ -162,7 +174,12 @@ class GameServer < Server
                 else
                     lobby = WebEnabledLobby.new(message.lobby_name, password_hash, username, @web_server) do |user, message|
                         socket = get_socket_for_user(user)
-                        send_to_client(socket, message) unless socket.nil?
+                        if socket
+                            send_to_client(socket, message)
+                            true
+                        else
+                            false
+                        end
                     end
                     @lobbies << lobby
                     @user_mutex.synchronize {

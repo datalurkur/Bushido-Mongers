@@ -20,7 +20,7 @@ trap_signals do
     $server.stop if $server
 end
 
-$server = GameServer.new
+$server = GameServer.new("net")
 $server.start
 while $server.is_running?
     sleep 10

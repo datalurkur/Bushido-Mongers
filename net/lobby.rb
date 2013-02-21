@@ -50,8 +50,22 @@ class Lobby
         message.alter_params do |params|
             Descriptor.describe(params, character)
         end
-        Log.debug(message, 10)
-        @send_callback.call(username, message)
+
+        if !@send_callback.call(username, message)
+            Log.debug("No socket for user #{username}, client likely disconnected")
+            # No socket for user, start the countdown until they're booted from the game
+            @users[username][:timeout] ||= Time.now
+
+            # TODO - Read this from a config or something
+            timeout = 60
+            if (Time.now - @users[username][:timeout]) > timeout
+                # Boot the user
+                Log.info("#{username} timed out (#{timeout} seconds)")
+                remove_user(username)
+            end
+        elsif @users[username][:timeout]
+            @users[username].delete[:timeout]
+        end
     end
 
     def send_to_users(list, message)

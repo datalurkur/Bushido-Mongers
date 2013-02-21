@@ -18,7 +18,7 @@ Log.setup("Main", "local")
 require './game/test/character'
 recreate_test_character("test_user", "default")
 
-$server = GameServer.new
+$server = GameServer.new("test")
 $client = StackClient.new($client_config)
 
 trap_signals do
