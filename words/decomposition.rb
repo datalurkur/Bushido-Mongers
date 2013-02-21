@@ -51,7 +51,7 @@ module Words
     # verb => [[preposition, case], [preposition, case], ...]
     def self.decompose_phrases(args, pieces)
         Words.db.get_preps_for_verb(args[:verb]).each do |preposition, designation|
-            Log.debug([preposition, designation])
+            Log.debug([preposition, designation], 6)
             if pieces.size > 0
                 phrase = slice_prep_phrase(preposition, pieces)
                 args[designation] = phrase if phrase
@@ -70,7 +70,7 @@ module Words
     # N.B. modifies the pieces array
     def self.slice_prep_phrase(preposition, pieces)
         if (index = pieces.index(preposition))
-            Log.debug("Detected '#{preposition}' at #{index}")
+            Log.debug("Detected '#{preposition}' at #{index}", 6)
             pieces.slice!(index, 1)
             noun = slice_noun_phrase(index, pieces)
         end
@@ -89,7 +89,7 @@ module Words
         size = 0
 
         pieces[index..-1].each_with_index do |piece, i|
-            Log.debug([piece, i])
+            Log.debug([piece, i], 6)
             if Words::Sentence::Adjective.adjective?(piece)
                 Log.debug(["found adjective", piece])
                 adjectives << piece

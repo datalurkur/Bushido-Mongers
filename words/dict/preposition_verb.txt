@@ -1,0 +1,17 @@
+look at target
+attack with tool
+move to destination
+move nil destination
+travel to destination
+travel nil destination
+go to destination
+go nil destination
+walk to destination
+walk into destination
+walk nil destination
+leave for destination
+leave nil destination
+throw at destination
+attach to target
+pick up target
+wear on target
