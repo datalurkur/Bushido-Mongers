@@ -201,7 +201,7 @@ module Words
                         raise TypeError unless [String, Symbol].include?(hash[:monicker].class)
 
                         hash[:adjectives] = Adjective.descriptor_adjectives(noun)
-                        hash[:definite] == noun[:definite] if noun[:definite]
+                        hash[:definite] = noun[:definite] if noun[:definite]
                         hash[:possessor_info] = noun[:possessor_info]if noun[:possessor_info]
                     else
                         hash[:monicker] = noun
@@ -439,7 +439,7 @@ module Words
             end
 
             def self.needs_article?(noun)
-                !Noun.proper?(noun) && !Noun.pronoun?(noun)
+                !Noun.proper?(noun) && !Noun.pronoun?(noun) && ![:luck].include?(gen_noun_text(noun))
             end
 
             def self.proper?(noun)
@@ -556,7 +556,7 @@ module Words
         end
 
         class Article < Determiner
-            def initialize(noun, first_word=nil, definite=nil)
+            def initialize(noun, first_word = nil, definite = false)
                 if Article.article?(noun)
                     super(noun)
                 elsif definite || Noun.definite?(noun)
