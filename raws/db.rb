@@ -61,6 +61,15 @@ class ObjectDB
         Marshal.load(Marshal.dump(ret))
     end
 
+    def minimum_depth_of(type)
+        info = raw_info_for(type)
+        unless info[:abstract]
+            return 0
+        else
+            return info[:subtypes].collect { |s| minimum_depth_of(s) }.min
+        end
+    end
+
     private
     def set_info(type, datapoint, value)
         type_hash = raw_info_for(type)

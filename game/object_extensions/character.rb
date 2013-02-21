@@ -151,18 +151,22 @@ module Character
     end
 
     def set_user_callback(lobby, username)
+        Log.debug("Setting user callback for #{monicker}")
         @lobby    = lobby
         @username = username
     end
 
     def inform_user(message)
-        if @lobby
-            event_properties = message.params.merge(:event_type => message.type)
-            @lobby.send_to_user(@username, Message.new(:game_event, {:description => event_properties}))
+        unless @lobby
+            Log.error(caller)
         end
+        raise(StateError, "User callback not set for #{monicker}") unless @lobby
+        event_properties = message.params.merge(:event_type => message.type)
+        @lobby.send_to_user(@username, Message.new(:game_event, {:description => event_properties}))
     end
 
     def nil_user_callback
+        Log.debug("Clearing user callback for #{monicker}")
         @lobby    = nil
         @username = nil
     end
