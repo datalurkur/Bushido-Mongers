@@ -43,7 +43,7 @@ module Composition
                     :position_type => symmetric_part[:container_class],
                     :randomize     => true
                 }
-                @core.db.create(@core, symmetric_part[:object_type], params.merge(symmetric_params))
+                @core.create(symmetric_part[:object_type], params.merge(symmetric_params))
             end
         end
 
@@ -55,7 +55,7 @@ module Composition
             set_property(comp_type, already_created)
 
             to_be_created.each do |component|
-                @core.db.create(@core, component, params.merge(
+                @core.create(component, params.merge(
                     :position      => self,
                     :position_type => comp_type,
                     :randomize     => true

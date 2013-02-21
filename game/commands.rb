@@ -172,18 +172,143 @@ module Commands
                 :chance_to_hit => 1.0, # FIXME
                 :damage        => 5,   # FIXME
             })
+            core.destroy_flagged
         end
     end
 
     module Construct
         def self.stage(core, params)
-            #FIXME
-            raise(NotImplementedError)
+=begin
+            Here we need to take some combination of:
+                - a target contructable
+                - a list of components
+                - a technique
+                - a tool
+                - a location
+            and
+                a) Return more information about that thing (or query for more information about the intention)
+                b) Link those things into a recipe and prepare to construct it
+=end
+            Log.debug(["Player is attempting to construct an object with params", params])
+
+            if params[:target]
+                # If the player has a goal of what they want to make in mind, find the recipes for that thing and then see if the rest of the information given by the player is enough to establish which recipe they want to use
+                Log.debug("Target provided - #{params[:target].inspect}")
+
+                # Find a recipe (or throw an exception if there's a problem)
+                params[:recipe] = find_recipe(params)
+
+                # Now we have to check that the player actually has access to all of the stuff in the params
+                # TODO - Verify that find_objects can deal with abstract object types like :metal
+                Commands.find_objects(core, params, {
+                    :location   => [:position], # Location generally refers to something too large to carry
+                    :tool       => [:inventory, :body], # A tool might be in a hand or in a pocket
+                    :components => [:inventory, :body],
+                })
+
+                # Verify that the player has the skill needed to construct the thing
+                # FIXME
+
+                # TODO - Add something like minimum skill levels
+
+                # We have enough information to construct something!
+            else
+                # If the player gives only components / a technique / a location, provide some information about what they might possibly do with those things
+                Log.debug("Providing more information given no target")
+                # FIXME
+                raise(NotImplementedError)
+            end
         end
 
         def self.do(core, params)
             #FIXME
             raise(NotImplementedError)
+        end
+
+        def self.find_recipe(params)
+            # Get a list of recipes used to make the thing
+            # TODO - Use player knowledge of recipes here
+            # TODO - Include raws that are "called" other things
+            #  (Example: A "hood" is actually a head_armor made of cloth, but "hood" isn't an entry in the raws)
+            recipes = core.db.info_for(params[:target], :recipes)
+            Log.debug(["#{recipes.size} recipes found for #{params[:target].inspect} - ", recipes])
+            failure_string = "You don't know how to make a #{params[:target]}"
+            raise(FailedCommandError, "#{failure_string}.") if recipes.empty?
+
+            # Begin filtering the recipes based on parameters
+            if params[:technique]
+                failure_string.sub!("make", params[:technique])
+                recipes.select! { |r| r[:technique] == params[:technique] }
+                raise(NotImplementedError)
+                raise(FailedCommandError, "#{failure_string}, perhaps try a different technique.") if recipes.empty?
+            end
+            if params[:location]
+                failure_string += " at a #{params[:location]}"
+                recipes.select! { |r| r[:location] == params[:location] }
+                raise(NotImplementedError)
+                raise(FailedCommandError, "#{failure_string}, perhaps try a different location.") if recipes.empty?
+            end
+            if params[:tool]
+                failure_string += " with a #{params[:tool]}"
+                recipes.select! { |r| r[:tool] == params[:tool] }
+                raise(NotImplementedError)
+                raise(FailedCommandError, "#{failure_string}, perhaps try a different tool.") if recipes.empty?
+            end
+            if params[:components]
+                failure_string += " using #{params[:components].dup.insert(-2, "and").join(", ")}"
+                params[:components].each do |component|
+                    recipes.select! { |r| r[:components].include?(component) }
+                end
+                raise(NotImplementedError)
+                raise(FailedCommandError, "#{failure_string}, perhaps try different components.") if recipes.empty?
+            end
+
+            if recipes.size > 1
+                # The parameters are ambiguous
+                distinct_locations  = recipes.collect { |r| r[:location]  }.uniq
+                distinct_tools      = recipes.collect { |r| r[:tool]      }.uniq
+                distinct_techniques = recipes.collect { |r| r[:technique] }.uniq
+                # FIXME - Return some interesting information about *why* the command fails here
+                # Example: If all of the recipes have the same tool, ask the player to be more specific with the components (since the tool probably isn't what needs to change)
+                raise(NotImplementedError)
+            end
+
+            recipe = recipes.first
+
+            # FIXME - Add logging
+
+            # If we had enough parameters to select a recipe, but some were left blank, fill in the missing pieces in the parameters before object lookup
+            [:tool, :location, :technique].each do |key|
+                params[key] ||= recipe[key] if recipe[key]
+            end
+            # Components are a bit funky, since we have to care about incomplete component lists, and generic components ("metal" instead of "iron")
+            missing_components = []
+            unused_components = params[:components].dup
+            sorted_components = recipe[:components].sort do |x,y|
+                core.db.minimum_depth_of(x) <=> core.db.minimum_depth_of(y)
+            end
+            sorted_components.each do |component|
+                match = nil
+                unused_components.each do |unused|
+                    if core.db.is_type?(unused, component)
+                        match = unused
+                        break
+                    end
+                end
+                if match
+                    unused_components.delete(match)
+                else
+                    missing_components << component
+                end
+            end
+
+            unless unused_components.empty?
+                # The user specified some components that can't be used
+                raise(FailedCommandError, "Some components could not be used")
+            end
+            params[:components].concat(missing_components)
+
+            return recipe
         end
     end
 end

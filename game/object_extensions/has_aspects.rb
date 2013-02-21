@@ -46,7 +46,7 @@ module HasAspects
     def add_attribute(attribute, params={})
         @attributes ||= {}
         raise(UnknownType, "#{attribute} is not an attribute.") unless @core.db.is_type?(attribute, :attribute)
-        @attributes[attribute] = @core.db.create(@core, attribute, params)
+        @attributes[attribute] = @core.create(attribute, params)
     end
 
     def add_skill(skill, params={})
@@ -55,7 +55,7 @@ module HasAspects
         raise(UnknownType, "#{skill} is not a skill.") unless @core.db.is_type?(skill_raw_name, :skill)
 
         # TODO - mod bonuses based on attributes
-        @skills[skill] = @core.db.create(@core, skill_raw_name, params)
+        @skills[skill] = @core.create(skill_raw_name, params)
     end
 
     def has_attribute?(attribute)

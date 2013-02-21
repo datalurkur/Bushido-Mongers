@@ -36,7 +36,7 @@ module Corporeal
             return
         end
         body_type = class_info(:body_type)
-        @core.db.create(@core, body_type, {
+        @core.create(body_type, {
             :relative_size => get_property(:size),
             :position      => self,
             :position_type => :incidental
@@ -70,9 +70,9 @@ module Corporeal
         if target.hp <= 0
             if get_property(:incidental).include?(target)
                 Log.debug("Destroying body of #{monicker}")
-                destroy(attacker)
+                @core.flag_for_destruction(self, attacker)
             end
-            target.destroy(attacker)
+            @core.flag_for_destruction(target, attacker)
         end
     end
 end

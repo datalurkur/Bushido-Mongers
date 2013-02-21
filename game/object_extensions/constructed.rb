@@ -43,7 +43,7 @@ module Constructed
         # Choose a random recipe
         recipe = class_info(:recipes).rand
         recipe[:components].collect do |component|
-            @core.db.create(@core, @core.db.random(component), p)
+            @core.create(@core.db.random(component), p)
         end
     end
 end

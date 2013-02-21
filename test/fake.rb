@@ -3,6 +3,9 @@ class FakeCore
     def initialize(db)
         @db = db
     end
+    def create(type, hash)
+        @db.create(self, type, hash)
+    end
 end
 
 class FakeRoom
