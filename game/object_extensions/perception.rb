@@ -65,9 +65,9 @@ module Perception
             if number
                 return potentials[number - 1]
             else
+                Log.debug(["Found multiple matches", potentials])
+                return potentials.first
                 # TODO - We should try re-searching here based on other descriptive information/heuristics.
-                Log.debug(potentials)
-                raise(AmbiguousMatchError, "Multiple #{type_class} objects found.")
             end
         end
     end
