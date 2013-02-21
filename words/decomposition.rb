@@ -103,6 +103,10 @@ module Words
                 #    first_part + [pieces[(i-1)..(i+1)]] + last_part
                 #end
                 Log.debug(["found noun", piece])
+                if noun
+                    # It must be an adjective, instead.
+                    adjectives << noun
+                end
                 noun = piece
                 size += 1
             else
