@@ -41,6 +41,11 @@ module Commands
                 missing_params.each do |missing|
                     case missing
                     when :target
+                        clarify_string += " what"
+                    when :tool
+                        clarify_string += " with what"
+                    when :location
+                        clarification_string += " where"
                     else
                         Log.error("Can't format parameter #{missing}")
                     end
