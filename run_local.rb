@@ -3,9 +3,10 @@ require './util/timer'
 require './net/game_server'
 require './net/stack_client'
 
+config = CFGReader.read("test")
 $client_config = {
     :server_hostname => "localhost",
-    :server_port     => DEFAULT_LISTEN_PORT,
+    :server_port     => config[:listen_port],
     :username        => "test_user",
     :password        => "stack_pass",
     :lobby_name      => "test_lobby",
@@ -18,7 +19,7 @@ Log.setup("Main", "local")
 require './game/test/character'
 recreate_test_character("test_user", "default")
 
-$server = GameServer.new
+$server = GameServer.new("test")
 $client = StackClient.new($client_config)
 
 trap_signals do

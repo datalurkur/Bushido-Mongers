@@ -9,12 +9,12 @@ require './util/cfg_reader'
 # Listens for new connections in a separate thread
 # Polls sockets for input on separate threads, for this reason, sockets should be modified and closed using the provided APIs
 class Server
-    def initialize(config={})
+    def initialize(config_file)
         @running = false
-        @config  = config.merge(CFGReader.read("net"))
-        @config[:buffer_size] = (@config[:buffer_size] || DEFAULT_BUFFER_SIZE).to_i
-        @config[:listen_port] = (@config[:listen_port] || DEFAULT_LISTEN_PORT).to_i
-        @config[:irc_port]    = (@config[:irc_port]    || DEFAULT_IRC_PORT).to_i
+        @config  = CFGReader.read(config_file)
+        @config[:buffer_size] ||= DEFAULT_BUFFER_SIZE
+        @config[:listen_port] ||= DEFAULT_LISTEN_PORT
+        @config[:irc_port]    ||= DEFAULT_IRC_PORT
         @message_buffer = MessageBuffer.new
     end
 
@@ -83,24 +83,17 @@ class Server
         @message_buffer.report
     end
 
-    def terminate_client(socket)
-        Log.debug("Terminating client socket")
-        @sockets_mutex.synchronize do
-            unless @client_sockets[socket].nil?
-                @client_sockets[socket].kill if @client_sockets[socket].alive?
-                socket.close unless socket.closed?
-                @client_sockets.delete(socket)
-            end
-        end
-    end
-
     def set_client_info(socket,info)
         @sockets_mutex.synchronize { @client_sockets[socket] = info }
     end
 
-    def clear_client_info(socket)
-        socket.close
-        @sockets_mutex.synchronize { @client_sockets.delete(socket) }
+    def terminate_client(socket)
+        Log.debug("Terminating client socket")
+        socket.close unless socket.closed?
+        @sockets_mutex.synchronize do
+            @client_sockets[socket].kill if @client_sockets[socket] && @client_sockets[socket].alive?
+            @client_sockets.delete(socket)
+        end
     end
 
     def spawn_thread_for(socket)
@@ -136,7 +129,7 @@ class Server
             rescue Exception => e
                 Log.error("Thread exited abnormally (#{e.class} : #{e.message})")
             end
-            clear_client_info(socket)
+            terminate_client(socket)
         end
     end
 
@@ -145,9 +138,11 @@ class Server
             #Log.debug("Packing message #{message.type} for client", 8)
             packed_data = @message_buffer.pack_message(message)
             socket.write_nonblock(packed_data)
+            return true
         rescue Exception => e
             Log.debug(["Failed to send data to client", e.message, e.backtrace])
-            clear_client_info(socket)
+            terminate_client(socket)
+            return false
         end
     end
 

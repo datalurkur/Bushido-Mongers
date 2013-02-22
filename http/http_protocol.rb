@@ -71,6 +71,7 @@ class HTTP
                     # FIXME - Broken on IE
                     @data = @data.deflate
                     @headers["Content-Encoding"] = "deflate"
+                when nil
                 else
                     Log.error("Unknown compression type #{@use_compressiong}")
                 end
