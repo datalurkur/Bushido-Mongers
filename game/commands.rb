@@ -61,6 +61,12 @@ module Commands
                     lookup_locs
                 )
             end
+
+            params.keys.select { |p| params[p].is_a?(Array) }.each do |p|
+                Log.debug("Parameter #{p.inspect} found from text but not searched for! Add searching for this parameter to #{params[:command]}.")
+                # FIXME - there might be valid reasons to return an array... Handle this in a more robust way.
+                params.delete(p)
+            end
         end
     end
 
@@ -188,6 +194,8 @@ module Commands
     module Attack
         def self.stage(core, params)
             Commands.find_objects(core, params, :target => [:position])
+            # FIXME - use default if no :tool specified!
+            #Commands.find_objects(core, params, :tool => [:inventory, :body])
         end
 
         def self.do(core, params)
