@@ -66,7 +66,7 @@ class Message
         def check_message(type, args)
             raise(ArgumentError, "Unknown message type #{type}") unless type_defined?(type)
             required_args(type).each do |arg|
-                unless args.has_key?(arg) && args[arg]
+                unless args.has_key?(arg) && !args[arg].nil?
                     raise(ArgumentError, "#{arg} required for message type #{type.inspect}.")
                 end
             end
