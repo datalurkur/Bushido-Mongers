@@ -65,6 +65,8 @@ Message.define(:admin_change,        :lobby, [:result], "Admin changed")        
 # Gameplay Protocol
 # Interactions between a client and the game lobby
 Message.define(:act,           :game, [:command])
+Message.define(:act_clarify,   :game, [:text])
+Message.define(:clarification, :game, [:command])
 Message.define(:act_fail,      :game, [:reason], "Failed to perform action")
 Message.define(:act_success,   :game, [:description])
 Message.define(:game_event,    :game, [:description])

@@ -13,7 +13,9 @@ module Commands
 
         def stage(core, command, params)
             mod = get_command_module(core, command)
-            SharedObjectExtensions.check_required_params(params, [:agent])
+            unless params[:agent] && params[:command]
+                raise(ArgumentError, "An agent and a command must be present for a command to be staged")
+            end
             mod.stage(core, params)
             # Return the resolved parameters
             params.merge(:command => command)
@@ -30,7 +32,22 @@ module Commands
         #  value: where to look for the object, in order.
         # Takes optional parameter value :'key'_type_class, where 'key' is a key of :needed.
         def find_objects(core, params, filters)
-            SharedObjectExtensions.check_required_params(params, filters.keys + [:agent, :command])
+            missing_params = []
+            filters.keys.each do |req|
+                missing_params << req unless params[req]
+            end
+            unless missing_params.empty?
+                clarify_string = "#{params[:command].title}"
+                missing_params.each do |missing|
+                    case missing
+                    when :target
+                    else
+                        Log.error("Can't format parameter #{missing}")
+                    end
+                end
+                clarify_string += "?"
+                raise(AmbiguousCommandError, clarify_string)
+            end
 
             filters.each do |p, lookup_locs|
                 params[p] = params[:agent].find_object(
@@ -122,7 +139,9 @@ module Commands
 
     module Move
         def self.stage(core, params)
-            SharedObjectExtensions.check_required_params(params, [:destination])
+            unless params[:destination]
+                raise(AmbiguousCommandError, "#{params[:command].title} where? (north, south, east, west)")
+            end
             destination, adjectives = params[:destination]
 
             position = params[:agent].absolute_position
@@ -163,9 +182,6 @@ module Commands
 
     module Attack
         def self.stage(core, params)
-            SharedObjectExtensions.check_required_params(params, [:target])
-
-            # The target is an object and needs to be resolved
             Commands.find_objects(core, params, :target => [:position])
         end
 
