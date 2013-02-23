@@ -88,7 +88,7 @@ module Words
         pieces[index..-1].each_with_index do |piece, i|
             Log.debug([piece, i], 6)
             if Words::Sentence::Adjective.adjective?(piece)
-                Log.debug(["found adjective", piece])
+                Log.debug(["found adjective", piece], 6)
                 adjectives << piece
                 size += 1
             elsif Words::Sentence::Noun.noun?(piece) ||
@@ -102,7 +102,7 @@ module Words
                 #    last_part  = (i < pieces.size - 2) ? pieces[(i+1)..-1] : []
                 #    first_part + [pieces[(i-1)..(i+1)]] + last_part
                 #end
-                Log.debug(["found noun", piece])
+                Log.debug(["found noun", piece], 6)
                 if noun
                     # It must be an adjective, instead.
                     adjectives << noun
@@ -110,7 +110,7 @@ module Words
                 noun = piece
                 size += 1
             else
-                Log.debug(["invalid piece", piece])
+                Log.debug(["invalid piece", piece], 6)
                 break
             end
         end

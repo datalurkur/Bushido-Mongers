@@ -83,6 +83,32 @@ module HasAspects
         @skills[skill]
     end
 
+    def get_aspect(aspect)
+        has_attribute?(aspect) ? attribute(aspect) :
+        has_skill?(aspect)     ? skill(aspect) : nil
+    end
+
+    # -- #
+
+    def make_check(aspect_sym, difficulty = Difficulty.standard)
+        aspect = get_aspect(aspect_sym)
+        raise "No aspect #{aspect.monicker} on #{self.monicker}!" if aspect.nil?
+
+        aspect.improve(difficulty) if has_skill?(aspect_sym)
+        aspect.check(difficulty, @attributes)
+    end
+
+    # FIXME - right now difficulty affects aspect, associate attribute, AND opposer difficulty.
+    def opposed_check(aspect, difficulty, opposer, opposed_aspect)
+        roll = make_check(aspect, difficulty)
+        # If opposer hasn't aspects, just do a regular difficulty check.
+        opposed_roll =  opposer.respond_to?(:make_check) ?
+                        opposer.make_check(opposed_aspect, difficulty) :
+                        Difficulty.value_of(difficulty)
+        Log.debug([roll, opposed_roll], 6)
+        return roll > opposed_roll
+    end
+
     # Find a list of modifiers to the default attributes whose total fits within the range.
     def generate_variances(default_values, variance_per_value, relative_offset)
         num_values = default_values.size

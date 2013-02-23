@@ -118,7 +118,7 @@ module Words
                     # Eventually this will be more complex, and describe either
                     # how the blow was evaded (parry, blocked, hit armor, etc)
                     # or how and where the blow hit.
-                    if args[:success]
+                    if args[type]
                         super(:",", :hitting)
                     else
                         super(:",", :missing)

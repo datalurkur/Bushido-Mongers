@@ -199,12 +199,26 @@ module Commands
         end
 
         def self.do(core, params)
-            Log.debug("#{params[:agent].monicker} attacks #{params[:target].monicker}")
+            attacker = params[:agent]
+            defender = params[:target]
+            Log.debug("#{attacker.monicker} attacks #{defender.monicker}")
+
+            # TODO - make skill used based on weapon used
+            success = if attacker.type_ancestry.include?(:has_aspects) && attacker.has_skill?(:fighting)
+                # defender has_aspects checked in opposed_check.
+                attacker.opposed_check(:fighting, Difficulty.standard, defender, :defense)
+            else
+                # No attributes? Make a normal difficulty roll to hit.
+                (rand > Difficulty.value_of(Difficulty.standard))
+            end
+            Log.debug("Success!") if success
+
             Message.dispatch(core, :unit_attacks, {
                 :attacker      => params[:agent],
                 :defender      => params[:target],
-                :chance_to_hit => 1.0, # FIXME
+                :success       => success,
                 :damage        => 5,   # FIXME
+                :result_hash   => {}   # FIXME
             })
             core.destroy_flagged
         end

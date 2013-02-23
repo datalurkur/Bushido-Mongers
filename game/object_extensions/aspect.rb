@@ -37,8 +37,8 @@ module Aspect
 
     def attempt(difficulty, attributes)
         roll = check(difficulty, attributes)
-        Log.debug(["Rolled #{roll} from attribute", self])
-        (roll > Difficulty.value_of(difficulty))
+        Log.debug(["Rolled #{roll} from attribute", self.type])
+        roll > Difficulty.value_of(difficulty)
     end
 
     # TODO - Fix this ugly hack
@@ -80,7 +80,6 @@ module Aspect
 
     private
     def _check(difficulty, attributes)
-        Log.debug("Attempting to perform a #{difficulty} #{monicker} check")
         @last_used  = @current_tick
         base_intrinsic  = get_property(:intrinsic)
 
@@ -96,7 +95,7 @@ module Aspect
 
         # Use intrinsic as a baseline, and allow familiarity to vary the outcome based on the variance
         roll = make_check(intrinsic, class_info(:variance), get_property(:familiarity) || 0.0)
-        Log.debug("Rolled a #{roll}")
+        Log.debug("Rolled a #{roll} for a #{difficulty} #{monicker} check", 6)
         roll
     end
 
