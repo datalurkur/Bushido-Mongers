@@ -55,6 +55,7 @@ module Words
         sentences = [gen_sentence(args)]
 
 #        sentences << gen_sentence(args[:result_hash])
+        sentences.join(" ")
     end
 
 

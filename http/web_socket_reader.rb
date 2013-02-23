@@ -16,7 +16,9 @@ class WebSocketPayload
         @mask   = mask
         @length = data.length
 
-        raise(ArgumentError, "Invalid data format") unless (String === data)
+        unless (String === data)
+            raise(ArgumentError, "Invalid data format: #{data.class}\n#{data.inspect}")
+        end
 
         if @mask
             @data = data
