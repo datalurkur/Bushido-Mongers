@@ -1,33 +1,36 @@
 require './state/state'
 
 class PlayingState < State
-    def setup_exchanges; end
+    def setup_exchanges
+        @clarification = define_exchange(:text_field, {:field => :clarification}) do |data|
+            Log.info("Clarified : #{data.inspect}")
+            @client.send_to_server(Message.new(:clarification, {:command => data}))
+        end
+    end
     def make_current; end
 
     def from_server(message)
         case message.type
         when :link
             @client.send_to_client(Message.new(:properties, {:field => :server_link, :properties => {:host => @client.get(:server_hostname), :uri => message.uri}}))
-            return
         when :user_joins, :user_leaves, :admin_change
             pass_to_client(message)
-            return
+        when :act_clarify
+            pass_to_client(message)
+            begin_exchange(@clarification)
         when :act_fail
             # FIXME - Use a sentence to describe the result
             pass_to_client(message)
-            return
         when :act_success
             @client.send_to_client(Message.new(:properties, {:field => :action_results, :properties => message.description}))
-            return
         when :game_event
             @client.send_to_client(Message.new(:properties, {:field => :game_event, :properties => message.description}))
-            return
         when :user_dies
             pass_to_client(message)
             @client.set_state(LobbyState.new(@client)) if message.result == @client.get(:username)
-            return
+        else
+            super(message)
         end
-        super(message)
     end
 
     def from_client(message)

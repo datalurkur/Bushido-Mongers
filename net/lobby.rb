@@ -209,6 +209,33 @@ class Lobby
         end
     end
 
+    def perform_action(username, params, allow_clarification=true)
+        command = params[:command]
+
+        begin
+            Log.debug("Performing command #{command}", 8)
+            character = @game_core.get_character(username)
+
+            params = Commands.stage(@game_core, command, params.merge(:agent => character))
+            send_to_user(username, Message.new(:act_success, {:description => params}))
+        rescue Exception => e
+            Log.debug(["Failed to stage command #{command}", e.message])
+            if AmbiguousCommandError === e && allow_clarification
+                send_to_user(username, Message.new(:act_clarify, {:text => e.message}))
+            else
+                send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
+            end
+            return
+        end
+
+        begin
+            Commands.do(@game_core, command, params)
+        rescue Exception => e
+            Log.error(["Failed to perform command #{command}", e.message, e.backtrace])
+            send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
+        end
+    end
+
     def process_message(message, username=nil)
         case message.message_class
         when :lobby; process_lobby_message(message, username)
@@ -253,28 +280,16 @@ class Lobby
         end
 
         case message.type
+        when :clarification
+            Log.error("FIXME")
+            # Just assume an affirmative response with no clarification and proceed
+            perform_action(username, @users[username][:last_action_params], false)
         when :act
             Log.debug("Parsing action message", 8)
             params = Words.decompose_command(message.command)
-            command = params[:command]
 
-            begin
-                Log.debug("Performing command", 8)
-                character = @game_core.get_character(username)
-
-                params = Commands.stage(@game_core, command, params.merge(:agent => character))
-                send_to_user(username, Message.new(:act_success, {:description => params}))
-            rescue Exception => e
-                Log.debug(["Failed to stage command #{command}", e.message])
-                send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
-                return
-            end
-
-            begin
-                Commands.do(@game_core, command, params)
-            rescue Exception => e
-                Log.error(["Failed to perform command #{command}", e.message, e.backtrace])
-            end
+            @users[username][:last_action_params] = params.dup
+            perform_action(username, params)
         else
             Log.warning("Unhandled game message type #{message.type} received from client")
         end

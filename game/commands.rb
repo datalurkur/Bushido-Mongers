@@ -13,7 +13,9 @@ module Commands
 
         def stage(core, command, params)
             mod = get_command_module(core, command)
-            SharedObjectExtensions.check_required_params(params, [:agent])
+            unless params[:agent] && params[:command]
+                raise(ArgumentError, "An agent and a command must be present for a command to be staged")
+            end
             mod.stage(core, params)
             # Return the resolved parameters
             params.merge(:command => command)
@@ -30,7 +32,27 @@ module Commands
         #  value: where to look for the object, in order.
         # Takes optional parameter value :'key'_type_class, where 'key' is a key of :needed.
         def find_objects(core, params, filters)
-            SharedObjectExtensions.check_required_params(params, filters.keys + [:agent, :command])
+            missing_params = []
+            filters.keys.each do |req|
+                missing_params << req unless params[req]
+            end
+            unless missing_params.empty?
+                clarify_string = "#{params[:command].title}"
+                missing_params.each do |missing|
+                    case missing
+                    when :target
+                        clarify_string += " what"
+                    when :tool
+                        clarify_string += " with what"
+                    when :location
+                        clarification_string += " where"
+                    else
+                        Log.error("Can't format parameter #{missing}")
+                    end
+                end
+                clarify_string += "?"
+                raise(AmbiguousCommandError, clarify_string)
+            end
 
             filters.each do |p, lookup_locs|
                 params[p] = params[:agent].find_object(
@@ -38,6 +60,12 @@ module Commands
                     params[p],
                     lookup_locs
                 )
+            end
+
+            params.keys.select { |p| params[p].is_a?(Array) }.each do |p|
+                Log.debug("Parameter #{p.inspect} found from text but not searched for! Add searching for this parameter to #{params[:command]}.")
+                # FIXME - there might be valid reasons to return an array... Handle this in a more robust way.
+                params.delete(p)
             end
         end
     end
@@ -122,7 +150,9 @@ module Commands
 
     module Move
         def self.stage(core, params)
-            SharedObjectExtensions.check_required_params(params, [:destination])
+            unless params[:destination]
+                raise(AmbiguousCommandError, "#{params[:command].title} where? (north, south, east, west)")
+            end
             destination, adjectives = params[:destination]
 
             position = params[:agent].absolute_position
@@ -163,10 +193,9 @@ module Commands
 
     module Attack
         def self.stage(core, params)
-            SharedObjectExtensions.check_required_params(params, [:target])
-
-            # The target is an object and needs to be resolved
             Commands.find_objects(core, params, :target => [:position])
+            # FIXME - use default if no :tool specified!
+            #Commands.find_objects(core, params, :tool => [:inventory, :body])
         end
 
         def self.do(core, params)

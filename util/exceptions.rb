@@ -9,4 +9,5 @@ class NoMatchError < GameError; end
 class StateError < GameError; end
 class UnexpectedBehaviorError < GameError; end
 class UnknownType < GameError; end
+class AmbiguousCommandError < GameError; end
 class FailedCommandError < GameError; end
