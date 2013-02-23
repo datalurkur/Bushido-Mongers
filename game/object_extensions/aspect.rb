@@ -37,6 +37,7 @@ module Aspect
 
     def attempt(difficulty, attributes)
         roll = check(difficulty, attributes)
+        Log.debug(["Rolled #{roll} from attribute", self])
         (roll > Difficulty.value_of(difficulty))
     end
 
@@ -71,9 +72,9 @@ module Aspect
 
     # Increase intrinsic
     def improve(difficulty)
-        # Use the difficulty of the training / task being performed to determine intrinsic gain
-        # FIXME
-        raise(NotImplementedError)
+        difficulty = Difficulty.value_of(difficulty) if Symbol === difficulty
+
+        amount = 0.0025 * (1 - get_property(:intrinsic))**2 * difficulty
         set_property(:intrinsic, clamp(get_property(:intrinsic) + amount))
     end
 
