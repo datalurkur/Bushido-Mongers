@@ -43,71 +43,61 @@ module WordParser
         raise(ArgumentError, "Cannot find #{dict_dir}.") unless File.exists?(dict_dir) && File.directory?(dict_dir)
 
         db = nil
-        time_block("Words loaded") do
-            db = WordDB.new
+        db = WordDB.new
 
-            time_block("Word types parsed") do
-                Words::TYPES.each do |type|
-                    load_files(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/).each do |keyword, lines|
-                        lines.map(&:chomp).each { |l| db.add_keyword_family(keyword, type => l) }
-                    end
-                end
+        Words::TYPES.each do |type|
+            load_files(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/).each do |keyword, lines|
+                lines.map(&:chomp).each { |l| db.add_keyword_family(keyword, type => l) }
             end
-
-            time_block("Word associations parsed") do
-                load_files(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/).each do |pos, lines|
-                    lines.each do |line|
-                        families = line.split(/\s+/).map(&:to_sym).collect { |word| {pos => word} }
-                        db.add_family(*families)
-                    end
-                end
-            end
-
-            time_block("New prepositions parsed") do
-                # nil corresponds to no preposition; i.e. usually the direct object
-                load_files(dict_dir, "preposition_base.txt").each do |match, lines|
-                    lines.each do |line|
-                        words = line.split(/\s+/).map(&:to_sym)
-                        raise "Specifier '#{words.inspect}' should be 2 words!" unless words.size == 2
-                        preposition, designation = words
-                        preposition = nil if preposition == :nil
-                        db.add_default_preposition(preposition, designation)
-                        db.add_family(:preposition => preposition) if preposition
-                    end
-                end
-
-                load_files(dict_dir, "preposition_verb.txt").each do |match, lines|
-                    lines.each do |line|
-                        words = line.split(/\s+/).map(&:to_sym)
-                        raise "Specifier '#{words.inspect}' should be 3 words!" unless words.size == 3
-                        verb, preposition, designation = words
-                        preposition = nil if preposition == :nil
-                        db.add_verb_preposition(verb, preposition, designation)
-                        db.add_family(:preposition => preposition) if preposition
-                    end
-                end
-            end
-
-            time_block("Conjugations parsed") do
-                load_files(dict_dir, "conjugations.txt").each do |match, lines|
-                    lines.each do |line|
-                        words = line.split(/\s+/)
-                        infinitive = words.shift.to_sym
-
-                        # add infinitive as a verb
-                        db.add_family(:verb => infinitive)
-
-                        # Convert properties ("present,second") into a State
-                        properties = words.shift.split(",").map(&:to_sym)
-                        state = Words::State.new(properties)
-
-                        db.add_conjugation_by_person(infinitive, state, words.map(&:to_sym))
-                    end
-                end
-            end
-
-            Words.register_db(db)
         end
+
+        load_files(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/).each do |pos, lines|
+            lines.each do |line|
+                families = line.split(/\s+/).map(&:to_sym).collect { |word| {pos => word} }
+                db.add_family(*families)
+            end
+        end
+
+        # nil corresponds to no preposition; i.e. usually the direct object
+        load_files(dict_dir, "preposition_base.txt").each do |match, lines|
+            lines.each do |line|
+                words = line.split(/\s+/).map(&:to_sym)
+                raise "Specifier '#{words.inspect}' should be 2 words!" unless words.size == 2
+                preposition, designation = words
+                preposition = nil if preposition == :nil
+                db.add_default_preposition(preposition, designation)
+                db.add_family(:preposition => preposition) if preposition
+            end
+        end
+
+        load_files(dict_dir, "preposition_verb.txt").each do |match, lines|
+            lines.each do |line|
+                words = line.split(/\s+/).map(&:to_sym)
+                raise "Specifier '#{words.inspect}' should be 3 words!" unless words.size == 3
+                verb, preposition, designation = words
+                preposition = nil if preposition == :nil
+                db.add_verb_preposition(verb, preposition, designation)
+                db.add_family(:preposition => preposition) if preposition
+            end
+        end
+
+        load_files(dict_dir, "conjugations.txt").each do |match, lines|
+            lines.each do |line|
+                words = line.split(/\s+/)
+                infinitive = words.shift.to_sym
+
+                # add infinitive as a verb
+                db.add_family(:verb => infinitive)
+
+                # Convert properties ("present,second") into a State
+                properties = words.shift.split(",").map(&:to_sym)
+                state = Words::State.new(properties)
+
+                db.add_conjugation_by_person(infinitive, state, words.map(&:to_sym))
+            end
+        end
+
+        Words.register_db(db)
 
         db
     end
