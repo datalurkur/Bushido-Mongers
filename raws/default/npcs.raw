@@ -40,7 +40,7 @@ abstract npc guard {
 guard,corporeal peacekeeper {
     size medium;
     body_type humanoid_body;
-    factions peaceful_unless_provoked;
+    factions peaceful;
     provocations lie attack steal kill;
 }
 

@@ -1,8 +1,12 @@
 /* Must be of type npc to spawn */
-abstract karmic,aligned,position npc {
+abstract karmic,aligned,position,has_aspects npc {
     has optional sym behavior;
 
     uses npc_behavior perception;
+
+    attributes strength perception endurance charisma intelligence agility luck;
+
+    skills fighting defense;
 
     class_many sym spawns_in;
 

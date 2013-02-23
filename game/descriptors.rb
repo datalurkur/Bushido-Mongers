@@ -30,6 +30,7 @@ class Descriptor
     class BushidoObjectDescriptor
         def self.describe(object, observer)
             # FIXME - Take the observer into account
+            # TODO - SERIOUSLY obfuscate details if object is :hidden
             d = {
                 :type => object.type
             }

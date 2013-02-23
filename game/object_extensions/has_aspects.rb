@@ -92,7 +92,7 @@ module HasAspects
 
     def make_check(aspect_sym, difficulty = Difficulty.standard)
         aspect = get_aspect(aspect_sym)
-        raise "No aspect #{aspect.monicker} on #{self.monicker}!" if aspect.nil?
+        raise "No aspect #{aspect_sym} on #{self.monicker}!" if aspect.nil?
 
         aspect.improve(difficulty) if has_skill?(aspect_sym)
         aspect.check(difficulty, @attributes)
