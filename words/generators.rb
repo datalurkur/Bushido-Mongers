@@ -12,13 +12,6 @@ module Words
         subject = args[:subject] || args[:agent]
         verb    = args[:verb] || args[:action] || args[:command]
 
-        # Check event types and set verb accordingly
-        if args[:event_type] == :unit_attacks
-            verb          = :attack
-            subject       = args[:attacker]
-            args[:target] = args[:defender]
-        end
-
         # Subject is you in second person
         if !subject && args[:state].person == :second
             subject = :you
@@ -52,6 +45,18 @@ module Words
 
         Sentence.new(subject_np, verb_np).to_s
     end
+
+    def self.describe_attack(args = {})
+        # TODO - reach into result_hash and pick verb
+        args[:action] = :attack
+        args[:agent]  = args[:attacker]
+        args[:target] = args[:defender]
+
+        sentences = [gen_sentence(args)]
+
+#        sentences << gen_sentence(args[:result_hash])
+    end
+
 
     private
     def self.possessor_info(possessor)

@@ -97,7 +97,7 @@ module Words
         # Types: prepositional (during), infinitive (to work hard)
         # adpositions: preposition (by jove), circumpositions (from then on).
         class AdverbPhrase < ParseTree::PTInternalNode
-            USED_ARGS = [:target, :tool, :destination, :receiver, :result]
+            USED_ARGS = [:target, :tool, :destination, :receiver, :success]
 
             # The type is the part of the args being used to generate an adverb phrase.
             # args must be defined.
@@ -114,14 +114,13 @@ module Words
                     super(noun_phrase_with_prep(type, args))
                     # In Modern English, an indirect object is often expressed with a prepositional phrase of "to" or "for". If there is a direct object, the indirect object can be expressed by an object pronoun placed between the verb and the direct object. For example, "He gave that to me" and "He built a snowman for me" are the same as "He gave me that" and "He built me a snowman". 
                     raise NotImplementedError
-                when :result
+                when :success
                     # Eventually this will be more complex, and describe either
                     # how the blow was evaded (parry, blocked, hit armor, etc)
                     # or how and where the blow hit.
-                    case args[type]
-                    when :hit
+                    if args[:success]
                         super(:",", :hitting)
-                    when :miss
+                    else
                         super(:",", :missing)
                     end
                 end
