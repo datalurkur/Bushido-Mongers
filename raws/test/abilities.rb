@@ -15,10 +15,10 @@ aspect_list.each do |aspect|
 end
 
 [
-    [:strength,              :easy],
-    [:agility,               :simple],
-    [:hide_skill,            :normal],
-    [:fighting_skill,        :trivial]
+    [:strength,                 :easy],
+    [:agility,                  :simple],
+    [:hide_skill,               :normal],
+    [:intrinsic_fighting_skill, :trivial]
 ].each do |aspect, difficulty|
     Log.debug("Attempting to #{aspect} with difficulty #{difficulty}")
     result = aspects[aspect].attempt(difficulty, aspects)

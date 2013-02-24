@@ -1,0 +1,86 @@
+/* http://en.wikipedia.org/wiki/Kory%C5%AB */
+abstract no_skill fighting_skill {
+    default_intrinsic 0.2;
+    default_familiarity 0.0;
+
+    associated_attribute strength;
+    attribute_scaling 0.2;
+
+    class optional sym japanese_name;
+
+    class_many optional sym weapons;
+}
+
+fighting_skill intrinsic_fighting_skill {
+    associated_attribute strength;
+    attribute_scaling 0.2;
+}
+
+/* Yes, karate and kendo didn't exist until the 20th century. Too bad! */
+fighting_skill empty_hand_fighting_skill {
+    japanese_name karate;
+    weapons hand leg;
+}
+
+fighting_skill sword_skill {
+    japanese_name kendo;
+    weapons sword;
+    /* TODO - paractice kata */
+}
+
+/* grappling, holds, kicking */
+fighting_skill grappling_skill {
+    japanese_name jujutsu;
+    weapons hand leg;
+}
+
+fighting_skill staff_skill {
+    japanese_name bojutsu;
+    weapons staff;
+    /* TODO - practice kata */
+}
+
+fighting_skill short_staff_skill {
+    japanese_name jojutsu;
+    weapons short_staff;
+    /* TODO - practice kata */
+}
+
+/* There's really not a good analog for this name. Baton? */
+/* using jutte, disarmament, non-lethal, apprehension / blocking, deflecting, grappling swords */
+fighting_skill juttejutsu_skill {
+    japanese_name juttejutsu;
+    weapons jutte;
+}
+
+fighting_skill glaive_skill {
+    japanese_name naginatajutsu;
+    weapons glaive;
+}
+
+/* yari spear used by ashigaru (lightfeet) */
+fighting_skill spear_skill {
+    japanese_name sojutsu;
+    weapons spear;
+}
+
+fighting_skill knife_skill {
+    japanese_name tantōjutsu;
+    weapons knife;
+}
+
+fighting_skill two-sword_skill {
+    japanese_name nitōryū;
+    weapons katana daito wakizashi shoto;
+}
+
+
+fighting_skill bow_skill {
+    japanese_name yumi;
+    weapons short_bow long_bow;
+}
+
+fighting_skill matchlock_skill {
+    japanese_name tanegashimajutsu; /* ?? */
+    weapons matchlock;
+}

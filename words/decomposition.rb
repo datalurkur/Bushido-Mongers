@@ -5,7 +5,7 @@ module Words
     # to the object-finder to narrow the search.
     # parameter: A whitespace-separated list of words.
     def self.decompose_command(entire_command)
-        Log.debug(["entire_command: #{entire_command.inspect}"], 6)
+        Log.debug(["command text entered: #{entire_command.inspect}"], 1)
         pieces = entire_command.downcase.strip.split(/\s+/).collect(&:to_sym)
 
         # Find the command/verb
