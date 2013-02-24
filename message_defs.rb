@@ -21,9 +21,6 @@ Message.define(:join_lobby,     :server_menu, [:lobby_name,:lobby_password])
 Message.define(:join_success,   :server_menu, [],        "Lobby joined")
 Message.define(:join_fail,      :server_menu, [:reason], "Failed to join lobby")
 Message.define(:leave_lobby,    :server_menu)
-Message.define(:create_lobby,   :server_menu, [:lobby_name,:lobby_password])
-Message.define(:create_success, :server_menu, [],        "Lobby created")
-Message.define(:create_fail,    :server_menu, [:reason], "Failed to create lobby")
 
 # Inter-player communication
 Message.define(:send_chat,           :chat, [:chat_text])

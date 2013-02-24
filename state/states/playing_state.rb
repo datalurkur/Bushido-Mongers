@@ -42,8 +42,11 @@ class PlayingState < State
                 if message.command.empty?
                     Log.debug("No command data given", 4)
                 elsif message.command[0,1] == "/"
-                    if message.command.match(/link/)
+                    case message.command
+                    when /link/
                         @client.send_to_server(Message.new(:get_link))
+                    when /quit/
+                        @client.stop
                     else
                         Log.debug("Unrecognized command #{message.command}", 4)
                     end
