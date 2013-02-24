@@ -116,7 +116,7 @@ module Character
             when :unit_attacks
                 locations = [message.attacker.absolute_position, message.defender.absolute_position]
                 # Make sure the user sees the attack if they're the target, even if the attacker is hidden
-                if (message.attacker != instance) && ((message.defender == instance) || instance.witnesses?(locations))
+                if (message.attacker == instance) || (message.defender == instance) || instance.witnesses?(locations)
                     instance.inform_user(message)
                 end
             when :unit_acts
