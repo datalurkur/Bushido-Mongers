@@ -126,8 +126,26 @@ class GameServer < Server
                 lobby = @lobbies.find { |lobby| lobby.name == message.lobby_name }
             }
             if lobby.nil?
-                send_to_client(socket, Message.new(:join_fail, {:reason => :lobby_does_not_exist}))
+                # Lobby doesn't exist, create it
+                lobby = WebEnabledLobby.new(message.lobby_name, password_hash, username, @web_server) do |user, message|
+                    socket = get_socket_for_user(user)
+                    if socket
+                        send_to_client(socket, message)
+                        true
+                    else
+                        false
+                    end
+                end
+                @lobby_mutex.synchronize {
+                    @lobbies << lobby
+                }
+                @user_mutex.synchronize {
+                    @user_info[socket][:lobby] = lobby
+                    @user_info[socket][:state] = :lobby
+                }
+                send_to_client(socket, Message.new(:join_success))
             elsif lobby.check_password(password_hash)
+                # Lobby exists, join it
                 @lobby_mutex.synchronize {
                     lobby.add_user(username)
                 }
@@ -157,38 +175,6 @@ class GameServer < Server
                     @user_info[socket].delete(:lobby)
                 }
             end
-        when :create_lobby
-            password_hash = nil
-            username      = nil
-            user_state    = nil
-            @user_mutex.synchronize {
-                password_hash = message.lobby_password.xor(@user_info[socket][:server_hash])
-                username      = @user_info[socket][:username]
-                user_state    = @user_info[socket][:state]
-            }
-            @lobby_mutex.synchronize {
-                if @lobbies.find { |lobby| lobby.name == message.lobby_name }
-                    send_to_client(socket, Message.new(:create_fail, {:reason => :lobby_exists}))
-                elsif user_state != :server_menu
-                    send_to_client(socket, Message.new(:join_fail, {:reason => :not_in_server_menu}))
-                else
-                    lobby = WebEnabledLobby.new(message.lobby_name, password_hash, username, @web_server) do |user, message|
-                        socket = get_socket_for_user(user)
-                        if socket
-                            send_to_client(socket, message)
-                            true
-                        else
-                            false
-                        end
-                    end
-                    @lobbies << lobby
-                    @user_mutex.synchronize {
-                        @user_info[socket][:lobby] = lobby
-                        @user_info[socket][:state] = :lobby
-                    }
-                    send_to_client(socket, Message.new(:create_success))
-                end
-            }
         else
             Log.warning("Unhandled server menu message type #{message.type} received from client")
         end

@@ -6,8 +6,8 @@ class ServerMenuState < State
         @server_menu_exchange = define_exchange(:choose_from_list, {:field => :server_menu, :choices => server_menu_choices}) do |choice|
             case choice
             when :list_lobbies; begin_exchange(@list_lobbies)
-            when :create_lobby; @entry_type = :create_lobby; begin_exchange(@join_lobby)
-            when :join_lobby;   @entry_type = :join_lobby;   begin_exchange(@join_lobby)
+            when :create_lobby; begin_exchange(@create_lobby)
+            when :join_lobby;   begin_exchange(@join_lobby)
             when :disconnect;   LoginState.new(@client)
             end
         end
@@ -17,21 +17,31 @@ class ServerMenuState < State
             begin_exchange(@server_menu_exchange)
         end
 
-        @join_lobby = define_exchange_chain([
-            [:server_query, {:query_method => :list_lobbies}],
-            [:choose_from_list, {:field => :lobby_name, :choices_from => :lobbies}],
-            [:text_field,       {:field => :lobby_password}]
-        ]) do
-            enter_lobby(@entry_type)
+        @join_lobby = define_exchange(:server_query, {:query_method => :list_lobbies}) do |args|
+            if args[:lobbies].empty?
+                begin_exchange(@create_lobby)
+            else
+                begin_exchange(@choose_lobby)
+            end
+        end
+
+        @create_lobby = define_exchange(:text_field, {:field => :lobby_name}) do
+            begin_exchange(@enter_lobby)
+        end
+
+        @choose_lobby = define_exchange(:choose_from_list, {:field => :lobby_name, :choices_from => :lobbies}) do
+            begin_exchange(@enter_lobby)
+        end
+
+        @enter_lobby = define_exchange(:text_field, {:field => :lobby_password}) do
+            enter_lobby
         end
     end
 
     def make_current
         case @client.get(:server_menu_autocmd)
-        when :join_lobby
-            enter_lobby(:join_lobby)
-        when :create_lobby
-            enter_lobby(:create_lobby)
+        when :join_lobby, :create_lobby
+            enter_lobby
         else
             @client.send_to_server(Message.new(:get_motd))
         end
@@ -39,10 +49,10 @@ class ServerMenuState < State
 
     def server_menu_choices; [:list_lobbies, :join_lobby, :create_lobby, :disconnect]; end
 
-    def enter_lobby(entry_type)
+    def enter_lobby
         password_hash = LameCrypto.hash_using_method(@client.get(:hash_method),@client.get(:password),@client.get(:server_hash))
         @client.unset(:password)
-        @client.send_to_server(Message.new(entry_type,{:lobby_name=>@client.get(:lobby_name),:lobby_password=>password_hash}))
+        @client.send_to_server(Message.new(:join_lobby, {:lobby_name => @client.get(:lobby_name), :lobby_password => password_hash}))
     end
 
     def from_server(message)
