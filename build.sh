@@ -15,6 +15,8 @@ if   [[ "$platform" == 'Linux' ]]; then
 	mv lib/noise/noise.so lib/
 elif [[ "$platform" == 'FreeBSD' ]]; then
 	mv lib/noise/noise.bundle lib/
+elif [[ "$platform" == 'Darwin' ]]; then
+	mv lib/noise/noise.bundle lib/
 else
 	echo "Unsupported platform $platform"
 	exit -1

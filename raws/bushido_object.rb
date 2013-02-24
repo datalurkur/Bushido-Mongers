@@ -115,6 +115,11 @@ class BushidoObject
         end
     end
 
+    # This is a hack for Ruby 1.9 / 2.0
+    # rb_ary_flatten tries to call to_ary on everything, and method_missing throws an exception
+    # This method allows to_ary to be called with benign result to bypass that issue
+    def to_ary; nil; end
+
     def get_property(key)
         @properties[key]
     end
