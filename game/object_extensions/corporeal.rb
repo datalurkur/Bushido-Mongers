@@ -14,9 +14,6 @@ module Corporeal
                 if message.defender == instance
                     Log.debug("#{instance.monicker} is being attacked!", 7)
 
-                    # TODO - extract damage from attacker, tool, etc.
-                    damage = 1
-
                     target_part = if rand() > 0.5
                         # Target a random body part
                         instance.external_body_parts.rand
@@ -24,7 +21,12 @@ module Corporeal
                         # Not a targeted shot
                         nil
                     end
-                    instance.damage(damage, message.attacker, target_part)
+                    #message.return_hash[:subtarget] = target_part
+
+                    # TODO - extract damage from attacker, tool, etc.
+                    if message.success
+                        instance.damage(message.damage, message.attacker, target_part)
+                    end
                 end
             end
         end
