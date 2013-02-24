@@ -39,7 +39,7 @@ class CreateCharacterState < State
             PlayingState.new(@client)
         when :character_not_ready
             pass_to_client(message)
-            begin_exchange(@required_creation)
+            PlayingState.new(@client)
         else
             super(message)
         end
