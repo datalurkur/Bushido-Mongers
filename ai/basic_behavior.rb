@@ -1,4 +1,4 @@
-require 'util/exceptions'
+require './util/exceptions'
 
 Behavior.define(:random_movement) do |actor|
     position = actor.absolute_position
