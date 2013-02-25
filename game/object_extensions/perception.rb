@@ -1,6 +1,10 @@
 require './util/exceptions'
 
 module Perception
+    class << self
+        PERCEIVABLE_LOCATIONS = [:position, :grasped_objects, :stashed_objects, :worn_objects, :body]
+    end
+
     def perceivable_objects_of(list)
         list.select { |obj| can_perceive?(obj) }
     end
@@ -18,20 +22,27 @@ module Perception
             perceivable_objects_of(self.absolute_position.objects).select do |object|
                 object.matches(:type => type, :name => name)
             end
-        when :inventory
+        when :grasped_objects
             return [] unless self.uses?(Equipment)
-            # First, look through the basic items.
-            list = (self.all_grasped_objects + self.all_worn_objects).select do |object|
+            # Objects held in hands, mouths, pincers, etc.
+            self.all_grasped_objects.select do |object|
                 object.matches(:type => type, :name => name)
             end
-            # Then try searching in all the containers.
-            # First, look through the basic items.
-            list += self.containers_in_inventory.select do |cont|
+        when :stashed_objects
+            return [] unless self.uses?(Equipment)
+            # Search within the perceiver's backpacks, sacks, etc.
+            self.containers_in_inventory.select do |cont|
                 cont.internal_objects(true) do |object|
                     object.matches(:type => type, :name => name)
                 end
             end
-#            when :body
+        when :worn_objects
+            return [] unless self.uses?(Equipment)
+            # Objects worn on the body.
+            self.all_worn_objects.select do |object|
+                object.matches(:type => type, :name => name)
+            end
+#        when :body
             # FIXME: Search through all resident corporeals' bodies.
 #                []
         else
@@ -46,6 +57,13 @@ module Perception
 
 #        Log.debug(["Searching!", type_class, object, locations])
 #        Log.debug(["Adjectives!", adjectives]) if adjectives && !adjectives.empty?
+
+        # Explode inventory into appropriate categories.
+        # FIXME - changes ordering...
+        if locations.include?(:inventory)
+            locations.delete(:inventory)
+            locations += [:grasped_objects, :stashed_objects, :worn_objects]
+        end
 
         # Sort through the potentials and find out which ones match the query
         potentials = []

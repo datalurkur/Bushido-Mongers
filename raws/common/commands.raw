@@ -8,18 +8,16 @@ abstract root command {
 }
 
 /* Info commands. */
-command stats {
-}
+command stats {}
+
+
+command inspect {}
+
+command move {}
 
 command attack {
     target corporeal;
     tool weapon;
-}
-
-command inspect {
-}
-
-command move {
 }
 
 command consume {
@@ -30,29 +28,29 @@ command get {
     target item;
 }
 
+command equip {}
+
+command unequip {}
+
 /* stash/put/place */
-/* command stash {} */
+command stash {}
 
 /* drop/ditch */
 command drop {
     target item;
 }
 
-command hide {
-}
+command hide {}
 
-command unhide {
-}
+command unhide {}
 
-command help {
-}
+command help {}
 
 abstract command construct {
     invocation construct;
 }
 
-construct cook {
-}
+construct cook {}
 
 construct forge {
     location anvil;
@@ -67,23 +65,23 @@ construct fletch {}
 
 post_process {
     self.find_subtypes(:command, {}, true).each do |command|
-        Log.debug("Propagating tool information for #{command}")
+        Log.debug("Propagating tool information for #{command}", 6)
         propagate_recursive(info_for(command, :tool)) do |subtype|
-            Log.debug("#{subtype} is a required tool for #{command}")
+            Log.debug("#{subtype} is a required tool for #{command}", 6)
             name = :used_for
             modify_info(subtype, name, []) << command
         end
 
-        Log.debug("Propagating target information for #{command}")
+        Log.debug("Propagating target information for #{command}", 6)
         propagate_recursive(info_for(command, :target)) do |subtype|
-            Log.debug("#{subtype} is a target of #{command}")
+            Log.debug("#{subtype} is a target of #{command}", 6)
             name = :target_of
             modify_info(subtype, name, []) << command
         end
 
-        Log.debug("Propagating location information for #{command}")
+        Log.debug("Propagating location information for #{command}", 6)
         propagate_recursive(info_for(command, :location)) do |subtype|
-            Log.debug("#{subtype} is the location at which #{command} happens")
+            Log.debug("#{subtype} is the location at which #{command} happens", 6)
             name = :location_of
             modify_info(subtype, name, []) << command
         end

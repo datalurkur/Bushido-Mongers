@@ -7,4 +7,6 @@ get fetch grab take pick
 stash put place
 drop ditch
 use utilize manipulate
+equip wear
+remove unequip
 throw toss

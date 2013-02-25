@@ -97,7 +97,7 @@ module Commands
                 # Examine the agent.
                 params[:target] = params[:agent]
             elsif params[:target]
-                Commands.find_objects(core, params, :target => [:inventory, :position, :body])
+                Commands.find_objects(core, params, :target => [:grasped_objects, :worn_objects, :stashed_objects, :position, :body])
             else
                 # Assume the player wants a broad overview of what he can see, describe the room
                 params[:target] = params[:agent].absolute_position
@@ -130,7 +130,7 @@ module Commands
 
     module Get
         def self.stage(core, params)
-            Commands.find_objects(core, params, :target => [:position, :inventory])
+            Commands.find_objects(core, params, :target => [:position, :stashed_objects, :worn_objects])
         end
 
         def self.do(core, params)
@@ -145,6 +145,58 @@ module Commands
 
         def self.do(core, params)
             params[:target].move_to(params[:agent].absolute_position)
+        end
+    end
+
+    module Equip
+        def self.stage(core, params)
+            Commands.find_objects(core, params, :target => [:grasped_objects, :stashed_objects])
+            # TODO - take 'on' preposition that establishes destination
+#            Commands.find_objects(core, params, :destination => [:body])
+        end
+
+        def self.do(core, params)
+            agent     = params[:agent]
+            equipment = params[:target]
+            equipment_types = equipment.type_ancestry
+
+            Log.debug("Looking to equip #{equipment.monicker} #{equipment_types.inspect}")
+            if agent.respond_to?(:wear)
+                parts_can_equip = agent.external_body_parts.select do |part|
+                    part.has_property?(:can_equip) && (part.can_equip & equipment_types).size > 0
+                end
+
+                if parts_can_equip.empty?
+                    raise(FailedCommandError, "#{agent.monicker} can't wear #{equipment.monicker}!")
+                end
+
+                # Look for parts that can equip the item that are also free.
+                parts_can_wear = parts_can_equip.select { |part| !part.full?(:worn) }
+
+                # wear() will throw the equippable-but-not-free slot exception for us.
+                agent.wear(parts_can_wear.first || parts_can_equip.first, equipment)
+            else
+                raise(FailedCommandError, "#{agent.monicker} can't wear anything!")
+            end
+        end
+    end
+
+    module Unequip
+        def self.stage(core, params)
+            Commands.find_objects(core, params, :target => [:worn_objects])
+#            Commands.find_objects(core, params, :destination => [:body])
+        end
+
+        def self.do(core, params)
+            agent     = params[:agent]
+            equipment = params[:target]
+
+            Log.debug("Looking to unequip #{equipment.monicker}")
+            if agent.respond_to?(:remove)
+                agent.remove(equipment)
+            else
+                raise(FailedCommandError, "#{agent.monicker} doesn't know how to remove #{equipment.monicker}!")
+            end
         end
     end
 
