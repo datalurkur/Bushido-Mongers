@@ -45,7 +45,6 @@ class Lobby
     end
 
     def send_to_user(username, message)
-        # Sanitize the message
         character = is_playing?(username) ? @game_core.get_character(username) : nil
         message.alter_params do |params|
             Descriptor.describe(params, character)
@@ -160,6 +159,8 @@ class Lobby
         end
 
         if @game_state == :genesis
+            @game_state = :generating
+
             # Create the new game core
             @game_core = GameCore.new
             @game_core.setup(@game_args)
@@ -171,6 +172,9 @@ class Lobby
             Log.info("Game created")
             broadcast(Message.new(:generation_success))
             true
+        elsif @game_state == :generating
+            send_to_user(username, Message.new(:generation_fail, {:reason => :generation_in_progress}))
+            false
         elsif @game_state == :playing || @game_state == :ready
             send_to_user(username, Message.new(:generation_fail, {:reason => :already_generated}))
             false
@@ -203,8 +207,11 @@ class Lobby
         elsif @game_state == :playing
             send_to_user(username, Message.new(:start_fail, {:reason => :already_started}))
             false
-        else @game_state == :genesis
+        elsif @game_state == :genesis
             send_to_user(username, Message.new(:start_fail, {:reason => :world_not_generated}))
+            false
+        elsif @game_state == :generating
+            send_to_user(username, Message.new(:start_fail, {:reason => :world_generation_in_progress}))
             false
         end
     end
@@ -214,9 +221,10 @@ class Lobby
 
         begin
             Log.debug("Performing command #{command}", 8)
-            character = @game_core.get_character(username)
-
-            params = Commands.stage(@game_core, command, params.merge(:agent => character))
+            @game_core.protect do
+                character = @game_core.get_character(username)
+                params = Commands.stage(@game_core, command, params.merge(:agent => character))
+            end
             send_to_user(username, Message.new(:act_success, {:description => params}))
         rescue Exception => e
             Log.debug(["Failed to stage command #{command}", e.message])
@@ -229,7 +237,9 @@ class Lobby
         end
 
         begin
-            Commands.do(@game_core, command, params)
+            @game_core.protect do
+                Commands.do(@game_core, command, params)
+            end
         rescue Exception => e
             Log.error(["Failed to perform command #{command}", e.message, e.backtrace])
             send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
@@ -252,6 +262,7 @@ class Lobby
             Log.debug("Lobby tick", 6)
         when :object_destroyed
             @users.keys.each do |username|
+                # Core messages already protected (issued by a protected method)
                 character = @game_core.get_character(username)
                 next if character.nil?
                 next unless message.position == character.absolute_position
