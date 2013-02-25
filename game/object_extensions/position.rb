@@ -7,12 +7,23 @@ module Position
             instance.set_position(params[:position], params[:position_type] || :internal) unless params[:position].nil?
         end
 
-        def at_destruction(instance)
+        def at_destruction(instance, destroyer)
             if instance.has_position?
                 instance.relative_position.remove_object(instance)
+                instance.dispatch_destruction_message(destroyer)
             else
                 Log.warning(["Destroying object with no position - #{instance.monicker}", caller])
             end
+        end
+    end
+
+    def dispatch_destruction_message(destroyer)
+        if has_position?
+            Message.dispatch_positional(@core, [absolute_position], :object_destroyed, {
+                :agent    => destroyer,
+                :position => absolute_position,
+                :target   => self
+            })
         end
     end
 
@@ -42,6 +53,7 @@ module Position
         if @position && !force_set
             Log.warning("WARNING: Position being set more than once for #{monicker}; this method is meant to be called during setup and never again; call \"move_to\" instead")
         end
+        Message.change_listener_position(@core, self, position, @position)
         @position      = position
         @position_type = type
         @position.add_object(self, type)
@@ -52,6 +64,7 @@ module Position
         # This should only be called on a character object prior to saving
         # This is to avoid storing any instance-specific data in a saved character which may be ported to other instances
         raise(UnexpectedBehaviorError) unless is_type?(:character)
+        Message.clear_listener_position(@core, self, @position)
         @position.remove_object(self)
         @position      = nil
         @position_type = nil
@@ -90,6 +103,7 @@ module Position
 
     private
     def _set_position(new_position)
+        Message.change_listener_position(@core, self, new_position, @position)
         @position.remove_object(self) if @position
         @position = new_position
     end

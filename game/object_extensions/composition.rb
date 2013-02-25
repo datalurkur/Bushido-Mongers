@@ -8,7 +8,7 @@ module Composition
             instance.initial_composure(params)
         end
 
-        def at_destruction(instance)
+        def at_destruction(instance, destroyer)
             Log.debug("Destroying composition #{instance.monicker}", 7)
             instance.container_classes.each do |key|
                 if instance.preserved_container_classes.include?(key)

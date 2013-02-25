@@ -1,4 +1,3 @@
-require './message'
 require './util/exceptions'
 
 # Provides a set of tools for maintaining a state stack and state variables

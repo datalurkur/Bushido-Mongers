@@ -2,7 +2,6 @@ require './world/factories'
 require './game/tables'
 require './game/object_extensions'
 require './raws/db'
-require './message'
 require './util/exceptions'
 
 class GameCore

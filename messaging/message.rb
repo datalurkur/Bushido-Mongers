@@ -2,17 +2,15 @@ require './util/log'
 
 # Generic message defining, creation, checking, and delegation
 # Used in lots of places
-class Message
+class MessageBase
     class << self
         def setup(core)
             @listeners       ||= {}
             @listeners[core]   = {}
             types.each_key do |type|
-                Log.info("Initializing message type #{type}")
                 @listeners[core][type] = []
             end
             klasses.each_key do |klass|
-                Log.info("Initializing message klass #{klass}")
                 @listeners[core][klass] = []
             end
             @listener_state_dirty = []
@@ -59,11 +57,11 @@ class Message
 
         def dispatch(core, type, args={})
             m = Message.new(type, args)
-            sent_to = []
 
             message_class = types[type][:message_class]
             listener_list = (@listeners[core][type] + @listeners[core][message_class]).uniq
 
+            sent_to = []
             @listener_state_dirty.push(false)
             while (next_listener = listener_list.shift)
                 next_listener.process_message(m)
@@ -128,5 +126,3 @@ class Message
         @args[name]
     end
 end
-
-require './message_defs'

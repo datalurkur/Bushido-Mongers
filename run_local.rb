@@ -1,7 +1,6 @@
+require './bushido'
 require './util/traps'
-require './util/timer'
-require './net/game_server'
-require './net/stack_client'
+require './util/cfg_reader'
 
 config = CFGReader.read("test")
 $client_config = {

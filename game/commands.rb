@@ -226,7 +226,8 @@ module Commands
             end
             Log.debug("Success!") if success
 
-            Message.dispatch(core, :unit_attacks, {
+            locations = [params[:agent].absolute_position, params[:target].absolute_position]
+            Message.dispatch_positional(core, locations, :unit_attacks, {
                 :attacker      => params[:agent],
                 :defender      => params[:target],
                 :success       => success,
