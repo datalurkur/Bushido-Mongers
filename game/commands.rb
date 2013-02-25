@@ -203,13 +203,26 @@ module Commands
             defender = params[:target]
             Log.debug("#{attacker.monicker} attacks #{defender.monicker}")
 
-            # TODO - make skill used based on weapon used
-            success = if attacker.type_ancestry.include?(:has_aspects) && attacker.has_skill?(:fighting)
-                # defender has_aspects checked in opposed_check.
-                attacker.opposed_check(:fighting, Difficulty.standard, defender, :defense)
-            else
+            result_hash = {}
+
+            unless attacker.type_ancestry.include?(:has_aspects) && defender.type_ancestry.include?(:has_aspects)
                 # No attributes? Make a normal difficulty roll to hit.
-                (rand > Difficulty.value_of(Difficulty.standard))
+                success = (rand > Difficulty.value_of(Difficulty.standard))
+            else
+                skill = :intrinsic_fighting
+
+                if attacker.respond_to?(:has_weapon?) && attacker.has_weapon?
+                    result_hash[:weapon] = attacker.weapon
+                    skill = attacker.weapon.get_property(:skill_used)
+                end
+
+                if attacker.has_skill?(skill)
+                    # defender has_aspects checked in opposed_check.
+                    success = attacker.opposed_check(skill, Difficulty.standard, defender, :defense)
+                else
+                    # TODO - generate skill on attacker, improve?
+                    success = (rand > Difficulty.value_of(Difficulty.standard))
+                end
             end
             Log.debug("Success!") if success
 
@@ -218,7 +231,7 @@ module Commands
                 :defender      => params[:target],
                 :success       => success,
                 :damage        => 5,   # FIXME
-                :result_hash   => {}   # FIXME
+                :result_hash   => result_hash   # FIXME
             })
             core.destroy_flagged
         end

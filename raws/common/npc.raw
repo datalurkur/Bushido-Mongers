@@ -6,7 +6,7 @@ abstract karmic,aligned,position,has_aspects npc {
 
     attributes strength perception endurance charisma intelligence agility luck;
 
-    skills fighting defense;
+    skills intrinsic_fighting defense;
 
     class_many sym spawns_in;
 

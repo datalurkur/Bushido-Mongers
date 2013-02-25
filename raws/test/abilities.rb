@@ -6,7 +6,7 @@ Log.setup("Main", "abilities")
 db = ObjectDB.get("default")
 core = FakeCore.new(db)
 
-aspect_list = [:strength, :agility, :fighting_skill, :hide_skill]
+aspect_list = [:strength, :agility, :intrinsic_fighting_skill, :hide_skill]
 
 aspects = {}
 
@@ -15,10 +15,10 @@ aspect_list.each do |aspect|
 end
 
 [
-    [:strength,              :easy],
-    [:agility,               :simple],
-    [:hide_skill,            :normal],
-    [:fighting_skill,        :trivial]
+    [:strength,                 :easy],
+    [:agility,                  :simple],
+    [:hide_skill,               :normal],
+    [:intrinsic_fighting_skill, :trivial]
 ].each do |aspect, difficulty|
     Log.debug("Attempting to #{aspect} with difficulty #{difficulty}")
     result = aspects[aspect].attempt(difficulty, aspects)

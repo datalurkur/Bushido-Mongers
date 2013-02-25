@@ -24,21 +24,7 @@ low_skill hide_skill {
     hidden false;
 }
 
-no_skill fighting_skill {
-    associated_attribute strength;
-    attribute_scaling 0.2;
-}
-
 no_skill defense_skill {
     associated_attribute agility;
-    attribute_scaling 0.2;
-}
-
-/* http://en.wikipedia.org/wiki/Kory%C5%AB */
-no_skill martial_arts_skill {
-    default_intrinsic 0.2;
-    default_familiarity 0.0;
-
-    associated_attribute strength;
     attribute_scaling 0.2;
 }

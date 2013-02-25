@@ -3,7 +3,7 @@ karmic,aligned,corporeal,position,has_aspects character {
 
     attributes strength perception endurance charisma intelligence agility luck;
 
-    skills hide defense fighting;
+    skills hide defense intrinsic_fighting;
     random_skills false; /* Start all skills low. TODO - different intrinsics dependent on character template... */
 
     needs name;

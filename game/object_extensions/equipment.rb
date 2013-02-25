@@ -55,6 +55,13 @@ module Inventory
     def worn_containers
         containers(:worn)
     end
+
+    def has_weapon?
+        false
+    end
+
+    def weapon
+    end
 end
 
 module Equipment
