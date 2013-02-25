@@ -22,6 +22,13 @@ module HasAspects
             instance.skills.each_with_index do |name, i|
                 instance.add_skill(name, :intrinsic_bonus => variances[i])
             end
+
+            instance.start_listening_for(:tick)
+        end
+
+        def at_message(instance, message)
+            instance.attribute_list.each { |a| instance.attribute(a).increment_tick }
+            instance.skill_list.each     { |s| instance.skill(s).increment_tick     }
         end
 
         private

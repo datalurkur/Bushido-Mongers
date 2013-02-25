@@ -138,10 +138,9 @@ class Lobby
 
         character, failures = @game_core.load_character(self, username, character_name)
         if character
+            send_to_user(username, Message.new(:character_ready))
             if @game_state == :playing
                 send_to_user(username, Message.new(:begin_playing))
-            else
-                send_to_user(username, Message.new(:character_ready))
             end
         else
             failure = if failures.empty?
@@ -166,6 +165,7 @@ class Lobby
             @game_core.setup(@game_args)
             # Start listening for messages from this core
             Message.register_listener(@game_core, :core, self)
+            Message.register_listener(@game_core, :tick, self)
 
             @game_state = :ready
             Log.info("Game created")
@@ -238,9 +238,9 @@ class Lobby
 
     def process_message(message, username=nil)
         case message.message_class
-        when :lobby; process_lobby_message(message, username)
-        when :game;  process_game_message(message, username)
-        when :core;  process_core_message(message)
+        when :lobby;        process_lobby_message(message, username)
+        when :game;         process_game_message(message, username)
+        when :core, :tick;  process_core_message(message)
         else 
             Log.error("Lobby doesn't know how to handle message class #{message.message_class}")
         end
@@ -250,15 +250,6 @@ class Lobby
         case message.type
         when :tick
             Log.debug("Lobby tick", 6)
-        when :unit_acts
-            @users.keys.each do |username|
-                character = @game_core.get_character(username)
-                next if character.nil?
-                next unless message.position == character.absolute_position
-
-                event_properties = message.params.merge(:event_type => action)
-                send_to_user(username, Message.new(:game_event, {:description => event_properties}))
-            end
         when :object_destroyed
             @users.keys.each do |username|
                 character = @game_core.get_character(username)
@@ -322,6 +313,9 @@ class Lobby
                 # TODO - Add a check for a character with the same name
                 @game_core.create_character(self, username, message.attributes)
                 send_to_user(username, Message.new(:character_ready))
+                if @game_state == :playing
+                    send_to_user(username, Message.new(:begin_playing))
+                end
             rescue Exception => e
                 send_to_user(username, Message.new(:character_not_ready, {:reason => e.message}))
             end

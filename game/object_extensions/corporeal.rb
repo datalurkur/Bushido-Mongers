@@ -5,7 +5,7 @@ module Corporeal
     class << self
         def at_creation(instance, params)
             instance.create_body
-            instance.start_listening_for(:core)
+            instance.start_listening_for(:unit_attacks)
         end
     end
 

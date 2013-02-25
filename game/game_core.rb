@@ -9,6 +9,7 @@ class GameCore
     attr_reader :world, :db
 
     def initialize
+        Message.setup(self)
     end
 
     # TODO - Write save / load methods

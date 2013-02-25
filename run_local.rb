@@ -11,13 +11,10 @@ $client_config = {
     :password        => "stack_pass",
     :lobby_name      => "test_lobby",
     :lobby_password  => "test",
+    :character_name  => "test_character"
 }
 
 Log.setup("Main", "local")
-
-# DEBUG
-require './game/test/character'
-recreate_test_character("test_user", "default")
 
 $server = GameServer.new("test")
 $client = StackClient.new($client_config)
@@ -51,13 +48,8 @@ end
 $client.stack.specify_response_for(:join_fail) do |stack, message|
     stack.set_state(:create_lobby)
 end
-$client.stack.specify_response_for(:create_fail) do |stack, message|
-    $client_config[:lobby_name] += "_"
-end
-[:join_success, :create_success].each do |msg|
-    $client.stack.specify_response_for(msg) do |stack, message|
-        stack.set_state(:generate_game)
-    end
+$client.stack.specify_response_for(:join_success) do |stack, message|
+    stack.set_state(:generate_game)
 end
 $client.stack.specify_response_for(:choose_from_list, {:field => :lobby_menu}) do |stack, message|
     case stack.get_state
@@ -65,8 +57,8 @@ $client.stack.specify_response_for(:choose_from_list, {:field => :lobby_menu}) d
         stack.put_response(:generate_game)
     when :start_game
         stack.put_response(:start_game)
-    when :select_character
-        stack.put_response(:select_character)
+    when :create_character
+        stack.put_response(:create_character)
     end
 end
 $client.stack.specify_response_for(:generation_success) do |stack, message|
@@ -81,18 +73,27 @@ $client.stack.specify_response_for(:generation_fail) do |stack, message|
     end
 end
 $client.stack.specify_response_for(:start_success) do |stack, message|
-    stack.set_state(:select_character)
+    stack.set_state(:create_character)
 end
 $client.stack.specify_response_for(:start_fail) do |stack, message|
     if message.reason == :already_started
-        stack.set_state(:select_character)
+        stack.set_state(:create_character)
     else
         puts "Couldn't start game - #{message.reason}"
         $client.release_control
     end
 end
-$client.stack.specify_response_for(:choose_from_list, {:field => :character}) do |stack, message|
+$client.stack.specify_response_for(:text_field, {:field => :character_name}) do |stack, message|
+    stack.put_response($client_config[:character_name])
+end
+$client.stack.specify_response_for(:choose_from_list, {:field => :character_race}) do |stack, message|
     stack.put_response(message.choices.rand)
+end
+$client.stack.specify_response_for(:choose_from_list, {:field => :character_gender}) do |stack, message|
+    stack.put_response(message.choices.rand)
+end
+$client.stack.specify_response_for(:choose_from_list, {:field => :character_options}) do |stack, message|
+    stack.put_response(:create)
 end
 $client.stack.specify_response_for(:character_ready) do |stack, message|
     stack.clear_state

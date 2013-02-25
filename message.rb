@@ -4,12 +4,29 @@ require './util/log'
 # Used in lots of places
 class Message
     class << self
+        def setup(core)
+            @listeners       ||= {}
+            @listeners[core]   = {}
+            types.each_key do |type|
+                Log.info("Initializing message type #{type}")
+                @listeners[core][type] = []
+            end
+            klasses.each_key do |klass|
+                Log.info("Initializing message klass #{klass}")
+                @listeners[core][klass] = []
+            end
+            @listener_state_dirty = []
+        end
+
         def define(type, message_class, required_args=[], text=nil)
             raise(ArgumentError, "Message class must be a symbol, #{message_class.class} provided")      unless (Symbol === message_class)
             raise(ArgumentError, "Required arguments must be an array, #{required_args.class} provided") unless (Array === required_args)
+            raise(ArgumentError, "Message type already defined") if types.has_key?(type)
+            klasses[message_class] ||= []
+            klasses[message_class] << type
             types[type] = {
                 :required_args => required_args,
-                :message_class => message_class || type,
+                :message_class => message_class,
                 :default_args  => {}
             }
             (types[type][:default_args][:text] = text) unless text.nil?
@@ -19,53 +36,48 @@ class Message
             @types ||= {}
         end
 
-        def message_class_of(type)
-            types[type][:message_class]
+        def klasses
+            @klasses ||= {}
         end
 
         def type_defined?(type)
             types.has_key?(type)
         end
 
-        def required_args(type)
-            types[type][:required_args]
+        def register_listener(core, message_type, listener)
+            @listener_state_dirty[-1] = true unless @listener_state_dirty.empty?
+            Log.debug("#{listener.class} starts listening for #{message_type} messages", 6)
+            @listeners[core][message_type] << listener
+            @listeners[core][message_type].uniq!
         end
 
-        def listeners(core, message_class)
-            @listeners                      ||= {}
-            @listeners[core]                ||= {}
-            @listeners[core][message_class] ||= [] 
-            @listeners[core][message_class]
-        end
-
-        def get_listeners_for(core, type)
-            message_class = message_class_of(type)
-            listeners(core, message_class) + listeners(core, :all)
-        end
-
-        def register_listener(core, message_class, listener)
-            Log.debug("#{listener.class} starts listening for #{message_class} messages", 6)
-            listeners(core, message_class) << listener
-            listeners(core, message_class).uniq!
-        end
-
-        def unregister_listener(core, message_class, listener)
-            Log.debug("#{listener.class} stops listening for #{message_class} messages", 6)
-            listeners(core, message_class).delete(listener)
+        def unregister_listener(core, message_type, listener)
+            @listener_state_dirty[-1] = true unless @listener_state_dirty.empty?
+            Log.debug("#{listener.class} stops listening for #{message_type} messages", 6)
+            @listeners[core][message_type].delete(listener)
         end
 
         def dispatch(core, type, args={})
             m = Message.new(type, args)
             sent_to = []
-            while (next_listener = (get_listeners_for(core, type) - sent_to).first)
+
+            message_class = types[type][:message_class]
+            listener_list = (@listeners[core][type] + @listeners[core][message_class]).uniq
+
+            @listener_state_dirty.push(false)
+            while (next_listener = listener_list.shift)
                 next_listener.process_message(m)
                 sent_to << next_listener
+                if @listener_state_dirty[-1]
+                    listener_list = (@listeners[core][type] + @listeners[core][message_class]).uniq - sent_to
+                end
             end
+            @listener_state_dirty.pop
         end
 
         def check_message(type, args)
             raise(ArgumentError, "Unknown message type #{type}") unless type_defined?(type)
-            required_args(type).each do |arg|
+            types[type][:required_args].each do |arg|
                 unless args.has_key?(arg) && !args[arg].nil?
                     raise(ArgumentError, "#{arg} required for message type #{type.inspect}.")
                 end
@@ -78,23 +90,19 @@ class Message
             return false if hash[:type] && message.type != hash[:type]
             return hash.keys.reject { |k| k == :type }.all? { |k| (message.has_param?(k) && message.send(k) == hash[k]) }
         end
-
-        def default_args(type)
-            types[type][:default_args]
-        end
     end
 
     def initialize(type, args={})
         Message.check_message(type, args)
         @type = type
-        @args = Message.default_args(type).merge(args)
+        @args = Message.types[type][:default_args].merge(args)
 
         self
     end
 
     def type; @type; end
 
-    def message_class; Message.message_class_of(@type); end
+    def message_class; Message.types[@type][:message_class]; end
 
     def report
         [@type, @args]

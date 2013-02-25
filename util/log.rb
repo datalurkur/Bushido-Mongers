@@ -11,7 +11,6 @@ class Log
         LOG_CONFIG = "./log.cfg"
 
         def setup(name, logfile_prefix, logfile_behavior=:terse)
-            @log_mutex = Mutex.new
             @default_thread_name = "?"
 
             @max_log_level       = 9
@@ -68,10 +67,8 @@ class Log
         # THREADSAFE
         def name_thread(name)
             raise(StandardError, "Logging system never initialized.") unless @logging_setup
-            @log_mutex.synchronize do
-                @source_threads[Thread.current] = name
-                @longest_thread_name = [@longest_thread_name,name.length].max
-            end
+            @source_threads[Thread.current] = name
+            @longest_thread_name = [@longest_thread_name,name.length].max
         end
 
         # THREADSAFE
@@ -102,6 +99,7 @@ class Log
         private
         def log_internal(msg, level, color=:white)
             file,line = caller[1].split(/:/)
+            file.sub!(Dir.pwd, '.')
             @source_files[file] ||= @max_log_level
             raise(TypeError, "#{level} is not a valid log level.") unless Numeric === level
             return unless level <= @source_files[file] || @logfile_behavior == :verbose
@@ -114,13 +112,11 @@ class Log
                 format_line(m, thread_name, formatted_filename, line, level, color)
             end.join("\n")
 
-            @log_mutex.synchronize do
-                if level <= @source_files[file]
-                    Kernel.puts printable_data
-                    (@filtered_logfile.puts printable_data) unless @logfile_behavior == :none
-                end
-                (@verbose_logfile.puts printable_data) if @logfile_behavior == :verbose
+            if level <= @source_files[file]
+                Kernel.puts printable_data
+                (@filtered_logfile.puts printable_data) unless @logfile_behavior == :none
             end
+            (@verbose_logfile.puts printable_data) if @logfile_behavior == :verbose
         end
 
         def format_line(msg, thread_name, file, line, level, color)
