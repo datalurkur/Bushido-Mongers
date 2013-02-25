@@ -75,7 +75,7 @@ Message.define(:link,          :game, [:uri])
 # Messages passed between the game lobby / game objects / lobby
 Message.define(:tick,             :tick)
 Message.define(:unit_moves,       :core, [:unit, :start, :finish])
-Message.define(:unit_attacks,     :core, [:attacker, :defender, :success, :damage, :result_hash])
+Message.define(:unit_attacks,     :core, [:attacker, :defender, :success, :result_hash])
 Message.define(:unit_acts,        :core, [:agent, :target, :position])
 Message.define(:object_destroyed, :core, [:agent, :target, :position])
 
