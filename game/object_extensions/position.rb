@@ -7,10 +7,10 @@ module Position
             instance.set_position(params[:position], params[:position_type] || :internal) unless params[:position].nil?
         end
 
-        def at_destruction(instance, destroyer)
+        def at_destruction(instance, destroyer, vaporize)
             if instance.has_position?
                 instance.relative_position.remove_object(instance)
-                instance.dispatch_destruction_message(destroyer)
+                instance.dispatch_destruction_message(destroyer) unless vaporize
             else
                 Log.warning(["Destroying object with no position - #{instance.monicker}", caller])
             end
@@ -57,6 +57,10 @@ module Position
         @position      = position
         @position_type = type
         @position.add_object(self, type)
+    end
+
+    def get_position
+        [@position, @position_type]
     end
 
     def nil_position

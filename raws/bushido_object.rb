@@ -53,11 +53,11 @@ class BushidoObject
         end
     end
 
-    def destroy(destroyer)
+    def destroy(destroyer, vaporize=false)
         stop_listening
 
         @extensions.each do |mod|
-            mod.at_destruction(self, destroyer) if mod.respond_to?(:at_destruction)
+            mod.at_destruction(self, destroyer, vaporize) if mod.respond_to?(:at_destruction)
         end
     end
 
@@ -139,6 +139,7 @@ class BushidoObject
     end
 
     def process_message(message)
+        Log.error("#{monicker} has no core!") unless @core
         @extensions.each do |mod|
             mod.at_message(self, message) if mod.respond_to?(:at_message)
         end

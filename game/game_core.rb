@@ -120,8 +120,8 @@ class GameCore
 
             character, failures = Character.attempt_to_load(username, character_name)
             if character
-                character.set_position(cached_positions[username] || @world.random_starting_location)
                 character.set_core(self)
+                character.set_position(cached_positions[username] || @world.random_starting_location)
                 characters[username] = character
                 Log.info("Character #{character.name} loaded for #{username}")
                 Message.register_listener(self, :core, character)
@@ -178,6 +178,7 @@ class GameCore
         else
             # Cache the character's position within the game server so that it can be placed back where it exited when logging back in
             cached_positions[username] = character.absolute_position
+            character.destroy(nil, true)
             Character.save(username, character)
         end
         characters.delete(username)

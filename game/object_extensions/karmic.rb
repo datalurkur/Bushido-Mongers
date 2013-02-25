@@ -9,7 +9,7 @@ module Karmic
         def at_message(instance, message)
             case message.type
             when :object_destroyed
-                return unless message.agent == instance
+                return unless message.has_param?(:agent) && message.agent == instance
                 if message.target.is_type?(:corporeal)
                     # FIXME - We want to store more than the name of the kill here
                     # Suggestions - notoriety / difficulty of kill, type of monster
@@ -19,7 +19,7 @@ module Karmic
             end
         end
 
-        def at_destruction(instance, destruction)
+        def at_destruction(instance, destruction, vaporize)
             # FIXME - Create a notoriety table
             #if instance.notoriety >= :well_known
                 Log.info("The great #{instance.monicker} has been slain!")

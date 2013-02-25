@@ -73,7 +73,7 @@ module Equipment
             instance.random_equipment
         end
 
-        def at_destruction(instance, destroyer)
+        def at_destruction(instance, destroyer, vaporize)
             # drop equipment on death, or leave it on the body to be pulled off?
         end
     end
