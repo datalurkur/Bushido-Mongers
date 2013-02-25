@@ -265,7 +265,7 @@ class Lobby
                 # Core messages already protected (issued by a protected method)
                 character = @game_core.get_character(username)
                 next if character.nil?
-                next unless message.position == character.absolute_position
+                next unless message.location == character.absolute_position
 
                 if message.target == character
                     Log.info("Character #{character.name} dies!")

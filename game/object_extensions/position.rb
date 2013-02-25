@@ -21,7 +21,7 @@ module Position
         if has_position?
             Message.dispatch_positional(@core, [absolute_position], :object_destroyed, {
                 :agent    => destroyer,
-                :position => absolute_position,
+                :location => absolute_position,
                 :target   => self
             })
         end
@@ -87,9 +87,18 @@ module Position
         @position.wear(self)
     end
 
-    def move_to(new_position)
-        Log.debug("#{monicker} moved to #{new_position.monicker}", 5)
-        _set_position(new_position)
+    def move_to(destination)
+        Log.debug("#{monicker} moved to #{destination.monicker}", 5)
+
+        locations = [self.absolute_position, destination]
+        Message.dispatch_positional(@core, locations, :unit_moves, {
+            :agent         => self,
+            :action        => :move,
+            :location      => self.absolute_position,
+            :destination   => destination
+        })
+
+        _set_position(destination)
         @position_type = :internal
         @position.add_object(self)
     end

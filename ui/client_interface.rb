@@ -141,6 +141,8 @@ module VerboseInterface
                     return Words.gen_copula(message.properties.merge(:verb=>:destroy))
                 when :unit_attacks
                     return Words.describe_attack(message.properties)
+                when :unit_acts, :unit_moves
+                    return Words.gen_sentence(message.properties)
                 else
                     return "I don't know how to express a game event of type #{message.properties[:event_type]}"
                 end

@@ -114,7 +114,7 @@ module Character
         def at_message(instance, message)
             case message.type
             when :unit_moves
-                if (message.unit != instance) && instance.witnesses?([message.start, message.finish])
+                if (message.agent != instance) && instance.witnesses?([message.location, message.destination])
                     instance.inform_user(message)
                 end
             when :unit_attacks
@@ -125,11 +125,11 @@ module Character
                 end
             when :unit_acts
                 # TODO - Add in distance scoping for different actions (shouting can be witnessed from further away than talking)
-                if (message.unit != instance) && instance.witnesses?([message.position])
+                if (message.agent != instance) && instance.witnesses?([message.location])
                     instance.inform_user(message)
                 end
             when :object_destroyed
-                if instance.witnesses?([message.position])
+                if instance.witnesses?([message.location])
                     instance.inform_user(message)
                 end
             end
