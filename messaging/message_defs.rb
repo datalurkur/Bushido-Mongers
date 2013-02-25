@@ -74,10 +74,10 @@ Message.define(:link,          :game, [:uri])
 # Core Game Information
 # Messages passed between the game lobby / game objects / lobby
 Message.define(:tick,             :tick)
-Message.define(:unit_moves,       :core, [:unit, :start, :finish])
+Message.define(:unit_moves,       :core, [:agent, :location, :destination])
 Message.define(:unit_attacks,     :core, [:attacker, :defender, :success, :result_hash])
-Message.define(:unit_acts,        :core, [:agent, :target, :position])
-Message.define(:object_destroyed, :core, [:agent, :target, :position])
+Message.define(:unit_acts,        :core, [:agent, :action, :action_hash, :location])
+Message.define(:object_destroyed, :core, [:agent, :target, :location])
 
 # Client / Interface Messages
 # Interface Messages
