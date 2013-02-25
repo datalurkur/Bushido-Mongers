@@ -58,15 +58,21 @@ module Character
         end
 
         def save(username, character)
+            # TODO - Save based on selected attributes rather than marshalling
+
             # Clean up instance-specific data
-            character.nil_position
-            character.nil_core
+            position, position_type = character.nil_position
+            core = character.nil_core
 
             filename = to_filename(character.name)
             full_filename = File.join(get_user_directory(username), filename)
             f = File.open(full_filename, 'w')
             f.write(Marshal.dump(character))
             f.close
+
+            # Reset instance-specific data
+            character.set_core(core)
+            character.set_position(position, position_type)
         end
 
         def attempt_to_load(username, character_name)
@@ -148,7 +154,9 @@ module Character
     end
 
     def nil_core
+        ret = @core
         @core = nil
+        return ret
     end
 
     def set_user_callback(lobby, username)

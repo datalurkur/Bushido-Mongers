@@ -178,8 +178,8 @@ class GameCore
         else
             # Cache the character's position within the game server so that it can be placed back where it exited when logging back in
             cached_positions[username] = character.absolute_position
-            character.destroy(nil, true)
             Character.save(username, character)
+            character.destroy(nil, true)
         end
         characters.delete(username)
     end

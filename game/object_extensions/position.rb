@@ -59,19 +59,19 @@ module Position
         @position.add_object(self, type)
     end
 
-    def get_position
-        [@position, @position_type]
-    end
-
     def nil_position
         Log.debug("Clearing position of #{monicker}", 6)
         # This should only be called on a character object prior to saving
         # This is to avoid storing any instance-specific data in a saved character which may be ported to other instances
         raise(UnexpectedBehaviorError) unless is_type?(:character)
+
         Message.clear_listener_position(@core, self, @position)
         @position.remove_object(self)
+
+        ret = [@position, @position_type]
         @position      = nil
         @position_type = nil
+        return ret
     end
 
     # HELPER FUNCTIONS for different position types.

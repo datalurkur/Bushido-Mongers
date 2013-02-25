@@ -33,6 +33,9 @@ end
 $client.stack.specify_response_for(:choose_from_list, {:field => :lobby_name}) do |stack, message|
     stack.put_response(message.choices.rand)
 end
+$client.stack.specify_response_for(:text_field, {:field => :lobby_name}) do |stack, message|
+    stack.put_response($config[:lobby_name])
+end
 $client.stack.specify_response_for(:text_field, {:field => :lobby_password}) do |stack, message|
     stack.put_response($config[:lobby_password])
 end

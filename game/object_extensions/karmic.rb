@@ -20,6 +20,8 @@ module Karmic
         end
 
         def at_destruction(instance, destruction, vaporize)
+            return if vaporize
+
             # FIXME - Create a notoriety table
             #if instance.notoriety >= :well_known
                 Log.info("The great #{instance.monicker} has been slain!")
