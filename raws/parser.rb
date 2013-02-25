@@ -349,7 +349,7 @@ module ObjectRawParser
                         property      = expression_type
                         property_info = object_data[:has][property]
                         if object_data[:extension_of]
-                            Log.debug("#{object_type} is an extension of #{object_data[:extension_of]}")
+                            Log.debug("#{object_type} is an extension of #{object_data[:extension_of]}", 6)
                             property_info ||= object_database[object_data[:extension_of]][:has][property]
                         end
                         if property_info.nil?
