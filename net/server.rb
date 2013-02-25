@@ -65,14 +65,12 @@ class Server
     def stop_listening_for_connections
         @accept_thread.kill
         @accept_socket.close
-        @sockets_mutex.synchronize do
-            @client_sockets.each_key do |k|
-                # FIXME - This is not a graceful way to teardown
-                k.close unless k.closed?
-                @client_sockets[k].kill
-            end
-            @client_sockets.clear
+        @client_sockets.each_key do |k|
+            @client_sockets[k].kill if @client_sockets[k].alive?
+            k.close unless k.closed?
         end
+        @client_sockets.clear
+        @sockets_mutex = nil
     end
 
     def teardown
@@ -89,11 +87,11 @@ class Server
 
     def terminate_client(socket)
         Log.debug("Terminating client socket")
-        socket.close unless socket.closed?
         @sockets_mutex.synchronize do
             @client_sockets[socket].kill if @client_sockets[socket] && @client_sockets[socket].alive?
             @client_sockets.delete(socket)
         end
+        socket.close unless socket.closed?
     end
 
     def spawn_thread_for(socket)

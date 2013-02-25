@@ -57,13 +57,12 @@ class HTTPServer
             @accept_socket = nil
         end
 
-        @client_mutex.synchronize do
-            @clients.each do |k,v|
-                v.kill if v.alive?
-                k.close unless k.closed?
-            end
-            @clients.clear
+        @clients.each do |k,v|
+            v.kill if v.alive?
+            k.close unless k.closed?
         end
+        @clients.clear
+        @client_mutex = nil
     end
 
     def process_exchanges(socket, protocol=:http)
