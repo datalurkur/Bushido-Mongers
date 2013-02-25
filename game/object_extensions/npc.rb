@@ -6,7 +6,7 @@ module NpcBehavior
     class << self
         def at_creation(instance, params)
             instance.set_behavior(instance.class_info(:behavior) || :random_attack_and_move)
-            instance.start_listening_for(:core)
+            instance.start_listening_for(:tick)
         end
 
         def at_message(instance, message)

@@ -23,15 +23,6 @@ module Aspect
             if instance.has_property?(:associated_attribute)
                 raise(MissingProperty, "Associated attribute has no scaling value.") unless instance.has_property?(:attribute_scaling)
             end
-
-            instance.start_listening_for(:core)
-        end
-
-        def at_message(instance, message)
-            case message.type
-            when :tick
-                instance.current_tick = instance.current_tick + 1
-            end
         end
     end
 
@@ -49,6 +40,8 @@ module Aspect
 
     def current_tick;        @current_tick ||= 0;   end
     def current_tick=(val);  @current_tick = val;   end
+
+    def increment_tick;      self.current_tick = self.current_tick + 1; end
 
     def last_used;           @last_used    ||= 0;   end
     def last_used=(val);     @last_used = val;      end
@@ -113,13 +106,11 @@ module Skill
             initial_familiarity = instance.class_info(:default_familiarity) + (params[:familiarity_bonus] || 0)
             instance.set_property(:familiarity, initial_familiarity)
         end
+    end
 
-        def at_message(instance, message)
-            case message.type
-            when :tick
-                instance.languish if (instance.current_tick - instance.last_used > instance.class_info(:familiarity_loss))
-            end
-        end
+    def increment_tick
+        super()
+        languish if current_tick - last_used > class_info(:familiarity_loss)
     end
 
     def check(difficulty, attributes)

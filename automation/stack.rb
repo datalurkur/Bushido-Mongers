@@ -70,6 +70,7 @@ class AutomationStack
     end
 
     def put_response(response)
+        Log.debug(["Putting response", response], 6)
         @write_pipe.write(@message_buffer.pack_message(response))
     end
 end

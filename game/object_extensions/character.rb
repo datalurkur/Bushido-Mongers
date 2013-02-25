@@ -107,6 +107,10 @@ module Character
             history.sort { |x,y| x[:timestamp] <=> y[:timestamp] }
         end
 
+        def at_creation(instance, params)
+            instance.start_listening_for(:core)
+        end
+
         def at_message(instance, message)
             case message.type
             when :unit_moves
@@ -128,9 +132,6 @@ module Character
                 if instance.witnesses?([message.position])
                     instance.inform_user(message)
                 end
-            when :tick
-            else
-                Log.debug("Character received unhandled message of type #{message.type}")
             end
         end
     end
