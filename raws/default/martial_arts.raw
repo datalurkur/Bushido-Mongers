@@ -84,3 +84,8 @@ fighting_skill matchlock_skill {
     japanese_name tanegashimajutsu; /* ?? */
     weapons matchlock;
 }
+
+fighting_skill kusarigamajutsu_skill {
+    japanese_name kusarigamajutsu;
+    weapons kusarigama;
+}

@@ -6,12 +6,16 @@ abstract item equipment {
     protection 0;
 
     size small;
+
+    class optional sym japanese_name;
 }
 
 abstract root weapon {
     /* TODO - Work out the slot (or slots) a weapon can go in based on its handedness */
     class sym handedness;
     class sym type;
+
+    class optional sym japanese_name;
 }
 
 abstract weapon melee_weapon {}

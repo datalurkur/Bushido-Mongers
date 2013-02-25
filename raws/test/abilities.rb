@@ -6,7 +6,7 @@ Log.setup("Main", "abilities")
 db = ObjectDB.get("default")
 core = FakeCore.new(db)
 
-aspect_list = [:strength, :agility, :fighting_skill, :hide_skill]
+aspect_list = [:strength, :agility, :intrinsic_fighting_skill, :hide_skill]
 
 aspects = {}
 

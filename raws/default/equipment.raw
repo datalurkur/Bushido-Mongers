@@ -14,6 +14,7 @@ constructed,item dagger_blade {
 
 /* http://en.wikipedia.org/wiki/Japanese_swordsmithing */
 constructed,melee_weapon dagger {
+    japanese_name tanto;
     type piercing;
     handedness one;
 
