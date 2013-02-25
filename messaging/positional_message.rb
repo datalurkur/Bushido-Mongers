@@ -27,13 +27,13 @@ class PositionalMessage < MessageBase
         def register_listener(core, message_type, listener)
             super(core, message_type, listener)
             position = (Position === listener && listener.has_position?) ? listener.absolute_position : nil
-            set_listener_position(core, listener, position) if position
+            set_listener_position(core, listener, position)
         end
 
         def unregister_listener(core, message_type, listener)
             super(core, message_type, listener)
             position = (Position === listener && listener.has_position?) ? listener.absolute_position : nil
-            clear_listener_position(core, listener, position) if position
+            clear_listener_position(core, listener, position)
         end
 
         def dispatch_positional(core, locations, type, args={}, scope=1)
@@ -69,14 +69,14 @@ class DebugPositionalMessage < PositionalMessage
             new_listener_list = get_listeners_at(core, locations, klass, type)
             old_listener_list = (@listeners[core][type] + @listeners[core][klass]).uniq
             old_filtered      = old_listener_list.select do |l|
-                Position === l && l.has_position? && locations.include?(l.absolute_position)
+                (Position === l && l.has_position? && locations.include?(l.absolute_position)) || !(Position === l)
             end
 
             if old_filtered.size != new_listener_list.size ||
               (old_filtered & new_listener_list).size != old_filtered.size
                 Log.error("Positional messaging is broken!")
-                Log.error(["Expected listeners:", old_filtered])
-                Log.error(["Actual listeners:", new_listener_list])
+                Log.error(["Expected listeners:", old_filtered.size])
+                Log.error(["Actual listeners:", new_listener_list.size])
             end
 
             super(core, locations, type, args, scope)
