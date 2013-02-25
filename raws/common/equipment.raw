@@ -26,10 +26,10 @@ abstract root ammunition {}
 
 post_process {
     self.find_subtypes(:equipment, {}, true).each do |equipment|
-        Log.debug("Propagating slot information for #{equipment}")
+        Log.debug("Propagating slot information for #{equipment}", 6)
         propagate_recursive(info_for(equipment, :slot)) do |subtype|
             raise(StandardError, "Can't equip on unequippable part #{subtype}!") unless is_type?(subtype, :can_wear)
-            Log.debug("#{subtype} can equip #{equipment}")
+            Log.debug("#{subtype} can equip #{equipment}", 6)
             modify_info(subtype, :can_equip, []) << equipment
         end
     end

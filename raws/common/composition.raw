@@ -54,7 +54,7 @@ abstract composition constructed {
 }
 
 post_process {
-    Log.debug("Propagating component information for constructed objects", 1)
+    Log.debug("Propagating component information for constructed objects", 6)
     types_of(:constructed, true).each do |constructed|
         recipes = info_for(constructed, :recipes)
         Log.error("No recipes found for #{constructed.inspect}") if recipes.empty?
@@ -63,7 +63,7 @@ post_process {
             Log.error("No components found for recipe #{recipe}") if components.empty?
             components.each do |component|
                 propagate_recursive(component) do |subtype|
-                    Log.debug("#{subtype} is used in #{constructed}", 1)
+                    Log.debug("#{subtype} is used in #{constructed}", 6)
                     name = :used_in
                     # This is going to become a performance issue later
                     modify_info(subtype, name, []) << constructed
