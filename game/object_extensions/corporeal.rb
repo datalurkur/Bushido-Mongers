@@ -7,29 +7,6 @@ module Corporeal
             instance.create_body
             instance.start_listening_for(:core)
         end
-
-        def at_message(instance, message)
-            case message.type
-            when :unit_attacks
-                if message.defender == instance
-                    Log.debug("#{instance.monicker} is being attacked!", 7)
-
-                    target_part = if rand() > 0.5
-                        # Target a random body part
-                        instance.external_body_parts.rand
-                    else
-                        # Not a targeted shot
-                        nil
-                    end
-                    #message.return_hash[:subtarget] = target_part
-
-                    # TODO - extract damage from attacker, tool, etc.
-                    if message.success
-                        instance.damage(message.damage, message.attacker, target_part)
-                    end
-                end
-            end
-        end
     end
 
     def create_body
@@ -71,10 +48,11 @@ module Corporeal
         @total_hp -= amount
         if target.hp <= 0
             if get_property(:incidental).include?(target)
-                Log.debug("Destroying body of #{monicker}")
+                Log.debug("Destroying #{monicker}!")
                 @core.flag_for_destruction(self, attacker)
+            else
+                @core.flag_for_destruction(target, attacker)
             end
-            @core.flag_for_destruction(target, attacker)
         end
     end
 end

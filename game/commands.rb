@@ -201,9 +201,9 @@ module Commands
         def self.do(core, params)
             attacker = params[:agent]
             defender = params[:target]
-            Log.debug("#{attacker.monicker} attacks #{defender.monicker}")
 
             result_hash = {}
+            damage = 5
 
             unless attacker.type_ancestry.include?(:has_aspects) && defender.type_ancestry.include?(:has_aspects)
                 # No attributes? Make a normal difficulty roll to hit.
@@ -224,14 +224,24 @@ module Commands
                     success = (rand > Difficulty.value_of(Difficulty.standard))
                 end
             end
-            Log.debug("Success!") if success
+
+            # Target a random body part
+            part_targeted = defender.external_body_parts.rand
+            result_hash[:subtarget] = part_targeted
+
+            print = part_targeted ? "in the #{part_targeted.monicker}" : ''
+            Log.debug("#{attacker.monicker} attacks #{defender.monicker} #{print}")
+
+            if success
+                result_hash[:damage] = damage
+                defender.damage(damage, attacker, part_targeted)
+            end
 
             Message.dispatch(core, :unit_attacks, {
-                :attacker      => params[:agent],
-                :defender      => params[:target],
+                :attacker      => attacker,
+                :defender      => defender,
                 :success       => success,
-                :damage        => 5,   # FIXME
-                :result_hash   => result_hash   # FIXME
+                :result_hash   => result_hash
             })
             core.destroy_flagged
         end
