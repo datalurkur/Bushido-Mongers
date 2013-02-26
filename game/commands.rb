@@ -138,6 +138,16 @@ module Commands
         end
     end
 
+    module Stash
+        def self.stage(core, params)
+            Commands.find_objects(core, params, :target => [:grasped_objects, :worn_objects, :position])
+        end
+
+        def self.do(core, params)
+            params[:agent].stash(params[:target])
+        end
+    end
+
     module Drop
         def self.stage(core, params)
             Commands.find_objects(core, params, :target => [:inventory])
