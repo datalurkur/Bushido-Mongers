@@ -3,8 +3,8 @@ require './util/log'
 module Commands
     class << self
         def get_command_module(core, command)
-            unless core.db.has_type?(command)
-                raise(InvalidCommandError, "Command #{command.inspect} not found.")
+            unless core.db.types_of(:command).include?(command)
+                raise(InvalidCommandError, "Command #{command.to_s.inspect} not found.")
             end
 
             invocation = core.db.info_for(command, :invocation) || command
