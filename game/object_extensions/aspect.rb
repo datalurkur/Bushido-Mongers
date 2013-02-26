@@ -69,6 +69,7 @@ module Aspect
 
         amount = 0.0025 * (1 - get_property(:intrinsic))**2 * difficulty
         set_property(:intrinsic, clamp(get_property(:intrinsic) + amount))
+        Log.debug("#{self.monicker} improved to #{get_property(:intrinsic)}", 8)
     end
 
     private

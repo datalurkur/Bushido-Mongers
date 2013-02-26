@@ -1,3 +1,5 @@
+# TODO - add multiple names for certain values.
+
 module DataTables
     class << self
         def extended(klass)
@@ -200,6 +202,25 @@ module GenericAspect
         [:peerless,    1.0]
     ]; end
     def self.standard; :decent; end
+    extend DataTables
+end
+
+module GenericSkill
+    def self.raw_values; [
+        [:no,           0.0],
+        [:laughable,    0.1],
+        [:novice,       0.2],
+        [:passable,     0.3], # initiate
+        [:capable,      0.4], # apprentice
+        [:competent,    0.5],
+        [:proficient,   0.6], # journeyman
+        [:professional, 0.7],
+        [:expert,       0.8], # adept
+        [:great,        0.9],
+        [:master,       0.95], # master
+        [:peerless,     1.0]
+    ]; end
+    def self.standard; :novice; end
     extend DataTables
 end
 

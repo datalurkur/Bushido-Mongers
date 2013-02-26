@@ -65,7 +65,11 @@ class Descriptor
             if object.is_type?(:aspect)
                 # Send an adjective to the user, not a number.
                 d[:properties][:adjectives] ||= []
-                d[:properties][:adjectives] << GenericAspect.value_below(d[:properties][:intrinsic])
+                if object.is_type?(:skill)
+                    d[:properties][:adjectives] << GenericSkill.value_below(d[:properties][:intrinsic])\
+                else
+                    d[:properties][:adjectives] << GenericAspect.value_below(d[:properties][:intrinsic])
+                end
                 d[:properties].delete(:intrinsic)
             end
 
