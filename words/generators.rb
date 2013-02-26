@@ -206,14 +206,19 @@ module Words
         args.delete(:verb)
         args.delete(:action)
         args.delete(:command)
+
+        room = args[:target] || args[:destination]
+        args.delete(:target)
+        args.delete(:destination)
+
         args.merge!(:verb => :see)
 
-        objects = (args[:target] || args[:destination])[:objects]
+        objects = room[:objects]
         if objects && !objects.empty?
             sentences << Words.gen_sentence(args.merge(:target => objects))
         end
 
-        exits   = (args[:target] || args[:destination])[:exits]
+        exits   = room[:exits]
         if exits && !exits.empty?
             sentences << Words.gen_sentence(args.merge(:target => Sentence::Noun.new("exits to #{Sentence::NounPhrase.new(exits)}")))
         end
