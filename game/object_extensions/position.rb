@@ -94,13 +94,15 @@ module Position
     def move_to(destination)
         Log.debug("#{monicker} moved to #{destination.monicker}", 5)
 
-        locations = [self.absolute_position, destination]
-        Message.dispatch_positional(@core, locations, :unit_moves, {
-            :agent         => self,
-            :action        => :move,
-            :location      => self.absolute_position,
-            :destination   => destination
-        })
+        if self.uses?(Character) || self.uses?(NpcBehavior)
+            locations = [self.absolute_position, destination]
+            Message.dispatch_positional(@core, locations, :unit_moves, {
+                :agent         => self,
+                :action        => :move,
+                :location      => locations.first,
+                :destination   => locations.last
+            })
+        end
 
         _set_position(destination)
         @position_type = :internal
