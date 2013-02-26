@@ -225,7 +225,6 @@ class Lobby
                 character = @game_core.get_character(username)
                 params = Commands.stage(@game_core, command, params.merge(:agent => character))
             end
-            send_to_user(username, Message.new(:act_success, {:description => params}))
         rescue Exception => e
             Log.debug(["Failed to stage command #{command}", e.message])
             if AmbiguousCommandError === e && allow_clarification
@@ -240,6 +239,7 @@ class Lobby
             @game_core.protect do
                 Commands.do(@game_core, command, params)
             end
+            send_to_user(username, Message.new(:act_success, {:description => params}))
         rescue Exception => e
             Log.error(["Failed to perform command #{command}", e.message, e.backtrace])
             send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
