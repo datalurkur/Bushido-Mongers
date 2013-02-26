@@ -5,7 +5,6 @@ module Corporeal
     class << self
         def at_creation(instance, params)
             instance.create_body
-            instance.start_listening_for(:unit_attacks)
         end
     end
 
@@ -43,10 +42,13 @@ module Corporeal
     end
 
     def damage(amount, attacker, target=nil)
+        # If a body part (target) isn't specified, just damage the body.
         target ||= get_property(:incidental).rand
         target.set_property(:hp, target.hp - amount)
         @total_hp -= amount
         if target.hp <= 0
+            # If they've destroyed the whole body, the corporeal (spirit)
+            # dies, and the body will hit the floor.
             if get_property(:incidental).include?(target)
                 Log.debug("Destroying #{monicker}!")
                 @core.flag_for_destruction(self, attacker)
