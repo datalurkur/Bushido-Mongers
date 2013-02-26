@@ -126,7 +126,7 @@ module VerboseInterface
                     end
                 when :move
                     return Words.gen_move_description(message.properties)
-                when :attack, :get, :drop, :hide, :unhide
+                when :attack, :get, :drop, :hide, :unhide, :equip, :unequip
                     return Words.gen_sentence(message.properties)
                 when :stats
                     return Words.describe_stats(message.properties)

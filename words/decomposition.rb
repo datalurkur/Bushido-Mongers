@@ -48,17 +48,21 @@ module Words
 
     # N.B. modifies the pieces array
     def self.decompose_phrases(args, pieces)
-        Words.db.get_preps_for_verb(args[:verb]).each do |preposition, designation|
-            if pieces.size > 0
-                phrase = slice_prep_phrase(preposition, pieces)
-                args[designation] = phrase if phrase
+        Words.db.get_preps_for_verb(args[:verb]).each do |preposition, designations|
+            designations.each do |designation|
+                if pieces.size > 0
+                    phrase = slice_prep_phrase(preposition, pieces)
+                    args[designation] = phrase if phrase
+                end
             end
         end
 
         # What remains is stored in the nil preposition designation.
         # This is usually the direct object.
-        designation = Words.db.get_preps_for_verb(args[:verb])[nil]
-        args[designation] = slice_noun_phrase(0, pieces) unless args[designation]
+        designations = Words.db.get_preps_for_verb(args[:verb])[nil]
+        designations.each do |designation|
+            args[designation] = slice_noun_phrase(0, pieces) unless args[designation]
+        end
 
         args
     end

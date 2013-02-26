@@ -107,7 +107,15 @@ module Words
                 # Based on noun and argument information, decide which preposition to use, if any.
                 case type
                 # TODO - destination preposition s.b. 'into' when moving to indoor locations
-                when :target, :tool, :destination, :location
+                when :target
+                    if args[:state].voice == :passive
+                        # We switch subject & target in passive, so look up how to treat the subject instead.
+                        super(noun_phrase_with_prep(type, args, :subject))
+                    else
+                        super(noun_phrase_with_prep(type, args))
+                    end
+                    handled = true
+                when :tool, :destination, :location
                     super(noun_phrase_with_prep(type, args))
                     handled = true
                 when :receiver
@@ -130,9 +138,9 @@ module Words
             end
 
             private
-            def noun_phrase_with_prep(type, args)
-                prep = Words.db.get_prep_for_verb(args[:verb], type)
-                Log.debug([args[type], args[:verb], prep], 8)
+            def noun_phrase_with_prep(type, args, lookup_type = type)
+                prep = Words.db.get_prep_for_verb(args[:verb], lookup_type)
+                Log.debug([type, lookup_type, args[:verb], prep], 4)
                 if prep
                     return prep, NounPhrase.new(args[type])
                 else

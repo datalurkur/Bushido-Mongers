@@ -13,10 +13,11 @@ leave for destination
 leave nil destination
 throw at destination
 attach to target
-grasp by subject
-throw by subject
+attach to subject
+wear on subject
+wear on destination
+wear on location
 pick up target
-wear on target
 get from location
 fetch from location
 grab from location

@@ -174,7 +174,9 @@ module Commands
                 parts_can_wear = parts_can_equip.select { |part| !part.full?(:worn) }
 
                 # wear() will throw the equippable-but-not-free slot exception for us.
-                agent.wear(parts_can_wear.first || parts_can_equip.first, equipment)
+                part_to_equip = parts_can_wear.first || parts_can_equip.first
+                agent.wear(part_to_equip, equipment)
+                params[:destination] = part_to_equip
             else
                 raise(FailedCommandError, "#{agent.monicker} can't wear anything!")
             end

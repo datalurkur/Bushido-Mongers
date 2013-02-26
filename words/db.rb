@@ -92,12 +92,13 @@ class WordDB
     # which part of speech the word is.
     def add_verb_preposition(verb, preposition, designation)
         @verb_prep[verb] ||= {}
-        @verb_prep[verb][preposition] = designation
+        @verb_prep[verb][preposition] ||= []
+        @verb_prep[verb][preposition] << designation
     end
 
     def add_default_preposition(preposition, designation)
-        @prep_defaults[preposition] ||= {}
-        @prep_defaults[preposition] = designation
+        @prep_defaults[preposition] ||= []
+        @prep_defaults[preposition] << designation
     end
 
     # Get a list of related groups
@@ -143,9 +144,9 @@ class WordDB
     # There's also the nil preposition, which implies no preposition for the designation.
     def get_preps_for_verb(verb)
         @verb_prep[verb] ||= {}
-        @prep_defaults.each do |preposition, designation|
+        @prep_defaults.each do |preposition, list|
             if @verb_prep[verb][preposition].nil?
-                @verb_prep[verb][preposition] = designation
+                @verb_prep[verb][preposition] = list
             end
         end
         @verb_prep[verb]
@@ -156,8 +157,8 @@ class WordDB
     def get_prep_for_verb(verb, designation)
         preps = get_preps_for_verb(verb)
         Log.debug([verb, preps, designation], 8)
-        preps.each do |prep, desig|
-            return prep if desig == designation && !prep.nil?
+        preps.each do |prep, list|
+            return prep if list.include?(designation) && !prep.nil?
         end
         nil
     end
