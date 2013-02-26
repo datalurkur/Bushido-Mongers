@@ -107,34 +107,7 @@ module VerboseInterface
 
         def properties(message)
             if message.field == :action_results
-                case message.properties[:command]
-                when :inspect
-                    target = message.properties[:target]
-                    case target[:type]
-                    when :room
-                        return Words.gen_room_description(target)
-                    else
-                        if target[:is_type].include?(:corporeal)
-                            return Words.describe_corporeal(target)
-                        elsif target[:is_type].include?(:composition_root)
-                            return Words.describe_composition(target)
-                        elsif target[:is_type].include?(:item)
-                            return Words.gen_sentence(message.properties)
-                        else
-                            return "I don't know how to describe a #{target[:type].inspect}, bother zphobic to fix this"
-                        end
-                    end
-                when :move
-                    return Words.gen_move_description(message.properties)
-                when :attack, :get, :drop, :hide, :unhide, :equip, :unequip
-                    return Words.gen_sentence(message.properties)
-                when :stats
-                    return Words.describe_stats(message.properties)
-                when :help
-                    return Words.describe_help(message.properties)
-                else
-                    return "I don't know how to express the results of a(n) #{message.properties[:command]}, pester zphobic to work on this"
-                end
+                return Words.generate(message.properties)
             elsif message.field == :game_event
                 case message.properties[:event_type]
                 when :object_destroyed

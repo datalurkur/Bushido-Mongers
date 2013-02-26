@@ -140,7 +140,7 @@ module Words
             private
             def noun_phrase_with_prep(type, args, lookup_type = type)
                 prep = Words.db.get_prep_for_verb(args[:verb], lookup_type)
-                Log.debug([type, lookup_type, args[:verb], prep], 4)
+                Log.debug([type, lookup_type, args[:verb], prep], 7)
                 if prep
                     return prep, NounPhrase.new(args[type])
                 else

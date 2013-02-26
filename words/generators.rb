@@ -1,6 +1,38 @@
 # TODO - add info on acceptable/used arguments to generators
 
 module Words
+    def self.generate(args)
+        case args[:command]
+        when :inspect
+            target = args[:target]
+            Log.debug(target)
+            case target[:type]
+            when :room
+                return Words.describe_room(args)
+            else
+                if target[:is_type].include?(:corporeal)
+                    return Words.describe_corporeal(target)
+                elsif target[:is_type].include?(:composition_root)
+                    return Words.describe_composition(target)
+                elsif target[:is_type].include?(:item)
+                    return Words.gen_sentence(args)
+                else
+                    return "I don't know how to describe a #{target[:type].inspect}, bother zphobic to fix this"
+                end
+            end
+        when :move
+            return Words.describe_room(args)
+        when :attack, :get, :drop, :hide, :unhide, :equip, :unequip
+            return Words.gen_sentence(args)
+        when :stats
+            return Words.describe_stats(args)
+        when :help
+            return Words.describe_help(args)
+        else
+            return "I don't know how to express the results of a(n) #{message.properties[:command]}, pester zphobic to work on this"
+        end
+    end
+
     # TODO - action descriptors: The generic ninja generically slices the goat with genericness.
     def self.gen_sentence(args = {})
         to_print = args.dup
@@ -52,12 +84,10 @@ module Words
         args[:agent]  = args[:attacker]
         args[:target] = args[:defender]
 
-        sentences = [gen_sentence(args)]
-
-#        sentences << gen_sentence(args[:result_hash])
+        Log.debug(args[:result_hash].keys)
+        sentences = [gen_sentence(args)]#, gen_sentence(args[:result_hash])]
         sentences.join(" ")
     end
-
 
     private
     def self.possessor_info(possessor)
@@ -171,38 +201,22 @@ module Words
 #        end
     end
 
-    #:keywords=>[], :objects=>["Test NPC 23683", "Test NPC 35550", "Test Character"], :exits=>[:west], :name=>"b00"
+    def self.describe_room(args = {})
+        sentences = [self.gen_sentence(args)]
 
-    def self.gen_move_description(args = {})
-        room = args[:destination]
+        args.delete(:verb)
+        args.delete(:action)
+        args.delete(:command)
+        args.merge!(:verb => :see)
 
-        move_args = args.dup
-        move_args[:destination] = {:monicker => room[:zone], :adjectives => (room[:keywords].rand || :boring)}
-        room[:room_mentioned] = true
-
-        [self.gen_sentence(move_args), gen_room_description(room)].join(" ")
-    end
-
-    # Required/expected arg values: keywords objects exits
-    def self.gen_room_description(args = {})
-        sentences = []
-
-        args = args.merge(:action => :see)
-
-        args[:state] = State.new
-        args[:state].person = :second
-
-        unless args[:room_mentioned]
-            target = {:monicker => args[:zone], :adjectives => (args[:keywords].rand || :boring)}
-            sentences << Words.gen_sentence(args.merge(:target => target))
+        objects = (args[:target] || args[:destination])[:objects]
+        if objects && !objects.empty?
+            sentences << Words.gen_sentence(args.merge(:target => objects))
         end
 
-        if args[:objects] && !args[:objects].empty?
-            sentences << Words.gen_sentence(args.merge(:target => args[:objects]))
-        end
-
-        if args[:exits] && !args[:exits].empty?
-            sentences << Words.gen_sentence(args.merge(:target => Sentence::Noun.new("exits to #{Sentence::NounPhrase.new(args[:exits])}")))
+        exits   = (args[:target] || args[:destination])[:exits]
+        if exits && !exits.empty?
+            sentences << Words.gen_sentence(args.merge(:target => Sentence::Noun.new("exits to #{Sentence::NounPhrase.new(exits)}")))
         end
 
         sentences.join(" ")

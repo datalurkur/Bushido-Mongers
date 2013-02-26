@@ -52,7 +52,10 @@ monster_spawner boat {
     keywords wet;
 }
 
-zone pier {}
+zone pier {
+    depth_range 0 1;
+    keywords wooden;
+}
 zone jungle {}
 zone forest {}
 zone orchard {}
