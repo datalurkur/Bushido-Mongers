@@ -5,7 +5,6 @@ module Words
         case args[:command]
         when :inspect
             target = args[:target]
-            Log.debug(target)
             case target[:type]
             when :room
                 return Words.describe_room(args)
@@ -137,8 +136,8 @@ module Words
 
     # Yeah, I don't want to auto-generate this info.
     def self.describe_help(args)
-        "Basic commands: #{args[:target].join(" ")}\n" +
-        "There are synonyms of these commands. Experiment!"
+        "Basic commands:\n"+
+        args[:target].map { |c| [c, *Words.db.get_related_words(c)].join(" ") }.join("\n") + "\n"
     end
 
     def self.describe_composition(composition)
