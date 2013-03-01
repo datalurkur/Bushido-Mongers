@@ -332,7 +332,7 @@ module Commands
                 Log.debug("Target provided - #{params[:target].inspect}")
 
                 # Find a recipe (or throw an exception if there's a problem)
-                params[:recipe] = find_recipe(params)
+                params[:recipe] = find_recipe(core, params)
 
                 # Now we have to check that the player actually has access to all of the stuff in the params
                 # TODO - Verify that find_objects can deal with abstract object types like :metal
@@ -361,7 +361,7 @@ module Commands
             raise(NotImplementedError)
         end
 
-        def self.find_recipe(params)
+        def self.find_recipe(core, params)
             # Get a list of recipes used to make the thing
             # TODO - Use player knowledge of recipes here
             # TODO - Include raws that are "called" other things
