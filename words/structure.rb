@@ -97,7 +97,7 @@ module Words
         # Types: prepositional (during), infinitive (to work hard)
         # adpositions: preposition (by jove), circumpositions (from then on).
         class AdverbPhrase < ParseTree::PTInternalNode
-            USED_ARGS = [:target, :tool, :destination, :receiver, :success]
+            USED_ARGS = [:target, :tool, :destination, :receiver, :success, :statement]
 
             # The type is the part of the args being used to generate an adverb phrase.
             # args must be defined.
@@ -131,6 +131,11 @@ module Words
                     else
                         super(:",", :missing)
                     end
+                when :statement
+                    Log.debug(args[:statement])
+                    args[:statement][0]  =  '"' + args[:statement][0].to_s
+                    args[:statement][-1] = args[:statement][-1].to_s + '"'
+                    super(:",", args[:statement])
                 end
 
                 # We don't want to generate this again for other verbs and so forth.

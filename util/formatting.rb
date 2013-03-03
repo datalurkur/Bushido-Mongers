@@ -12,10 +12,12 @@ class String
         word = self.gsub(/^(\w)/) { $1.upcase }
         # Clobber underscores.
         word.gsub!(/_/, ' ')
-        # Add ending punctuation, if it doesn't already exist.
-        word.gsub!(/([\.\!\?])?$/) { $1 || '.' }
         # Drop whitespace before punctuation.
         word.gsub!(/\s+([\,\.\?\!])/, '\1')
+        # Add ending punctuation, if it doesn't already exist.
+        word += '.' unless word.match(/[\.\!\?]['"]?$/)
+        # Swap the sentence punctuation with the quote.
+        word.gsub!(/(['"]?)([\.\!\?])?/, '\2\1')
         # Whitespace cleanup.
         word.gsub!(/^\s+/, '')
         word

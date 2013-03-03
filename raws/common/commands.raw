@@ -9,7 +9,9 @@ abstract root command {
 
 /* Info commands. */
 command stats {}
+command help {}
 
+/* World-interaction commands. */
 
 command inspect {}
 
@@ -28,23 +30,25 @@ command get {
     target item;
 }
 
-command equip {}
-
-command unequip {}
-
-/* stash/put/place */
 command stash {}
 
-/* drop/ditch */
 command drop {
     target item;
 }
+
+command equip {
+}
+command unequip {}
 
 command hide {}
 
 command unhide {}
 
-command help {}
+/* PC-NPC Interactions. */
+
+command say {}
+
+/* Item construction. */
 
 abstract command construct {
     invocation construct;
