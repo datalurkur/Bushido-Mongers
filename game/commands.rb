@@ -330,7 +330,7 @@ module Commands
                 Message.dispatch_positional(core, locations, :unit_acts, {
                     :agent       => params[:agent],
                     :action      => :say,
-                    :action_hash => {:target => params[:target]},
+                    :action_hash => {:receiver => params[:receiver]},
                     :location    => locations.first
                 })
             end

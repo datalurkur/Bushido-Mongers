@@ -25,3 +25,6 @@ take from location
 pick from location
 give to receiver
 send to receiver
+say to receiver
+talk to receiver
+tell nil receiver

@@ -179,6 +179,13 @@ module Words
                     AdverbPhrase.new(arg, args.merge(:verb => verbs.last))
                 end
 
+                if args[:action_hash]
+                    @children += AdverbPhrase::USED_ARGS.select { |arg| args[:action_hash].has_key?(arg) }.collect do |arg|
+                        Log.debug("Handing action_hash arg #{arg}")
+                        AdverbPhrase.new(args[:action_hash], args[:action_hash].merge(:verb => verbs.last))
+                    end
+                end
+
                 if args[:subject_complement]
                     # FIXME: Technically we're not supposed to insert symbol children into PTInternalNode, but hack it.
                     # Subject complements can be adjectives or nouns (or NPs). How should we distinguish?
