@@ -29,7 +29,7 @@ abstract root composition_root {
 /* The classic composition. */
 /* Internals are the things inside, e.g. a backpack or a stomach.
    Incidentals are what the thing is made of, e.g. the cloth the backpack is made out of.
-   Externals are things attached to the outside, from paint to a glued-on moose.
+   Externals are things attached to the outside, from paint to a glued-on moose to an article of clothing.
 */
 abstract composition_root composition {
     container_classes             internal incidental external;

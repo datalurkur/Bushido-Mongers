@@ -11,6 +11,7 @@ abstract no_skill fighting_skill {
     class_many optional sym weapons;
 }
 
+/* Used for animals that fight on instinct. */
 fighting_skill intrinsic_fighting_skill {
     associated_attribute strength;
     attribute_scaling 0.2;
@@ -46,7 +47,6 @@ fighting_skill short_staff_skill {
     /* TODO - practice kata */
 }
 
-/* There's really not a good analog for this name. Baton? */
 /* using jutte, disarmament, non-lethal, apprehension / blocking, deflecting, grappling swords */
 fighting_skill juttejutsu_skill {
     japanese_name juttejutsu;
@@ -66,17 +66,16 @@ fighting_skill spear_skill {
 
 fighting_skill knife_skill {
     japanese_name tantōjutsu;
-    weapons knife;
+    weapons dagger;
 }
 
 fighting_skill two-sword_skill {
     japanese_name nitōryū;
-    weapons katana daito wakizashi shoto;
+    weapons katana wakizashi;
 }
 
-
 fighting_skill bow_skill {
-    japanese_name yumi;
+    japanese_name kyūjutsu;
     weapons short_bow long_bow;
 }
 
@@ -87,5 +86,9 @@ fighting_skill matchlock_skill {
 
 fighting_skill kusarigamajutsu_skill {
     japanese_name kusarigamajutsu;
-    weapons kusarigama;
+    weapons chain_and_sickle;
+}
+
+fighting_skill hammer_skill {
+    weapons hammer;
 }

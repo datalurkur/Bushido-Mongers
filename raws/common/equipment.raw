@@ -16,6 +16,9 @@ abstract root weapon {
     class sym type;
 
     class optional sym japanese_name;
+
+    class sym length; /* in shaku */
+    length 1; /* about a foot */
 }
 
 abstract weapon melee_weapon {}

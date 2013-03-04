@@ -1,0 +1,209 @@
+abstract melee_weapon sword {
+    type piercing;
+}
+
+constructed,item,sword katana {
+    japanese_name katana;
+    handedness one;
+    /* can_parry */
+    length 2..3;
+
+    recipes {
+        technique craft;
+        components sword_blade long_handle;
+    }
+}
+
+constructed,item,sword wakizashi {
+    japanese_name wakizashi; /* literally 'side-inserted sword' */
+    handedness one;
+    /* can_parry */
+    length 1..2;
+
+    recipes {
+        technique craft;
+        components sword_blade long_handle;
+    }
+}
+
+constructed,item,sword dagger {
+    japanese_name tanto;
+    handedness one;
+    /* can_parry */
+    length 0..1;
+
+    recipes {
+        technique craft;
+        components dagger_blade leather;
+    }
+}
+
+constructed,item,sword nagamaki {
+    japanese_name nagamaki;
+    handedness two;
+    /* can_parry */
+    length 4; /* half is the handle */
+
+    recipes {
+        technique forge;
+        components sword_blade long_handle;
+    }
+}
+
+constructed,item,sword cavalry_sword {
+    japanese_name ōdachi; /* also nodachi */
+    handedness two;
+    /* can_parry */
+    /* 165-178 cm; too long for close-quarters combat */
+    length 4..5;
+
+    recipes {
+        technique forge;
+        components longsword_blade handle;
+    }
+}
+
+constructed,item,melee_weapon longstaff {
+    japanese_name bo;
+    type blunt;
+    handedness two;
+    /* can_parry */
+    length 6..9;
+
+    recipes {
+        technique craft;
+        components bamboo;
+    }
+}
+
+constructed,item,melee_weapon shortstaff {
+    japanese_name jo;
+    type blunt;
+    handedness two;
+    /* can_parry */
+    length 4.2;
+
+    recipes {
+        technique craft;
+        components bamboo;
+    }
+}
+
+constructed,item,melee_weapon halfstaff {
+    japanese_name hanbo;
+    type blunt;
+    handedness two;
+    /* can_parry */
+    length 3;
+
+    recipes {
+        technique craft;
+        components bamboo;
+    }
+}
+
+constructed,item,melee_weapon jutte {
+    japanese_name jutte;
+    type nonlethal;
+    handedness one;
+    /* can_parry, can_block */
+    length 1;
+
+    recipes {
+        technique forge;
+        components iron;
+    }
+}
+
+constructed,item,melee_weapon spear {
+    japanese_name yari;
+    type piercing;
+    handedness two;
+    length 3.5..23; /* !! */
+
+    recipes {
+        technique forge;
+        components sword_blade long_handle;
+    }
+}
+
+constructed,item,melee_weapon sickle {
+    type piercing;
+    handedness one;
+
+    recipes {
+        technique forge;
+        components metal;
+    }
+}
+
+constructed,item,melee_weapon chain_and_sickle {
+    japanese_name kusarigama;
+    type blunt; /* FIXME: s.b. either blunt or piercing, depending on the part wielded */
+    handedness two;
+
+    recipes {
+        technique forge;
+        components chain sickle;
+    }
+}
+
+constructed,item,melee_weapon hammer {
+    type blunt;
+    handedness one;
+
+    recipes {
+        technique craft;
+        components wood metal leather;
+    }
+}
+
+constructed,item,melee_weapon glaive {
+    japanese_name naginata;
+    type piercing;
+    handedness two;
+    /* can_parry */
+    length 7; /* blade: 2, shaft: 5 */
+
+    recipes {
+        technique craft;
+        components axe_blade long_handle;
+    }
+}
+
+constructed,item,ranged_weapon long_bow {
+    japanese_name daikyū;
+    type piercing;
+    handedness two;
+
+    recipes {
+        technique bowmaking;
+        components thread wood;
+        /*
+        FIXME: allow components to be a combination of: 
+        bamboo/wood/leather, hemp/silk
+        */
+    }
+}
+
+constructed,item,ranged_weapon short_bow {
+    japanese_name hankyū;
+    type piercing;
+    handedness two;
+
+    recipes {
+        technique bowmaking;
+        components thread wood;
+    }
+}
+
+constructed,item,ammunition arrow {
+    class sym japanese_name;
+    japanese_name ya;
+
+    recipes {
+        technique fletching;
+        components wood metal feather;
+        duplicates 10;
+    }
+}
