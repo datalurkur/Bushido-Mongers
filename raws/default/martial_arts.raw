@@ -17,7 +17,7 @@ fighting_skill intrinsic_fighting_skill {
     attribute_scaling 0.2;
 }
 
-/* Yes, karate and kendo didn't exist until the 20th century. Too bad! */
+/* Yes, karate and kendo did not exist until the 20th century. Too bad! */
 fighting_skill empty_hand_fighting_skill {
     japanese_name karate;
     weapons hand leg;
@@ -37,13 +37,13 @@ fighting_skill grappling_skill {
 
 fighting_skill staff_skill {
     japanese_name bojutsu;
-    weapons staff;
+    weapons longstaff;
     /* TODO - practice kata */
 }
 
 fighting_skill short_staff_skill {
     japanese_name jojutsu;
-    weapons short_staff;
+    weapons shortstaff halfstaff;
     /* TODO - practice kata */
 }
 
@@ -84,7 +84,7 @@ fighting_skill matchlock_skill {
     weapons matchlock;
 }
 
-fighting_skill kusarigamajutsu_skill {
+fighting_skill chain_and_sickle_skill {
     japanese_name kusarigamajutsu;
     weapons chain_and_sickle;
 }
@@ -92,3 +92,24 @@ fighting_skill kusarigamajutsu_skill {
 fighting_skill hammer_skill {
     weapons hammer;
 }
+
+post_process {
+    Log.debug("Propagating component information for martial arts skill", 6)
+    types_of(:fighting_skill, true).each do |skill|
+        weapons = info_for(skill, :weapons)
+        if !(weapons.nil? || weapons.empty?)
+            weapons.each do |weapon|
+                if has_type?(weapon)
+                    Log.debug("#{weapon} is used in #{skill}")
+                    name = :skill_used
+                    # This is going to become a performance issue later
+                    modify_info(weapon, name, []) << skill
+                    modify_info(weapon, name).uniq!
+                else
+                    Log.error("#{weapon.inspect} not defined as db type")
+                end
+            end
+        end
+    end
+}
+
