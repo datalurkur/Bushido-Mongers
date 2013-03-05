@@ -7,6 +7,8 @@ class WebEnabledLobby < Lobby
     def initialize(name, password_hash, creator, web_server, &block)
         super(name, password_hash, creator, &block)
 
+        @map_size = 512
+
         @web_server = web_server
         setup_web_routes
     end
@@ -36,7 +38,7 @@ class WebEnabledLobby < Lobby
 
     def create_lobby_map
         # FIXME - Cache the map so we don't have to recreate it every damn time
-        map_data = @game_core.world.get_map_layout(512, 0.2)
+        map_data = @game_core.world.get_map_layout(@map_size, 0.2)
         f = File.open(map_location, 'w')
         f.write(map_data)
         f.close
@@ -44,7 +46,7 @@ class WebEnabledLobby < Lobby
 
     def get_room_layout
         # FIXME - Cache the layout so we don't have to recreate it every damn time
-        @game_core.world.get_room_layout(256, 0.2)
+        @game_core.world.get_room_layout(@map_size, 0.2)
     end
 
     def create_map_for(username)
