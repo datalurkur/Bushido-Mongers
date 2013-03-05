@@ -31,7 +31,7 @@ class GameCore
             # And finally read in some basic noun & adjective information from the raws db.
             WordParser.read_raws(@words_db, @db)
 
-            setup_world(args.merge(:core => self))
+            setup_world(args)
             @awaiting_destruction = []
 
             @setup = true
@@ -188,10 +188,10 @@ class GameCore
     private
     def setup_world(args)
         Log.debug("Creating world")
-        @world = WorldFactory.generate(args)
+        @world = WorldFactory.generate(self, args)
 
         Log.debug("Populating world with NPCs and items")
-        @world.populate(self)
+        @world.populate
     end
 
     def teardown_world

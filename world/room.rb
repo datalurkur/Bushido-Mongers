@@ -3,18 +3,19 @@ require './world/zone'
 
 module ZoneWithKeywords
     # The instantiated zone, a BushidoObject.
-    def zone
-        raise(StandardError, "Zone not defined!") unless @params[:zone]
-        @params[:zone]
+    def zone_type
+        raise(StandardError, "Zone has no type!") unless @params[:type]
+        @params[:type]
+    end
+
+    def zone_info
+        raise(StandardError, "Zone has no core!") unless @core
+        @core.db.info_for(self.zone_type)
     end
 
     def keywords
-        @params[:zone].keywords
+        self.zone_info[:keywords]
     end
-
-#    def monicker
-#        @params[:zone].monicker
-#    end
 end
 
 class Room < ZoneLeaf
@@ -22,9 +23,12 @@ class Room < ZoneLeaf
 
     attr_reader :objects
 
-    def initialize(name, params={})
+    def initialize(core, name, params={})
+        @core    = core
         @params  = params
+
         @objects = []
+
         super(name)
     end
 
@@ -50,35 +54,35 @@ class Room < ZoneLeaf
     end
 
     # Determines how a leaf populates itself
-    def populate(core)
+    def populate
         Log.debug("Populating leaf #{name}")
 
         # FIXME: This should be somewhere else, and not so inclusive.
         @parent.add_starting_location(self)# if Chance.take(:coin_toss)
 
-        populate_npcs(core)
-        populate_items(core)
+        populate_npcs
+        populate_items
     end
 
-    def populate_npcs(core)
-        npc_types = core.db.info_for(self.zone.type, :spawn_npcs)
+    def populate_npcs
+        npc_types = @core.db.info_for(self.zone_type, :spawn_npcs)
 
-        Log.debug("No acceptable NPC types found for #{self.zone.type}!") if npc_types.empty?
+        Log.debug("No acceptable NPC types found for #{self.zone_type}!") if npc_types.empty?
 
         # Actually spawn the NPCs; just one of each type for now.
         npc_types.each do |type|
-            if Rarity.roll(core.db.info_for(type, :spawn_rarity))
-                core.create(type, {:position => self })
+            if Rarity.roll(@core.db.info_for(type, :spawn_rarity))
+                @core.create(type, {:position => self })
             end
         end
     end
 
-    def populate_items(core)
-        item_types = core.db.info_for(self.zone.type, :spawn_items)
+    def populate_items
+        item_types = @core.db.info_for(self.zone_type, :spawn_items)
 
         # Actually spawn the items.
         item_types.each do |type|
-            core.create(type, {:position => self })
+            @core.create(type, {:position => self })
         end
     end
 end
@@ -86,8 +90,9 @@ end
 class Area < ZoneContainer
     include ZoneWithKeywords
 
-    def initialize(name, size, depth, params={})
+    def initialize(core, name, size, depth, params={})
         Log.debug("Creating #{name} room with #{params.inspect}")
+        @core   = core
         @params = params
         super(name, size, depth)
     end
@@ -101,14 +106,12 @@ class Area < ZoneContainer
     end
 
     # Decides whether an Area populates its sub-Areas / Leaves directly, or defers to them to do so
-    def populate(core)
+    def populate
         Log.debug("Populating area #{name}")
 
         # FIXME - This will be more complex based on keywords
         leaves.each do |leaf|
-            leaf.populate(core)
+            leaf.populate
         end
     end
 end
-
-$nowhere = Room.new("Nowhere")

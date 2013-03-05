@@ -4,14 +4,14 @@ require './util/timer'
 
 class WorldFactory
 class << self
-    def generate(config={})
-        raise(ArgumentError, "No core object given to #{self.class}.") unless config[:core]
-
+    def generate(core, config={})
         config[:world_size]         ||= 3
         config[:world_depth]        ||= 3
         config[:openness]           ||= 0.75 # Larger numbers lead to more rooms overall
         config[:connectedness]      ||= 0.75 # Larger numbers lead to more passageways
         config[:area_size_tendency] ||= 0.35 # Larger numbers move the balance of small/large rooms towards the large end
+
+        Log.info(["Generating world with config", config])
 
         size, depth = config[:world_size], config[:world_depth]
 
@@ -20,33 +20,33 @@ class << self
         Log.debug("Seeding world with #{seed}")
         srand(seed)
 
-        params = Zone.create(config[:core], nil, depth)
+        params = Zone.get_params(core, nil, depth)
 
         world_name = Words.gen_area_name(params)
 
-        world = World.new(world_name, size, depth, params)
-        populate_area(world, config)
+        world = World.new(core, world_name, size, depth, params)
+        populate_area(core, world, config)
         world.finalize
         world
     end
 
-    def generate_area(size, depth, parent_area, config)
+    def generate_area(core, size, depth, parent_area, config)
         Log.debug("Generating area of size #{size} in #{parent_area.name}", 6)
 
         # Find and add a suitable zone template.
-        parent_zone = parent_area.respond_to?(:zone) ? parent_area.zone : nil
+        parent_zone_type = parent_area.respond_to?(:zone_type) ? parent_area.zone_type : nil
 
-        params = Zone.create(config[:core], parent_zone, depth)
+        params = Zone.get_params(core, parent_zone_type, depth)
 
         Log.debug(params.inspect, 6)
         name = "#{Words.gen_area_name(params)}-#{rand(1000)}"
 
         area = if (depth < 2) || (rand() < config[:area_size_tendency])
             Log.debug("Generating room #{name}", 5)
-            Room.new(name, params)
+            Room.new(core, name, params)
         else
             Log.debug("Generating area #{name} of size #{size} and depth #{depth}", 5)
-            Area.new(name, size, depth, params)
+            Area.new(core, name, size, depth, params)
         end
 
         # Populate the empty zone.
@@ -54,14 +54,14 @@ class << self
 
         if Area === area
             # The config will almost certainly be modified by the zone template
-            populate_area(area, config, parent_area)
+            populate_area(core, area, config, parent_area)
         end
 
         area
     end
 
     # Generate sub-areas, and clean up excess/broken connections.
-    def populate_area(area, config, parent_area=nil)
+    def populate_area(core, area, config, parent_area=nil)
         Log.debug("Populating area #{area.name}", 5)
         noise_size = 3*area.size
         noisemap = NoiseMap.new(noise_size)
@@ -75,7 +75,7 @@ class << self
                 iY = 3*y + 1.0
                 if noisemap.get_scaled(iX, iY, 0.0, 1.0) < config[:openness]
                     # Create a zone at these coordinates
-                    subarea = generate_area(area.size, area.depth - 1, area, config)
+                    subarea = generate_area(core, area.size, area.depth - 1, area, config)
                     area.set_zone(x, y, subarea)
 
                     Log.debug("Set subarea #{subarea.name} with coords #{subarea.get_full_coordinates.inspect}", 7)

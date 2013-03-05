@@ -22,11 +22,20 @@ class World < Area
     end
 
     def get_room_layout(total_size, corridor_ratio)
-        depth_powers   = (0..@depth-1).collect { |n| @size ** n }.reverse
-        cells_per_side = depth_powers.first
+        Log.info("Getting room layout given total size #{total_size} and corridor ratio #{corridor_ratio} (#{@depth} depths)")
+
+        depth_powers   = (0..@depth).collect { |n| @size ** n }.reverse
+        cells_per_side = depth_powers[1]
         cell_size      = total_size / cells_per_side
         corridor_size  = (cell_size * corridor_ratio).to_i
         cell_sizes     = depth_powers.reverse.collect { |p| total_size / p }
+
+        Log.debug(["Depth powers", depth_powers, "Results in cells-pert-side and cell size #{cells_per_side} / #{cell_size}", cell_sizes])
+
+        if corridor_size <= 0
+            Log.warning("Corridors will be invisible, cell size (#{cell_size}) and corridor ratio too small")
+            corridor_size = 0
+        end
 
         room_layout    = {
             :total_size    => total_size,
@@ -34,18 +43,21 @@ class World < Area
             :rooms         => {}
         }
 
+        Log.info("Generating layout information for #{leaves.size} leaves")
+
         leaves.each do |leaf|
             leaf_data = {}
 
             base_coords = leaf.get_full_coordinates
+            #Log.debug(["Generating room info at", base_coords])
 
             # Compute the position and dimension of this room
             local_cell_size = cell_sizes[base_coords.size]
             room_size       = local_cell_size - (corridor_size * 2)
             room_coords     = [0, total_size - 1]
             base_coords.each_with_index do |c,i|
-                room_coords[0] += (c[0] * depth_powers[i+1] * cell_size)
-                room_coords[1] -= (c[1] * depth_powers[i+1] * cell_size)
+                room_coords[0] += (c[0] * depth_powers[i+2] * cell_size)
+                room_coords[1] -= (c[1] * depth_powers[i+2] * cell_size)
             end
 
             leaf_data[:room_size]   = room_size
@@ -64,6 +76,10 @@ class World < Area
             leaf.connected_directions.each do |dir|
                 other           = leaf.get_adjacent(dir)
                 other_coords    = other.get_full_coordinates
+
+                if other_coords.size > @depth
+                    Log.error("Cell is deeper (#{other_coords.size} / #{@depth}) than it's allowed to be!")
+                end
 
                 corridor_offset = [0,0]
                 shift_cell_size = local_cell_size

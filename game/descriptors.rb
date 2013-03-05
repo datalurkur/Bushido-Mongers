@@ -85,8 +85,8 @@ class Descriptor
             friendly_name = room.name.gsub(/-\d+$/, '')
             {
                 :type       => :room,
-                :monicker   => room.zone.type,   # friendly_name.to_sym # TODO - change when name isn't just <keywords> <zone>
-                :zone       => room.zone.type,
+                :monicker   => room.zone_type,   # friendly_name.to_sym # TODO - change when name isn't just <keywords> <zone>
+                :zone       => room.zone_type,
                 :adjectives => room.keywords,
                 :objects    => observer.perceivable_objects_of(room.objects - [observer]).collect { |o| BushidoObjectDescriptor.describe(o, observer) },
                 :exits      => room.connected_directions

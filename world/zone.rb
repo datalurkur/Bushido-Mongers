@@ -7,15 +7,16 @@ class Zone
     # Create zones given a parent (nil for the root zone) and depth information.
     class << self
         # Returns args used to populate gen_area_name, Area.new and Room.new.
-        def create(core, parent, depth)
+        def get_params(core, parent, depth)
             args = if parent
                 # Inherit a keyword from the parent.
                 #Log.debug(parent.type)
                 #parent_list = core.db.info_for(parent.type, :keywords)
-                #Log.debug(["Zone.create", parent.type, parent_list])
+                #Log.debug(["Zone.get_params", parent.type, parent_list])
 
-                { :type => find_child(core.db, parent, depth),
-                  :inherited_keywords => []
+                {
+                    :type => find_child(core.db, parent, depth),
+                    :inherited_keywords => []
                 }
             else
                 { :type => find_random(core.db, depth) }
@@ -23,7 +24,6 @@ class Zone
             #Log.debug("found #{args[:inherited_keywords].inspect}!") if args[:inherited_keywords]
 
             args[:depth]    = depth
-            args[:zone]     = core.create(args[:type], args)
             args[:keywords] = core.db.info_for(args[:type], :keywords)
 
             args.delete(:inherited_keywords) # Shouldn't need this again.
@@ -38,14 +38,14 @@ class Zone
         end
 
         def find_child(db, parent, depth)
-            potential_zones = zones_of_depth(db, depth, db.info_for(parent.type, :child_zones))
+            potential_zones = zones_of_depth(db, depth, db.info_for(parent, :child_zones))
 
             if potential_zones.empty?
                 potential_zones = zones_of_depth(db, depth)
             end
 
             type = potential_zones.rand
-            raise(UnexpectedBehaviorError, "Found invalid child zone type #{type} in #{parent.type}!") unless db[type]
+            raise(UnexpectedBehaviorError, "Found invalid child zone type #{type} in #{parent}!") unless db[type]
             return type
         end
 
