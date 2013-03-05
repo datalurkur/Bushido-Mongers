@@ -88,7 +88,7 @@ module Words
         args[:target] = args[:defender]
 
         Log.debug(args[:result_hash].keys)
-        sentences = [gen_sentence(args)]#, gen_sentence(args[:result_hash])]
+        sentences = [gen_sentence(args.merge(args[:result_hash]))]
         sentences.join(" ")
     end
 

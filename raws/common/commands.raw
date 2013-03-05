@@ -19,7 +19,7 @@ command move {}
 
 command attack {
     target corporeal;
-    tool weapon;
+    tool item; /* weapon-specific lookups happen if no tool is specified */
 }
 
 command consume {
