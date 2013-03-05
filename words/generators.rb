@@ -28,7 +28,7 @@ module Words
         when :help
             return Words.describe_help(args)
         else
-            return "I don't know how to express the results of a(n) #{message.properties[:command]}, pester zphobic to work on this"
+            return "I don't know how to express the results of a(n) #{args[:command]}, pester zphobic to work on this"
         end
     end
 
