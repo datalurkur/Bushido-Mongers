@@ -41,7 +41,7 @@ class << self
         Log.debug(params.inspect, 6)
         name = "#{Words.gen_area_name(params)}-#{rand(1000)}"
 
-        area = if (depth < 2) || (rand() < config[:area_size_tendency])
+        area = if (depth < 1) || (rand() < config[:area_size_tendency])
             Log.debug("Generating room #{name}", 5)
             Room.new(core, name, params)
         else

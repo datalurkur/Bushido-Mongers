@@ -36,7 +36,7 @@ class WebEnabledLobby < Lobby
 
     def create_lobby_map
         # FIXME - Cache the map so we don't have to recreate it every damn time
-        map_data = @game_core.world.get_map_layout(256, 0.2)
+        map_data = @game_core.world.get_map_layout(512, 0.2)
         f = File.open(map_location, 'w')
         f.write(map_data)
         f.close

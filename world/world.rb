@@ -25,12 +25,12 @@ class World < Area
         Log.info("Getting room layout given total size #{total_size} and corridor ratio #{corridor_ratio} (#{@depth} depths)")
 
         depth_powers   = (0..@depth).collect { |n| @size ** n }.reverse
-        cells_per_side = depth_powers[1]
+        cells_per_side = depth_powers.first
         cell_size      = total_size / cells_per_side
         corridor_size  = (cell_size * corridor_ratio).to_i
-        cell_sizes     = depth_powers.reverse.collect { |p| total_size / p }
+        cell_sizes     = depth_powers.reverse.collect { |p| total_size.to_f / p }
 
-        Log.debug(["Depth powers", depth_powers, "Results in cells-pert-side and cell size #{cells_per_side} / #{cell_size}", cell_sizes])
+        #Log.debug(["Depth powers", depth_powers, "Results in cells-per-side and cell size #{cells_per_side} / #{cell_size}", cell_sizes])
 
         if corridor_size <= 0
             Log.warning("Corridors will be invisible, cell size (#{cell_size}) and corridor ratio too small")
@@ -43,21 +43,21 @@ class World < Area
             :rooms         => {}
         }
 
-        Log.info("Generating layout information for #{leaves.size} leaves")
+        #Log.info("Generating layout information for #{leaves.size} leaves")
 
         leaves.each do |leaf|
             leaf_data = {}
 
             base_coords = leaf.get_full_coordinates
-            #Log.debug(["Generating room info at", base_coords])
+            #Log.info("Placing leaf #{leaf.name}")
 
             # Compute the position and dimension of this room
             local_cell_size = cell_sizes[base_coords.size]
             room_size       = local_cell_size - (corridor_size * 2)
             room_coords     = [0, total_size - 1]
             base_coords.each_with_index do |c,i|
-                room_coords[0] += (c[0] * depth_powers[i+2] * cell_size)
-                room_coords[1] -= (c[1] * depth_powers[i+2] * cell_size)
+                room_coords[0] += (c[0] * cell_sizes[i+1])
+                room_coords[1] -= (c[1] * cell_sizes[i+1])
             end
 
             leaf_data[:room_size]   = room_size

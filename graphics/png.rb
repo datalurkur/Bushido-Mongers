@@ -89,8 +89,10 @@ class DerpyPNG
     end
 
     def fill_box(x,y,w,h,color)
-        (x...(x+w)).each do |i|
-            (y...(y+h)).each do |j|
+        x_range = (x.round...(x.round + w.round))
+        y_range = (y.round...(y.round + h.round))
+        x_range.each do |i|
+            y_range.each do |j|
                 set_pixel(i,j,color)
             end
         end
