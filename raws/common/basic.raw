@@ -1,6 +1,9 @@
 abstract root object {
     has float weight;
     has sym size;
+
+    class float hardness;
+    hardness insubstantial;
 }
 
 abstract root aligned {

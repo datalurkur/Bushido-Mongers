@@ -312,6 +312,31 @@ module Commands
         end
     end
 
+    ### NPC-PC INTERACTION COMMANDS ###
+
+    module Say
+        def self.stage(core, params)
+            # Look for receiver in the room.
+            if params[:receiver]
+                Commands.find_objects(core, params, :receiver => [:position])
+            end
+        end
+
+        def self.do(core, params)
+            if params[:receiver]
+                # TODO - send message only to receiver, for whisper
+            else
+                locations = [params[:agent].absolute_position]
+                Message.dispatch_positional(core, locations, :unit_acts, {
+                    :agent       => params[:agent],
+                    :action      => :say,
+                    :action_hash => {:receiver => params[:receiver]},
+                    :location    => locations.first
+                })
+            end
+        end
+    end
+
     module Construct
         def self.stage(core, params)
 =begin

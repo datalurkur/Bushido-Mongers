@@ -1,0 +1,77 @@
+constructed,fabric swatch {
+    value 100;
+    weight 0.2;
+    size small;
+
+    recipes {
+        technique craft;
+        components thread;
+    }
+}
+
+material,constructed ingot {
+    size small;
+
+    recipes {
+        technique forge;
+        components metal;
+    }
+}
+
+item,constructed buckle {
+    recipes {
+        technique forge;
+        components metal;
+    }
+}
+
+item,constructed dagger_blade {
+    size tiny;
+
+    recipes {
+        technique forge;
+        components metal;
+    }
+}
+
+item,constructed handle {
+    recipes {
+        technique craft;
+        components leather;
+    }
+}
+
+item,constructed long_handle {
+    recipes {
+        technique craft;
+        components leather;
+    }
+}
+
+item,constructed chain {
+    recipes {
+        technique forge;
+        components metal;
+    }
+}
+
+item,constructed axe_blade {
+    recipes {
+        technique forge;
+        components metal;
+    }
+}
+
+item,constructed sword_blade {
+    recipes {
+        technique forge;
+        components metal;
+    }
+}
+
+item,constructed longsword_blade {
+    recipes {
+        technique forge;
+        components metal;
+    }
+}

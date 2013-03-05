@@ -27,6 +27,10 @@ abstract root composition_root {
 }
 
 /* The classic composition. */
+/* Internals are the things inside, e.g. a backpack or a stomach.
+   Incidentals are what the thing is made of, e.g. the cloth the backpack is made out of.
+   Externals are things attached to the outside, from paint to a glued-on moose to an article of clothing.
+*/
 abstract composition_root composition {
     container_classes             internal incidental external;
     /* Determines which components are modifiable after creation */
@@ -57,17 +61,33 @@ post_process {
     Log.debug("Propagating component information for constructed objects", 6)
     types_of(:constructed, true).each do |constructed|
         recipes = info_for(constructed, :recipes)
-        Log.error("No recipes found for #{constructed.inspect}") if recipes.empty?
+        if recipes.nil? || recipes.empty?
+            Log.error("No recipes found for #{constructed.inspect}")
+            next
+        end
+
         recipes.each do |recipe|
             components = recipe[:components]
-            Log.error("No components found for recipe #{recipe}") if components.empty?
+            if components.nil? || components.empty?
+                Log.error("No components found for recipe #{recipe}")
+                next
+            end
             components.each do |component|
+                unless has_type?(component)
+                    # identical to the raw_info_for exception, but in the post_process block to avoid the binding line-mashed stack dump.
+                    Log.error("#{component.inspect} not defined as db type")
+                    next
+                end
                 propagate_recursive(component) do |subtype|
-                    Log.debug("#{subtype} is used in #{constructed}", 6)
-                    name = :used_in
-                    # This is going to become a performance issue later
-                    modify_info(subtype, name, []) << constructed
-                    modify_info(subtype, name).uniq!
+                    if has_type?(subtype)
+                        Log.debug("#{subtype} is used in #{constructed}", 6)
+                        name = :used_in
+                        # This is going to become a performance issue later
+                        modify_info(subtype, name, []) << constructed
+                        modify_info(subtype, name).uniq!
+                    else
+                        Log.error("#{subtype.inspect} not defined as db type")
+                    end
                 end
             end
         end

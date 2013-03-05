@@ -11,6 +11,12 @@ module Words
         # Find the command/verb
         verb = pieces.slice!(0)
 
+        # handle the special case of command style: 'this is text that i'm speaking, indicated by the initial quote.
+        if verb.to_s[0].chr == "'"
+            args = {:verb => :say, :command => :say}
+            return decompose_statement(args, [verb.to_s[1..-1]] + pieces)
+        end
+
         args = {:verb => verb, :command => verb}
 
         # Strip out articles, since they aren't necessary yet.
@@ -33,6 +39,11 @@ module Words
             args[:command] = matching_commands.first
         end
 
+        # Commands involving statements need to be parsed differently.
+        if [:say, :whisper, :yell].include?(args[:command])
+            return decompose_statement(args, pieces)
+        end
+
         phrase_args = decompose_phrases(args, pieces)
 
         if pieces.size > 0
@@ -45,6 +56,32 @@ module Words
     end
 
     private
+    # N.B. modifies the pieces array
+    def self.decompose_statement(args, pieces)
+        # This is tricky. The first word might be the receiver:
+        # $ whisper jeff I saw a beaver.
+        # $ tell antonio I loved you in Zorro.
+        # But it might also just be part of the statement:
+        # $ say I saw a beaver.
+        # This is probably something that should either be decided in the command logic.
+        # I believe for most command words it will be the :target.
+
+        Words.db.get_preps_for_verb(args[:verb]).each do |preposition, designations|
+            Log.debug([preposition, designations])
+            Log.debug(nil)
+            designations.each do |designation|
+                if pieces.size > 0
+                    phrase = slice_initial_phrase(preposition, pieces)
+                    args[designation] = phrase if phrase
+                end
+            end
+        end
+
+        # What remains is the statement.
+        args[:statement] = pieces
+
+        args
+    end
 
     # N.B. modifies the pieces array
     def self.decompose_phrases(args, pieces)
@@ -65,6 +102,17 @@ module Words
         end
 
         args
+    end
+
+    # N.B. modifies the pieces array
+    def self.slice_initial_phrase(preposition, pieces)
+        if (pieces[0] == preposition)
+            Log.debug("Detected initial '#{preposition}'", 6)
+            pieces.slice!(0, 1)
+            noun = slice_noun_phrase(index, pieces)
+        end
+        Log.debug(noun, 6) if noun
+        noun
     end
 
     # N.B. modifies the pieces array

@@ -1,7 +1,4 @@
-abstract item material {
-    class float hardness;
-    hardness insubstantial;
-}
+abstract item material {}
 
 abstract material metal {
     class int melting_point;
@@ -54,41 +51,20 @@ wood alder {
     size small;
 }
 
+wood bamboo {
+    value 10;
+    weight 1;
+    size medium;
+}
+
 thread silk {
     value 50;
     weight 0.1;
     size tiny;
 }
 
-constructed,fabric swatch {
-    value 100;
-    weight 0.2;
-    size small;
-
-    recipes {
-        technique craft;
-        components thread;
-    }
-}
-
 material feather {
     value 5;
     weight 0.1;
     size tiny;
-}
-
-material,constructed ingot {
-    size small;
-
-    recipes {
-        technique forge;
-        components metal;
-    }
-}
-
-constructed buckle {
-    recipes {
-        technique forge;
-        components metal;
-    }
 }

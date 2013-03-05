@@ -10,3 +10,4 @@ use utilize manipulate
 equip wear
 remove unequip
 throw toss
+say talk tell

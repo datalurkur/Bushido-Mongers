@@ -23,6 +23,8 @@ module Words
             return Words.describe_room(args)
         when :attack, :get, :drop, :hide, :unhide, :equip, :unequip
             return Words.gen_sentence(args)
+        when :say
+            return Words.gen_sentence(args.merge(:verb => :say))
         when :stats
             return Words.describe_stats(args)
         when :help
@@ -66,9 +68,11 @@ module Words
         raise unless verb
 
         # Use an associated verb, if any exist.
-        associated_verbs = Words.db.get_related_words(verb.to_sym)
-        if associated_verbs && associated_verbs.size > 1
-            verb = associated_verbs.rand
+        unless [:say].include?(verb)
+            associated_verbs = Words.db.get_related_words(verb.to_sym)
+            if associated_verbs && associated_verbs.size > 1
+                verb = associated_verbs.rand
+            end
         end
 
         subject_np = Sentence::NounPhrase.new(subject)
@@ -203,13 +207,13 @@ module Words
     def self.describe_room(args = {})
         sentences = [self.gen_sentence(args)]
 
-        args.delete(:verb)
-        args.delete(:action)
-        args.delete(:command)
-
         room = args[:target] || args[:destination]
         args.delete(:target)
         args.delete(:destination)
+
+        args.delete(:verb)
+        args.delete(:action)
+        args.delete(:command)
 
         args.merge!(:verb => :see)
 
