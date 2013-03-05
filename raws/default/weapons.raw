@@ -141,6 +141,7 @@ constructed,item,melee_weapon chain_and_sickle {
     japanese_name kusarigama;
     type blunt; /* FIXME: s.b. either blunt or piercing, depending on the part wielded */
     handedness two;
+    /* can_grapple */
 
     recipes {
         technique forge;
@@ -194,6 +195,17 @@ constructed,item,ranged_weapon short_bow {
     recipes {
         technique bowmaking;
         components thread wood;
+    }
+}
+
+constructed,item,ranged_weapon matchlock {
+    japanese_name tanegashima;
+    type explosive;
+    handedness two;
+
+    recipes {
+        technique forge;
+        components metal metal metal wood wood;
     }
 }
 

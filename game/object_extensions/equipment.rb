@@ -69,10 +69,20 @@ module Inventory
     end
 
     def has_weapon?
-        false
+        weapon = nil
+        candidates = all_grasped_objects.select { |o| o.is_type?(:weapon) }
+        unless candidates.empty?
+            Log.debug(candidates)
+            # TODO - check handedness, and ignore or penalize weapon without enough hands.
+            @default_weapon = candidates[0]
+            true
+        else
+            false
+        end
     end
 
     def weapon
+        @default_weapon
     end
 end
 
