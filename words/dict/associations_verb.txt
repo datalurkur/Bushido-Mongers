@@ -1,4 +1,6 @@
-attack chop slice stab strike hit
+attack strike
+chop slice stab
+bash smash wallop
 consume eat chomp gnaw bite drink quaff
 inspect see look observe notice spot detect perceive
 search
