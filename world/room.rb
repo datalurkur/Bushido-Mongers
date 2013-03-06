@@ -2,7 +2,6 @@ require './game/tables'
 require './world/zone'
 
 module ZoneWithKeywords
-    # The instantiated zone, a BushidoObject.
     def zone_type
         raise(StandardError, "Zone has no type!") unless @params[:type]
         @params[:type]

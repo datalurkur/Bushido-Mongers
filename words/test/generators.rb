@@ -7,7 +7,20 @@ require './words/words'
 
 Log.debug(Words.gen_area_name({:type => :mountain, :keywords => [:beautiful]}))
 Log.debug(Words.gen_area_name({:type => :sewer,    :keywords => [:dank]}))
-Log.debug(Words.gen_room_description(:zone => :mountain, :keywords => [:beautiful], :objects => ["elderly beaver", "Frank the Ninja Bunny"], :exits => [:east, :north]))
+Log.debug(
+    Words.describe_room(
+        :command => :inspect,
+        :agent  => :you,
+        :target =>
+        {
+            :type       => :room,
+            :monicker   => :mountain,
+            :adjectives => [:tall, :broken],
+            :objects    => ["elderly beaver", "Frank the Ninja Bunny"],
+            :exits      => [:east, :north]
+        }
+    )
+)
 
 def john_and_mary(state)
     Log.debug(Words.gen_sentence(:agent => :John, :command => :move, :destination => :west, :state=>state))

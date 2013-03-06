@@ -1,6 +1,8 @@
 class FakeCore
     attr_reader :db
     def initialize(db)
+        Message.setup(self)
+
         @db = db
     end
     def create(type, hash)
@@ -18,6 +20,7 @@ end
 unless Object.const_defined?("Message")
     class Message
         class << self
+            def setup(core); end
             def register_listener(core, klass, obj); end
             def unregister_listener(core, klass, obj); end
             def dispatch(core, type, args={}); end
