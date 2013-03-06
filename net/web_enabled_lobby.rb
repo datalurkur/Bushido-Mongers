@@ -51,7 +51,7 @@ class WebEnabledLobby < Lobby
 
     def create_map_for(username)
         character = @game_core.get_character(username)
-        map_data  = @game_core.world.get_map_layout(256, 0.2, {character.absolute_position => :red})
+        map_data  = @game_core.world.get_map_layout(@map_size, 0.2, {character.absolute_position => :red})
         f = File.open(map_location_for(username), 'w')
         f.write(map_data)
         f.close
