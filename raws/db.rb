@@ -148,8 +148,8 @@ class ObjectDB
         raise(ArgumentError, "#{type.inspect} is not instantiable.") if @db[type][:abstract]
 
         # When no longer in debug mode, go back to using BushidoObject
-        #BushidoObject.new(core, type, params)
-        SafeBushidoObject.new(core, type, params)
+        #BushidoObject.create(core, type, params)
+        SafeBushidoObject.create(core, type, params)
     end
 
     def get_binding
