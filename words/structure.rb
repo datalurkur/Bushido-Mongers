@@ -121,7 +121,7 @@ module Words
                 when :receiver
                     super(noun_phrase_with_prep(type, args))
                     # In Modern English, an indirect object is often expressed with a prepositional phrase of "to" or "for". If there is a direct object, the indirect object can be expressed by an object pronoun placed between the verb and the direct object. For example, "He gave that to me" and "He built a snowman for me" are the same as "He gave me that" and "He built me a snowman". 
-                    raise NotImplementedError
+                    handled = true
                 when :success
                     # Eventually this will be more complex, and describe either
                     # how the blow was evaded (parry, blocked, hit armor, etc)

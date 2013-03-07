@@ -8,8 +8,8 @@ class WordDB
         @keywords     = {}
         @conjugations = {}
 
-        @verb_prep     = {}
-        @prep_defaults = {}
+        @verb_case_maps     = {}
+        @verb_default_case  = {}
     end
 
     def collect_groups(*list_of_words)
@@ -90,15 +90,13 @@ class WordDB
 
     # Basically the reason this isn't a keyword_family is because we don't know
     # which part of speech the word is.
-    def add_verb_preposition(verb, preposition, designation)
-        @verb_prep[verb] ||= {}
-        @verb_prep[verb][preposition] ||= []
-        @verb_prep[verb][preposition] << designation
-    end
-
-    def add_default_preposition(preposition, designation)
-        @prep_defaults[preposition] ||= []
-        @prep_defaults[preposition] << designation
+    def add_verb_preposition(verb, preposition, case_name)
+        @verb_case_maps[verb] ||= {}
+        if preposition
+            @verb_case_maps[verb][case_name] = preposition
+        else
+            @verb_default_case[verb] = case_name
+        end
     end
 
     # Get a list of related groups
@@ -140,27 +138,19 @@ class WordDB
         keyword_groups.select { |g| g.has?(pos) }.collect { |g| g[pos] }
     end
 
-    # Verbs have different prepositions for different designations.
-    # There's also the nil preposition, which implies no preposition for the designation.
-    def get_preps_for_verb(verb)
-        @verb_prep[verb] ||= {}
-        @prep_defaults.each do |preposition, list|
-            if @verb_prep[verb][preposition].nil?
-                @verb_prep[verb][preposition] = list
-            end
-        end
-        @verb_prep[verb]
+    # Verbs have different prepositions for different cases.
+    def get_prep_map_for_verb(verb)
+        @verb_case_maps[:default].dup.merge(@verb_case_maps[verb])
     end
 
     # Verbs have different prepositions for different designations.
-    # There's also the nil preposition, which implies no preposition for the designation.
-    def get_prep_for_verb(verb, designation)
-        preps = get_preps_for_verb(verb)
-        Log.debug([verb, preps, designation], 8)
-        preps.each do |prep, list|
-            return prep if list.include?(designation) && !prep.nil?
-        end
-        nil
+    def get_prep_for_verb(verb, case_name)
+        @verb_case_maps[verb] ||= {}
+        @verb_case_maps[verb][case_name] || @verb_case_maps[:default][case_name]
+    end
+
+    def get_default_case_for_verb(verb)
+        @verb_default_case[verb] || @verb_default_case[:default]
     end
 
     # For 'special' conjugations. Basic rules are in Sentence::Verb::conjugate.

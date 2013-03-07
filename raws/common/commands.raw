@@ -29,20 +29,29 @@ command consume {
 command get {
     target item;
 }
-
-command stash {}
-
+command stash {
+    target item;
+}
 command drop {
     target item;
 }
 
 command equip {
+    target item;
 }
-command unequip {}
+command unequip {
+    target item;
+}
 
 command hide {}
-
 command unhide {}
+
+command open {
+    target composition;
+}
+command close {
+    target composition;
+}
 
 /* PC-NPC Interactions. */
 

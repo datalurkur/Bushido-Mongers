@@ -66,14 +66,10 @@ module Words
         # This is probably something that should either be decided in the command logic.
         # I believe for most command words it will be the :target.
 
-        Words.db.get_preps_for_verb(args[:verb]).each do |preposition, designations|
-            Log.debug([preposition, designations])
-            Log.debug(nil)
-            designations.each do |designation|
-                if pieces.size > 0
-                    phrase = slice_initial_phrase(preposition, pieces)
-                    args[designation] = phrase if phrase
-                end
+        Words.db.get_prep_map_for_verb(args[:verb]).each do |case_name, preposition|
+            if pieces.size > 0
+                phrase = slice_initial_phrase(preposition, pieces)
+                args[case_name] = phrase if phrase
             end
         end
 
@@ -85,21 +81,16 @@ module Words
 
     # N.B. modifies the pieces array
     def self.decompose_phrases(args, pieces)
-        Words.db.get_preps_for_verb(args[:verb]).each do |preposition, designations|
-            designations.each do |designation|
-                if pieces.size > 0
-                    phrase = slice_prep_phrase(preposition, pieces)
-                    args[designation] = phrase if phrase
-                end
-            end
+        prep_map = Words.db.get_prep_map_for_verb(args[:verb])
+        prep_map.each_pair do |case_name, preposition|
+            Log.debug("Testing #{case_name} with #{preposition.inspect}", 6)
+            phrase = slice_prep_phrase(preposition, pieces)
+            args[case_name] = phrase if phrase
         end
 
-        # What remains is stored in the nil preposition designation.
-        # This is usually the direct object.
-        designations = Words.db.get_preps_for_verb(args[:verb])[nil]
-        designations.each do |designation|
-            args[designation] = slice_noun_phrase(0, pieces) unless args[designation]
-        end
+        default_case = Words.db.get_default_case_for_verb(args[:verb])
+        Log.debug("Testing #{default_case} with nil", 6)
+        args[default_case] = slice_noun_phrase(0, pieces) if pieces.size > 0 && default_case
 
         args
     end
@@ -122,7 +113,6 @@ module Words
             pieces.slice!(index, 1)
             noun = slice_noun_phrase(index, pieces)
         end
-        Log.debug(noun, 6) if noun
         noun
     end
 
@@ -131,7 +121,6 @@ module Words
         if index >= pieces.size
             return nil
         end
-        Log.debug([index, pieces], 5)
 
         adjectives = []
         noun = nil

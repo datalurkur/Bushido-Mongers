@@ -13,3 +13,4 @@ equip wear
 remove unequip
 throw toss
 say talk tell
+close shut

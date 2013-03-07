@@ -19,6 +19,8 @@ material,constructed ingot {
 }
 
 item,constructed buckle {
+    size tiny;
+
     recipes {
         technique forge;
         components metal;

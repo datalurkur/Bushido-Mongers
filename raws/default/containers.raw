@@ -1,4 +1,4 @@
-abstract equipment,container backpack {
+abstract equipment,container,openable backpack {
     /* FIXME - This needs to be more generic (torso, for example) */
     slot humanoid_body tortoise_body;
     size medium;
@@ -10,4 +10,8 @@ backpack leather_backpack {
         ("backpack",  made of fabric and buckle, with generic types) */
     incidental leather_scrap;
     incidental buckle;
+}
+
+equipment,container,openable chest {
+    incidental wood;
 }

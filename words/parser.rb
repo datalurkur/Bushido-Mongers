@@ -63,9 +63,9 @@ module WordParser
             lines.each do |line|
                 words = line.split(/\s+/).map(&:to_sym)
                 raise "Specifier '#{words.inspect}' should be 2 words!" unless words.size == 2
-                preposition, designation = words
+                preposition, case_name = words
                 preposition = nil if preposition == :nil
-                db.add_default_preposition(preposition, designation)
+                db.add_verb_preposition(:default, preposition, case_name)
                 db.add_family(:preposition => preposition) if preposition
             end
         end
@@ -74,9 +74,9 @@ module WordParser
             lines.each do |line|
                 words = line.split(/\s+/).map(&:to_sym)
                 raise "Specifier '#{words.inspect}' should be 3 words!" unless words.size == 3
-                verb, preposition, designation = words
+                verb, preposition, case_name = words
                 preposition = nil if preposition == :nil
-                db.add_verb_preposition(verb, preposition, designation)
+                db.add_verb_preposition(verb, preposition, case_name)
                 db.add_family(:preposition => preposition) if preposition
             end
         end

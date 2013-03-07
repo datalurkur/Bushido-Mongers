@@ -2,3 +2,8 @@ abstract composition container {
     mutable_container_classes     internal            external;
     preserved_container_classes   internal            external;
 }
+
+abstract root openable {
+    has bool opened;
+    opened false;
+}
