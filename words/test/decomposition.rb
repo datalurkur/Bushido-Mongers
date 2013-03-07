@@ -16,3 +16,9 @@ args = Words.decompose_command("aTTack Spider")
 raise unless args[:command] == :attack
 raise unless args[:target].first == :spider
 
+args = Words.decompose_command("look self")
+raise unless args[:target].first == :self
+
+args = Words.decompose_command("look at self with microscope")
+raise unless args[:target].first == :self
+raise unless args[:tool].first == :microscope

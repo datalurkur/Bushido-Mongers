@@ -83,13 +83,13 @@ module Words
     def self.decompose_phrases(args, pieces)
         prep_map = Words.db.get_prep_map_for_verb(args[:verb])
         prep_map.each_pair do |case_name, preposition|
-            Log.debug("Testing #{case_name} with #{preposition.inspect}")
+            Log.debug("Testing #{case_name} with #{preposition.inspect}", 6)
             phrase = slice_prep_phrase(preposition, pieces)
             args[case_name] = phrase if phrase
         end
 
         default_case = Words.db.get_default_case_for_verb(args[:verb])
-        Log.debug("Testing #{default_case} with nil")
+        Log.debug("Testing #{default_case} with nil", 6)
         args[default_case] = slice_noun_phrase(0, pieces) if pieces.size > 0 && default_case
 
         args
@@ -113,7 +113,6 @@ module Words
             pieces.slice!(index, 1)
             noun = slice_noun_phrase(index, pieces)
         end
-        Log.debug(noun, 6) if noun
         noun
     end
 
@@ -122,7 +121,6 @@ module Words
         if index >= pieces.size
             return nil
         end
-        Log.debug([index, pieces], 5)
 
         adjectives = []
         noun = nil
