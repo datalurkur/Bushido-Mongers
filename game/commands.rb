@@ -170,7 +170,7 @@ module Commands
             equipment = params[:target]
             equipment_types = equipment.type_ancestry
 
-            Log.debug("Looking to equip #{equipment.monicker} #{equipment_types.inspect}")
+            Log.debug("#{agent.monicker} trying to equip #{equipment.monicker} #{equipment_types.inspect}")
             if agent.respond_to?(:wear)
                 parts_can_equip = agent.external_body_parts.select do |part|
                     part.has_property?(:can_equip) && (part.can_equip & equipment_types).size > 0
@@ -272,7 +272,7 @@ module Commands
             result_hash = {}
             damage = 5
 
-            unless attacker.type_ancestry.include?(:has_aspects) && defender.type_ancestry.include?(:has_aspects)
+            unless HasAspects === attacker && HasAspects === defender
                 # No attributes? Make a normal difficulty roll to hit.
                 success = (rand > Difficulty.value_of(Difficulty.standard))
             else
@@ -341,7 +341,7 @@ module Commands
 
     module Open
         def self.stage(core, params)
-            Commands.find_objects(core, params, :target => [:position, :stashed_objects, :worn_objects])
+            Commands.find_objects(core, params, :target => [:position, :inventory])
 
             if !params[:agent].type_ancestry.include?(:openable)
                 raise(FailedCommandError, "#{params[:target].monicker} cannot be opened.")
@@ -357,7 +357,7 @@ module Commands
 
     module Close
         def self.stage(core, params)
-            Commands.find_objects(core, params, :target => [:position, :stashed_objects, :worn_objects])
+            Commands.find_objects(core, params, :target => [:position, :inventory])
 
             if !params[:agent].type_ancestry.include?(:openable)
                 raise(FailedCommandError, "#{params[:target].monicker} cannot be closed.")
