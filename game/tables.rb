@@ -152,7 +152,7 @@ end
 
 module Size
     def self.raw_values; [
-        [:miniscule,  0.1],
+        [:minuscule,  0.1],
         [:tiny,       0.25],
         [:small,      0.5],
         [:medium,     1.0],
