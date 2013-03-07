@@ -50,7 +50,7 @@ class Descriptor
 
             if Composition === object
                 d[:container_contents] = {}
-                [:incidental, :external, :internal, :symmetric].each do |prop|
+                object.container_classes.each do |prop|
                     contents = object.container_contents(prop)
                     if contents && !contents.empty?
                         d[:container_contents][prop] = contents.collect do |o|
