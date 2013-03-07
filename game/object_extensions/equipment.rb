@@ -105,7 +105,8 @@ module Equipment
             if part.has_property?(:can_equip) && !part.can_equip.empty?
                 Log.debug("Looking for equipment worn on #{part.monicker} (#{part.can_equip.inspect})", 6)
                 equipment_type = @core.db.random(part.can_equip.rand)
-                equipment_piece = @core.create(equipment_type, {:randomize => true})
+                equipment_piece = @core.create(equipment_type, :randomize => true)
+                Log.debug(["Found", equipment_piece], 6)
                 wear(part, equipment_piece)
             end
         end

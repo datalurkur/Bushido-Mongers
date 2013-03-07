@@ -299,11 +299,10 @@ module Commands
                             # TODO - How should we describe this? Default to :attack...
                         end
                     else
-                        # An improvised attack is probably just going to wack the item into the target.
+                        # An improvised attack is probably just going to wack the item into the target, unless the item is bladed somehow.
                         result_hash[:verb] = :bash
                     end
 
-                    # TODO - change damage/damage_type based on weapon.
                     result_hash[:tool] = weapon
                 end
 
@@ -337,6 +336,38 @@ module Commands
                 :result_hash   => result_hash
             })
             core.destroy_flagged
+        end
+    end
+
+    module Open
+        def self.stage(core, params)
+            Commands.find_objects(core, params, :target => [:position, :stashed_objects, :worn_objects])
+
+            if !params[:agent].type_ancestry.include?(:openable)
+                raise(FailedCommandError, "#{params[:target].monicker} cannot be opened.")
+            elsif params[:agent].get_property(:opened)
+                raise(FailedCommandError, "#{params[:target].monicker} is already open.")
+            end
+        end
+
+        def self.do(core, params)
+            params[:target].set_property(:opened, true)
+        end
+    end
+
+    module Close
+        def self.stage(core, params)
+            Commands.find_objects(core, params, :target => [:position, :stashed_objects, :worn_objects])
+
+            if !params[:agent].type_ancestry.include?(:openable)
+                raise(FailedCommandError, "#{params[:target].monicker} cannot be closed.")
+            elsif !params[:agent].get_property(:opened)
+                raise(FailedCommandError, "#{params[:target].monicker} is already closed.")
+            end
+        end
+
+        def self.do(core, params)
+            params[:target].set_property(:opened, false)
         end
     end
 
