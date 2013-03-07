@@ -155,8 +155,8 @@ module Words
 
         comp_types = {
             :attach => composition[:container_contents][:external],
-            :wear   => composition[:properties][:worn],
-            :grasp  => composition[:properties][:grasped],
+            :wear   => composition[:container_contents][:worn],
+            :grasp  => composition[:container_contents][:grasped],
         }
 
         comp_types.each do |verb, list|
