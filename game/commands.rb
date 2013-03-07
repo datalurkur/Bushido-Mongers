@@ -173,7 +173,7 @@ module Commands
             Log.debug("#{agent.monicker} trying to equip #{equipment.monicker} #{equipment_types.inspect}")
             if agent.respond_to?(:wear)
                 parts_can_equip = agent.external_body_parts.select do |part|
-                    part.has_property?(:can_equip) && (part.can_equip & equipment_types).size > 0
+                    ((part.properties[:can_equip] || []) & equipment_types).size > 0
                 end
 
                 if parts_can_equip.empty?
@@ -233,25 +233,25 @@ module Commands
 
     module Hide
         def self.stage(core, params)
-            if params[:agent].skill(:hide).get_property(:hidden)
+            if params[:agent].skill(:hide).properties[:hidden]
                 raise(FailedCommandError, "You are already hidden.")
             end
         end
 
         def self.do(core, params)
-            params[:agent].skill(:hide).set_property(:hidden, true)
+            params[:agent].skill(:hide).properties[:hidden] = true
         end
     end
 
     module Unhide
         def self.stage(core, params)
-            unless params[:agent].skill(:hide).get_property(:hidden)
+            unless params[:agent].skill(:hide).properties[:hidden]
                 raise(FailedCommandError, "You are not in hiding.")
             end
         end
 
         def self.do(core, params)
-            params[:agent].skill(:hide).set_property(:hidden, false)
+            params[:agent].skill(:hide).properties[:hidden] = false
         end
     end
 
@@ -345,13 +345,13 @@ module Commands
 
             if !params[:agent].type_ancestry.include?(:openable)
                 raise(FailedCommandError, "#{params[:target].monicker} cannot be opened.")
-            elsif params[:agent].get_property(:opened)
+            elsif params[:agent].properties[:opened]
                 raise(FailedCommandError, "#{params[:target].monicker} is already open.")
             end
         end
 
         def self.do(core, params)
-            params[:target].set_property(:opened, true)
+            params[:target].properties[:opened] = true
         end
     end
 
@@ -361,13 +361,13 @@ module Commands
 
             if !params[:agent].type_ancestry.include?(:openable)
                 raise(FailedCommandError, "#{params[:target].monicker} cannot be closed.")
-            elsif !params[:agent].get_property(:opened)
+            elsif !params[:agent].properties[:opened]
                 raise(FailedCommandError, "#{params[:target].monicker} is already closed.")
             end
         end
 
         def self.do(core, params)
-            params[:target].set_property(:opened, false)
+            params[:target].properties[:opened] = false
         end
     end
 

@@ -12,7 +12,7 @@ module Perception
     # TODO - There should be some sort of cached perception check here,
     # which will be re-rolled given certain events.
     def can_perceive?(object)
-        !(object.respond_to?(:skill) && object.has_skill?(:hide) && object.skill(:hide).get_property(:hidden))
+        !(object.respond_to?(:skill) && object.has_skill?(:hide) && object.skill(:hide).properties[:hidden])
     end
 
     def filter_objects(location, type=nil, name=nil)

@@ -94,7 +94,8 @@ class BushidoObject
         end
     end
 
-    attr_reader :properties, :extensions
+    attr_accessor :properties
+    attr_reader   :extensions
 
     def get_type; @type; end
 
@@ -130,7 +131,7 @@ class BushidoObject
     end
 
     def monicker
-        (get_property(:name) || @type).to_s
+        (@properties[:name] || @type).to_s
     end
 
     def is_type?(type)
@@ -150,26 +151,10 @@ class BushidoObject
         @core.db.ancestry_of(@type)
     end
 
-    def method_missing(method_name, *args, &block)
-        if @properties.has_key?(method_name)
-            @properties[method_name]
-        else
-            raise(ArgumentError, "Property #{method_name.inspect} not found for #{@type}.")
-        end
-    end
-
     # This is a hack for Ruby 1.9 / 2.0
     # rb_ary_flatten tries to call to_ary on everything, and method_missing throws an exception
     # This method allows to_ary to be called with benign result to bypass that issue
     def to_ary; nil; end
-
-    def get_property(key)
-        @properties[key]
-    end
-
-    def has_property?(prop)
-        @properties.has_key?(prop)
-    end
 
     def process_message(message)
         Log.error("#{monicker} has no core!") unless @core
@@ -204,18 +189,6 @@ class BushidoObject
         @properties = value
     end
 
-    def set_property(key, value)
-        # TODO - Properly check type of value based on raw type information
-=begin
-        if !@properties[key].nil? &&
-                value.class != @properties[key].class &&
-                !(Numeric === value.class && Numeric === @properties[key].class)
-            Log.warning("Changing class of property #{key}: from #{@properties[key].class} to #{value.class}")
-        end
-=end
-        @properties[key] = value
-    end
-
     def initialize(core, type)
         @core = core
         @type = type
@@ -248,16 +221,6 @@ class SafeBushidoObject < BushidoObject
     def monicker
         check_destroyed
         super()
-    end
-
-    def method_missing(*args, &block)
-        check_destroyed
-        super(*args, &block)
-    end
-
-    def set_property(*args)
-        check_destroyed
-        super(*args)
     end
 
     def process_message(*args)

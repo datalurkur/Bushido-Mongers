@@ -125,7 +125,7 @@ class GameCore
                 Message.register_listener(self, :core, character)
 
                 characters[username] = character
-                Log.info("Character #{character.name} loaded for #{username}")
+                Log.info("Character #{character.monicker} loaded for #{username}")
             end
 
             ret = [character, failures]
@@ -139,7 +139,7 @@ class GameCore
             character = @db.create(self, :character, details.merge(:position => position))
 
             characters[username] = character
-            Log.info("Character #{character.name} created for #{username}")
+            Log.info("Character #{character.monicker} created for #{username}")
             Message.register_listener(self, :core, character)
             character.set_user_callback(lobby, username)
 

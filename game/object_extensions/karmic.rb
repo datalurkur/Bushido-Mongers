@@ -3,7 +3,7 @@ require './util/log'
 module Karmic
     class << self
         def at_creation(instance, params)
-            instance.set_property(:name, params[:name])
+            instance.properties[:name] = params[:name]
         end
 
         def at_message(instance, message)

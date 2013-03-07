@@ -24,7 +24,7 @@ module Composition
         end
 
         def at_creation(instance, params)
-            instance.set_property(:weight, 0)
+            instance.properties[:weight] = 0
             instance.initial_composure(params)
         end
 
@@ -33,7 +33,7 @@ module Composition
 
             Log.debug("Destroying composition #{instance.monicker}", 7)
             instance.container_classes.each do |key|
-                if instance.preserved_container_classes.include?(key)
+                if instance.preserved?(key)
                     # Drop these components at the location where this object is
                     instance.container_contents(key).each do |component|
                         Log.debug("Dropping #{component.monicker} at #{instance.absolute_position.name}", 6)
@@ -50,8 +50,8 @@ module Composition
     end
 
     def initial_composure(params)
-        self.symmetric.each do |symmetric_part|
-            unless container_classes.include?(symmetric_part[:container_class])
+        symmetric_parts.each do |symmetric_part|
+            unless composed_of?(symmetric_part[:container_class])
                 Log.error("No container class #{symmetric_part[:container_class].inspect} found for #{monicker}")
                 next
             end
@@ -69,9 +69,9 @@ module Composition
             end
         end
 
-        self.container_classes.each do |comp_type|
-            raise(MissingProperty, "Container class #{comp_type} specified but not created.") if get_property(comp_type).nil?
-            get_property(comp_type).each do |component|
+        container_classes.each do |comp_type|
+            raise(MissingProperty, "Container class #{comp_type} specified but not created.") unless @properties[comp_type]
+            @properties[comp_type].each do |component|
                 @core.create(component, params.merge(
                     :position      => self,
                     :position_type => comp_type,
@@ -135,11 +135,11 @@ module Composition
     end
 
     def is_container?
-        self.container_classes.include?(:internal)
+        self.composed_of?(:internal)
     end
 
     def grasping_parts
-        all_body_parts.select { |bp| bp.container_classes.include?(:grasped) }
+        all_body_parts.select { |bp| bp.composed_of?(:grasped) }
     end
 
     def containers(type, recursive=true)
@@ -166,7 +166,7 @@ module Composition
         type = Array(type)
         list = []
         type.each do |type|
-            next unless get_property(type)
+            next unless @properties[type]
             container_contents(type).each do |obj|
                 next if block_given? && !block.call(obj)
                 list << obj
@@ -178,60 +178,48 @@ module Composition
         list
     end
 
-=begin
-    # It doesn't look like this method is being used, and even if it were, I'm really not sure how it would work
-    def all_children
-        self.container_classes.inject([]) do |i, cc|
-            i + cc.inject([]) do |j, obj|
-                j + [obj] + obj.is_type?(:composition) ? obj.all_children : []
-            end
-        end.flatten
-    end
-=end
-
-    def container_contents(container_type)
-        @container_contents                 ||= {}
-        return nil unless container_classes.include?(container_type)
-        @container_contents[container_type] ||= []
+    def container_contents(type)
+        @container_contents       ||= {}
+        raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
+        @container_contents[type] ||= []
     end
 
-    def set_container_contents(container_type, value)
+    def set_container_contents(type, value)
         @container_contents               ||= {}
-        return nil unless container_classes.include?(container_type)
-        @container_contents[container_type] = value
+        raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
+        @container_contents[type] = value
     end
+
+    def container_classes;     @properties[:container_classes];             end
+    def mutable_classes;       @properties[:mutable_container_classes];     end
+    def valued_classes;        @properties[:added_value_container_classes]; end
+    def symmetric_parts;       @properties[:symmetric];                     end
+
+    def composed_of?(klass);   @properties[:container_classes].include?(klass);             end
+    def mutable?(klass);       @properties[:mutable_container_classes].include?(klass);     end
+    def valued?(klass);        @properties[:added_value_container_classes].include?(klass); end
+    def preserved?(klass);     @properties[:preserved_container_classes].include?(klass);   end
 
     private
     def _add_object(object, type, respect_mutable=true)
-        raise(ArgumentError, "Invalid container class #{type}.") unless self.container_classes.include?(type)
-        raise(ArgumentError, "Cannot modify #{type} composition of #{monicker}!") if respect_mutable && !self.mutable_container_classes.include?(type)
+        raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
+        raise(ArgumentError, "Cannot modify #{type} composition of #{monicker}!") if respect_mutable && !mutable?(type)
         add_weight(object)
-        add_value(object) if self.added_value_container_classes.include?(type)
+        add_value(object) if valued?(type)
         container_contents(type) << object
         object
     end
 
     def _remove_object(object, type)
-        raise(ArgumentError, "Invalid container class #{type}.") unless self.container_classes.include?(type)
-        raise(ArgumentError, "Cannot modify #{type} composition of #{monicker}!") unless self.mutable_container_classes.include?(type)
+        raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
+        raise(ArgumentError, "#{type} contents of #{monicker} are immutable.") unless mutable?(type)
         remove_weight(object)
-        remove_value(object) if self.added_value_container_classes.include?(type)
+        remove_value(object) if valued?(type)
         container_contents(type).delete(object)
     end
 
-    def add_weight(object)
-        set_property(:weight, (get_property(:weight) || 0) + object.weight)
-    end
-
-    def remove_weight(object)
-        set_property(:weight, get_property(:weight) - object.weight)
-    end
-
-    def add_value(object)
-        set_property(:value, (get_property(:value) || 0) + object.value)
-    end
-
-    def remove_value(object)
-        set_property(:value, get_property(:value) - object.value)
-    end
+    def add_weight(object);    @properties[:weight] += object.properties[:weight]; end
+    def remove_weight(object); @properties[:weight] -= object.properties[:weight]; end
+    def add_value(object);     @properties[:value]  += object.properties[:value];  end
+    def remove_value(object);  @properties[:value]  -= object.properties[:value];  end
 end

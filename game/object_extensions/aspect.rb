@@ -18,10 +18,10 @@ module Aspect
     class << self
         def at_creation(instance, params)
             initial_intrinsic = instance.class_info(:default_intrinsic) + (params[:intrinsic_bonus] || 0)
-            instance.set_property(:intrinsic, initial_intrinsic)
+            instance.properties[:intrinsic] = initial_intrinsic
 
-            if instance.has_property?(:associated_attribute)
-                raise(MissingProperty, "Associated attribute has no scaling value.") unless instance.has_property?(:attribute_scaling)
+            if instance.properties[:associated_attribute]
+                raise(MissingProperty, "Associated attribute has no scaling value.") unless instance.properties[:attribute_scaling]
             end
         end
 
@@ -77,15 +77,15 @@ module Aspect
     def improve(difficulty)
         difficulty = Difficulty.value_of(difficulty) if Symbol === difficulty
 
-        amount = 0.0025 * (1 - get_property(:intrinsic))**2 * difficulty
-        set_property(:intrinsic, clamp(get_property(:intrinsic) + amount))
-        Log.debug("#{self.monicker} improved to #{get_property(:intrinsic)}", 8)
+        amount = 0.0025 * (1 - @properties[:intrinsic])**2 * difficulty
+        @properties[:intrinsic] = clamp(@properties[:intrinsic] + amount)
+        Log.debug("#{self.monicker} improved to #{@properties[:intrinsic]}", 8)
     end
 
     private
     def _check(difficulty, attributes)
         @last_used  = @current_tick
-        base_intrinsic  = get_property(:intrinsic)
+        base_intrinsic  = @properties[:intrinsic]
 
         # A intrinsic may or may not be affected by another intrinsic or attribute
         associated_attribute = class_info(:associated_attribute)
@@ -98,7 +98,7 @@ module Aspect
         end
 
         # Use intrinsic as a baseline, and allow familiarity to vary the outcome based on the variance
-        roll = make_check(intrinsic, class_info(:variance), get_property(:familiarity) || 0.0)
+        roll = make_check(intrinsic, class_info(:variance), @properties[:familiarity] || 0.0)
         Log.debug("Rolled a #{roll} for a #{difficulty} #{monicker} check", 6)
         roll
     end
@@ -115,7 +115,7 @@ module Skill
             raise(MissingObjectExtensionError, "Skills must use the Aspect module.") unless Aspect === instance
 
             initial_familiarity = instance.class_info(:default_familiarity) + (params[:familiarity_bonus] || 0)
-            instance.set_property(:familiarity, initial_familiarity)
+            instance.properties[:familiarity] = initial_familiarity
         end
     end
 
@@ -132,16 +132,17 @@ module Skill
     # Increase familiarity
     def practice(difficulty)
         # Use the difficulty of the training / task being performed to determine familiarity gain
-        difficulty_adjustment = 2 ** Difficulty.difference(Difficulty.value_at(get_property(:intrinsic).floor), difficulty)
-        amount = get_property(:familiarity_gain_rate) * difficulty_adjustment
-        set_property(:familiarity, get_property(:familiarity) + amount)
+        # FIXME - Calling .floor here is....of questionable usefulness
+        difficulty_adjustment = 2 ** Difficulty.difference(Difficulty.value_at(@properties[:intrinsic].floor), difficulty)
+        amount = @properties[:familiarity_gain_rate] * difficulty_adjustment
+        @properties[:familiarity] = clamp(@properties[:familiarity] + amount)
     end
 
     # Decrease familiarity
     def languish
         # Exponentially decrease familiarity
         #  (familiarity loss slows as time spent away from a task increases)
-        new_level = clamp(get_property(:familiarity) * (1.0 - get_property(:familiarity_loss_rate)))
-        set_property(:familiarity, new_level)
+        new_level = clamp(@properties[:familiarity] * (1.0 - @properties[:familiarity_loss_rate]))
+        @properties[:familiarity] = new_level
     end
 end

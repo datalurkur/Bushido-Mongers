@@ -40,8 +40,8 @@ def test_test_npc(db, test_npc_type, name)
     test_npc = test_npc(db, test_npc_type, name)
     Log.debug(test_npc)
     Log.debug("Test NPC is a guard? #{test_npc.is_type?(:guard)}")
-    if test_npc.has_property?(:provocations)
-        Log.debug(["Test NPC has provocations", test_npc.provocations])
+    if test_npc.properties[:provocations]
+        Log.debug(["Test NPC has provocations", test_npc.properties[:provocations]])
     end
 end
 

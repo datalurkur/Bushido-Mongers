@@ -28,7 +28,7 @@
                                     %td=attribute
                                     %td
                                         %div.progress
-                                            %span{:style => "width: #{(character.attribute(attribute).get_property(:intrinsic) * 100).to_i}%"}
+                                            %span{:style => "width: #{(character.attribute(attribute).properties[:intrinsic] * 100).to_i}%"}
                         %h3 Skills
                         %table
                             %tr
@@ -40,10 +40,10 @@
                                     %td=skill
                                     %td
                                         %div.progress
-                                            %span{:style => "width: #{(character.skill(skill).get_property(:intrinsic) * 100).to_i}%"}
+                                            %span{:style => "width: #{(character.skill(skill).properties[:intrinsic] * 100).to_i}%"}
                                     %td
                                         %div.progress
-                                            %span{:style => "width: #{(character.skill(skill).get_property(:familiarity) * 100).to_i}%"}
+                                            %span{:style => "width: #{(character.skill(skill).properties[:familiarity] * 100).to_i}%"}
                     %div.hiddentab#map
                         %img{:src => lobby.map_uri_for(username)}
         .footer

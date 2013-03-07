@@ -48,7 +48,7 @@ module CharacterLoader
         end
 
         def save(username, character)
-            filename = to_filename(character.name)
+            filename = to_filename(character.properties[:name])
             character_data = SafeBushidoObject.pack(character)
             full_filename = File.join(get_user_directory(username), filename)
             f = File.open(full_filename, 'w')

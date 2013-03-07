@@ -28,12 +28,12 @@ module Constructed
 
             # Created object quality depends on the quality of its components as well
             avg_component_quality = components.inject(0.0) { |s,i|
-                s + Quality.index_of(i.is_type?(:constructed) ? i.quality : Quality.standard)
+                s + Quality.index_of(i.is_type?(:constructed) ? i.properties[:quality] : Quality.standard)
             } / components.size
             quality_value = (Quality.index_of(quality) + avg_component_quality) / 2.0
             quality_level = Quality.value_at(Quality.clamp_index(quality_value.ceil))
 
-            instance.set_property(:quality, quality_level)
+            instance.properties[:quality] = quality_level
             instance.set_container_contents(:incidental, components)
         end
     end

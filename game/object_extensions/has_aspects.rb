@@ -31,20 +31,20 @@ module HasAspects
             variances = if instance.class_info(:random_attributes)
                 random_attribute_variances(instance, params)
             else
-                Array.new(instance.attributes.size, 0)
+                Array.new(instance.properties[:attributes].size, 0)
             end
 
-            instance.attributes.each_with_index do |name, i|
+            instance.properties[:attributes].each_with_index do |name, i|
                 instance.add_attribute(name, :intrinsic_bonus => variances[i])
             end
 
             variances = if instance.class_info(:random_skills)
                 random_skill_variances(instance, params)
             else
-                Array.new(instance.skills.size, 0)
+                Array.new(instance.properties[:skills].size, 0)
             end
 
-            instance.skills.each_with_index do |name, i|
+            instance.properties[:skills].each_with_index do |name, i|
                 instance.add_skill(name, :intrinsic_bonus => variances[i])
             end
         end
@@ -56,7 +56,7 @@ module HasAspects
 
         private
         def random_attribute_variances(instance, params)
-            default_values = instance.get_attribute_defaults(instance.attributes)
+            default_values = instance.get_attribute_defaults(instance.properties[:attributes])
             relative_offset = instance.class_info(:attribute_offset) || 0
             variance_per_value = instance.class_info(:random_variance)
 
@@ -64,7 +64,7 @@ module HasAspects
         end
 
         def random_skill_variances(instance, params)
-            default_values = instance.get_skill_defaults(instance.skills)
+            default_values = instance.get_skill_defaults(instance.properties[:skills])
             relative_offset = instance.class_info(:skill_offset) || 0
             # FIXME: this should probably be different for attributes and skills.
             variance_per_value = instance.class_info(:random_variance)

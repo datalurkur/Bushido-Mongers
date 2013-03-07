@@ -102,9 +102,9 @@ module Equipment
 
     def add_random_equipment
         external_body_parts.each do |part|
-            if part.has_property?(:can_equip) && !part.can_equip.empty?
-                Log.debug("Looking for equipment worn on #{part.monicker} (#{part.can_equip.inspect})", 6)
-                equipment_type = @core.db.random(part.can_equip.rand)
+            if part.properties[:can_equip] && !part.properties[:can_equip].empty?
+                Log.debug(["Looking for equipment worn on #{part.monicker}", part.properties[:can_equip]], 6)
+                equipment_type = @core.db.random(part.properties[:can_equip].rand)
                 equipment_piece = @core.create(equipment_type, :randomize => true)
                 Log.debug(["Found", equipment_piece], 6)
                 wear(part, equipment_piece)

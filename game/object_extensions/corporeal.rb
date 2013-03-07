@@ -15,11 +15,11 @@ module Corporeal
         end
         body_type = class_info(:body_type)
         @core.create(body_type, {
-            :relative_size => get_property(:size),
+            :relative_size => @properties[:size],
             :position      => self,
             :position_type => :incidental
         })
-        set_property(:total_hp, all_body_parts.map(&:hp).inject(0, &:+))
+        @properties[:total_hp] = all_body_parts.collect { |p| p.properties[:hp] }.inject(0, &:+)
 
         # If this has multiple values, I don't know what the fuck we're doing
         # That would mean that this corporeal thing has multiple independent bodies
@@ -44,8 +44,8 @@ module Corporeal
     def damage(amount, attacker, target=nil)
         # If a body part (target) isn't specified, just damage the body.
         target ||= container_contents(:incidental).rand
-        target.set_property(:hp, target.hp - amount)
-        set_property(:total_hp, get_property(:total_hp) - amount)
+        target.properties[:hp] -= amount
+        @properties[:total_hp] -= amount
         if target.hp <= 0
             # If they've destroyed the whole body, the corporeal (spirit)
             # dies, and the body will hit the floor.

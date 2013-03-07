@@ -268,7 +268,7 @@ class Lobby
                 next unless message.location == character.absolute_position
 
                 if message.target == character
-                    Log.info("Character #{character.name} dies!")
+                    Log.info("Character #{character.monicker} dies!")
                     @game_core.remove_character(username, true)
                     broadcast(Message.new(:user_dies, {:result => username}))
                 end
