@@ -107,7 +107,7 @@ module Words
         corporeal[:definite] = true
         sentences = [gen_sentence(:subject => corporeal, :verb => :have, :target => body)]
         body[:possessor_info] = possessor_info(corporeal)
-        sentences << describe_composition(body)
+        sentences << describe_composition_root(body)
 
         # TODO - Add more information about abilities, features, etc.
 
@@ -168,7 +168,7 @@ module Words
                                 :state   => state)
                 sentences += list.collect do |part|
                     if part[:is_type].include?(:composition_root)
-                        describe_composition(part)
+                        describe_composition_root(part)
                     else
                         gen_copula(:subject => part)
                     end
