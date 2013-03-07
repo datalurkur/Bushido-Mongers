@@ -38,7 +38,7 @@ module Aspect
 
     def attempt(difficulty, attributes)
         roll = check(difficulty, attributes)
-        Log.debug(["Rolled #{roll} from attribute", self.type])
+        Log.debug(["Rolled #{roll} from attribute", self.monicker])
         roll > Difficulty.value_of(difficulty)
     end
 

@@ -285,11 +285,11 @@ module Commands
                 end
 
                 if weapon
-                    if weapon_skill = core.db.info_for(weapon.type, :skill_used)
+                    if weapon_skill = core.db.info_for(weapon.get_type, :skill_used)
                         skill = weapon_skill
                     end
 
-                    if damage_type = core.db.info_for(weapon.type, :type)
+                    if damage_type = core.db.info_for(weapon.get_type, :type)
                         case damage_type
                         when :piercing
                             result_hash[:verb] = :slice

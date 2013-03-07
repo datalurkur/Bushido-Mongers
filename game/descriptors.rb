@@ -32,7 +32,7 @@ class Descriptor
             # FIXME - Take the observer into account
             # TODO - SERIOUSLY obfuscate details if object is :hidden
             d = {
-                :type => object.type
+                :type => object.get_type
             }
 
             d[:name]             = object.name if object.has_property?(:name)

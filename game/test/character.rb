@@ -4,7 +4,7 @@ require './test/fake'
 
 def recreate_test_character(username, raw_group, clean=true)
     if clean
-        userdir = Character.get_user_directory(username)
+        userdir = CharacterLoader.get_user_directory(username)
         Dir.entries(userdir).reject { |file| file == "." || file == ".." }.each { |file| File.delete(File.join(userdir, file)) }
     end
 
@@ -13,7 +13,7 @@ def recreate_test_character(username, raw_group, clean=true)
     fake_core = FakeCore.new(db)
     Log.debug("Creating test character using fake state")
     c = db.create(fake_core, :character, {:position => fake_room, :name => "Test Character"})
-    Character.save(username, c)
+    CharacterLoader.save(username, c)
     c
 end
 

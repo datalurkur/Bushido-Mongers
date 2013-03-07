@@ -7,7 +7,7 @@ class BushidoObject
         def pack(object)
             raw_data = {}
 
-            raw_data[:type] = object.type
+            raw_data[:type] = object.get_type
             raw_data[:properties] = object.properties
 
             raw_data[:extensions] = {}
@@ -94,7 +94,9 @@ class BushidoObject
         end
     end
 
-    attr_reader :type, :properties, :extensions
+    attr_reader :properties, :extensions
+
+    def get_type; @type; end
 
     def destroy(destroyer, vaporize=false)
         stop_listening

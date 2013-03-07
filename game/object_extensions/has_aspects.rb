@@ -7,10 +7,10 @@ module HasAspects
         def pack(instance)
             raw_data = {:attributes => {}, :skills => {}}
             instance.attribute_list.each do |attribute|
-                raw_data[:attributes][attribute] = SafeBushidoObject.pack(attributes(attribute))
+                raw_data[:attributes][attribute] = SafeBushidoObject.pack(instance.attribute(attribute))
             end
             instance.skill_list.each do |skill|
-                raw_data[:skills][skill] = SafeBushidoObject.pack(skills(skill))
+                raw_data[:skills][skill] = SafeBushidoObject.pack(instance.skill(skill))
             end
             raw_data
         end
@@ -162,7 +162,7 @@ module HasAspects
         range_size       = range_end - range_begin
         # If the range_size is zero the acceptable_range requested is impossible to generate.
         if range_size == 0
-            raise "Can't generate #{num_values} random values for #{self.type} based on " +
+            raise "Can't generate #{num_values} random values for #{self.monicker} based on " +
                   "random_variance #{variance_per_value.abs} and relative_offset #{relative_offset}!"
         end
         # Warn if acceptable_range is unlikely to be hit.
@@ -177,7 +177,7 @@ module HasAspects
         #   generating a LOT of these).
         report_generation_count = false
         if (num_values / range_size > 1_000) || (range_end < num_values / 50.0) || (range_begin > num_values - (num_values / 50.0))
-            Log.warning("Unlikely acceptable value range (#{acceptable_range}) for #{self.type} " +
+            Log.warning("Unlikely acceptable value range (#{acceptable_range}) for #{self.monicker} " +
                         "may take a while to generate.")
             report_generation_count = true
         end

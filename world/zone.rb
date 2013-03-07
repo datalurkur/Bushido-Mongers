@@ -10,9 +10,9 @@ class Zone
         def get_params(core, parent, depth)
             args = if parent
                 # Inherit a keyword from the parent.
-                #Log.debug(parent.type)
-                #parent_list = core.db.info_for(parent.type, :keywords)
-                #Log.debug(["Zone.get_params", parent.type, parent_list])
+                #Log.debug(parent)
+                #parent_list = core.db.info_for(parent, :keywords)
+                #Log.debug(["Zone.get_params", parent, parent_list])
 
                 {
                     :type => find_child(core.db, parent, depth),
