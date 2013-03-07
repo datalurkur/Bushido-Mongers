@@ -3,55 +3,65 @@ require './util/exceptions'
 require './game/object_extensions'
 
 class BushidoObject
-    attr_reader :type, :properties
-
-    def initialize(core, type, params={})
-        Log.debug("Creating #{type}", 6) unless core.db.types_of(:body_part).include?(type)
-        @core = core
-        @type = type
-
-        @properties  = {}
-        @extensions  = []
-        @listens_for = []
-
-        type_info = @core.db.raw_info_for(@type)
-
-        type_info[:needs].each do |k|
-            raise(ArgumentError, "Required argument #{k.inspect} missing during creation of #{@type}.") unless params[k]
+    class << self
+        def pack(object)
         end
 
-        type_info[:class_values].each do |k,v|
-            unless type_info[:has].has_key?(k) && type_info[:has][k][:class_only]
-                @properties[k] = Marshal.load(Marshal.dump(v))
+        def unpack(core, object)
+        end
+
+        def create(core, type, params={})
+            # Create an empty object
+            object = self.new(core, type)
+
+            type_info = core.db.raw_info_for(type)
+
+            # Check required parameters
+            type_info[:needs].each do |k|
+                raise(ArgumentError, "Required argument #{k.inspect} missing during creation of #{type}.") unless params[k]
             end
-        end
 
-        type_info[:uses].each do |mod|
-            @extensions << mod
-            extend mod
-        end
-
-        @extensions.each do |mod|
-            next unless mod.respond_to?(:at_creation)
-            result = mod.at_creation(self, params)
-            @properties.merge!(result) if Hash === result
-        end
-
-        type_info[:has].keys.each do |property|
-            next if type_info[:has][property][:class_only]
-            if type_info[:has][property][:multiple]
-                if @properties[property].nil? || (@properties[property].empty? && !type_info[:has][property][:optional])
-                    raise(StandardError, "Property #{property.inspect} has no values for #{@type}.")
-                end
-            elsif @properties[property].nil?
-                if type_info[:has][property][:optional]
-                    @properties[property] = nil
-                else
-                    raise(StandardError, "Property #{property.inspect} has no value for #{@type}.")
+            # Set up default property values
+            type_info[:class_values].each do |k,v|
+                unless type_info[:has].has_key?(k) && type_info[:has][k][:class_only]
+                    object.properties[k] = Marshal.load(Marshal.dump(v))
                 end
             end
+
+            # Add extensions
+            type_info[:uses].each do |mod|
+                object.add_extension(mod)
+            end
+
+            # Perform first-time extension creation
+            type_info[:uses].each do |mod|
+                next unless mod.respond_to?(:at_creation)
+                result = mod.at_creation(object, params)
+                object.properties.merge!(result) if Hash === result
+            end
+
+            # Initialize property values
+            type_info[:has].keys.each do |property|
+                next if type_info[:has][property][:class_only]
+                if type_info[:has][property][:multiple]
+                    if object.properties[property].nil? ||
+                      (object.properties[property].empty? && !type_info[:has][property][:optional])
+                        raise(StandardError, "Property #{property.inspect} has no values for #{type}.")
+                    end
+                elsif object.properties[property].nil?
+                    if type_info[:has][property][:optional]
+                        object.properties[property] = nil
+                    else
+                        raise(StandardError, "Property #{property.inspect} has no value for #{type}.")
+                    end
+                end
+            end
+
+            return object
         end
     end
+
+    attr_reader :type, :properties
 
     def destroy(destroyer, vaporize=false)
         stop_listening
@@ -159,6 +169,22 @@ class BushidoObject
 
     def to_formatted_string(prefix, nest_prefix=true)
         [@type, [@properties]].to_formatted_string(prefix, nest_prefix)
+    end
+
+    # FIXME - Because of the inheritance schema of SafeBushidoObject, SafeBushidoObject.create cannot access add_extension unless it is a public method; whenever we do away with SafeBushidoObject, methods like add_extension (meant to be called during creation and never again) should be protected
+    def add_extension(extension)
+        @extensions << extension
+        extend extension
+    end
+
+private
+    def initialize(core, type)
+        @core = core
+        @type = type
+
+        @properties  = {}
+        @extensions  = []
+        @listens_for = []
     end
 end
 
