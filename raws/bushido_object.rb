@@ -5,9 +5,42 @@ require './game/object_extensions'
 class BushidoObject
     class << self
         def pack(object)
+            raw_data = {}
+
+            raw_data[:type] = object.get_type
+            raw_data[:properties] = object.properties
+
+            raw_data[:extensions] = {}
+            object.extensions.each do |extension|
+                raw_data[:extensions][extension] =
+                    extension.respond_to?(:pack) ? extension.pack(object) : nil
+            end
+
+            raw_data
         end
 
-        def unpack(core, object)
+        def unpack(core, raw_data)
+            raise(ArgumentError, "Malformed packed object data") unless Hash === raw_data
+
+            raise(MissingProperty, "Object type missing from packed data") unless raw_data[:type]
+            object = self.new(core, raw_data[:type])
+
+            raise(MissingProperty, "Object properties missing from packed data") unless raw_data[:properties]
+            object.properties = raw_data[:properties]
+
+            raise(MissingProperty, "Object extensions missing from packed data") unless raw_data[:extensions]
+            raw_data[:extensions].each_pair do |extension, data|
+                object.add_extension(extension)
+                if data && extension.respond_to?(:unpack)
+                    extension.unpack(core, object, data)
+                elsif extension.respond_to?(:unpack)
+                    raise(MissingProperty, "Data missing for extension #{extension}")
+                elsif data
+                    Log.warning("Extension data present with no method for unpacking it")
+                end
+            end
+
+            object
         end
 
         def create(core, type, params={})
@@ -61,7 +94,9 @@ class BushidoObject
         end
     end
 
-    attr_reader :type, :properties
+    attr_reader :properties, :extensions
+
+    def get_type; @type; end
 
     def destroy(destroyer, vaporize=false)
         stop_listening
@@ -175,6 +210,11 @@ class BushidoObject
     def add_extension(extension)
         @extensions << extension
         extend extension
+        if extension.respond_to?(:listens_for)
+            extension.listens_for.each do |message_type|
+                start_listening_for(message_type)
+            end
+        end
     end
 
 private

@@ -1,17 +1,7 @@
 require './util/log'
 
-=begin
-    NECESSARY ENHANCEMENTS
-    ======================
-    1) There needs to be some discussion about character portability between worlds.
-    We should allow this, but we need to think about things like character location between worlds.
-        - If a character saves and reloads a character in the same world, he should be at the same location
-        - If a character saves and reloads a character between worlds, his old position doesn't make sense for the new world
-    This means we need a way to identify which world a character was saved in (or store character position within the world, that might make more sense)
-    This means we also need a way to identify worlds uniquely (I suggest hashing the name of the world with a timestamp)
-=end
-
-module Character
+# TODO - Consider moving this logic into the lobby / game core
+module CharacterLoader
     class << self
         CHARACTER_DIRECTORY = "./data/characters"
 
@@ -58,24 +48,15 @@ module Character
         end
 
         def save(username, character)
-            # TODO - Save based on selected attributes rather than marshalling
-
-            # Clean up instance-specific data
-            position, position_type = character.nil_position
-            core = character.nil_core
-
             filename = to_filename(character.name)
+            character_data = SafeBushidoObject.pack(character)
             full_filename = File.join(get_user_directory(username), filename)
             f = File.open(full_filename, 'w')
-            f.write(Marshal.dump(character))
+            f.write(Marshal.dump(character_data))
             f.close
-
-            # Reset instance-specific data
-            character.set_core(core)
-            character.set_position(position, position_type)
         end
 
-        def attempt_to_load(username, character_name)
+        def attempt_to_load(core, username, character_name)
             unless get_characters_for(username).include?(character_name)
                 Log.debug("No character #{character_name} found")
                 return [nil, []]
@@ -85,7 +66,8 @@ module Character
                 character      = nil
                 history.each do |cdata|
                     begin
-                        character = Character.load_file(username, cdata[:filename])
+                        character_data = Character.load_file(username, cdata[:filename])
+                        character      = SafeBushidoObject.unpack(core, character_data)
                         break
                     rescue Exception => e
                         # This one failed to load, try the next one
@@ -93,7 +75,7 @@ module Character
                         failed_choices << cdata
                     end
                 end
-                return [character, failed_choices]
+                return [character_data, failed_choices]
             end
         end
 
@@ -112,10 +94,12 @@ module Character
             history  = contents.select { |fdata| fdata[:character_name] == character_name }
             history.sort { |x,y| x[:timestamp] <=> y[:timestamp] }
         end
+    end
+end
 
-        def at_creation(instance, params)
-            instance.start_listening_for(:core)
-        end
+module Character
+    class << self
+        def listens_for; [:core]; end
 
         def at_message(instance, message)
             case message.type
@@ -143,20 +127,10 @@ module Character
     end
 
     def witnesses?(locations=[], scope=:immediate)
+        # FIXME - This needs to be generalized to all perceivers, not special for characters
         # TODO - Use scope to determine if events in adjacent zones can be heard / seen
         # TODO - Add perception checks
         return locations.include?(absolute_position)
-    end
-
-    # Since this object is sometimes saved and loaded, we need to recreate it gracefully
-    def set_core(core)
-        @core = core
-    end
-
-    def nil_core
-        ret = @core
-        @core = nil
-        return ret
     end
 
     def set_user_callback(lobby, username)
@@ -166,17 +140,8 @@ module Character
     end
 
     def inform_user(message)
-        unless @lobby
-            Log.error(caller)
-        end
         raise(StateError, "User callback not set for #{monicker}") unless @lobby
         event_properties = message.params.merge(:event_type => message.type)
         @lobby.send_to_user(@username, Message.new(:game_event, {:description => event_properties}))
-    end
-
-    def nil_user_callback
-        Log.debug("Clearing user callback for #{monicker}")
-        @lobby    = nil
-        @username = nil
     end
 end

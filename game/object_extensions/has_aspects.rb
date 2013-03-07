@@ -2,6 +2,31 @@ require './util/exceptions'
 
 module HasAspects
     class << self
+        def listens_for; [:tick]; end
+
+        def pack(instance)
+            raw_data = {:attributes => {}, :skills => {}}
+            instance.attribute_list.each do |attribute|
+                raw_data[:attributes][attribute] = SafeBushidoObject.pack(instance.attribute(attribute))
+            end
+            instance.skill_list.each do |skill|
+                raw_data[:skills][skill] = SafeBushidoObject.pack(instance.skill(skill))
+            end
+            raw_data
+        end
+
+        def unpack(core, instance, raw_data)
+            raise(MissingProperty, "HasAspects data corrupted") unless raw_data[:skills] && raw_data[:attributes]
+            raw_data[:attributes].each_pair do |attribute, raw_attribute_data|
+                actual = SafeBushidoObject.unpack(core, raw_attribute_data)
+                instance.set_attribute(attribute, actual)
+            end
+            raw_data[:skills].each_pair do |skill, raw_skill_data|
+                actual = SafeBushidoObject.unpack(core, raw_skill_data)
+                instance.set_skill(skill, actual)
+            end
+        end
+
         def at_creation(instance, params)
             variances = if instance.class_info(:random_attributes)
                 random_attribute_variances(instance, params)
@@ -22,8 +47,6 @@ module HasAspects
             instance.skills.each_with_index do |name, i|
                 instance.add_skill(name, :intrinsic_bonus => variances[i])
             end
-
-            instance.start_listening_for(:tick)
         end
 
         def at_message(instance, message)
@@ -139,7 +162,7 @@ module HasAspects
         range_size       = range_end - range_begin
         # If the range_size is zero the acceptable_range requested is impossible to generate.
         if range_size == 0
-            raise "Can't generate #{num_values} random values for #{self.type} based on " +
+            raise "Can't generate #{num_values} random values for #{self.monicker} based on " +
                   "random_variance #{variance_per_value.abs} and relative_offset #{relative_offset}!"
         end
         # Warn if acceptable_range is unlikely to be hit.
@@ -154,7 +177,7 @@ module HasAspects
         #   generating a LOT of these).
         report_generation_count = false
         if (num_values / range_size > 1_000) || (range_end < num_values / 50.0) || (range_begin > num_values - (num_values / 50.0))
-            Log.warning("Unlikely acceptable value range (#{acceptable_range}) for #{self.type} " +
+            Log.warning("Unlikely acceptable value range (#{acceptable_range}) for #{self.monicker} " +
                         "may take a while to generate.")
             report_generation_count = true
         end
@@ -190,5 +213,14 @@ module HasAspects
             skill_raw_name = (skill.to_s.match(/_skill$/) ? skill : "#{skill}_skill".to_sym)
             @core.db.info_for(skill_raw_name)[:default_intrinsic]
         end
+    end
+
+private
+    def set_attribute(name, attribute)
+        @attributes[name] = attribute
+    end
+
+    def set_skill(name, skill)
+        @skills[name] = skill
     end
 end

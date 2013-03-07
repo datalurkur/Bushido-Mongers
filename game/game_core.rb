@@ -118,14 +118,14 @@ class GameCore
         @usage_mutex.synchronize do
             cached_positions[username]
 
-            character, failures = Character.attempt_to_load(username, character_name)
+            character, failures = CharacterLoader.attempt_to_load(self, username, character_name)
             if character
-                character.set_core(self)
                 character.set_position(cached_positions[username] || @world.random_starting_location)
+                character.set_user_callback(lobby, username)
+                Message.register_listener(self, :core, character)
+
                 characters[username] = character
                 Log.info("Character #{character.name} loaded for #{username}")
-                Message.register_listener(self, :core, character)
-                character.set_user_callback(lobby, username)
             end
 
             ret = [character, failures]
@@ -148,7 +148,7 @@ class GameCore
         return ret
     end
     def get_user_characters(username)
-        Character.get_characters_for(username)
+        CharacterLoader.get_characters_for(username)
     end
     def has_active_character?(username)
         characters.has_key?(username)
@@ -170,7 +170,6 @@ class GameCore
         character = characters[username]
 
         Message.unregister_listener(self, :core, character)
-        character.nil_user_callback
 
         if character_dies
             cached_positions[username] = nil
@@ -178,7 +177,7 @@ class GameCore
         else
             # Cache the character's position within the game server so that it can be placed back where it exited when logging back in
             cached_positions[username] = character.absolute_position
-            Character.save(username, character)
+            CharacterLoader.save(username, character)
             character.destroy(nil, true)
         end
         characters.delete(username)

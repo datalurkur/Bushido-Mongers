@@ -13,7 +13,7 @@ module Inventory
 
     # TODO - stash priorities for a) particular items and b) particular commands.
     def stash(object)
-        Log.debug("Stashing #{object.type}")
+        Log.debug("Stashing #{object.monicker}")
         if grasper = available_grasper
             grasp(grasper, object)
         elsif container = available_container
@@ -34,7 +34,7 @@ module Inventory
 
     def available_grasper
          self.grasping_parts.each do |part|
-            Log.debug("Looking at #{part.type} for grasping")
+            Log.debug("Looking at #{part.monicker} for grasping")
             return part unless part.full?(:grasped)
         end
         nil
@@ -42,7 +42,7 @@ module Inventory
 
     def available_container
         containers_in_inventory.each do |cont|
-            Log.debug("Looking at #{cont.type} for grasping")
+            Log.debug("Looking at #{cont.monicker} for grasping")
             return cont unless cont.full?
         end
         nil

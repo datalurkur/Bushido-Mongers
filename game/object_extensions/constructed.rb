@@ -33,8 +33,8 @@ module Constructed
             quality_value = (Quality.index_of(quality) + avg_component_quality) / 2.0
             quality_level = Quality.value_at(Quality.clamp_index(quality_value.ceil))
 
-            instance.set_property(:quality,    quality_level)
-            instance.set_property(:incidental, components)
+            instance.set_property(:quality, quality_level)
+            instance.set_container_contents(:incidental, components)
         end
     end
 

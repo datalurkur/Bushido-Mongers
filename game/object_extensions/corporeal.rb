@@ -9,7 +9,7 @@ module Corporeal
     end
 
     def create_body
-        unless get_property(:incidental).empty?
+        unless container_contents(:incidental).empty?
             Log.error("Body created twice for #{monicker}")
             return
         end
@@ -19,16 +19,16 @@ module Corporeal
             :position      => self,
             :position_type => :incidental
         })
-        @total_hp = all_body_parts.map(&:hp).inject(0, &:+)
+        set_property(:total_hp, all_body_parts.map(&:hp).inject(0, &:+))
 
         # If this has multiple values, I don't know what the fuck we're doing
         # That would mean that this corporeal thing has multiple independent bodies
         # How do you even describe such a thing?
-        raise(UnexpectedBehaviorError, "Multiple independent bodies provided for #{monicker}.") if get_property(:incidental).size > 1
+        raise(UnexpectedBehaviorError, "Multiple independent bodies provided for #{monicker}.") if container_contents(:incidental).size > 1
     end
 
     def all_body_parts(type = [:internal, :external])
-        get_property(:incidental).collect do |body|
+        container_contents(:incidental).collect do |body|
             body.select_objects(type, true) { |obj| obj.is_type?(:body_part) }
         end.flatten
     end
@@ -38,18 +38,18 @@ module Corporeal
     end
 
     def internal_body_parts
-        get_property(:incidental) + all_body_parts(:internal)
+        container_contents(:incidental) + all_body_parts(:internal)
     end
 
     def damage(amount, attacker, target=nil)
         # If a body part (target) isn't specified, just damage the body.
-        target ||= get_property(:incidental).rand
+        target ||= container_contents(:incidental).rand
         target.set_property(:hp, target.hp - amount)
-        @total_hp -= amount
+        set_property(:total_hp, get_property(:total_hp) - amount)
         if target.hp <= 0
             # If they've destroyed the whole body, the corporeal (spirit)
             # dies, and the body will hit the floor.
-            if get_property(:incidental).include?(target)
+            if container_contents(:incidental).include?(target)
                 Log.debug("Destroying #{monicker}!")
                 @core.flag_for_destruction(self, attacker)
             else

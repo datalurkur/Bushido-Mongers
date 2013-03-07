@@ -32,7 +32,7 @@ class Descriptor
             # FIXME - Take the observer into account
             # TODO - SERIOUSLY obfuscate details if object is :hidden
             d = {
-                :type => object.type
+                :type => object.get_type
             }
 
             d[:name]             = object.name if object.has_property?(:name)
@@ -48,10 +48,15 @@ class Descriptor
             # Undecided as to whether these are useful to have - lots of duplication
             #d[:class_properties] = Descriptor.describe(object.class_properties, observer)
 
-            # Drop some non-informative values.
-            [:incidental, :external, :internal, :symmetric].each do |prop|
-                if d[:properties][prop] && d[:properties][prop].empty?
-                    d[:properties].delete(prop)
+            if Composition === object
+                d[:container_contents] = {}
+                object.container_classes.each do |prop|
+                    contents = object.container_contents(prop)
+                    if contents && !contents.empty?
+                        d[:container_contents][prop] = contents.collect do |o|
+                            Descriptor.describe(o, observer)
+                        end
+                    end
                 end
             end
 

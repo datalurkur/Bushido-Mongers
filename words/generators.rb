@@ -103,7 +103,7 @@ module Words
 
     def self.describe_corporeal(corporeal)
         # Describe the corporeal body
-        body = corporeal[:properties][:incidental].first
+        body = corporeal[:container_contents][:incidental].first
         corporeal[:definite] = true
         sentences = [gen_sentence(:subject => corporeal, :verb => :have, :target => body)]
         body[:possessor_info] = possessor_info(corporeal)
@@ -151,9 +151,9 @@ module Words
         sentences = []
 
         comp_types = {
-            :attach => composition[:properties][:external],
-            :wear   => composition[:properties][:worn],
-            :grasp  => composition[:properties][:grasped],
+            :attach => composition[:container_contents][:external],
+            :wear   => composition[:container_contents][:worn],
+            :grasp  => composition[:container_contents][:grasped],
         }
 
         comp_types.each do |verb, list|
