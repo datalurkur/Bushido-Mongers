@@ -46,7 +46,7 @@ class Descriptor
             # Collect property information
             d[:properties]       = Descriptor.describe(object.properties, observer)
             # Undecided as to whether these are useful to have - lots of duplication
-            #d[:class_properties] = Descriptor.describe(object.class_properties, observer)
+            #d[:class_properties] = Descriptor.describe(object.class_info, observer)
 
             if Composition === object
                 d[:container_contents] = {}

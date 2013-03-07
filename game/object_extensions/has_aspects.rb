@@ -79,6 +79,11 @@ module HasAspects
         @attributes[attribute] = @core.create(attribute, params)
     end
 
+    def set_attribute(attribute, value)
+        @attributes ||= {}
+        @attributes[attribute] = value
+    end
+
     def add_skill(skill, params={})
         @skills ||= {}
         skill_raw_name = (skill.to_s.match(/_skill$/) ? skill : "#{skill}_skill".to_sym)
@@ -86,6 +91,11 @@ module HasAspects
 
         # TODO - mod bonuses based on attributes
         @skills[skill] = @core.create(skill_raw_name, params)
+    end
+
+    def set_skill(skill, value)
+        @skills ||= {}
+        @skills[skill] = value
     end
 
     def has_attribute?(attribute)
@@ -213,14 +223,5 @@ module HasAspects
             skill_raw_name = (skill.to_s.match(/_skill$/) ? skill : "#{skill}_skill".to_sym)
             @core.db.info_for(skill_raw_name)[:default_intrinsic]
         end
-    end
-
-private
-    def set_attribute(name, attribute)
-        @attributes[name] = attribute
-    end
-
-    def set_skill(name, skill)
-        @skills[name] = skill
     end
 end

@@ -26,7 +26,7 @@ class BushidoObject
             object = self.new(core, raw_data[:type])
 
             raise(MissingProperty, "Object properties missing from packed data") unless raw_data[:properties]
-            object.properties = raw_data[:properties]
+            object.set_properties(raw_data[:properties])
 
             raise(MissingProperty, "Object extensions missing from packed data") unless raw_data[:extensions]
             raw_data[:extensions].each_pair do |extension, data|
@@ -167,6 +167,43 @@ class BushidoObject
         @properties[key]
     end
 
+    def has_property?(prop)
+        @properties.has_key?(prop)
+    end
+
+    def process_message(message)
+        Log.error("#{monicker} has no core!") unless @core
+        @extensions.each do |mod|
+            mod.at_message(self, message) if mod.respond_to?(:at_message)
+        end
+    end
+
+    def class_info(key=nil)
+        @core.db.info_for(@type, key)
+    end
+
+    def inspect
+        "#<#{@type} #{@properties.inspect}>"
+    end
+
+    def to_formatted_string(prefix, nest_prefix=true)
+        [@type, [@properties]].to_formatted_string(prefix, nest_prefix)
+    end
+
+    def add_extension(extension)
+        @extensions << extension
+        extend extension
+        if extension.respond_to?(:listens_for)
+            extension.listens_for.each do |message_type|
+                start_listening_for(message_type)
+            end
+        end
+    end
+
+    def set_properties(value)
+        @properties = value
+    end
+
     def set_property(key, value)
         # TODO - Properly check type of value based on raw type information
 =begin
@@ -179,45 +216,6 @@ class BushidoObject
         @properties[key] = value
     end
 
-    def has_property?(prop)
-        @properties.has_key?(prop)
-    end
-
-    def process_message(message)
-        Log.error("#{monicker} has no core!") unless @core
-        @extensions.each do |mod|
-            mod.at_message(self, message) if mod.respond_to?(:at_message)
-        end
-    end
-
-    def class_info(key)
-        @core.db.info_for(@type, key)
-    end
-
-    def class_properties
-        @core.db.info_for(@type)
-    end
-
-    def inspect
-        "#<#{@type} #{@properties.inspect}>"
-    end
-
-    def to_formatted_string(prefix, nest_prefix=true)
-        [@type, [@properties]].to_formatted_string(prefix, nest_prefix)
-    end
-
-    # FIXME - Because of the inheritance schema of SafeBushidoObject, SafeBushidoObject.create cannot access add_extension unless it is a public method; whenever we do away with SafeBushidoObject, methods like add_extension (meant to be called during creation and never again) should be protected
-    def add_extension(extension)
-        @extensions << extension
-        extend extension
-        if extension.respond_to?(:listens_for)
-            extension.listens_for.each do |message_type|
-                start_listening_for(message_type)
-            end
-        end
-    end
-
-private
     def initialize(core, type)
         @core = core
         @type = type

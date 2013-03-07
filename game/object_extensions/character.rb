@@ -66,16 +66,16 @@ module CharacterLoader
                 character      = nil
                 history.each do |cdata|
                     begin
-                        character_data = Character.load_file(username, cdata[:filename])
+                        character_data = load_file(username, cdata[:filename])
                         character      = SafeBushidoObject.unpack(core, character_data)
                         break
                     rescue Exception => e
                         # This one failed to load, try the next one
-                        Log.debug(["Failed to load character with timestamp #{cdata[:timestamp]}", e.message])
+                        Log.debug(["Failed to load character with timestamp #{cdata[:timestamp]}", e.message, e.backtrace])
                         failed_choices << cdata
                     end
                 end
-                return [character_data, failed_choices]
+                return [character, failed_choices]
             end
         end
 

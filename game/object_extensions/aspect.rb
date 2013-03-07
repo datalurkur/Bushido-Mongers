@@ -29,10 +29,10 @@ module Aspect
             {:unused_for => instance.current_tick - instance.last_used}
         end
 
-        def unpack(instance, data)
+        def unpack(core, instance, data)
             raise(MissingProperty, "Aspect data corrupted") unless data[:unused_for]
-            @current_tick = data[:unused_for]
-            @last_used    = 0
+            instance.current_tick = data[:unused_for]
+            instance.last_used    = 0
         end
     end
 
