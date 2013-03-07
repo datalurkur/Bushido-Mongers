@@ -2,6 +2,31 @@ require './util/exceptions'
 
 module HasAspects
     class << self
+        def listens_for; [:tick]; end
+
+        def pack(instance)
+            raw_data = {:attributes => {}, :skills => {}}
+            instance.attribute_list.each do |attribute|
+                raw_data[:attributes][attribute] = SafeBushidoObject.pack(attributes(attribute))
+            end
+            instance.skill_list.each do |skill|
+                raw_data[:skills][skill] = SafeBushidoObject.pack(skills(skill))
+            end
+            raw_data
+        end
+
+        def unpack(core, instance, raw_data)
+            raise(MissingProperty, "HasAspects data corrupted") unless raw_data[:skills] && raw_data[:attributes]
+            raw_data[:attributes].each_pair do |attribute, raw_attribute_data|
+                actual = SafeBushidoObject.unpack(core, raw_attribute_data)
+                instance.set_attribute(attribute, actual)
+            end
+            raw_data[:skills].each_pair do |skill, raw_skill_data|
+                actual = SafeBushidoObject.unpack(core, raw_skill_data)
+                instance.set_skill(skill, actual)
+            end
+        end
+
         def at_creation(instance, params)
             variances = if instance.class_info(:random_attributes)
                 random_attribute_variances(instance, params)
@@ -22,8 +47,6 @@ module HasAspects
             instance.skills.each_with_index do |name, i|
                 instance.add_skill(name, :intrinsic_bonus => variances[i])
             end
-
-            instance.start_listening_for(:tick)
         end
 
         def at_message(instance, message)
@@ -190,5 +213,14 @@ module HasAspects
             skill_raw_name = (skill.to_s.match(/_skill$/) ? skill : "#{skill}_skill".to_sym)
             @core.db.info_for(skill_raw_name)[:default_intrinsic]
         end
+    end
+
+private
+    def set_attribute(name, attribute)
+        @attributes[name] = attribute
+    end
+
+    def set_skill(name, skill)
+        @skills[name] = skill
     end
 end

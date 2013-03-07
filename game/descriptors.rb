@@ -48,10 +48,15 @@ class Descriptor
             # Undecided as to whether these are useful to have - lots of duplication
             #d[:class_properties] = Descriptor.describe(object.class_properties, observer)
 
-            # Drop some non-informative values.
-            [:incidental, :external, :internal, :symmetric].each do |prop|
-                if d[:properties][prop] && d[:properties][prop].empty?
-                    d[:properties].delete(prop)
+            if Composition === object
+                d[:container_contents] = {}
+                [:incidental, :external, :internal, :symmetric].each do |prop|
+                    contents = object.container_contents(prop)
+                    if contents && !contents.empty?
+                        d[:container_contents][prop] = contents.collect do |o|
+                            Descriptor.describe(o, observer)
+                        end
+                    end
                 end
             end
 

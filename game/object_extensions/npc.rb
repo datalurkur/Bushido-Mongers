@@ -4,9 +4,17 @@ require './game/commands'
 
 module NpcBehavior
     class << self
+        def listens_for; [:tick]; end
+
+        def pack(instance)
+        end
+
+        def unpack(core, instance, raw_data)
+            instance.set_behavior(instance.class_info(:behavior) || :random_attack_and_move)
+        end
+
         def at_creation(instance, params)
             instance.set_behavior(instance.class_info(:behavior) || :random_attack_and_move)
-            instance.start_listening_for(:tick)
         end
 
         def at_message(instance, message)

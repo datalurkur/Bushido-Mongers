@@ -24,6 +24,16 @@ module Aspect
                 raise(MissingProperty, "Associated attribute has no scaling value.") unless instance.has_property?(:attribute_scaling)
             end
         end
+
+        def pack(instance)
+            {:unused_for => instance.current_tick - instance.last_used}
+        end
+
+        def unpack(instance, data)
+            raise(MissingProperty, "Aspect data corrupted") unless data[:unused_for]
+            @current_tick = data[:unused_for]
+            @last_used    = 0
+        end
     end
 
     def attempt(difficulty, attributes)

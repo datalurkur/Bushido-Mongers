@@ -3,6 +3,26 @@ require './util/exceptions'
 
 module Composition
     class << self
+        def pack(instance)
+            raw_data = {:containers => {}}
+            instance.container_classes.each do |container_class|
+                raw_data[:containers][container_class] = instance.container_contents(container_class).collect do |object|
+                    BushidoObject.pack(object)
+                end
+            end
+            raw_data
+        end
+
+        def unpack(core, instance, raw_data)
+            raise(MissingProperty, "Composition data corrupted") unless raw_data[:containers]
+            raw_data[:containers].each_pair do |container_class, container_contents|
+                instantiated_contents = container_contents.collect do |object|
+                    BushidoObject.unpack(core, object)
+                end
+                instance.set_container_contents(container_class, instantiated_contents)
+            end
+        end
+
         def at_creation(instance, params)
             instance.set_property(:weight, 0)
             instance.initial_composure(params)
@@ -15,13 +35,13 @@ module Composition
             instance.container_classes.each do |key|
                 if instance.preserved_container_classes.include?(key)
                     # Drop these components at the location where this object is
-                    instance.get_property(key).each do |component|
+                    instance.container_contents(key).each do |component|
                         Log.debug("Dropping #{component.monicker} at #{instance.absolute_position.name}", 6)
                         # Force the new position.
                         component.set_position(instance.absolute_position, :internal, true)
                     end
                     # All components set to a new location. Clear the local references.
-                    instance.set_property(key, [])
+                    instance.set_container_contents(key, [])
                 else
                     Log.debug("#{instance.monicker} does not preserve #{key} components", 8)
                 end
@@ -51,12 +71,7 @@ module Composition
 
         self.container_classes.each do |comp_type|
             raise(MissingProperty, "Container class #{comp_type} specified but not created.") if get_property(comp_type).nil?
-            components           = get_property(comp_type).dup
-            already_created      = components.select { |component| BushidoObject === component }
-            to_be_created        = components - already_created
-            set_property(comp_type, already_created)
-
-            to_be_created.each do |component|
+            get_property(comp_type).each do |component|
                 @core.create(component, params.merge(
                     :position      => self,
                     :position_type => comp_type,
@@ -101,7 +116,7 @@ module Composition
     def remove_object(object)
         Log.debug("Removing #{object.monicker} from #{monicker}", 6)
         self.container_classes.each do |type|
-            if get_property(type).include?(object)
+            if container_contents(type).include?(object)
                 return _remove_object(object, type)
             end
         end
@@ -111,9 +126,9 @@ module Composition
     def full?(type=:internal)
         case type
         when :grasped
-            get_property(type).size > 0
+            container_contents(type).size > 0
         when :worn
-            get_property(type).size > 1
+            container_contents(type).size > 1
         else
             false
         end
@@ -152,7 +167,7 @@ module Composition
         list = []
         type.each do |type|
             next unless get_property(type)
-            get_property(type).each do |obj|
+            container_contents(type).each do |obj|
                 next if block_given? && !block.call(obj)
                 list << obj
                 if recursive && obj.is_type?(:composition) && depth > 0
@@ -163,12 +178,27 @@ module Composition
         list
     end
 
+=begin
+    # It doesn't look like this method is being used, and even if it were, I'm really not sure how it would work
     def all_children
         self.container_classes.inject([]) do |i, cc|
             i + cc.inject([]) do |j, obj|
                 j + [obj] + obj.is_type?(:composition) ? obj.all_children : []
             end
         end.flatten
+    end
+=end
+
+    def container_contents(container_type)
+        @container_contents                 ||= {}
+        return nil unless container_classes.include?(container_type)
+        @container_contents[container_type] ||= []
+    end
+
+    def set_container_contents(container_type, value)
+        @container_contents               ||= {}
+        return nil unless container_classes.include?(container_type)
+        @container_contents[container_type] = value
     end
 
     private
@@ -177,7 +207,7 @@ module Composition
         raise(ArgumentError, "Cannot modify #{type} composition of #{monicker}!") if respect_mutable && !self.mutable_container_classes.include?(type)
         add_weight(object)
         add_value(object) if self.added_value_container_classes.include?(type)
-        set_property(type, get_property(type) << object)
+        container_contents(type) << object
         object
     end
 
@@ -186,7 +216,7 @@ module Composition
         raise(ArgumentError, "Cannot modify #{type} composition of #{monicker}!") unless self.mutable_container_classes.include?(type)
         remove_weight(object)
         remove_value(object) if self.added_value_container_classes.include?(type)
-        get_property(type).delete(object)
+        container_contents(type).delete(object)
     end
 
     def add_weight(object)
