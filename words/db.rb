@@ -140,7 +140,7 @@ class WordDB
 
     # Verbs have different prepositions for different cases.
     def get_prep_map_for_verb(verb)
-        @verb_case_maps[:default].dup.merge(@verb_case_maps[verb])
+        @verb_case_maps[:default].dup.merge(@verb_case_maps[verb] || {})
     end
 
     # Verbs have different prepositions for different designations.
