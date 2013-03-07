@@ -5,19 +5,16 @@ module Words
         case args[:command]
         when :inspect
             target = args[:target]
-            case target[:type]
-            when :room
+            if target[:is_type].include?(:room)
                 return Words.describe_room(args)
+            elsif target[:is_type].include?(:corporeal)
+                return Words.describe_corporeal(target)
+            elsif target[:is_type].include?(:composition_root)
+                return Words.describe_composition_root(target)
+            elsif target[:is_type].include?(:item)
+                return Words.gen_sentence(args)
             else
-                if target[:is_type].include?(:corporeal)
-                    return Words.describe_corporeal(target)
-                elsif target[:is_type].include?(:composition_root)
-                    return Words.describe_composition(target)
-                elsif target[:is_type].include?(:item)
-                    return Words.gen_sentence(args)
-                else
-                    return "I don't know how to describe a #{target[:type].inspect}, bother zphobic to fix this"
-                end
+                return "I don't know how to describe a #{target[:type].inspect}, bother zphobic to fix this"
             end
         when :move
             return Words.describe_room(args)
@@ -144,7 +141,7 @@ module Words
         args[:target].map { |c| [c, *Words.db.get_related_words(c)].join(" ") }.join("\n") + "\n"
     end
 
-    def self.describe_composition(composition)
+    def self.describe_composition_root(composition)
         state = State.new
         # Description is a currently-progressing state, so passive progressive.
         # verb == :grasp => "is grasped by"
