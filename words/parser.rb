@@ -91,7 +91,7 @@ module WordParser
 
                 # Convert properties ("present,second") into a State
                 properties = words.shift.split(",").map(&:to_sym)
-                state = Words::State.new(properties)
+                state = Words::State.new(*properties)
 
                 db.add_conjugation_by_person(infinitive, state, words.map(&:to_sym))
             end

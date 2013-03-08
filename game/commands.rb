@@ -92,6 +92,11 @@ module Commands
 
     module Inspect
         def self.stage(core, params)
+            location, adjs = params[:location]
+            if location
+                Commands.find_objects(core, params, :location => [:grasped_objects, :worn_objects, :stashed_objects, :position])
+            end
+
             target, adjs = params[:target]
             if !target.nil? && (params[:agent].monicker.match(target.to_s) || (Words.db.get_related_words(:self)+[:self]).include?(target))
                 # Examine the agent.

@@ -17,7 +17,7 @@ module Words
     # in all instances of all verbs in the present negative form.
     class State
         FIELDS = {
-            :aspects => [:perfect, :imperfect, :habitual, :stative, :progressive],
+            :aspect  => [:perfect, :imperfect, :habitual, :stative, :progressive],
             :tense   => [:present, :past, :future],
             :mood    => [:indicative, :subjunctive, :imperative],
             :person  => [:first, :second, :third, :first_plural, :second_plural, :third_plural],
@@ -27,7 +27,7 @@ module Words
         attr_accessor :aspect, :tense, :mood, :person, :voice
 
         # properties => e.g. [:perfect, :present, :passive]
-        def initialize(properties=[])
+        def initialize(*properties)
             set_default_state
             properties.each do |prop|
                 FIELDS.each do |field, list|

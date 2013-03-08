@@ -5,7 +5,10 @@ module Words
         case args[:command]
         when :inspect
             target = args[:target]
-            if target[:is_type].include?(:room)
+            location = args[:location]
+            if location
+                return Words.describe_composition_root(location)
+            elsif target[:is_type].include?(:room)
                 return Words.describe_room(args)
             elsif target[:is_type].include?(:corporeal)
                 return Words.describe_corporeal(target)
@@ -141,13 +144,23 @@ module Words
         args[:target].map { |c| [c, *Words.db.get_related_words(c)].join(" ") }.join("\n") + "\n"
     end
 
-    def self.describe_composition_root(composition)
-        state = State.new
-        # Description is a currently-progressing state, so passive progressive.
-        # verb == :grasp => "is grasped by"
-        state.voice  = :passive
-        state.aspect = :progressive
+    def self.describe_container_class(composition, klass = :internal)
+        class_verbs = {
+            :internal => :in
+        }
 
+        list = composition[:container_contents][klass]
+
+        gen_sentence(
+            :subject => composition,
+            :verb    => class_verbs[klass],
+            :target  => (list && !list.empty? ? list : :nothing),
+            # Currently-progressing state, so passive progressive.
+            :state   => State.new(:passive, :progressive)
+        )
+    end
+
+    def self.describe_composition_root(composition)
         sentences = []
 
         comp_types = {
@@ -165,7 +178,8 @@ module Words
                                 :subject => composition,
                                 :verb    => verb,
                                 :target  => list.dup,
-                                :state   => state)
+                                # Currently-progressing state, so passive progressive.
+                                :state   => State.new(:passive, :progressive))
                 sentences += list.collect do |part|
                     if part[:is_type].include?(:composition_root)
                         describe_composition_root(part)

@@ -1,4 +1,5 @@
 look at target
+look in location
 attack with tool
 move to destination
 move nil destination
