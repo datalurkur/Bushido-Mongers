@@ -17,7 +17,7 @@ require './game/tables'
 module Aspect
     class << self
         def at_creation(instance, params)
-            initial_intrinsic = instance.class_info(:default_intrinsic) + (params[:intrinsic_bonus] || 0)
+            initial_intrinsic = instance.class_info[:default_intrinsic] + (params[:intrinsic_bonus] || 0)
             instance.properties[:intrinsic] = initial_intrinsic
 
             if instance.properties[:associated_attribute]
@@ -88,9 +88,9 @@ module Aspect
         base_intrinsic  = @properties[:intrinsic]
 
         # A intrinsic may or may not be affected by another intrinsic or attribute
-        associated_attribute = class_info(:associated_attribute)
+        associated_attribute = class_info[:associated_attribute]
         intrinsic = if associated_attribute
-            attribute_scaling = class_info(:attribute_scaling)
+            attribute_scaling = class_info[:attribute_scaling]
             attribute_value   = attributes[associated_attribute].check(difficulty, attributes)
             (attribute_value * attribute_scaling) + (base_intrinsic * (1.0 - attribute_scaling))
         else
@@ -98,7 +98,7 @@ module Aspect
         end
 
         # Use intrinsic as a baseline, and allow familiarity to vary the outcome based on the variance
-        roll = make_check(intrinsic, class_info(:variance), @properties[:familiarity] || 0.0)
+        roll = make_check(intrinsic, class_info[:variance], @properties[:familiarity] || 0.0)
         Log.debug("Rolled a #{roll} for a #{difficulty} #{monicker} check", 6)
         roll
     end
@@ -114,14 +114,14 @@ module Skill
             # Check to make sure this thing is also an aspect
             raise(MissingObjectExtensionError, "Skills must use the Aspect module.") unless Aspect === instance
 
-            initial_familiarity = instance.class_info(:default_familiarity) + (params[:familiarity_bonus] || 0)
+            initial_familiarity = instance.class_info[:default_familiarity] + (params[:familiarity_bonus] || 0)
             instance.properties[:familiarity] = initial_familiarity
         end
     end
 
     def increment_tick
         super()
-        languish if current_tick - last_used > class_info(:familiarity_loss)
+        languish if current_tick - last_used > class_info[:familiarity_loss]
     end
 
     def check(difficulty, attributes)

@@ -28,7 +28,7 @@ module HasAspects
         end
 
         def at_creation(instance, params)
-            variances = if instance.class_info(:random_attributes)
+            variances = if instance.class_info[:random_attributes]
                 random_attribute_variances(instance, params)
             else
                 Array.new(instance.properties[:attributes].size, 0)
@@ -38,7 +38,7 @@ module HasAspects
                 instance.add_attribute(name, :intrinsic_bonus => variances[i])
             end
 
-            variances = if instance.class_info(:random_skills)
+            variances = if instance.class_info[:random_skills]
                 random_skill_variances(instance, params)
             else
                 Array.new(instance.properties[:skills].size, 0)
@@ -57,17 +57,17 @@ module HasAspects
         private
         def random_attribute_variances(instance, params)
             default_values = instance.get_attribute_defaults(instance.properties[:attributes])
-            relative_offset = instance.class_info(:attribute_offset) || 0
-            variance_per_value = instance.class_info(:random_variance)
+            relative_offset = instance.class_info[:attribute_offset] || 0
+            variance_per_value = instance.class_info[:random_variance]
 
             instance.generate_variances(default_values, variance_per_value, relative_offset)
         end
 
         def random_skill_variances(instance, params)
             default_values = instance.get_skill_defaults(instance.properties[:skills])
-            relative_offset = instance.class_info(:skill_offset) || 0
+            relative_offset = instance.class_info[:skill_offset] || 0
             # FIXME: this should probably be different for attributes and skills.
-            variance_per_value = instance.class_info(:random_variance)
+            variance_per_value = instance.class_info[:random_variance]
 
             instance.generate_variances(default_values, variance_per_value, relative_offset)
         end

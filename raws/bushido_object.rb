@@ -163,8 +163,8 @@ class BushidoObject
         end
     end
 
-    def class_info(key=nil)
-        @core.db.info_for(@type, key)
+    def class_info
+        @core.db.info_for(@type)
     end
 
     def inspect

@@ -13,7 +13,7 @@ module Corporeal
             Log.error("Body created twice for #{monicker}")
             return
         end
-        body_type = class_info(:body_type)
+        body_type = class_info[:body_type]
         @core.create(body_type, {
             :relative_size => @properties[:size],
             :position      => self,

@@ -58,7 +58,7 @@ end
 # TODO - Discuss how this works for vampires and how to functionally represent that drinking blood is bad.
 # Question: Can players / AI do things furtively / in secret?
 Behavior.define(:consume) do |actor|
-    consumable_type = actor.class_info(:consumes) || :consumable
+    consumable_type = actor.class_info[:consumes] || :consumable
     consumables = [:position, :grasped_objects, :stashed_objects].collect do |location|
         actor.filter_objects(location, consumable_type)
     end.flatten

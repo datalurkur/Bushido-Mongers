@@ -107,10 +107,10 @@ module Commands
 
     module Consume
         def self.stage(core, params)
-            params[:target_type_class] = (params[:agent].class_info(:consumes) || core.db.info_for(params[:command], :target))
+            params[:target_type_class] = (params[:agent].class_info[:consumes] || core.db.info_for(params[:command], :target))
             Commands.find_objects(core, params, :target => [:inventory, :position])
 
-            unless params[:agent].class_info(:on_consume) || params[:target].is_type?(:consumable)
+            unless params[:agent].class_info[:on_consume] || params[:target].is_type?(:consumable)
                 raise(FailedCommandError, "#{params[:agent].monicker} doesn't know how to eat a(n) #{params[:target].monicker}")
             end
         end
@@ -118,7 +118,7 @@ module Commands
         def self.do(core, params)
             agent = params[:agent]
             # Special consumption.
-            if agent.class_info(:consumes)
+            if agent.class_info[:consumes]
                 Log.info("#{agent.monicker} eats a #{params[:target].monicker}!")
             elsif params[:target].is_type?(:consumable)
                 # Do normal consumption
