@@ -38,7 +38,7 @@ module Words
     def self.gen_sentence(args = {})
         to_print = args.dup
         to_print.delete(:agent)
-        Log.debug(to_print, 8)
+        Log.debug(to_print, 7)
 
         args[:state] ||= State.new
 
@@ -78,16 +78,20 @@ module Words
         subject_np = Sentence::NounPhrase.new(subject)
         verb_np    = Sentence::VerbPhrase.new(verb, args)
 
-        Sentence.new(subject_np, verb_np).to_s
+        sentence = Sentence.new(subject_np, verb_np)
+        Log.debug(sentence, 7)
+        sentence.to_s
     end
 
     def self.describe_attack(args = {})
-        # TODO - reach into result_hash and pick verb
         args[:action] = :attack
         args[:agent]  = args[:attacker]
         args[:target] = args[:defender]
 
-        Log.debug(args[:result_hash].keys)
+        if args[:result_hash][:subtarget]
+            args[:defender][:subtarget] = args[:result_hash][:subtarget]
+        end
+
         sentences = [gen_sentence(args.merge(args[:result_hash]))]
         sentences.join(" ")
     end
@@ -96,11 +100,9 @@ module Words
     def self.possessor_info(possessor)
         # defaults
         person = :third
-        gender = :inanimate
         # specifics
         person = :second if possessor[:monicker] == :you
-        gender = possessor[:gender] if possessor[:gender]
-        { :person => person, :gender => gender }
+        { :person => person, :gender => (possessor[:gender] || :inanimate) }
     end
     public
 
@@ -202,7 +204,7 @@ module Words
             args[:verb]    = :be
         end
 
-        adjectives = Sentence::Adjective.descriptor_adjectives(args[:subject])
+        adjectives = Sentence::Adjective.new_for_descriptor(args[:subject])
         args[:subject_complement] = adjectives + [:adjective, :adjectives, :complement, :keywords].inject([]) { |a, s| a + Array(args[s]) }
 
         # TODO - Use expletive / inverted copula construction

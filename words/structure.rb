@@ -6,6 +6,19 @@ http://en.wikipedia.org/wiki/Constituent_(linguistics)
 PTNodes are the nodes of the tree, with further differentiation between internal nodes (nodes with node children) and leaf nodes. Internal nodes should not have non-node (i.e. symbol) children, and leaf nodes should not have node children, but in practice this is not strictly enforced.
 
 The sentence structures have been designed to be as flexible as possible given their current basic nature. For example, descriptor hashes (see ./game/descriptors) or symbols can be passed in as nouns in any context, and many placements will also accept pre-created parts of speech (all the PTNode subclasses defined under Sentence). Verb conjugation is dependent on both abnormal word knowledge and generic rules, which work for most cases.
+
+Cases
+
+The nominative case indicates the subject of a finite verb: We went to the store. => :subject
+The accusative case indicates the direct object of a verb: The clerk remembered us. => :target
+The dative case indicates the indirect object of a verb: The clerk gave us a discount. or The clerk gave a discount to us. => :hasnt_come_up_yet
+The ablative case indicates movement from something, or cause: The victim went from us to see the doctor. and He was unhappy because of depression. => :hasnt_come_up_yet
+The genitive case, which roughly corresponds to English's possessive case and preposition of, indicates the possessor of another noun: John's book was on the table. and The pages of the book turned yellow. => possessor_info?
+The vocative case indicates an addressee: John, are you all right? or simply Hello, John! => :hasnt_come_up_yet
+The locative case (loc) indicates a location: We live in China. => :location
+The lative case (lat) indicates motion to a location. It corresponds to the English prepositions "to" and "into". => :destination
+The instrumental case indicates an object used in performing an action: We wiped the floor with a mop. and Written by hand. => :tool, :material
+
 =end
 
 module Words
@@ -13,23 +26,8 @@ module Words
     class ParseTree
         attr_accessor :root
         class PTNode
-=begin
-            The nominative case indicates the subject of a finite verb: We went to the store. => :subject
-            The accusative case indicates the direct object of a verb: The clerk remembered us. => :target
-            The dative case indicates the indirect object of a verb: The clerk gave us a discount. or The clerk gave a discount to us. => :hasnt_come_up_yet
-            The ablative case indicates movement from something, or cause: The victim went from us to see the doctor. and He was unhappy because of depression. => :hasnt_come_up_yet
-            The genitive case, which roughly corresponds to English's possessive case and preposition of, indicates the possessor of another noun: John's book was on the table. and The pages of the book turned yellow. => possessor_info?
-            The vocative case indicates an addressee: John, are you all right? or simply Hello, John! => :hasnt_come_up_yet
-            The locative case (loc) indicates a location: We live in China. => :location
-            The lative case (lat) indicates motion to a location. It corresponds to the English prepositions "to" and "into". => :destination
-            The instrumental case indicates an object used in performing an action: We wiped the floor with a mop. and Written by hand. => :tool, :material
-=end
-            CASE = [:nominative, :accusative, :dative, :genitive, :vocative, :ablative, :locative, :lative, :instrumental]
-            attr_accessor :case
-            TYPE = [:sentence, :noun_phrase, :verb_phrase, :adverb_phrase, :noun, :verb, :adjective, :determiner, :possessive, :article]
-
             # Children in PTInternalNodes are other PTInternalNodes or PTLeafs. Children in PTLeaves are strings.
-            attr_accessor :children
+            attr_reader :children
 
             def initialize(*children)
                 raise(StandardError, "Can't instantiate PTNode class!") if self.class == PTNode
@@ -37,7 +35,12 @@ module Words
             end
 
             def to_s
-                @children.join(" ")
+                if @children.nil?
+                    Log.warning("PTNode of type #{self.class} has nil children!")
+                    ''
+                else
+                    @children.join(" ")
+                end
             end
 
             def to_sym
@@ -116,6 +119,9 @@ module Words
                     end
                     handled = true
                 when :tool, :destination, :location
+                    if Hash === args[type]
+                        args[type][:definite] = true
+                    end
                     super(noun_phrase_with_prep(type, args))
                     handled = true
                 when :receiver
@@ -136,10 +142,18 @@ module Words
                     args[:statement][0]  =  '"' + args[:statement][0].to_s
                     args[:statement][-1] = args[:statement][-1].to_s + '"'
                     super(:",", args[:statement])
+                else
+                    Log.warning("Don't know how to handle argument of type #{type}!")
                 end
 
                 # We don't want to generate this again for other verbs and so forth.
                 args.delete(type) if handled
+            end
+
+            def self.new_for_args(args)
+                (USED_ARGS & args.keys).collect do |arg|
+                    AdverbPhrase.new(arg, args)
+                end
             end
 
             private
@@ -162,7 +176,28 @@ module Words
 
         # TODO - handle premodifiers and postmodifiers
         # TODO - handle participles
-        class AdjectivePhrase < ParseTree::PTInternalNode; end
+        class AdjectivePhrase < ParseTree::PTInternalNode
+            USED_ARGS = [:subtarget]
+
+            # The type is the part of the args being used to generate an adverb phrase.
+            # args must be defined.
+            def initialize(type, args)
+                case type
+                when :subtarget
+                    if Hash === args[type]
+                        args[type][:definite] = true
+                    end
+                    super(:in, NounPhrase.new(args[type]))
+                end
+            end
+
+            def self.new_for_descriptor(descriptor_hash)
+                return [] unless Hash === descriptor_hash
+                (USED_ARGS & descriptor_hash.keys).collect do |arg|
+                    AdjectivePhrase.new(arg, descriptor_hash)
+                end
+            end
+        end
 
         class VerbPhrase < ParseTree::PTInternalNode
             include Listable
@@ -171,20 +206,15 @@ module Words
             # TODO - add modals based on tense/aspect
             def initialize(verbs, args = {})
                 verbs = Array(verbs)
+
                 @children = verbs.map do |verb|
                     Verb.new(verb, args)
                 end
 
-                @children += AdverbPhrase::USED_ARGS.select { |arg| args.has_key?(arg) }.collect do |arg|
-                    AdverbPhrase.new(arg, args.merge(:verb => verbs.last))
-                end
-
-                if args[:action_hash]
-                    @children += AdverbPhrase::USED_ARGS.select { |arg| args[:action_hash].has_key?(arg) }.collect do |arg|
-                        Log.debug("Handing action_hash arg #{arg}")
-                        AdverbPhrase.new(args[:action_hash], args[:action_hash].merge(:verb => verbs.last))
-                    end
-                end
+                args_for_adverb_phrases = args.dup
+                args_for_adverb_phrases.merge!(args[:action_hash]) if args[:action_hash]
+                args_for_adverb_phrases.merge!(:verb => verbs.last)
+                @children += AdverbPhrase.new_for_args(args_for_adverb_phrases)
 
                 if args[:subject_complement]
                     # FIXME: Technically we're not supposed to insert symbol children into PTInternalNode, but hack it.
@@ -211,17 +241,20 @@ module Words
                     return
                 end
 
+                # Turn every noun into a hash. Descriptors end up with the most information.
                 nouns.map! do |noun|
                     hash = {}
                     case noun
                     when Hash
                         # Decompose descriptor hashes into noun name, modifiers, and possession info.
                         hash[:monicker] = noun[:monicker]
-                        raise TypeError unless [String, Symbol].include?(hash[:monicker].class)
+                        raise TypeError, hash[:monicker].class.to_s unless [String, Symbol].include?(hash[:monicker].class)
 
-                        hash[:adjectives] = Adjective.descriptor_adjectives(noun)
+                        hash[:adjectives] = Adjective.new_for_descriptor(noun)
                         hash[:definite] = noun[:definite] if noun[:definite]
                         hash[:possessor_info] = noun[:possessor_info]if noun[:possessor_info]
+
+                        hash[:adj_phrases] = AdjectivePhrase.new_for_descriptor(noun)
                     else
                         hash[:monicker] = noun
                     end
@@ -230,10 +263,10 @@ module Words
 
                 if @list = (nouns.size > 1)
                     super(
-                    nouns.map do |noun|
-                        children = generate_children(noun)
-                        children.size > 1 ? NounPhrase.new(children) : children.first
-                    end
+                        nouns.map do |noun|
+                            children = generate_children(noun)
+                            children.size > 1 ? NounPhrase.new(children) : children.first
+                        end
                     )
                 else
                     super(generate_children(nouns.first))
@@ -259,6 +292,8 @@ module Words
 
                 children << Noun.new(monicker)
 
+                children += noun[:adj_phrases] if noun[:adj_phrases]
+
                 if determiner = Determiner.new_for_noun(noun, children.first, noun[:definite])
                     children.insert(0, determiner)
                 end
@@ -268,9 +303,11 @@ module Words
         end
 
         class Adjective < ParseTree::PTLeaf
-            def self.descriptor_adjectives(descriptor_hash)
+            def self.new_for_descriptor(descriptor_hash)
                 return [] unless Hash === descriptor_hash
+                # Look in the highest layer
                 adjectives = Array(descriptor_hash[:adjectives])
+                # Look in the properties
                 if descriptor_hash[:properties]
                     adjectives += Array(descriptor_hash[:properties][:adjectives])
                 end
