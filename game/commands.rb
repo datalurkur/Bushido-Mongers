@@ -74,10 +74,13 @@ module Commands
 
     module Stats
         def self.stage(core, params)
+            unless HasAspects === params[:agent]
+                raise(InvalidCommandError, "No aspects!")
+            end
             # Reach into agent and pull out stat details.
             list = []
-            list << params[:agent].attributes.collect { |name| params[:agent].attribute(name) }
-            list << params[:agent].skills.collect     { |name| params[:agent].skill(name) }
+            list << params[:agent].attribute_list.collect { |name| params[:agent].attribute(name) }
+            list << params[:agent].skill_list.collect     { |name| params[:agent].skill(name) }
             params[:target] = list
         end
     end
