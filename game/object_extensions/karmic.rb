@@ -13,8 +13,8 @@ module Karmic
                 if message.target.is_type?(:corporeal)
                     # FIXME - We want to store more than the name of the kill here
                     # Suggestions - notoriety / difficulty of kill, type of monster
-                    instance.kills << message.target.monicker
-                    Log.info("#{instance.monicker} increases their notoriety by shedding the blood of #{message.target.monicker} (now has #{instance.kills.size} kills)")
+                    instance.properties[:kills] << message.target.monicker
+                    Log.info("#{instance.monicker} increases their notoriety by shedding the blood of #{message.target.monicker} (now has #{instance.properties[:kills].size} kills)")
                 end
             end
         end
