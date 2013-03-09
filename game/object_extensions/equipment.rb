@@ -11,7 +11,7 @@ module Inventory
         object.grasped_by(part)
     end
 
-    # TODO - stash priorities for a) particular items and b) particular commands.
+    # TODO - stash priorities for a) particular items (e.g. arrows go in quiver) and b) particular commands.
     def stash(object)
         Log.debug("Stashing #{object.monicker}")
         if grasper = available_grasper

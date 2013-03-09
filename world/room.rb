@@ -31,12 +31,7 @@ class Room < ZoneLeaf
         super(name)
     end
 
-    def insert_object(object)
-        Log.debug("Inserting #{object.monicker} into #{@name}", 6)
-        @objects << object
-    end
-
-    def add_object(object, type=:internal)
+    def add_object(object, type=:internal, ignored=true)
         Log.debug("Adding #{object.monicker} into #{@name}", 6)
         if type != :internal
             Log.warning(["Rooms cannot be comprised of #{type.inspect} objects", caller])

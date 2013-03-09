@@ -1,6 +1,8 @@
 require './util/log'
 require './util/exceptions'
 
+# TODO - check for relative size / max carry number / other restrictions
+
 module Composition
     class << self
         def pack(instance)
@@ -32,18 +34,17 @@ module Composition
             return if vaporize
 
             Log.debug("Destroying composition #{instance.monicker}", 7)
-            instance.container_classes.each do |key|
-                if instance.preserved?(key)
+            instance.container_classes.each do |klass|
+                if instance.preserved?(klass)
                     # Drop these components at the location where this object is
-                    instance.container_contents(key).each do |component|
+                    instance.container_contents(klass).each do |component|
                         Log.debug("Dropping #{component.monicker} at #{instance.absolute_position.name}", 6)
-                        # Force the new position.
-                        component.set_position(instance.absolute_position, :internal, true)
+                        component.drop(instance.absolute_position)
                     end
                     # All components set to a new location. Clear the local references.
-                    instance.set_container_contents(key, [])
+                    instance.set_container_contents(klass, [])
                 else
-                    Log.debug("#{instance.monicker} does not preserve #{key} components", 8)
+                    Log.debug("#{instance.monicker} does not preserve #{klass} components", 8)
                 end
             end
         end
@@ -81,43 +82,24 @@ module Composition
         end
     end
 
-    # HELPER FUNCTIONS for different composition types.
-    # TODO - make generators for these functions.
-
-    # This is used by various at_creation methods to assemble objects sans-sanity checks
     # TODO - check for relative size / max carry number / other restrictions
-    def add_object(object, type=:internal)
+    # respect_mutable=false is used by various at_creation methods to assemble objects sans-sanity checks
+    def add_object(object, type=:internal, respect_mutable=true)
         Log.debug("Assembling #{monicker} - #{object.monicker} added to list of #{type} parts", 6)
-        _add_object(object, type, false)
+        _add_object(object, type, respect_mutable)
     end
 
-    # TODO - check for relative size / max carry number / other restrictions
-    def insert_object(object)
-        Log.debug("Inserting #{object.monicker} into #{monicker}", 6)
-        _add_object(object, :internal)
-    end
-
-    # TODO - check for relative size / max carry number / other restrictions
-    def attach_object(object)
-        Log.debug("Attaching #{object.monicker} to #{monicker}", 6)
-        _add_object(object, :external)
-    end
-
-    def wear(object)
-        Log.debug("Equipping #{object.monicker} on #{monicker}", 6)
-        _add_object(object, :worn)
-    end
-
-    def grasp(object)
-        Log.debug("Grasping #{object.monicker} in #{monicker}", 6)
-        _add_object(object, :grasped)
-    end
-
-    def remove_object(object)
+    def remove_object(object, klass = nil)
         Log.debug("Removing #{object.monicker} from #{monicker}", 6)
-        self.container_classes.each do |type|
-            if container_contents(type).include?(object)
-                return _remove_object(object, type)
+        if klass
+            if container_contents(klass).include?(object)
+                return _remove_object(object, klass)
+            end
+        else
+            self.container_classes.each do |klass|
+                if container_contents(klass).include?(object)
+                    return _remove_object(object, klass)
+                end
             end
         end
         raise(NoMatchError, "No matching object #{object.monicker} found.")
@@ -201,7 +183,7 @@ module Composition
     def preserved?(klass);     @properties[:preserved_container_classes].include?(klass);   end
 
     private
-    def _add_object(object, type, respect_mutable=true)
+    def _add_object(object, type, respect_mutable)
         raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
         raise(ArgumentError, "Cannot modify #{type} composition of #{monicker}!") if respect_mutable && !mutable?(type)
         add_weight(object)

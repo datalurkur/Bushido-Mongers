@@ -20,6 +20,9 @@ abstract root zone {
 
     class sym sideness;
     sideness outside;
+
+    class sym ground_name;
+    ground_name ground;
 }
 
 post_process {

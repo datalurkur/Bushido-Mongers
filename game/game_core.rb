@@ -120,7 +120,7 @@ class GameCore
 
             character, failures = CharacterLoader.attempt_to_load(self, username, character_name)
             if character
-                character.set_position(cached_positions[username] || @world.random_starting_location)
+                character.set_initial_position(cached_positions[username] || @world.random_starting_location)
                 character.set_user_callback(lobby, username)
                 Message.register_listener(self, :core, character)
 

@@ -394,8 +394,8 @@ module Commands
                 Message.dispatch_positional(core, locations, :unit_acts, {
                     :agent       => params[:agent],
                     :action      => :say,
-                    :action_hash => {:receiver => params[:receiver]},
-                    :location    => locations.first
+                    :location    => locations.first,
+                    :action_hash => {:receiver => params[:receiver], :statement => params[:statement]}
                 })
             end
         end

@@ -12,6 +12,7 @@ walk into destination
 walk nil destination
 leave for destination
 leave nil destination
+drop to destination
 throw at destination
 attach to target
 attach to subject

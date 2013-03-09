@@ -4,7 +4,7 @@ require './util/exceptions'
 module Position
     class << self
         def at_creation(instance, params)
-            instance.set_position(params[:position], params[:position_type] || :internal) unless params[:position].nil?
+            instance.set_initial_position(params[:position], params[:position_type] || :internal) unless params[:position].nil?
         end
 
         def at_destruction(instance, destroyer, vaporize)
@@ -48,15 +48,15 @@ module Position
         @position
     end
 
-    def set_position(position, type=:internal, force_set=false)
+    def set_initial_position(position, type=:internal)
         Log.debug("Setting position of #{monicker} to #{position.monicker}", 6)
-        if @position && !force_set
+        if @position
             Log.warning("WARNING: Position being set more than once for #{monicker}; this method is meant to be called during setup and never again; call \"move_to\" instead")
         end
         Message.change_listener_position(@core, self, position, @position)
         @position      = position
         @position_type = type
-        @position.add_object(self, type)
+        @position.add_object(self, type, false)
     end
 
     def nil_position
@@ -74,27 +74,42 @@ module Position
         return ret
     end
 
-    # HELPER FUNCTIONS for different position types.
-    # TODO - make generators for these functions.
+    # destination is assumed to be a room
+    # n.b. doesn't remove the item from the old position
+    def drop(destination)
+        Log.debug("#{monicker} dropped from #{@position.monicker} to #{destination.monicker}", 5)
+
+        Message.dispatch_positional(@core, [destination], :unit_acts, {
+            :agent         => self,
+            :action        => :drop,
+            :location      => destination,
+            :action_hash   => { :destination => destination.zone_info[:ground_name] }
+        })
+
+        @position      = nil # avoid removing the object from the old position
+        _set_position(destination)
+        @position_type = :internal
+        @position.add_object(self)
+    end
 
     def grasped_by(new_position)
         Log.debug("#{monicker} grasped by #{new_position.monicker}", 5)
         _set_position(new_position)
         @position_type = :grasped
-        @position.grasp(self)
+        @position.add_object(self, :grasped)
     end
 
     def equip_on(new_position)
         Log.debug("#{monicker} equipped on #{new_position.monicker}", 5)
         _set_position(new_position)
         @position_type = :worn
-        @position.wear(self)
+        @position.add_object(self, :worn)
     end
 
     def move_to(destination)
         Log.debug("#{monicker} moved to #{destination.monicker}", 5)
 
-        if self.uses?(Character) || self.uses?(NpcBehavior)
+        if Character === self || NpcBehavior === self
             locations = [self.absolute_position, destination]
             Message.dispatch_positional(@core, locations, :unit_moves, {
                 :agent         => self,
@@ -113,7 +128,7 @@ module Position
         Log.debug("#{monicker} attached to #{new_position.monicker}", 5)
         _set_position(new_position)
         @position_type = :external
-        @position.attach_object(self)
+        @position.add_object(self, :external)
     end
 
     private

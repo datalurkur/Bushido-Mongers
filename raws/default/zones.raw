@@ -1,6 +1,7 @@
 /* === ZONE TYPES === */
 abstract zone inside_zone {
     sideness inside;
+    ground_name floor;
 }
 
 abstract zone monster_spawner {
