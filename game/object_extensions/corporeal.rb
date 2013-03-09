@@ -46,7 +46,7 @@ module Corporeal
         target ||= container_contents(:incidental).rand
         target.properties[:hp] -= amount
         @properties[:total_hp] -= amount
-        if target.hp <= 0
+        if target.properties[:hp] <= 0
             # If they've destroyed the whole body, the corporeal (spirit)
             # dies, and the body will hit the floor.
             if container_contents(:incidental).include?(target)
