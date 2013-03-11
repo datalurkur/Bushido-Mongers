@@ -37,6 +37,8 @@ item,constructed dagger_blade {
 }
 
 item,constructed handle {
+    size small;
+
     recipes {
         technique craft;
         components leather;
@@ -44,6 +46,8 @@ item,constructed handle {
 }
 
 item,constructed long_handle {
+    size medium;
+
     recipes {
         technique craft;
         components leather;
@@ -51,6 +55,8 @@ item,constructed long_handle {
 }
 
 item,constructed chain {
+    size small;
+
     recipes {
         technique forge;
         components metal;
@@ -58,6 +64,8 @@ item,constructed chain {
 }
 
 item,constructed axe_blade {
+    size small;
+
     recipes {
         technique forge;
         components metal;
@@ -65,13 +73,17 @@ item,constructed axe_blade {
 }
 
 item,constructed sword_blade {
+    size medium;
+
     recipes {
         technique forge;
         components metal;
     }
 }
 
-item,constructed longsword_blade {
+item,constructed long_sword_blade {
+    size medium;
+
     recipes {
         technique forge;
         components metal;
