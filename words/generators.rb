@@ -21,7 +21,7 @@ module Words
             end
         when :move
             return Words.describe_room(args)
-        when :attack, :get, :drop, :hide, :unhide, :equip, :unequip, :open, :close
+        when :attack, :get, :stash, :drop, :hide, :unhide, :equip, :unequip, :open, :close
             return Words.gen_sentence(args)
         when :say
             return Words.gen_sentence(args.merge(:verb => :say))

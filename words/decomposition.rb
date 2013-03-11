@@ -81,16 +81,19 @@ module Words
 
     # N.B. modifies the pieces array
     def self.decompose_phrases(args, pieces)
+        default_case = Words.db.get_default_case_for_verb(args[:verb])
+        Log.debug("Testing #{default_case} with nil", 6)
+        if pieces.size > 0 && default_case
+            noun = slice_noun_phrase(0, pieces)
+            args[default_case] = noun if noun
+        end
+
         prep_map = Words.db.get_prep_map_for_verb(args[:verb])
         prep_map.each_pair do |case_name, preposition|
             Log.debug("Testing #{case_name} with #{preposition.inspect}", 6)
             phrase = slice_prep_phrase(preposition, pieces)
             args[case_name] = phrase if phrase
         end
-
-        default_case = Words.db.get_default_case_for_verb(args[:verb])
-        Log.debug("Testing #{default_case} with nil", 6)
-        args[default_case] = slice_noun_phrase(0, pieces) if pieces.size > 0 && default_case
 
         args
     end
@@ -128,13 +131,14 @@ module Words
 
         pieces[index..-1].each_with_index do |piece, i|
             Log.debug([piece, i], 6)
+            Log.debug([pieces[index + i], Words::Sentence::Preposition.preposition?(pieces[index + i])], 6)
             if Words::Sentence::Adjective.adjective?(piece)
                 Log.debug(["found adjective", piece], 6)
                 adjectives << piece
                 size += 1
             elsif Words::Sentence::Noun.noun?(piece) ||
                   (index + i) == pieces.size - 1 ||
-                  Words::Sentence::Preposition.preposition?(pieces[index + i])
+                  Words::Sentence::Preposition.preposition?(pieces[index + i + 1])
                 # TODO - Join any conjunctions together
                 # The tricky part in real NLP is finding out which kind of conjunction,
                 # it is, but for now we will assume it's a noun conjunction.
@@ -157,6 +161,6 @@ module Words
         end
         pieces.slice!(index, size).last
 
-        [noun, adjectives]
+        return noun ? [noun, adjectives] : nil
     end
 end
