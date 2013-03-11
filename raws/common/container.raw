@@ -3,7 +3,8 @@ abstract composition container {
     preserved_container_classes   internal            external;
 }
 
+/* A container with a mutable internal class is assumed to always be open unless it's openabled and opened is false. */
 abstract root openable {
-    has bool opened;
-    opened false;
+    has bool open;
+    open false;
 }

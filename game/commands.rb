@@ -97,7 +97,7 @@ module Commands
         def self.stage(core, params)
             location, adjs = params[:location]
             if location
-                Commands.find_objects(core, params, :location => [:grasped_objects, :worn_objects, :stashed_objects, :position])
+                Commands.find_objects(core, params, :location => [:grasped, :worn, :stashed, :position])
             end
 
             target, adjs = params[:target]
@@ -105,7 +105,7 @@ module Commands
                 # Examine the agent.
                 params[:target] = params[:agent]
             elsif params[:target]
-                Commands.find_objects(core, params, :target => [:grasped_objects, :worn_objects, :stashed_objects, :position, :body])
+                Commands.find_objects(core, params, :target => [:grasped, :worn, :stashed, :position, :body])
             else
                 # Assume the player wants a broad overview of what he can see, describe the room
                 params[:target] = params[:agent].absolute_position
@@ -138,7 +138,7 @@ module Commands
 
     module Get
         def self.stage(core, params)
-            Commands.find_objects(core, params, :target => [:position, :stashed_objects, :worn_objects])
+            Commands.find_objects(core, params, :target => [:position, :stashed, :worn])
         end
 
         def self.do(core, params)
@@ -148,7 +148,7 @@ module Commands
 
     module Stash
         def self.stage(core, params)
-            Commands.find_objects(core, params, :target => [:grasped_objects, :worn_objects, :position])
+            Commands.find_objects(core, params, :target => [:grasped, :worn, :position])
         end
 
         def self.do(core, params)
@@ -168,7 +168,7 @@ module Commands
 
     module Equip
         def self.stage(core, params)
-            Commands.find_objects(core, params, :target => [:grasped_objects, :stashed_objects])
+            Commands.find_objects(core, params, :target => [:grasped, :stashed])
             # TODO - take 'on' preposition that establishes destination
 #            Commands.find_objects(core, params, :destination => [:body])
         end
@@ -203,7 +203,7 @@ module Commands
 
     module Unequip
         def self.stage(core, params)
-            Commands.find_objects(core, params, :target => [:worn_objects])
+            Commands.find_objects(core, params, :target => [:worn])
 #            Commands.find_objects(core, params, :destination => [:body])
         end
 
@@ -267,7 +267,7 @@ module Commands
         def self.stage(core, params)
             # If a tool was specified, search for tool and target; otherwise just search for target.
             if params[:tool]
-                Commands.find_objects(core, params, :tool => [:grasped_objects], :target => [:position])
+                Commands.find_objects(core, params, :tool => [:grasped], :target => [:position])
             else
                 Commands.find_objects(core, params, :target => [:position])
             end
@@ -351,15 +351,15 @@ module Commands
         def self.stage(core, params)
             Commands.find_objects(core, params, :target => [:position, :inventory])
 
-            if !params[:agent].type_ancestry.include?(:openable)
-                raise(FailedCommandError, "#{params[:target].monicker} cannot be opened.")
-            elsif params[:agent].properties[:opened]
+            if params[:target].open?
                 raise(FailedCommandError, "#{params[:target].monicker} is already open.")
+            elsif !params[:target].is_type?(:openable)
+                raise(FailedCommandError, "#{params[:target].monicker} cannot be opened.")
             end
         end
 
         def self.do(core, params)
-            params[:target].properties[:opened] = true
+            params[:target].properties[:open] = true
         end
     end
 
@@ -367,15 +367,15 @@ module Commands
         def self.stage(core, params)
             Commands.find_objects(core, params, :target => [:position, :inventory])
 
-            if !params[:agent].type_ancestry.include?(:openable)
-                raise(FailedCommandError, "#{params[:target].monicker} cannot be closed.")
-            elsif !params[:agent].properties[:opened]
+            if !params[:target].open?
                 raise(FailedCommandError, "#{params[:target].monicker} is already closed.")
+            elsif !params[:target].is_type?(:openable)
+                raise(FailedCommandError, "#{params[:target].monicker} cannot be opened.")
             end
         end
 
         def self.do(core, params)
-            params[:target].properties[:opened] = false
+            params[:target].properties[:open] = false
         end
     end
 

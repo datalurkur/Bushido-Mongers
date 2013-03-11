@@ -28,7 +28,8 @@ module Corporeal
     end
 
     def all_body_parts(type = [:internal, :external])
-        container_contents(:incidental).collect do |body|
+        container_contents(:incidental) +
+        container_contents(:incidental).map do |body|
             body.select_objects(type, true) { |obj| obj.is_type?(:body_part) }
         end.flatten
     end
@@ -38,7 +39,7 @@ module Corporeal
     end
 
     def internal_body_parts
-        container_contents(:incidental) + all_body_parts(:internal)
+        all_body_parts(:internal)
     end
 
     def damage(amount, attacker, target=nil)
@@ -47,7 +48,7 @@ module Corporeal
         target.properties[:hp] -= amount
         @properties[:total_hp] -= amount
         if target.properties[:hp] <= 0
-            # If they've destroyed the whole body, the corporeal (spirit)
+            # If the whole body is destroyed, the corporeal (spirit)
             # dies, and the body will hit the floor.
             if container_contents(:incidental).include?(target)
                 Log.debug("Destroying #{monicker}!")

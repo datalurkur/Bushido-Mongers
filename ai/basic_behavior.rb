@@ -59,7 +59,7 @@ end
 # Question: Can players / AI do things furtively / in secret?
 Behavior.define(:consume) do |actor|
     consumable_type = actor.class_info[:consumes] || :consumable
-    consumables = [:position, :grasped_objects, :stashed_objects].collect do |location|
+    consumables = [:position, :grasped, :stashed].collect do |location|
         actor.filter_objects(location, consumable_type)
     end.flatten
 

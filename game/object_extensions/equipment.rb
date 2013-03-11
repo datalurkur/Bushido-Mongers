@@ -2,12 +2,12 @@ require './util/exceptions'
 
 module Inventory
     def wear(part, equipment)
-        raise(FailedCommandError, "Can't wear #{equipment.monicker}; already wearing #{part.worn_objects}") if part.full?(:worn)
+        raise(FailedCommandError, "Can't wear #{equipment.monicker}; already wearing #{part.worn}") if part.full?(:worn)
         equipment.equip_on(part)
     end
 
     def grasp(part, object)
-        raise(FailedCommandError, "Can't hold #{object.monicker}; already holding #{part.grasped_objects}") if part.full?(:graped)
+        raise(FailedCommandError, "Can't hold #{object.monicker}; already holding #{part.grasped}") if part.full?(:graped)
         object.grasped_by(part)
     end
 
@@ -26,14 +26,14 @@ module Inventory
     def remove(equipment)
         # TODO - check for curses :-p
         # TODO - check that equipment is actually equipped
-        raise(FailedCommandError, "Not wearing #{equipment.monicker}.") unless all_worn_objects.include?(equipment)
+        raise(FailedCommandError, "Not wearing #{equipment.monicker}.") unless all_equipment(:worn).include?(equipment)
         unless stash(equipment)
             equipment.move_to(self.absolute_position)
         end
     end
 
     def available_grasper
-         self.grasping_parts.each do |part|
+        all_body_parts.select { |bp| bp.composed_of?(:grasped) }.each do |part|
             Log.debug("Looking at #{part.monicker} for grasping")
             return part unless part.full?(:grasped)
         end
@@ -42,35 +42,25 @@ module Inventory
 
     def available_container
         containers_in_inventory.each do |cont|
-            Log.debug("Looking at #{cont.monicker} for grasping")
-            return cont unless cont.full?
+            Log.debug("Looking at #{cont.monicker} for container")
+            return cont if cont.open? && !cont.full?
         end
         nil
     end
 
-    def all_grasped_objects
-        all_body_parts.collect { |bp| bp.grasped_objects }.flatten
-    end
-
-    def all_worn_objects
-        all_body_parts.collect { |bp| bp.worn_objects }.flatten
+    def all_equipment(position)
+        all_body_parts.select { |bp| bp.composed_of?(position) }.map do |bp|
+            bp.container_contents(position)
+        end.flatten
     end
 
     def containers_in_inventory
-        grasped_containers + worn_containers
-    end
-
-    def grasped_containers
-        containers(:grasped)
-    end
-
-    def worn_containers
-        containers(:worn)
+        containers([:grasped, :worn])
     end
 
     def has_weapon?
         weapon = nil
-        candidates = all_grasped_objects.select { |o| o.is_type?(:weapon) }
+        candidates = all_equipment(:grasped).select { |o| o.is_type?(:weapon) }
         unless candidates.empty?
             Log.debug(candidates)
             # TODO - check handedness, and ignore or penalize weapon without enough hands.

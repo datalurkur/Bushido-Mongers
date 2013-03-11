@@ -93,8 +93,8 @@ begin
     Log.debug(carrot)
     bp.add_object(carrot)
     Log.debug(bp)
-    Log.debug(bp.internal_objects)
-    Log.debug(bp.external_objects)
+    Log.debug(bp.container_contents(:internal))
+    Log.debug(bp.container_contents(:external))
 end
 
 # test test.raw

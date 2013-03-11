@@ -116,38 +116,25 @@ module Composition
         end
     end
 
-    def is_container?
-        self.composed_of?(:internal)
+    def container?
+        self.composed_of?(:internal) && self.mutable?(:internal)
     end
 
-    def grasping_parts
-        all_body_parts.select { |bp| bp.composed_of?(:grasped) }
+    # the openable raw type doesn't have its own objext, but the
+    # method makes sense in composition too.
+    def open?
+        # If it's a container, assume open unless directly contradicted.
+        self.container? && (self.is_type?(:openable) ? @properties[:open] : true)
     end
 
     def containers(type, recursive=true)
-        select_objects(type, recursive) { |obj| cont.respond_to?(:is_container?) && cont.is_container? }
-    end
-
-    def grasped_objects(recursive=false, &block)
-        select_objects(:grasped, recursive, &block)
-    end
-
-    def worn_objects(recursive=false, &block)
-        select_objects(:worn, recursive, &block)
-    end
-
-    def internal_objects(recursive=false, &block)
-        select_objects(:internal, recursive, &block)
-    end
-
-    def external_objects(recursive=false, &block)
-        select_objects(:external, recursive, &block)
+        select_objects(type, recursive) { |obj| cont.respond_to?(:container?) && cont.container? }
     end
 
     def select_objects(type, recursive=false, depth=5, &block)
-        type = Array(type)
+        types = Array(type)
         list = []
-        type.each do |type|
+        types.each do |type|
             next unless @properties[type]
             container_contents(type).each do |obj|
                 next if block_given? && !block.call(obj)
@@ -160,7 +147,7 @@ module Composition
         list
     end
 
-    def container_contents(type)
+    def container_contents(type=:internal)
         @container_contents       ||= {}
         raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
         @container_contents[type] ||= []

@@ -2,7 +2,7 @@ require './util/exceptions'
 
 module Perception
     class << self
-        PERCEIVABLE_LOCATIONS = [:position, :grasped_objects, :stashed_objects, :worn_objects, :body]
+        PERCEIVABLE_LOCATIONS = [:position, :grasped, :stashed, :worn, :body]
     end
 
     def perceivable_objects_of(list)
@@ -22,29 +22,46 @@ module Perception
             perceivable_objects_of(self.absolute_position.objects).select do |object|
                 object.matches(:type => type, :name => name)
             end
-        when :grasped_objects
-            return [] unless self.uses?(Equipment)
-            # Objects held in hands, mouths, pincers, etc.
-            self.all_grasped_objects.select do |object|
+        when :grasped, :worn
+            return [] unless Composition === self && Inventory === self
+            all_equipment(location) do |object|
+                Log.debug("Running match on #{object}")
                 object.matches(:type => type, :name => name)
             end
-        when :stashed_objects
-            return [] unless self.uses?(Equipment)
+        when :stashed
+            return [] unless Composition === self && Inventory === self
             # Search within the perceiver's backpacks, sacks, etc.
-            self.containers_in_inventory.select do |cont|
-                cont.internal_objects(true) do |object|
+            containers_in_inventory.select do |cont|
+                cont.container_contents do |object|
                     object.matches(:type => type, :name => name)
                 end
             end
-        when :worn_objects
-            return [] unless self.uses?(Equipment)
-            # Objects worn on the body.
-            self.all_worn_objects.select do |object|
+        when :external
+            return [] unless Composition === self && Corporeal === self
+            external_body_parts do |object|
                 object.matches(:type => type, :name => name)
             end
-#        when :body
-            # FIXME: Search through all resident corporeals' bodies.
-#                []
+        when BushidoObject
+            if location.uses?(Composition)
+                if location.uses?(Perception)
+                    # TODO - This is weird. We shouldn't be using the external
+                    # perception to search, but it doesn't matter yet.
+                    # TODO - enable searching for internal parts if a body knowledge,
+                    # skill-check passes, presumably using can_percieve?.
+                    search_space = [:grasped, :stashed, :worn, :external]
+                    location.find_object(type, name, search_space)
+                elsif location.container?
+                    if location.open?
+                        location.container_contents do |object|
+                            object.matches(:type => type, :name => name)
+                        end
+                    else
+                        raise(FailedCommandError, "You can't search inside the #{location.monicker} because it's closed.")
+                    end
+                end
+            elsif location.matches(:type => type, :name => name)
+                [location]
+            end
         else
             Log.warning("#{location} lookups not implemented")
             []
@@ -52,17 +69,18 @@ module Perception
     end
 
     def find_object(type_class, object, locations)
-        return object if (BushidoObject === object)
+#        return object if (BushidoObject === object)
+        Log.warning("#{object.monicker} in find_object") if BushidoObject === object
         object, adjectives = object if object.respond_to?(:size) && object.size == 2
 
 #        Log.debug(["Searching!", type_class, object, locations])
 #        Log.debug(["Adjectives!", adjectives]) if adjectives && !adjectives.empty?
 
         # Explode inventory into appropriate categories.
-        # FIXME - changes ordering...
+        # FIXME - changes ordering.
         if locations.include?(:inventory)
             locations.delete(:inventory)
-            locations += [:grasped_objects, :stashed_objects, :worn_objects]
+            locations += [:grasped, :stashed, :worn]
         end
 
         # Sort through the potentials and find out which ones match the query
