@@ -60,12 +60,15 @@ module Commands
                     params[p],
                     lookup_locs
                 )
+                Log.debug("Found #{params[p].monicker} for #{p}")
             end
 
-            params.keys.select { |p| params[p].is_a?(Array) }.each do |p|
-                Log.debug("Parameter #{p.inspect} found from text but not searched for! Add searching for this parameter to #{params[:command]}.")
-                # FIXME - there might be valid reasons to return an array... Handle this in a more robust way.
-                params.delete(p)
+            unless params[:no_sanity_check]
+                params.keys.select { |p| params[p].is_a?(Array) }.each do |p|
+                    Log.debug("Parameter #{p.inspect} found from text but not searched for! Add searching for this parameter to #{params[:command]}.")
+                    # FIXME - there might be valid reasons to return an array... Handle this in a more robust way.
+                    params.delete(p)
+                end
             end
         end
     end
@@ -265,10 +268,19 @@ module Commands
 
     module Attack
         def self.stage(core, params)
-            # If a tool was specified, search for tool and target; otherwise just search for target.
+            # Search for tool and possibly target without complaining about extra parameters.
+            params[:no_sanity_check] = true
             if params[:tool]
-                Commands.find_objects(core, params, :tool => [:grasped], :target => [:position])
+                Commands.find_objects(core, params, :tool => [:grasped])
+            end
+
+            if params[:location]
+                # Find the target, then search within the target for the location.
+                Commands.find_objects(core, params, :target => [:position])
+                params.delete(:no_sanity_check)
+                Commands.find_objects(core, params, :location => [params[:target]])
             else
+                params.delete(:no_sanity_check)
                 Commands.find_objects(core, params, :target => [:position])
             end
         end
@@ -324,8 +336,8 @@ module Commands
                 end
             end
 
-            # Target a random body part
-            part_targeted = defender.external_body_parts.rand
+            # Target a random body part if location not specified
+            part_targeted = params[:location] || defender.external_body_parts.rand
             result_hash[:subtarget] = part_targeted
 
             print = part_targeted ? "in the #{part_targeted.monicker}" : ''

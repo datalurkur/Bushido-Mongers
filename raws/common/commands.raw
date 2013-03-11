@@ -19,6 +19,7 @@ command move {}
 
 command attack {
     target corporeal;
+    location body_part;
     tool item; /* weapon-specific lookups happen if no tool is specified */
 }
 

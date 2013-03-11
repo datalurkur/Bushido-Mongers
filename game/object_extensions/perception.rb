@@ -25,7 +25,6 @@ module Perception
         when :grasped, :worn
             return [] unless Composition === self && Inventory === self
             all_equipment(location) do |object|
-                Log.debug("Running match on #{object}")
                 object.matches(:type => type, :name => name)
             end
         when :stashed
@@ -38,10 +37,11 @@ module Perception
             end
         when :external
             return [] unless Composition === self && Corporeal === self
-            external_body_parts do |object|
+            external_body_parts.select do |object|
                 object.matches(:type => type, :name => name)
             end
         when BushidoObject
+            Log.debug("Finding #{name}, #{type} in #{location.monicker}", 6)
             if location.uses?(Composition)
                 if location.uses?(Perception)
                     # TODO - This is weird. We shouldn't be using the external
@@ -49,7 +49,10 @@ module Perception
                     # TODO - enable searching for internal parts if a body knowledge,
                     # skill-check passes, presumably using can_percieve?.
                     search_space = [:grasped, :stashed, :worn, :external]
-                    location.find_object(type, name, search_space)
+                    result = location.find_object(type, name, search_space)
+                    Log.debug(result)
+                    return [result]
+#                    [location.find_object(type, name, search_space)]
                 elsif location.container?
                     if location.open?
                         location.container_contents do |object|
@@ -69,12 +72,12 @@ module Perception
     end
 
     def find_object(type_class, object, locations)
-#        return object if (BushidoObject === object)
         Log.warning("#{object.monicker} in find_object") if BushidoObject === object
+#        return object if (BushidoObject === object)
         object, adjectives = object if object.respond_to?(:size) && object.size == 2
 
-#        Log.debug(["Searching!", type_class, object, locations])
-#        Log.debug(["Adjectives!", adjectives]) if adjectives && !adjectives.empty?
+        Log.debug(["Searching!", type_class, object, locations], 6)
+        Log.debug(["Adjectives!", adjectives], 6) if adjectives && !adjectives.empty?
 
         # Explode inventory into appropriate categories.
         # FIXME - changes ordering.
@@ -97,12 +100,16 @@ module Perception
         when 1
             return potentials.first
         else
-            number = adjectives.map { |a| Words::Sentence::Adjective.ordinal?(a) }.flatten.first
-            if number
-                return potentials[number - 1]
+            if adjectives
+                number = adjectives.map { |a| Words::Sentence::Adjective.ordinal?(a) }.flatten.first
+                if number
+                    return potentials[number - 1]
+                else
+                    return potentials.first
+                    # TODO - We should try re-searching here based on other descriptive information/heuristics.
+                end
             else
                 return potentials.first
-                # TODO - We should try re-searching here based on other descriptive information/heuristics.
             end
         end
     end
