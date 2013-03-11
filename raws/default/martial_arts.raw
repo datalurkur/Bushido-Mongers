@@ -58,6 +58,16 @@ fighting_skill glaive_skill {
     weapons glaive;
 }
 
+/* kobudō, a generic term for the systems of Okinawan martial arts weapons, was not invented until the 20th century. */
+fighting_skill sai_skill {
+    weapons sai;
+}
+
+fighting_skill nunchucks_skill {
+    japanese_name nunchaku_skill;
+    weapons nunchucks;
+}
+
 /* yari spear used by ashigaru (lightfeet) */
 fighting_skill spear_skill {
     japanese_name sojutsu;

@@ -120,7 +120,7 @@ constructed,item,melee_weapon jutte {
 
     recipes {
         technique forge;
-        components iron;
+        components metal;
     }
 }
 
@@ -184,6 +184,34 @@ constructed,item,melee_weapon glaive {
     recipes {
         technique craft;
         components axe_blade long_handle;
+    }
+}
+
+constructed,item,melee_weapon sai {
+    japanese_name sai;
+    type piercing;
+    handedness one;
+    /* can_parry */
+    length 1;
+    size small;
+
+    recipes {
+        technique craft;
+        components metal;
+    }
+}
+
+constructed,item,melee_weapon nunchucks {
+    japanese_name nunchaku;
+    type blunt;
+    handedness one;
+    /* can_parry? */
+    length 2;
+    size small;
+
+    recipes {
+        technique craft;
+        components wood chain; /* should be prepared hardwood */
     }
 }
 
