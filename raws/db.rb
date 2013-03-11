@@ -145,7 +145,13 @@ class ObjectDB
 
     def create(core, type, params={})
         raise(UnknownType, "#{type.inspect} not defined as db type.") unless @db[type]
-        raise(ArgumentError, "#{type.inspect} is not instantiable.") if @db[type][:abstract]
+        if @db[type][:abstract]
+            if params[:randomize]
+                type = types_of(type).rand
+            else
+                raise(ArgumentError, "#{type.inspect} is not instantiable.")
+            end
+        end
 
         # When no longer in debug mode, go back to using BushidoObject
         #BushidoObject.create(core, type, params)
