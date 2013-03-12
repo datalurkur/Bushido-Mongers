@@ -24,7 +24,7 @@ module Perception
             end
         when :grasped, :worn
             return [] unless Composition === self && Inventory === self
-            all_equipment(location) do |object|
+            all_equipment(location).select do |object|
                 object.matches(:type => type, :name => name)
             end
         when :stashed
