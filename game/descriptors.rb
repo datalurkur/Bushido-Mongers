@@ -63,7 +63,7 @@ class Descriptor
             # The user doesn't need to know any of this. If they do, we can deal with it on a case-by-case basis.
             [:target_of, :used_in, :can_equip,
              :added_value_container_classes, :preserved_container_classes,
-             :container_classes, :mutable_container_classes].each do |prop|
+             :container_classes].each do |prop|
                 d[:properties].delete(prop)
             end
 

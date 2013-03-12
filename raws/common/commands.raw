@@ -13,7 +13,9 @@ command help {}
 
 /* World-interaction commands. */
 
-command inspect {}
+command inspect {
+    location composition;
+}
 
 command move {}
 

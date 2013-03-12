@@ -321,8 +321,8 @@ module Commands
             if attacker.has_skill?(skill)
                 success = attacker.opposed_check(skill, Difficulty.standard, defender, :defense)
             else
-                # TODO - generate skill on attacker?
-                Log.debug("#{skill.inspect} doesn't exist for #{attacker.monicker}.")
+                # TODO - generate skill on attacker
+                Log.debug("#{skill.inspect} doesn't exist for #{attacker.monicker}!")
                 success = (rand > Difficulty.value_of(Difficulty.standard))
             end
 
