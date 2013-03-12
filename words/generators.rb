@@ -178,12 +178,10 @@ module Words
 
         list = composition[:container_contents][klass]
 
-        gen_sentence(
-            :subject => composition,
-            :verb    => class_verbs[klass],
-            :target  => (list && !list.empty? ? list : :nothing),
+        gen_copula(
+            :subject   => (list && !list.empty? ? list : :nothing),
+            :location => composition
             # Currently-progressing state, so passive progressive.
-            :state   => State.new(:passive, :progressive)
         )
     end
 
