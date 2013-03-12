@@ -19,9 +19,11 @@ module Perception
         case location
         when :position
             # A player tied to a long pole can still grab apples
-            perceivable_objects_of(self.absolute_position.objects).select do |object|
-                object.matches(:type => type, :name => name)
-            end
+            objects    = perceivable_objects_of(self.absolute_position.objects)
+            containers = objects.select { |o| o.respond_to?(:container?) && o.container? && o.open? }
+            # perceivable objects in room + contents of perceivable open containers in room
+            objects.select { |o| o.matches(:type => type, :name => name) } +
+            containers.map { |c| c.container_contents.select { |o| o.matches(:type => type, :name => name) } }.flatten
         when :grasped, :worn
             return [] unless Composition === self && Inventory === self
             all_equipment(location).select do |object|
@@ -29,12 +31,12 @@ module Perception
             end
         when :stashed
             return [] unless Composition === self && Inventory === self
-            # Search within the perceiver's backpacks, sacks, etc.
-            containers_in_inventory.select do |cont|
-                cont.container_contents do |object|
+            # Search within the perceiver's open backpacks, sacks, etc.
+            containers_in_inventory.select { |c| c.open? }.each do |cont|
+                cont.container_contents.select do |object|
                     object.matches(:type => type, :name => name)
                 end
-            end
+            end.flatten
         when :external
             return [] unless Composition === self && Corporeal === self
             external_body_parts.select do |object|
@@ -93,6 +95,8 @@ module Perception
             potentials.concat(results)
             break unless potentials.empty?
         end
+
+        Log.debug([potentials.map(&:monicker)], 6)
 
         case potentials.size
         when 0
