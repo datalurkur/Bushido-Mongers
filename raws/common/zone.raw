@@ -16,7 +16,7 @@ abstract root zone {
 
     /* Can spawn items */
     class_many optional sym spawn_items;
-    spawn_items rock;
+    spawn_items rock chest;
 
     class sym sideness;
     sideness outside;

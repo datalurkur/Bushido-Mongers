@@ -1,4 +1,4 @@
-abstract item equipment {
+abstract item,loot equipment {
     class_many sym slot;
 
     /* Protection can be based on a modifier manipulated by the material properties */
@@ -10,7 +10,7 @@ abstract item equipment {
     class optional sym japanese_name;
 }
 
-abstract root weapon {
+abstract loot weapon {
     /* TODO - Work out the slot (or slots) a weapon can go in based on its handedness */
     class sym handedness;
     class sym type;
@@ -25,7 +25,7 @@ abstract weapon melee_weapon {}
 
 abstract weapon ranged_weapon {}
 
-abstract root ammunition {}
+abstract loot ammunition {}
 
 post_process {
     self.find_subtypes(:equipment, {}, true).each do |equipment|

@@ -10,3 +10,5 @@ abstract object,position item {
     value 0;
 }
 
+/* Used to mark items as chest loot, so as not to have body part treasure. */
+abstract root loot {}
