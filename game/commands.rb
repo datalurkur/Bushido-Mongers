@@ -289,51 +289,38 @@ module Commands
             attacker = params[:agent]
             defender = params[:target]
 
+            unless HasAspects === attacker
+                raise(FailedCommandError, "#{attacker.monicker} is attacking #{defender.monicker} without aspects!")
+            end
+
+            skill = :intrinsic_fighting
             result_hash = {}
             damage = 5
 
-            unless HasAspects === attacker && HasAspects === defender
-                # No attributes? Make a normal difficulty roll to hit.
-                success = (rand > Difficulty.value_of(Difficulty.standard))
+            if params[:tool]
+                weapon = params[:tool]
+            elsif attacker.respond_to?(:has_weapon?) && attacker.has_weapon?
+                weapon = attacker.weapon
+            end
+
+            if weapon
+                if weapon_skill = core.db.info_for(weapon.get_type, :skill_used)
+                    skill = weapon_skill
+                end
+
+                if damage_type = core.db.info_for(weapon.get_type, :type)
+                    result_hash[:damage_type] = damage_type
+                end
+
+                result_hash[:tool] = weapon
+            end
+
+            if attacker.has_skill?(skill)
+                success = attacker.opposed_check(skill, Difficulty.standard, defender, :defense)
             else
-                skill = :intrinsic_fighting
-
-                if params[:tool]
-                    weapon = params[:tool]
-                elsif attacker.respond_to?(:has_weapon?) && attacker.has_weapon?
-                    weapon = attacker.weapon
-                end
-
-                if weapon
-                    if weapon_skill = core.db.info_for(weapon.get_type, :skill_used)
-                        skill = weapon_skill
-                    end
-
-                    if damage_type = core.db.info_for(weapon.get_type, :type)
-                        case damage_type
-                        when :piercing
-                            result_hash[:verb] = :slice
-                        when :blunt
-                            result_hash[:verb] = :bash
-                        when :nonlethal
-                            # TODO - How should we describe this? Default to :attack...
-                        end
-                    else
-                        # An improvised attack is probably just going to wack the item into the target, unless the item is bladed somehow.
-                        result_hash[:verb] = :bash
-                    end
-
-                    result_hash[:tool] = weapon
-                end
-
-                if attacker.has_skill?(skill)
-                    # defender has_aspects checked in opposed_check.
-                    success = attacker.opposed_check(skill, Difficulty.standard, defender, :defense)
-                else
-                    # TODO - generate skill on attacker?
-                    Log.debug("#{skill.inspect} doesn't exist for #{self.monicker}.")
-                    success = (rand > Difficulty.value_of(Difficulty.standard))
-                end
+                # TODO - generate skill on attacker?
+                Log.debug("#{skill.inspect} doesn't exist for #{self.monicker}.")
+                success = (rand > Difficulty.value_of(Difficulty.standard))
             end
 
             # Target a random body part if location not specified

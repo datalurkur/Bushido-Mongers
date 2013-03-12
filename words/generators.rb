@@ -92,6 +92,18 @@ module Words
             args[:defender][:subtarget] = args[:result_hash][:subtarget]
         end
 
+        case args[:result_hash][:damage_type]
+        when :piercing
+            args[:verb] = :slice
+        when :blunt
+            args[:verb] = :bash
+        when :nonlethal
+            # TODO - How should we describe this? Default to :attack...
+        when nil
+            # An improvised attack is probably just going to wack the item into the target, unless the item is bladed somehow.
+            args[:verb] = :bash
+        end
+
         sentences = [gen_sentence(args.merge(args[:result_hash]))]
         sentences.join(" ")
     end
