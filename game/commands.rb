@@ -101,6 +101,9 @@ module Commands
             location, adjs = params[:location]
             if location
                 Commands.find_objects(core, params, :location => [:grasped, :worn, :stashed, :position])
+                if params[:location].container? && !params[:location].open?
+                    raise(FailedCommandError, "#{params[:location].monicker} is closed.")
+                end
             end
 
             target, adjs = params[:target]
@@ -319,7 +322,7 @@ module Commands
                 success = attacker.opposed_check(skill, Difficulty.standard, defender, :defense)
             else
                 # TODO - generate skill on attacker?
-                Log.debug("#{skill.inspect} doesn't exist for #{self.monicker}.")
+                Log.debug("#{skill.inspect} doesn't exist for #{attacker.monicker}.")
                 success = (rand > Difficulty.value_of(Difficulty.standard))
             end
 
