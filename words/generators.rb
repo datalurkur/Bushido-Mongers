@@ -1,5 +1,14 @@
 # TODO - add info on acceptable/used arguments to generators
 
+class Descriptor
+    def self.container?(args)
+        Log.debug(args)
+        args[:is_type].include?(:composition_root) &&
+        args[:container_contents].has_key?(:internal) &&
+        args[:properties][:mutable_container_classes].include?(:internal)
+    end
+end
+
 module Words
     def self.generate(args)
         case args[:command]
@@ -7,28 +16,32 @@ module Words
             target = args[:target]
             location = args[:location]
             if location
-                return Words.describe_composition_root(location)
+                if Descriptor.container?(location)
+                    return describe_container_class(location)
+                else
+                    return describe_composition_root(location)
+                end
             elsif target[:is_type].include?(:room)
-                return Words.describe_room(args)
+                return describe_room(args)
             elsif target[:is_type].include?(:corporeal)
-                return Words.describe_corporeal(target)
+                return describe_corporeal(target)
             elsif target[:is_type].include?(:composition_root)
-                return Words.describe_composition_root(target)
+                return describe_composition_root(target)
             elsif target[:is_type].include?(:item)
-                return Words.gen_sentence(args)
+                return gen_sentence(args)
             else
                 return "I don't know how to describe a #{target[:type].inspect}, bother zphobic to fix this"
             end
         when :move
-            return Words.describe_room(args)
+            return describe_room(args)
         when :attack, :get, :stash, :drop, :hide, :unhide, :equip, :unequip, :open, :close
-            return Words.gen_sentence(args)
+            return gen_sentence(args)
         when :say
-            return Words.gen_sentence(args.merge(:verb => :say))
+            return gen_sentence(args.merge(:verb => :say))
         when :stats
-            return Words.describe_stats(args)
+            return describe_stats(args)
         when :help
-            return Words.describe_help(args)
+            return describe_help(args)
         else
             return "I don't know how to express the results of a(n) #{args[:command]}, pester zphobic to work on this"
         end
@@ -230,7 +243,7 @@ module Words
     end
 
     def self.describe_room(args = {})
-        sentences = [self.gen_sentence(args)]
+        sentences = [gen_sentence(args)]
 
         room = args[:target] || args[:destination]
         args.delete(:target)
@@ -244,12 +257,12 @@ module Words
 
         objects = room[:objects]
         if objects && !objects.empty?
-            sentences << Words.gen_sentence(args.merge(:target => objects))
+            sentences << gen_sentence(args.merge(:target => objects))
         end
 
         exits   = room[:exits]
         if exits && !exits.empty?
-            sentences << Words.gen_sentence(args.merge(:target => Sentence::Noun.new("exits to #{Sentence::NounPhrase.new(exits)}")))
+            sentences << gen_sentence(args.merge(:target => Sentence::Noun.new("exits to #{Sentence::NounPhrase.new(exits)}")))
         end
 
         sentences.join(" ")
