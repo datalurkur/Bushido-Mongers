@@ -21,6 +21,17 @@ The instrumental case indicates an object used in performing an action: We wiped
 
 =end
 
+class Descriptor
+    def self.set_definite(args)
+        if Hash === args
+            args[:definite] = true
+            return args
+        else
+            {:monicker => args, :definite => true}
+        end
+    end
+end
+
 module Words
     # Each node in the tree is either a root node, a branch node, or a leaf node.
     class ParseTree
@@ -100,7 +111,7 @@ module Words
         # Types: prepositional (during), infinitive (to work hard)
         # adpositions: preposition (by jove), circumpositions (from then on).
         class AdverbPhrase < ParseTree::PTInternalNode
-            USED_ARGS = [:target, :tool, :destination, :receiver, :success, :statement]
+            USED_ARGS = [:target, :tool, :destination, :receiver, :success, :statement, :location]
 
             # The type is the part of the args being used to generate an adverb phrase.
             # args must be defined.
@@ -119,9 +130,7 @@ module Words
                     end
                     handled = true
                 when :tool, :destination, :location
-                    if Hash === args[type]
-                        args[type][:definite] = true
-                    end
+                    args[type] = Descriptor.set_definite(args[type])
                     super(noun_phrase_with_prep(type, args))
                     handled = true
                 when :receiver
@@ -184,9 +193,7 @@ module Words
             def initialize(type, args)
                 case type
                 when :subtarget
-                    if Hash === args[type]
-                        args[type][:definite] = true
-                    end
+                    args[type] = Descriptor.set_definite(args[type])
                     super(:in, NounPhrase.new(args[type]))
                 end
             end
