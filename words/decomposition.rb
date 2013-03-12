@@ -132,11 +132,7 @@ module Words
         pieces[index..-1].each_with_index do |piece, i|
             Log.debug([piece, i], 6)
             Log.debug([pieces[index + i], Words::Sentence::Preposition.preposition?(pieces[index + i])], 6)
-            if Words::Sentence::Adjective.adjective?(piece)
-                Log.debug(["found adjective", piece], 6)
-                adjectives << piece
-                size += 1
-            elsif Words::Sentence::Noun.noun?(piece) ||
+            if Words::Sentence::Noun.noun?(piece) ||
                   (index + i) == pieces.size - 1 ||
                   Words::Sentence::Preposition.preposition?(pieces[index + i + 1])
                 # TODO - Join any conjunctions together
@@ -153,6 +149,10 @@ module Words
                     adjectives << noun
                 end
                 noun = piece
+                size += 1
+            elsif Words::Sentence::Adjective.adjective?(piece)
+                Log.debug(["found adjective", piece], 6)
+                adjectives << piece
                 size += 1
             else
                 Log.debug(["invalid piece", piece], 6)
