@@ -53,7 +53,7 @@ require './test/fake'
 $core = FakeCore.new(db)
 require './game/descriptors'
 
-def test_npc(db, test_npc_type, name)
+def db_create(db, test_npc_type, name)
     db.create($core, test_npc_type, :position => FakeRoom.new, :name => name)
 end
 
@@ -73,10 +73,10 @@ class Action
     end
 end
 
-observer = test_npc(db, :character, "Kenji Skrimshank")
+observer = db_create(db, :character, "Kenji Skrimshank")
 agent = Descriptor::BushidoObjectDescriptor.describe(observer, observer)
 Log.debug(Words.describe_corporeal(agent))
-target = test_npc(db, :goat, "Billy Goat Balrog")
+target = db_create(db, :goat, "Billy Goat Balrog")
 target = Descriptor::BushidoObjectDescriptor.describe(target, observer)
 Log.debug(Words.describe_corporeal(target))
 
@@ -84,3 +84,7 @@ Log.debug(Words.describe_corporeal(target))
 5.times do
     Action.do(:agent => agent, :target => target, :action => :attack, :tool => :dagger)
 end
+
+target = db_create(db, :chest, "Bosom")
+target = Descriptor::BushidoObjectDescriptor.describe(target, observer)
+Log.debug(Words.describe_container_class(target))

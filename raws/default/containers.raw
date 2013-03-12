@@ -13,5 +13,7 @@ backpack leather_backpack {
 }
 
 equipment,container,openable chest {
+    /* randomly fill with 4 items */
+    internal loot loot loot loot;
     incidental wood;
 }
