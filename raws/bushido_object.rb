@@ -184,6 +184,7 @@ class BushidoObject
             end
         end
     end
+    def uses?(extension); @extensions.include?(extension); end
 
     def set_properties(value)
         @properties = value

@@ -112,7 +112,7 @@ module Skill
     class << self
         def at_creation(instance, params)
             # Check to make sure this thing is also an aspect
-            raise(MissingObjectExtensionError, "Skills must use the Aspect module.") unless Aspect === instance
+            raise(MissingObjectExtensionError, "Skills must use the Aspect module.") unless instance.uses?(Aspect)
 
             initial_familiarity = instance.class_info[:default_familiarity] + (params[:familiarity_bonus] || 0)
             instance.properties[:familiarity] = initial_familiarity

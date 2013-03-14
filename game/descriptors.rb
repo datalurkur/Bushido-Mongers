@@ -48,7 +48,7 @@ class Descriptor
             # Undecided as to whether these are useful to have - lots of duplication
             #d[:class_properties] = Descriptor.describe(object.class_info, observer)
 
-            if Composition === object
+            if object.uses?(Composition)
                 d[:container_contents] = {}
                 object.container_classes.each do |prop|
                     contents = object.container_contents(prop)
