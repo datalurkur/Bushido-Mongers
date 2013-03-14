@@ -1,0 +1,21 @@
+FORMAT
+[speaker] says:
+[subject] : quest explanations
+=> task
+
+PROCURE ITEM
+
+[quartermaster, any recipe creator]
+[I|we] : have used up <necessary X>, need <X> for <recipe orders>
+=> find and return <X> in <Y> quantity <by time> to <subject>
+
+DELIVER ITEM
+
+[member of organization]
+[I|we] : need to <deliver
+=> receive item/message, deliver to <affiliated+distant?>
+
+KILL CREATURE
+
+[[Y] quantity creatures] : has done <bad deeds>, has reputation <rep>
+=> destroy or imprison (?) [subject] <by time> and return to <speaker|speaker's organization>
