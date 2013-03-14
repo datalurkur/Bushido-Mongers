@@ -172,16 +172,11 @@ module Words
     end
 
     def self.describe_container_class(composition, klass = :internal)
-        class_verbs = {
-            :internal => :in
-        }
-
         list = composition[:container_contents][klass]
 
         gen_copula(
             :subject   => (list && !list.empty? ? list : :nothing),
-            :location => composition
-            # Currently-progressing state, so passive progressive.
+            :location  => composition
         )
     end
 
