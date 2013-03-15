@@ -74,10 +74,11 @@ module Commands
     end
 
     ### HELPER COMMANDS ###
+    # TODO - Consider removing these in favor of their corresponding commands
 
     module Stats
         def self.stage(core, params)
-            unless HasAspects === params[:agent]
+            unless params[:agent].uses?(HasAspects)
                 raise(InvalidCommandError, "No aspects!")
             end
             # Reach into agent and pull out stat details.
@@ -292,7 +293,7 @@ module Commands
             attacker = params[:agent]
             defender = params[:target]
 
-            unless HasAspects === attacker
+            unless attacker.uses?(HasAspects)
                 raise(FailedCommandError, "#{attacker.monicker} is attacking #{defender.monicker} without aspects!")
             end
 

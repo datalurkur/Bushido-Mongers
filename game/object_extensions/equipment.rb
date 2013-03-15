@@ -81,7 +81,7 @@ module Equipment
 
     class << self
         def at_creation(instance, params)
-            raise(MissingObjectExtensionError, "Equipment can only be used on a corporeal!") unless Corporeal === instance
+            raise(MissingObjectExtensionError, "Equipment can only be used on a corporeal!") unless instance.uses?(Corporeal)
             instance.add_random_equipment
         end
 

@@ -11,8 +11,11 @@ class PlayingState < State
 
     def from_server(message)
         case message.type
-        when :link
-            @client.send_to_client(Message.new(:properties, {:field => :server_link, :properties => {:host => @client.get(:server_hostname), :uri => message.uri}}))
+        when :command_reply
+            pass_to_client(message)
+        # It will likely be useful in the future to make this stand out as a legit URL, but since we're in the CLI...
+        #when :link
+            #@client.send_to_client(Message.new(:properties, {:field => :server_link, :properties => {:host => @client.get(:server_hostname), :uri => message.uri}}))
         when :user_joins, :user_leaves, :admin_change
             pass_to_client(message)
         when :act_clarify
@@ -43,12 +46,10 @@ class PlayingState < State
                     Log.debug("No command data given", 4)
                 elsif message.command[0,1] == "/"
                     case message.command
-                    when /link/
-                        @client.send_to_server(Message.new(:get_link))
                     when /quit/
                         @client.stop
                     else
-                        Log.debug("Unrecognized command #{message.command}", 4)
+                        @client.send_to_server(Message.new(:command, :text => message.command[1..-1]))
                     end
                 else
                     @client.send_to_server(Message.new(:act, :command => message.command))

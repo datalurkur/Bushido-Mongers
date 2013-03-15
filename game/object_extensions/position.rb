@@ -94,7 +94,10 @@ module Position
     def move_to(destination)
         Log.debug("#{monicker} moved to #{destination.monicker}", 5)
 
-        if Character === self || NpcBehavior === self
+        # FIXME - This is actual a determination of whether something locomotes or *is moved*
+        #  We probably want an optional mover agent to indicate whether something is moving on its own or being moved
+        #  Future messages might include things like "Shinji removes a rock from his satchel"
+        if self.uses?(Character) || self.uses?(NpcBehavior)
             locations = [self.absolute_position, destination]
             Message.dispatch_positional(@core, locations, :unit_moves, {
                 :agent         => self,

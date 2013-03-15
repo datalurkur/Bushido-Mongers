@@ -216,6 +216,33 @@ class Lobby
         end
     end
 
+    def perform_command(username, params)
+        begin
+            data = case params[:command]
+            when :help
+                params[:target] ||= @game_core.db.types_of(:command)
+                Words.describe_help(params)
+            when :stats
+                character = @game_core.get_character(username)
+                raise(StateError, "User #{username} has no character") unless character
+                raise(InvalidCommandError, "Character #{character.monicker} has no stats") unless character.uses?(HasAspects)
+                params[:agent] = character
+                # FIXME - Allow users to request a specific subset of stats
+                list = []
+                list << character.attribute_list.collect { |name| character.attribute(name) }
+                list << character.skill_list.collect     { |name| character.skill(name) }
+                params[:target] = list
+                Words.describe_stats(params)
+            else
+                raise(ArgumentError, "Unrecognized command '#{params[:command]}'")
+            end
+            send_to_user(username, Message.new(:command_reply, :text => data))
+        rescue Exception => e
+            Log.debug(["Failed to perform user command", e.message, e.backtrace])
+            send_to_user(username, Message.new(:command_reply, :text => e.message))
+        end
+    end
+
     def perform_action(username, params, allow_clarification=true)
         command = params[:command]
 
@@ -286,6 +313,9 @@ class Lobby
             Log.error("FIXME")
             # Just assume an affirmative response with no clarification and proceed
             perform_action(username, @users[username][:last_action_params], false)
+        when :command
+            params = Words.decompose_command(message.text)
+            perform_command(username, params)
         when :act
             Log.debug("Parsing action message", 8)
             params = Words.decompose_command(message.command)
