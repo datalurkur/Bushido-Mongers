@@ -18,12 +18,11 @@ module Constructed
                 raise(ArgumentError, ":quality is a required parameter for non-random equipment.") unless quality
             end
 
-            # Remove component items from the world
+            # Remove component items from the world, unless they're freshly created.
             components.each do |component|
-                # This next is only necessary if the component has been created
-                # ex nihilo, which happens sometimes.
-                next unless component.has_position?
-                component.relative_position.remove_object(component)
+                if component.has_position?
+                    component.relative_position.remove_object(component)
+                end
             end
 
             # Created object quality depends on the quality of its components as well

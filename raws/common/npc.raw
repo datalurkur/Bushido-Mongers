@@ -17,4 +17,6 @@ abstract karmic,aligned,position,has_aspects npc {
 
     class sym spawn_rarity;
     spawn_rarity uncommon;
+
+    class optional sym japanese_name;
 }

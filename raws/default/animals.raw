@@ -12,8 +12,16 @@ animal,corporeal rat {
     spawn_rarity common;
 }
 
+animal,corporeal fox {
+    japanese_name kitsune;
+    size medium;
+    body_type canine_body;
+    spawns_in meadow forest mountain tundra;
+    spawn_rarity common;
+}
+
 monster,corporeal spider {
-    adjectives giant; /* It's big for a spider, all right? */
+    adjectives giant; /* It is big for a spider, all right? */
     size medium;
     body_type arachnoid_body;
     spawns_in sewer;

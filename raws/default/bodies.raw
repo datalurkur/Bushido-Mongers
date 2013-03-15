@@ -66,6 +66,13 @@ body,quadriped rodent_body {
     external head tail;
 }
 
+body,quadriped canine_body {
+    weight 50;
+    incidental flesh;
+    typical_size medium;
+    external head tail;
+}
+
 body,quadriped ungulate_body {
     weight 200;
     incidental flesh;
