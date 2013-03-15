@@ -74,6 +74,7 @@ module Commands
     end
 
     ### HELPER COMMANDS ###
+    # TODO - Consider removing these in favor of their corresponding commands
 
     module Stats
         def self.stage(core, params)

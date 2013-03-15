@@ -114,11 +114,11 @@ class WebEnabledLobby < Lobby
         end
     end
 
-    def process_game_message(message, username)
-        if message.type == :get_link
-            send_to_user(username, Message.new(:link, {:uri => web_uri}))
+    def perform_command(username, params)
+        if params[:command] == :link
+            send_to_user(username, Message.new(:command_reply, :text => web_uri))
         else
-            super(message, username)
+            super(username, params)
         end
     end
 end
