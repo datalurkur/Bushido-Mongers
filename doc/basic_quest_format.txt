@@ -1,3 +1,18 @@
+Quest Bushido Object
+====================
+Quest State:
+    Created (Triggering event occurs)
+    Assigned (Player accepts)
+    Succeeded / Failed
+    Finished (Reward collected)
+
+Quest Listens:
+    A quest object will listen for events that determine its success / failure criteria in order to determine when a quest moves from Assigned to Succeeded / Failed
+
+Notes:
+    The Finished state will allow us to keep track of what good deeds a player has performed (as well as how often they suck at doing something and fail at it) to determine what sorts of work they're offered in the future (this information can likely be stored as part of Karmic)
+====================
+
 FORMAT
 [speaker] says:
 [subject] : quest explanations
