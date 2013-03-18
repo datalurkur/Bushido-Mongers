@@ -6,16 +6,17 @@ module Words
     # parameter: A whitespace-separated list of words.
     def self.decompose_command(entire_command)
         Log.debug(["command text entered: #{entire_command.inspect}"], 1)
+
+        # handle the special case of command style: 'this is text that i'm speaking, indicated by the initial quote.
+        if entire_command[0].chr == "'"
+            return {:verb => :say, :command => :say, :statement => entire_command[1..-1]}
+            return decompose_statement(args, entire_command[1..-1].strip.split(/\s+/).collect(&:to_sym))
+        end
+
         pieces = entire_command.downcase.strip.split(/\s+/).collect(&:to_sym)
 
         # Find the command/verb
         verb = pieces.slice!(0)
-
-        # handle the special case of command style: 'this is text that i'm speaking, indicated by the initial quote.
-        if verb.to_s[0].chr == "'"
-            args = {:verb => :say, :command => :say}
-            return decompose_statement(args, [verb.to_s[1..-1]] + pieces)
-        end
 
         args = {:verb => verb, :command => verb}
 
@@ -63,7 +64,7 @@ module Words
         # $ tell antonio I loved you in Zorro.
         # But it might also just be part of the statement:
         # $ say I saw a beaver.
-        # This is probably something that should either be decided in the command logic.
+        # This is potentially better decided in the command logic.
         # I believe for most command words it will be the :target.
 
         Words.db.get_prep_map_for_verb(args[:verb]).each do |case_name, preposition|

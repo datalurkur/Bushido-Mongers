@@ -145,20 +145,19 @@ module Words
     end
 
     def self.describe_stats(args)
-        raise(ShitBeBustedError, "This method is super messed up.  See comments below")
-
         stats = args[:target]
-        attributes = stats.first
-        skills     = stats.last
-
         sentences = []
 
         stats.each do |list|
-            # I don't know what the hell this is supposed to do, but it's super-busted
+            list.map! do |s|
+                case s
+                when BushidoObject, Room; Descriptor.describe(s, args[:agent])
+                else s
+                end
+            end
             list.each do |stat|
                 stat[:possessor] = args[:agent]
             end
-            # This is also super busted, we can't just stuff bushido objects in here and expect this shit to work
             sentences << gen_sentence(
                 :subject => args[:agent],
                 :verb    => :have,

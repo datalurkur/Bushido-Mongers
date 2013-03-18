@@ -239,10 +239,11 @@ module Commands
 
             # This method raises an exception if the direction is invalid, so no need to check it
             params[:destination] = position.get_adjacent(destination)
+            params[:direction] = destination
         end
 
         def self.do(core, params)
-            params[:agent].move_to(params[:destination])
+            params[:agent].move_to(params[:destination], params[:direction])
         end
     end
 

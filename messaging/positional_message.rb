@@ -65,6 +65,7 @@ end
 class DebugPositionalMessage < PositionalMessage
     class << self
         def dispatch_positional(core, locations, type, args={}, scope=1)
+            locations         = Array(locations)
             klass             = types[type][:message_class]
             new_listener_list = get_listeners_at(core, locations, klass, type)
             old_listener_list = (@listeners[core][type] + @listeners[core][klass]).uniq
