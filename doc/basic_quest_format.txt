@@ -1,3 +1,17 @@
+1) What are quests and where are they stored?
+    - Quests are BushidoObjects
+    - Stored in the game core for now
+2) How are quests assigned?
+    - They aren't, you either know about them or you don't
+    - Players will learn about quests by talking to NPCs
+3) How are quests completed?
+    - See quest state below
+    - A follow-up conversation with the NPC the quest is "for" finishes the quest
+
+Ancillary Questions
+    1) How do we spread knowledge of quest status?  Is everyone immediately aware when a quest is completed, or must they discover this?
+
+====================
 Quest Bushido Object
 ====================
 Quest State:
