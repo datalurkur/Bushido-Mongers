@@ -11,5 +11,3 @@ class UnexpectedBehaviorError < GameError; end
 class UnknownType < GameError; end
 class AmbiguousCommandError < GameError; end
 class FailedCommandError < GameError; end
-
-class ShitBeBustedError < StandardError; end

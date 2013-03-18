@@ -74,7 +74,7 @@ Message.define(:user_dies,     :game, [:result], "User dies")
 # Core Game Information
 # Messages passed between the game lobby / game objects / lobby
 Message.define(:tick,             :tick)
-Message.define(:unit_moves,       :core, [:agent, :location, :destination])
+Message.define(:unit_moves,       :core, [:agent, :origin, :destination])
 Message.define(:unit_attacks,     :core, [:attacker, :defender, :success, :result_hash])
 Message.define(:unit_acts,        :core, [:agent, :action, :location, :action_hash])
 Message.define(:object_destroyed, :core, [:target, :location])

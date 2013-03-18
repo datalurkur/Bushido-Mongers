@@ -91,20 +91,28 @@ module Position
         @position.add_object(self, :worn)
     end
 
-    def move_to(destination)
-        Log.debug("#{monicker} moved to #{destination.monicker}", 5)
+    def move_to(destination, direction = nil)
+        Log.debug("#{monicker} moved to #{destination.monicker} with direction #{direction}", 5)
 
         # FIXME - This is actual a determination of whether something locomotes or *is moved*
         #  We probably want an optional mover agent to indicate whether something is moving on its own or being moved
         #  Future messages might include things like "Shinji removes a rock from his satchel"
         if self.uses?(Character) || self.uses?(NpcBehavior)
-            locations = [self.absolute_position, destination]
-            Message.dispatch_positional(@core, locations, :unit_moves, {
+            origin = self.absolute_position
+            msg_args =
+            {
                 :agent         => self,
                 :action        => :move,
-                :location      => locations.first,
-                :destination   => locations.last
-            })
+                :origin        => origin,
+                :destination   => destination
+            }
+            if direction
+                # Send different messages to origin and destination
+                Message.dispatch_positional(@core, origin,      :unit_moves, msg_args.merge(:destination => direction))
+                Message.dispatch_positional(@core, destination, :unit_moves, msg_args.merge(:origin      => Zone.direction_opposite(direction)))
+            else
+                Message.dispatch_positional(@core, [origin, destination], :unit_moves, msg_args)
+            end
         end
 
         _set_position(destination)

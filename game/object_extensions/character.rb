@@ -104,7 +104,7 @@ module Character
         def at_message(instance, message)
             case message.type
             when :unit_moves
-                if (message.agent != instance) && instance.witnesses?([message.location, message.destination])
+                if (message.agent != instance) && instance.witnesses?([message.origin, message.destination])
                     instance.inform_user(message)
                 end
             when :unit_attacks
