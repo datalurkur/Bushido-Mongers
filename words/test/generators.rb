@@ -57,22 +57,6 @@ def db_create(db, test_npc_type, name)
     $core.create(test_npc_type, :position => FakeRoom.new, :name => name)
 end
 
-class Action
-    def self.do(args = {})
-        self.send(args[:action], args)
-    end
-
-    def self.attack(args)
-        success_roll = rand(20) + 1
-        args[:result] = case success_roll
-        when 1..10;  :miss
-        when 11..20; :hit
-        end
-
-        Log.debug(Words.gen_sentence(args))
-    end
-end
-
 observer = db_create(db, :character, "Kenji Skrimshank")
 agent = Descriptor::BushidoObjectDescriptor.describe(observer, observer)
 Log.debug(Words.describe_corporeal(agent))
@@ -82,7 +66,8 @@ Log.debug(Words.describe_corporeal(target))
 
 # {:agent => <Ninja, :name => "Kenji Scrimshank">, :target => <Goat, :name => "Billy Goat Balrog">, :verb => :attack, :tool => :agent_current_weapon}
 5.times do
-    Action.do(:agent => agent, :target => target, :action => :attack, :tool => :dagger)
+    puts Words.describe_attack(:attacker => agent, :defender => target, :command => :attack, :tool => :dagger, :result_hash => {:damage_type => :piercing})
+    puts Words.describe_attack(:defender => agent, :attacker => target, :command => :attack,                   :result_hash => {:damage_type => [:piercing, :blunt, :nonlethal].rand})
 end
 
 target = db_create(db, :chest, "Bosom")

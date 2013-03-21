@@ -467,7 +467,8 @@ module Words
             def self.sibilant?(infinitive)
                 infinitive = infinitive.to_s if Symbol === infinitive
                 # First stab.
-                infinitive[-1].chr == 's' ||
+                infinitive.match(/s$/) ||
+                infinitive.match(/sh$/) ||
                 (Words::CONSONANTS.include?(infinitive[-2].chr) && infinitive[-1].chr == 'o')
             end
         end
