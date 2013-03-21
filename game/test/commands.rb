@@ -34,17 +34,11 @@ class GameCore
     end
 end
 
-class GameClient
-    def forced_interface_send(text)
-        @interface.parse(current_state.get_exchange_context, text, current_state.get_exchange_target)
-    end
-end
-
 require './run_local'
 
 $client.stack.specify_response_for(:begin_playing) do |stack, message|
     Log.debug("Begin!")
-    $client.forced_interface_send("look")
+    stack.put_response("look")
 end
 
 $client.start
