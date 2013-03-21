@@ -31,7 +31,7 @@ module TextInterface
         text ||= ''
         if !context || target == :server
             Log.debug("No context for parsing input, returning raw command", 6)
-            return Message.new(:raw_command,{:command=>text.chomp})
+            return Message.new(:raw_command, :command => text.chomp)
         end
 
         case context.type

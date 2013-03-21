@@ -29,7 +29,7 @@ end
 $server.start
 
 $client.stack.set_state(:join_lobby)
-$client.stack.specify_response_for(:choose_from_list, {:field => :server_menu}) do |stack, message|
+$client.stack.specify_response_for(:choose_from_list, :field => :server_menu) do |stack, message|
     if stack.get_state == :join_lobby
         puts "Attempting to join lobby #{$client_config[:lobby_name]}/#{$client_config[:lobby_password]}"
         stack.put_response(:join_lobby)
@@ -38,10 +38,10 @@ $client.stack.specify_response_for(:choose_from_list, {:field => :server_menu}) 
         stack.put_response(:create_lobby)
     end
 end
-$client.stack.specify_response_for(:text_field, {:field => :lobby_name}) do |stack, message|
+$client.stack.specify_response_for(:text_field, :field => :lobby_name) do |stack, message|
     stack.put_response($client_config[:lobby_name])
 end
-$client.stack.specify_response_for(:text_field, {:field => :lobby_password}) do |stack, message|
+$client.stack.specify_response_for(:text_field, :field => :lobby_password) do |stack, message|
     stack.put_response($client_config[:lobby_password])
 end
 $client.stack.specify_response_for(:join_fail) do |stack, message|
@@ -50,7 +50,7 @@ end
 $client.stack.specify_response_for(:join_success) do |stack, message|
     stack.set_state(:generate_game)
 end
-$client.stack.specify_response_for(:choose_from_list, {:field => :lobby_menu}) do |stack, message|
+$client.stack.specify_response_for(:choose_from_list, :field => :lobby_menu) do |stack, message|
     case stack.get_state
     when :generate_game
         stack.put_response(:generate_game)
@@ -82,16 +82,16 @@ $client.stack.specify_response_for(:start_fail) do |stack, message|
         $client.release_control
     end
 end
-$client.stack.specify_response_for(:text_field, {:field => :character_name}) do |stack, message|
+$client.stack.specify_response_for(:text_field, :field => :character_name) do |stack, message|
     stack.put_response($client_config[:character_name])
 end
-$client.stack.specify_response_for(:choose_from_list, {:field => :character_race}) do |stack, message|
+$client.stack.specify_response_for(:choose_from_list, :field => :character_race) do |stack, message|
     stack.put_response(message.choices.rand)
 end
-$client.stack.specify_response_for(:choose_from_list, {:field => :character_gender}) do |stack, message|
+$client.stack.specify_response_for(:choose_from_list, :field => :character_gender) do |stack, message|
     stack.put_response(message.choices.rand)
 end
-$client.stack.specify_response_for(:choose_from_list, {:field => :character_options}) do |stack, message|
+$client.stack.specify_response_for(:choose_from_list, :field => :character_options) do |stack, message|
     stack.put_response(:create)
 end
 $client.stack.specify_response_for(:character_ready) do |stack, message|
@@ -101,8 +101,10 @@ $client.stack.specify_response_for(:begin_playing) do |stack, message|
     $client.release_control
 end
 
-$client.start
+if __FILE__ == $0
+    $client.start
 
-while $client.running?
-    sleep 10
+    while $client.running?
+        sleep 10
+    end
 end
