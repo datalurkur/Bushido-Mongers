@@ -12,7 +12,7 @@ core = FakeCore.new(db)
 
 types = db.types_of(:body)
 types.each do |body|
-    test_body = db.create(core, body, {:position => FakeRoom.new, :relative_size => :medium})
+    test_body = core.create(body, {:position => FakeRoom.new, :relative_size => :medium})
     Log.debug(test_body)
     test_body.destroy(nil)
 end

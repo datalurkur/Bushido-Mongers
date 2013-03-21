@@ -22,5 +22,5 @@ $db.each_type(true) do |type|
         args[:randomize] = true
     end
     Log.debug(["Creating a #{type.inspect}"])
-    $db.create($core, type, args)
+    $db.create($core, type, 0, args)
 end

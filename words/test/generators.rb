@@ -54,7 +54,7 @@ $core = FakeCore.new(db)
 require './game/descriptors'
 
 def db_create(db, test_npc_type, name)
-    db.create($core, test_npc_type, :position => FakeRoom.new, :name => name)
+    $core.create(test_npc_type, :position => FakeRoom.new, :name => name)
 end
 
 class Action

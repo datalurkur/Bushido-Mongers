@@ -97,6 +97,9 @@ end
 $client.stack.specify_response_for(:character_ready) do |stack, message|
     stack.clear_state
 end
+$client.stack.specify_response_for(:character_not_ready) do |stack, message|
+    $client.release_control
+end
 $client.stack.specify_response_for(:begin_playing) do |stack, message|
     $client.release_control
 end
