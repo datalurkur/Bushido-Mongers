@@ -94,9 +94,8 @@ module Position
     def move_to(destination, direction = nil)
         Log.debug("#{monicker} moved to #{destination.monicker} with direction #{direction}", 5)
 
-        # FIXME - This is actual a determination of whether something locomotes or *is moved*
-        #  We probably want an optional mover agent to indicate whether something is moving on its own or being moved
-        #  Future messages might include things like "Shinji removes a rock from his satchel"
+        # FIXME - This is actually a determination of whether something locomotes or *is moved*
+        # FIXME - Shouldn't print messages for hidden moving things
         if self.uses?(Character) || self.uses?(NpcBehavior)
             origin = self.absolute_position
             msg_args =
