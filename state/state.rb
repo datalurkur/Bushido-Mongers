@@ -215,17 +215,20 @@ class State
         context = get_exchange_context
         clear_exchange_context
 
-        if message.type == :invalid_input
+        case message.type
+        when :invalid_input
             # Exchange failed, retry
             begin_exchange(id)
             return false
-        else
+        when :valid_input
             if context.has_param?(:field)
                 Log.debug("Setting client field #{context.field} to #{message.input} based on client input", 7)
                 @client.set(context.field, message.input)
                 @previous_result = message.input
             end
             return true
+        else
+            Log.warning("Didn't expect #{message.type} message here!")
         end
     end
 
