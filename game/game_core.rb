@@ -20,6 +20,8 @@ class GameCore
         @usage_mutex.synchronize do
             Log.info("Setting up game core")
 
+            @uid_count = 0
+
             @tick_rate     = args[:tick_rate] || (30)
             @ticking       = false
 
@@ -57,11 +59,15 @@ class GameCore
         ret
     end
 
-    def create(type, hash = {})
-        @db.create(self, type, hash)
+    def next_uid
+        @uid_count += 1
     end
 
-    def flag_for_destruction(object, destroyer)
+    def create(type, hash = {})
+        @db.create(self, type, next_uid, hash)
+    end
+
+    def flag_for_destruction(object, destroye)
         @awaiting_destruction << [object, destroyer]
     end
 
@@ -136,7 +142,7 @@ class GameCore
         ret = nil
         @usage_mutex.synchronize do
             position  = @world.random_starting_location
-            character = @db.create(self, :character, details.merge(:position => position))
+            character = create(:character, details.merge(:position => position))
 
             characters[username] = character
             Log.info("Character #{character.monicker} created for #{username}")

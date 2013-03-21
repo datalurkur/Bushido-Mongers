@@ -7,6 +7,7 @@ class BushidoObject
         def pack(object)
             raw_data = {}
 
+            raw_data[:uid]  = object.uid
             raw_data[:type] = object.get_type
             raw_data[:properties] = object.properties
 
@@ -23,7 +24,7 @@ class BushidoObject
             raise(ArgumentError, "Malformed packed object data") unless Hash === raw_data
 
             raise(MissingProperty, "Object type missing from packed data") unless raw_data[:type]
-            object = self.new(core, raw_data[:type])
+            object = self.new(core, raw_data[:type], raw_data[:uid])
 
             raise(MissingProperty, "Object properties missing from packed data") unless raw_data[:properties]
             object.set_properties(raw_data[:properties])
@@ -43,9 +44,9 @@ class BushidoObject
             object
         end
 
-        def create(core, type, params={})
+        def create(core, type, uid, params={})
             # Create an empty object
-            object = self.new(core, type)
+            object = self.new(core, type, uid)
 
             type_info = core.db.raw_info_for(type)
 
@@ -95,7 +96,7 @@ class BushidoObject
     end
 
     attr_accessor :properties
-    attr_reader   :extensions
+    attr_reader   :extensions, :uid
 
     def get_type; @type; end
 
@@ -108,23 +109,29 @@ class BushidoObject
     end
 
     def start_listening_for(message_type)
-        return if @listens_for.include?(message_type)
-        @listens_for << message_type
-        Message.register_listener(@core, message_type, self)
+        if @listens_for.keys.include?(message_type)
+            @listens_for[message_type] += 1
+        else
+            @listens_for[message_type] = 1
+            Message.register_listener(@core, message_type, self)
+        end
     end
 
     def listens?
-        !@listens_for.empty?
+        !@listens_for.keys.empty?
     end
 
     def stop_listening_for(message_type)
-        return unless @listens_for.include?(message_type)
-        Message.unregister_listener(@core, message_type, self)
-        @listens_for.delete(message_type)
+        return unless @listens_for.keys.include?(message_type)
+
+        if (@listens_for[message_type] -= 1) <= 0
+            Message.unregister_listener(@core, message_type, self)
+            @listens_for.delete(message_type)
+        end
     end
 
     def stop_listening
-        @listens_for.each do |type|
+        @listens_for.keys.each do |type|
             Message.unregister_listener(@core, type, self)
         end
         @listens_for.clear
@@ -136,10 +143,6 @@ class BushidoObject
 
     def is_type?(type)
         @core.db.is_type?(@type, type)
-    end
-
-    def uses?(mod)
-        @core.db.raw_info_for(@type)[:uses].include?(mod)
     end
 
     def matches(args = {})
@@ -184,19 +187,29 @@ class BushidoObject
             end
         end
     end
+    def remove_extension(extension)
+        return unless @extensions.include?(extension)
+        @extensions.delete(extension)
+        if extension.respond_to?(:listens_for)
+            extension.listens_for.each do |message_type|
+                stop_listening_for(message_type)
+            end
+        end
+    end
     def uses?(extension); @extensions.include?(extension); end
 
     def set_properties(value)
         @properties = value
     end
 
-    def initialize(core, type)
+    def initialize(core, type, uid)
         @core = core
         @type = type
+        @uid  = uid
 
         @properties  = {}
         @extensions  = []
-        @listens_for = []
+        @listens_for = {}
     end
 end
 

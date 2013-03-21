@@ -22,8 +22,8 @@ Log.debug(["Number of types of items:", db.types_of(:item).size])
 # Basic item creation tests
 test_item_type = :head_armor
 Log.debug("Creating a #{test_item_type}")
-test_item_args = {:relative_size => :medium, :quality => :fine, :components => [db.create($core, :iron)], :position => FakeRoom.new}
-test_item = db.create($core, test_item_type, test_item_args)
+test_item_args = {:relative_size => :medium, :quality => :fine, :components => [$core.create(:iron)], :position => FakeRoom.new}
+test_item = $core.create(test_item_type, test_item_args)
 Log.debug("Test item is a metal? #{test_item.is_type?(:metal)}")
 Log.debug("Test item is a constructable? #{test_item.is_type?(:constructed)}")
 Log.debug("Test item is a head armor? #{test_item.is_type?(:hear_armor)}")
@@ -33,7 +33,7 @@ Log.debug(["Types of NPCs:", db.types_of(:npc)])
 
 def test_npc(db, test_npc_type, name)
 #    Log.debug(["Creating a #{test_npc_type} with raw info", db.raw_info_for(test_npc_type)])
-    db.create($core, test_npc_type, :position => FakeRoom.new, :name => name)
+    $core.create(test_npc_type, :position => FakeRoom.new, :name => name)
 end
 
 def test_test_npc(db, test_npc_type, name)
@@ -49,8 +49,8 @@ test_test_npc(db, :peacekeeper, "Derpus Maximus")
 #test_test_npc(db, :giant_spider, "Leggus Maximus")
 
 # Body / Corporeal tests
-hb = db.create($core, :humanoid_body, :relative_size => :large)
-hb = db.create($core, :arachnoid_body, :relative_size => :tiny)
+hb = $core.create(:humanoid_body, :relative_size => :large)
+hb = $core.create(:arachnoid_body, :relative_size => :tiny)
 
 # Recipe and command tests
 Log.debug("How do I produce a dagger?")
@@ -87,9 +87,9 @@ end
 
 # item composition tests
 begin
-    bp = db.create($core, :leather_backpack)
+    bp = $core.create(:leather_backpack)
     Log.debug(bp)
-    carrot = db.create($core, :carrot, :size=>:medium)
+    carrot = $core.create(:carrot, :size=>:medium)
     Log.debug(carrot)
     bp.add_object(carrot)
     Log.debug(bp)
@@ -99,17 +99,17 @@ end
 
 # test test.raw
 begin
-    bp = db.create($core, :leather_backpack)
+    bp = $core.create(:leather_backpack)
     Log.debug(bp)
-    carrot = db.create($core, :carrot, :size=>:medium)
+    carrot = $core.create(:carrot, :size=>:medium)
     Log.debug(carrot)
     bp.add_object(carrot)
     Log.debug(bp)
 
-    sbp = db.create($core, :leather_backpack)
+    sbp = $core.create(:leather_backpack)
     Log.debug(sbp)
     sbp.add_object(carrot)
-    carrot = db.create($core, :carrot, :size=>:medium)
+    carrot = $core.create(:carrot, :size=>:medium)
     sbp.add_object(carrot, :external)
     Log.debug(sbp)
 end

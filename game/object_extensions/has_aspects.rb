@@ -142,7 +142,7 @@ module HasAspects
     def opposed_check(aspect, difficulty, opposer, opposed_aspect)
         roll = make_check(aspect, difficulty)
         # If opposer hasn't aspects, just do a regular difficulty check.
-        opposed_roll =  opposer.respond_to?(:make_check) ?
+        opposed_roll =  opposer.uses?(HasAspects) ?
                         opposer.make_check(opposed_aspect, difficulty) :
                         Difficulty.value_of(difficulty)
         Log.debug([roll, opposed_roll], 6)

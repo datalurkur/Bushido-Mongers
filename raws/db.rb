@@ -143,7 +143,7 @@ class ObjectDB
         types_of(type).rand
     end
 
-    def create(core, type, params={})
+    def create(core, type, uid, params)
         raise(UnknownType, "#{type.inspect} not defined as db type.") unless @db[type]
         if @db[type][:abstract]
             if params[:randomize]
@@ -155,7 +155,7 @@ class ObjectDB
 
         # When no longer in debug mode, go back to using BushidoObject
         #BushidoObject.create(core, type, params)
-        SafeBushidoObject.create(core, type, params)
+        SafeBushidoObject.create(core, type, uid, params)
     end
 
     def get_binding

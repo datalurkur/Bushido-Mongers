@@ -11,7 +11,7 @@ aspect_list = [:strength, :agility, :intrinsic_fighting_skill, :hide_skill]
 aspects = {}
 
 aspect_list.each do |aspect|
-    aspects[aspect] = db.create(core, aspect)
+    aspects[aspect] = core.create(aspect)
 end
 
 [

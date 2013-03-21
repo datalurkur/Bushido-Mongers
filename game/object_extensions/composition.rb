@@ -128,7 +128,7 @@ module Composition
     end
 
     def containers(type, recursive=true)
-        select_objects(type, recursive) { |obj| cont.respond_to?(:container?) && cont.container? }
+        select_objects(type, recursive) { |obj| cont.uses?(Composition) && cont.container? }
     end
 
     def select_objects(type, recursive=false, depth=5, &block)

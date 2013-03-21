@@ -5,8 +5,8 @@ class FakeCore
 
         @db = db
     end
-    def create(type, hash)
-        @db.create(self, type, hash)
+    def create(type, hash={})
+        @db.create(self, type, 0, hash)
     end
 end
 
