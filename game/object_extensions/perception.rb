@@ -12,7 +12,7 @@ module Perception
     # TODO - There should be some sort of cached perception check here,
     # which will be re-rolled given certain events.
     def can_perceive?(object)
-        !(object.respond_to?(:skill) && object.has_skill?(:hide) && object.skill(:hide).properties[:hidden])
+        !(object.uses?(HasAspects) && object.has_skill?(:hide) && object.skill(:hide).properties[:hidden])
     end
 
     def filter_objects(location, type=nil, name=nil)
@@ -20,7 +20,7 @@ module Perception
         when :position
             # A player tied to a long pole can still grab apples
             objects    = perceivable_objects_of(self.absolute_position.objects)
-            containers = objects.select { |o| o.respond_to?(:container?) && o.container? && o.open? }
+            containers = objects.select { |o| o.uses?(Composition) && o.container? && o.open? }
             # perceivable objects in room + contents of perceivable open containers in room
             objects.select { |o| o.matches(:type => type, :name => name) } +
             containers.map { |c| c.container_contents.select { |o| o.matches(:type => type, :name => name) } }.flatten
@@ -76,7 +76,12 @@ module Perception
     def find_object(type_class, object, locations)
         Log.warning("#{object.monicker} in find_object") if BushidoObject === object
 #        return object if (BushidoObject === object)
-        object, adjectives = object if object.respond_to?(:size) && object.size == 2
+
+        # What the fuck?  Hardcoded sizes?
+        #object, adjectives = object if object.respond_to?(:size) && object.size == 2
+
+        # FIXME ZPHOBIC - I don't know why we're doing this, but can we seriously not just pass in the adjectives as a separate argument?  I don't really want to dissect all this code to figure it out
+        object, adjectives = object
 
         Log.debug(["Searching!", type_class, object, locations], 6)
         Log.debug(["Adjectives!", adjectives], 6) if adjectives && !adjectives.empty?

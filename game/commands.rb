@@ -186,7 +186,7 @@ module Commands
             equipment_types = equipment.type_ancestry
 
             Log.debug("#{agent.monicker} trying to equip #{equipment.monicker} #{equipment_types.inspect}")
-            if agent.respond_to?(:wear)
+            if agent.uses?(Equipment)
                 parts_can_equip = agent.external_body_parts.select do |part|
                     ((part.properties[:can_equip] || []) & equipment_types).size > 0
                 end
@@ -219,7 +219,7 @@ module Commands
             equipment = params[:target]
 
             Log.debug("Looking to unequip #{equipment.monicker}")
-            if agent.respond_to?(:remove)
+            if agent.uses?(Equipment)
                 agent.remove(equipment)
             else
                 raise(FailedCommandError, "#{agent.monicker} doesn't know how to remove #{equipment.monicker}!")
@@ -304,7 +304,7 @@ module Commands
 
             if params[:tool]
                 weapon = params[:tool]
-            elsif attacker.respond_to?(:has_weapon?) && attacker.has_weapon?
+            elsif attacker.uses?(Equipment) && attacker.has_weapon?
                 weapon = attacker.weapon
             end
 
