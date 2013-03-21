@@ -1,5 +1,6 @@
 require './util/log'
 require './util/exceptions'
+require './game/transforms'
 
 module Corporeal
     class << self
@@ -52,6 +53,8 @@ module Corporeal
             # dies, and the body will hit the floor.
             if container_contents(:incidental).include?(target)
                 Log.debug("Destroying #{monicker}!")
+                # FIXME - Eventualy, this is what converts the Corporeal object to a corpse
+                Transforms.transform(self, :death)
                 @core.flag_for_destruction(self, attacker)
             else
                 @core.flag_for_destruction(target, attacker)
