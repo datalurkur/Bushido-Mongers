@@ -42,14 +42,9 @@ class MuxedClientBase
             return
         end
 
-        # This really doesn't need to be in a begin / rescue block, but until we find this thread concurrency bug, I need all the logging I can get
-        begin
-            #Log.debug("Packing message #{message.type} for server", 8)
-            packed_data = @message_buffer.pack_message(message)
-            @socket.write_nonblock(packed_data)
-        rescue Exception => e
-            Log.error(["Failed to send data to server", e.message, e.backtrace])
-        end
+        Log.debug("Packing message #{message.type} for server", 8)
+        packed_data = @message_buffer.pack_message(message)
+        @socket.write_nonblock(packed_data)
     end
 
     def get_messages
