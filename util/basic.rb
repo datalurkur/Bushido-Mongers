@@ -71,6 +71,10 @@ class String
         Digest::MD5.digest(self)
     end
 
+    def split_to_sym
+        self.strip.split(/\s+/).collect(&:to_sym)
+    end
+
     def color(c)
         case c
         when :white

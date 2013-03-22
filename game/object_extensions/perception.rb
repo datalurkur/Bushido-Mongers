@@ -73,15 +73,9 @@ module Perception
         end
     end
 
-    def find_object(type_class, object, locations)
+    def find_object(type_class, object, adjectives, locations)
         Log.warning("#{object.monicker} in find_object") if BushidoObject === object
 #        return object if (BushidoObject === object)
-
-        # What the fuck?  Hardcoded sizes?
-        #object, adjectives = object if object.respond_to?(:size) && object.size == 2
-
-        # FIXME ZPHOBIC - I don't know why we're doing this, but can we seriously not just pass in the adjectives as a separate argument?  I don't really want to dissect all this code to figure it out
-        object, adjectives = object
 
         Log.debug(["Searching!", type_class, object, locations], 6)
         Log.debug(["Adjectives!", adjectives], 6) if adjectives && !adjectives.empty?

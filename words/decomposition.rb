@@ -9,11 +9,11 @@ module Words
 
         # handle the special case of command style: 'this is text that i'm speaking, indicated by the initial quote.
         if entire_command[0].chr == "'"
-            return {:verb => :say, :command => :say, :statement => entire_command[1..-1]}
-            return decompose_statement(args, entire_command[1..-1].strip.split(/\s+/).collect(&:to_sym))
+            args = {:verb => :say, :command => :say, :statement => entire_command[1..-1]}
+            return decompose_statement(args, entire_command[1..-1].split_to_sym)
         end
 
-        pieces = entire_command.downcase.strip.split(/\s+/).collect(&:to_sym)
+        pieces = entire_command.downcase.split_to_sym
 
         # Find the command/verb
         verb = pieces.slice!(0)
@@ -42,7 +42,9 @@ module Words
 
         # Commands involving statements need to be parsed differently.
         if [:say, :whisper, :yell].include?(args[:command])
-            return decompose_statement(args, pieces)
+            # Still doesn't ENTIRELY mimic downcase parsing. 'say TO KRILLICK foo' won't find Krillick...
+            regular_case_pieces = entire_command.split_to_sym[1..-1]
+            return decompose_statement(args, regular_case_pieces)
         end
 
         phrase_args = decompose_phrases(args, pieces)
@@ -69,8 +71,7 @@ module Words
 
         Words.db.get_prep_map_for_verb(args[:verb]).each do |case_name, preposition|
             if pieces.size > 0
-                phrase = slice_initial_phrase(preposition, pieces)
-                args[case_name] = phrase if phrase
+                find_prep_phrase(case_name, preposition, pieces, args, true)
             end
         end
 
@@ -84,44 +85,48 @@ module Words
     def self.decompose_phrases(args, pieces)
         default_case = Words.db.get_default_case_for_verb(args[:verb])
         Log.debug("Testing #{default_case} with nil", 6)
-        if pieces.size > 0 && default_case
-            noun = slice_noun_phrase(0, pieces)
-            args[default_case] = noun if noun
+        if pieces.size > 0 && default_case && noun = find_noun_phrase(0, pieces)
+            set_case(default_case, args, noun.first, noun.last)
         end
 
         prep_map = Words.db.get_prep_map_for_verb(args[:verb])
         prep_map.each_pair do |case_name, preposition|
             Log.debug("Testing #{case_name} with #{preposition.inspect}", 6)
-            phrase = slice_prep_phrase(preposition, pieces)
-            args[case_name] = phrase if phrase
+            find_prep_phrase(case_name, preposition, pieces, args)
         end
 
         args
     end
 
-    # N.B. modifies the pieces array
-    def self.slice_initial_phrase(preposition, pieces)
-        if (pieces[0] == preposition)
-            Log.debug("Detected initial '#{preposition}'", 6)
-            pieces.slice!(0, 1)
-            noun = slice_noun_phrase(index, pieces)
-        end
-        Log.debug(noun, 6) if noun
-        noun
+    private
+    def self.set_case(case_name, args, noun, adjs)
+        case_name_adjs = (case_name.to_s + "_adjs").to_sym
+        Log.debug("Setting #{case_name.inspect} and #{case_name_adjs.inspect} to #{noun.inspect} and #{adjs.inspect}")
+        args[case_name] = noun
+        args[case_name_adjs] = adjs unless adjs.empty?
     end
 
     # N.B. modifies the pieces array
-    def self.slice_prep_phrase(preposition, pieces)
+    def self.find_prep_phrase(case_name, preposition, pieces, args, initial_only = false)
         if (index = pieces.index(preposition))
+            if initial_only
+                if index != 0
+                    Log.debug("Detected initial '#{preposition}' but not at initial position!", 6)
+                    return nil
+                else
+                    Log.debug("Detected initial '#{preposition}'", 6)
+                end
+            end
             Log.debug("Detected '#{preposition}' at #{index}", 6)
             pieces.slice!(index, 1)
-            noun = slice_noun_phrase(index, pieces)
+            if noun = find_noun_phrase(index, pieces)
+                set_case(case_name, args, noun.first, noun.last)
+            end
         end
-        noun
     end
 
     # N.B. modifies the pieces array
-    def self.slice_noun_phrase(index, pieces)
+    def self.find_noun_phrase(index, pieces)
         if index >= pieces.size
             return nil
         end

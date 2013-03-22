@@ -58,6 +58,7 @@ module Commands
                 params[p] = params[:agent].find_object(
                     params[:"#{p}_type_class"] || core.db.info_for(params[:command], p),
                     params[p],
+                    params[(p.to_s + "_adjs").to_sym] || [],
                     lookup_locs
                 )
                 Log.debug("Found #{params[p].monicker} for #{p}")
@@ -99,15 +100,14 @@ module Commands
 
     module Inspect
         def self.stage(core, params)
-            location, adjs = params[:location]
-            if location
+            if params[:location]
                 Commands.find_objects(core, params, :location => [:grasped, :worn, :stashed, :position])
                 if params[:location].container? && !params[:location].open?
                     raise(FailedCommandError, "#{params[:location].monicker} is closed.")
                 end
             end
 
-            target, adjs = params[:target]
+            target = params[:target]
             if !target.nil? && (params[:agent].monicker.match(target.to_s) || (Words.db.get_related_words(:self)+[:self]).include?(target))
                 # Examine the agent.
                 params[:target] = params[:agent]
@@ -232,7 +232,7 @@ module Commands
             unless params[:destination]
                 raise(AmbiguousCommandError, "#{params[:command].title} where? (north, south, east, west)")
             end
-            destination, adjectives = params[:destination]
+            destination = params[:destination]
 
             position = params[:agent].absolute_position
             raise(NotImplementedError, "You're trapped in a #{position.monicker}!") unless Room === position
