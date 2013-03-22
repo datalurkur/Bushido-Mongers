@@ -36,9 +36,15 @@ end
 
 require './run_local'
 
+$client.stack.specify_response_for(:properties) do |stack, message|
+    puts VerboseInterface.properties(message)
+end
+
 $client.stack.specify_response_for(:begin_playing) do |stack, message|
     Log.debug("Begin!")
     stack.put_response("look")
+    stack.put_response("open chest")
+    stack.put_response("look in chest")
 end
 
 $client.start
