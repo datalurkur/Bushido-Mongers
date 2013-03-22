@@ -67,7 +67,7 @@ class GameCore
         @db.create(self, type, next_uid, hash)
     end
 
-    def flag_for_destruction(object, destroye)
+    def flag_for_destruction(object, destroyer)
         @awaiting_destruction << [object, destroyer]
     end
 
