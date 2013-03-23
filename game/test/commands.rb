@@ -40,16 +40,19 @@ $client.stack.specify_response_for(:properties) do |stack, message|
     puts VerboseInterface.properties(message)
 end
 
+def cmd_and_wait(stack, cmd)
+    stack.put_response(cmd)
+    sleep 0.1
+end
+
 $client.stack.specify_response_for(:begin_playing) do |stack, message|
     Log.debug("Begin!")
-    stack.put_response("look")
-    stack.put_response("open chest")
-    stack.put_response("look in chest")
+    cmd_and_wait(stack, "look")
+    cmd_and_wait(stack, "open chest")
+    cmd_and_wait(stack, "look in chest")
+    cmd_and_wait(stack, "get rock")
+    cmd_and_wait(stack, "drop rock")
 end
 
 $client.start
-
-start_time = Time.new
-while $client.running? && !(Time.new > start_time + 3)
-    sleep 10
-end
+sleep 2

@@ -65,7 +65,9 @@ class AutomationStack
         Log.debug("Putting stack query", 6)
         response_proc = find_response_for(message)
         if response_proc
-            response_proc.call(self, message)
+            Thread.new do
+                response_proc.call(self, message)
+            end
         end
     end
 
