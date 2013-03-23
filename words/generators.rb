@@ -2,7 +2,7 @@
 
 class Descriptor
     def self.container?(args)
-        Log.debug(args)
+#        Log.debug(args)
         args[:is_type].include?(:composition_root) &&
         args[:container_contents].has_key?(:internal) &&
         args[:properties][:mutable_container_classes].include?(:internal)
@@ -186,11 +186,56 @@ module Words
     def self.describe_composition_root(composition)
         sentences = []
 
-        comp_types = {
-            :attach => composition[:container_contents][:external],
-            :wear   => composition[:container_contents][:worn],
-            :grasp  => composition[:container_contents][:grasped],
+        composition_verbs = {
+            :external => :attach,
+            :worn     => :wear,
+            :grasped  => :hold
         }
+
+        composition_verbs.keys.each do |comp_type|
+            list = composition[:container_contents][comp_type]
+            if list && !list.empty?
+                list.each do |part|
+                    part[:possessor_info] = composition[:possessor_info]
+                end
+                sentences << gen_sentence(
+                                :subject => composition,
+                                :verb    => composition_verbs[comp_type],
+                                :target  => list.dup,
+                                # Currently-progressing state, so passive progressive.
+                                :state   => State.new)
+                sentences += list.collect do |part|
+                    if part[:is_type].include?(:composition_root)
+                        describe_composition_root(part)
+                    else
+                        gen_copula(:subject => part)
+                    end
+                end
+            end
+        end
+
+        sentences.flatten.join(" ")
+    end
+
+    def self.describe_whole_composition(composition)
+        sentences = []
+
+        comp_types = {
+            :attach => :external,
+            :wear   => :worn,
+            :grasp  => :grasped
+        }
+
+        compositions = [composition]
+        comp_lists = {
+            :attach => []
+        }
+
+        while !compositions.empty?
+            current_comp = compositions.shift
+            comp_types.each do |verb, comp_name|
+            end
+        end
 
         comp_types.each do |verb, list|
             if list && !list.empty?
@@ -202,7 +247,7 @@ module Words
                                 :verb    => verb,
                                 :target  => list.dup,
                                 # Currently-progressing state, so passive progressive.
-                                :state   => State.new(:passive, :progressive))
+                                :state   => State.new)
                 sentences += list.collect do |part|
                     if part[:is_type].include?(:composition_root)
                         describe_composition_root(part)
@@ -249,6 +294,7 @@ module Words
         args.delete(:action)
         args.delete(:command)
 
+        # FIXME - Use available senses.
         args.merge!(:verb => :see)
 
         objects = room[:objects]

@@ -466,9 +466,8 @@ module Words
             # ending in a consonant plus o also typically add -es: veto → vetoes.
             def self.sibilant?(infinitive)
                 infinitive = infinitive.to_s if Symbol === infinitive
-                # First stab.
                 infinitive.match(/s$/) ||
-                infinitive.match(/sh$/) ||
+                infinitive.match(/[sc]h$/) ||
                 (Words::CONSONANTS.include?(infinitive[-2].chr) && infinitive[-1].chr == 'o')
             end
         end

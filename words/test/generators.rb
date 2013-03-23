@@ -65,10 +65,8 @@ target = Descriptor::BushidoObjectDescriptor.describe(target, observer)
 Log.debug(Words.describe_corporeal(target))
 
 # {:agent => <Ninja, :name => "Kenji Scrimshank">, :target => <Goat, :name => "Billy Goat Balrog">, :verb => :attack, :tool => :agent_current_weapon}
-5.times do
-    puts Words.describe_attack(:attacker => agent, :defender => target, :command => :attack, :tool => :dagger, :result_hash => {:damage_type => :piercing})
-    puts Words.describe_attack(:defender => agent, :attacker => target, :command => :attack,                   :result_hash => {:damage_type => [:piercing, :blunt, :nonlethal].rand})
-end
+puts Words.describe_attack(:attacker => agent, :defender => target, :command => :attack, :tool => :dagger, :result_hash => {:damage_type => :piercing})
+puts Words.describe_attack(:defender => agent, :attacker => target, :command => :attack,                   :result_hash => {:damage_type => [:piercing, :blunt, :nonlethal].rand})
 
 target = db_create(db, :chest, "Bosom")
 target = Descriptor::BushidoObjectDescriptor.describe(target, observer)

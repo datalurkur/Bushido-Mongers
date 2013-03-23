@@ -51,6 +51,7 @@ $client.stack.specify_response_for(:begin_playing) do |stack, message|
     cmd_and_wait(stack, "open chest")
     cmd_and_wait(stack, "look in chest")
     cmd_and_wait(stack, "get rock")
+    cmd_and_wait(stack, "look self")
     cmd_and_wait(stack, "drop rock")
 end
 
