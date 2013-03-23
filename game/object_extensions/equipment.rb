@@ -1,6 +1,29 @@
 require './util/exceptions'
 
-module Inventory
+module Equipment
+    class << self
+        def at_creation(instance, params)
+            raise(MissingObjectExtensionError, "Equipment can only be used on a corporeal!") unless instance.uses?(Corporeal)
+            instance.add_random_equipment
+        end
+
+        def at_destruction(instance, destroyer, vaporize)
+            # drop equipment on death, or leave it on the body to be pulled off?
+        end
+    end
+
+    def add_random_equipment
+        external_body_parts.each do |part|
+            if part.properties[:can_equip] && !part.properties[:can_equip].empty?
+                Log.debug(["Looking for equipment worn on #{part.monicker}", part.properties[:can_equip]], 6)
+                equipment_type = @core.db.random(part.properties[:can_equip].rand)
+                equipment_piece = @core.create(equipment_type, :randomize => true)
+                Log.debug(["Found", equipment_piece], 6)
+                wear(part, equipment_piece)
+            end
+        end
+    end
+
     def wear(part, equipment)
         raise(FailedCommandError, "Can't wear #{equipment.monicker}; already wearing #{part.worn}") if part.full?(:worn)
         equipment.equip_on(part)
@@ -73,32 +96,5 @@ module Inventory
 
     def weapon
         @default_weapon
-    end
-end
-
-module Equipment
-    include Inventory
-
-    class << self
-        def at_creation(instance, params)
-            raise(MissingObjectExtensionError, "Equipment can only be used on a corporeal!") unless instance.uses?(Corporeal)
-            instance.add_random_equipment
-        end
-
-        def at_destruction(instance, destroyer, vaporize)
-            # drop equipment on death, or leave it on the body to be pulled off?
-        end
-    end
-
-    def add_random_equipment
-        external_body_parts.each do |part|
-            if part.properties[:can_equip] && !part.properties[:can_equip].empty?
-                Log.debug(["Looking for equipment worn on #{part.monicker}", part.properties[:can_equip]], 6)
-                equipment_type = @core.db.random(part.properties[:can_equip].rand)
-                equipment_piece = @core.create(equipment_type, :randomize => true)
-                Log.debug(["Found", equipment_piece], 6)
-                wear(part, equipment_piece)
-            end
-        end
     end
 end

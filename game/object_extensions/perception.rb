@@ -25,12 +25,12 @@ module Perception
             objects.select { |o| o.matches(:type => type, :name => name) } +
             containers.map { |c| c.container_contents.select { |o| o.matches(:type => type, :name => name) } }.flatten
         when :grasped, :worn
-            return [] unless uses?(Composition) && uses?(Inventory)
+            return [] unless uses?(Composition) && uses?(Equipment)
             all_equipment(location).select do |object|
                 object.matches(:type => type, :name => name)
             end
         when :stashed
-            return [] unless uses?(Composition) && uses?(Inventory)
+            return [] unless uses?(Composition) && uses?(Equipment)
             # Search within the perceiver's open backpacks, sacks, etc.
             containers_in_inventory.select { |c| c.open? }.each do |cont|
                 cont.container_contents.select do |object|
