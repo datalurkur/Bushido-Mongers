@@ -22,7 +22,6 @@ class PlayingState < State
             pass_to_client(message)
             begin_exchange(@clarification)
         when :act_fail
-            # FIXME - Use a sentence to describe the result
             pass_to_client(message)
         when :act_success
             @client.send_to_client(Message.new(:properties, {:field => :action_results, :properties => message.description}))

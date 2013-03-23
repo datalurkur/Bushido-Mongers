@@ -99,4 +99,8 @@ class Symbol
     def to_const(root=Object)
         to_s.to_const(root)
     end
+
+    def downcase
+        to_s.downcase.to_sym
+    end
 end

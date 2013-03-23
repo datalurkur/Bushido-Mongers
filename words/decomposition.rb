@@ -42,7 +42,6 @@ module Words
 
         # Commands involving statements need to be parsed differently.
         if [:say, :whisper, :yell].include?(args[:command])
-            # Still doesn't ENTIRELY mimic downcase parsing. 'say TO KRILLICK foo' won't find Krillick...
             regular_case_pieces = entire_command.split_to_sym[1..-1]
             return decompose_statement(args, regular_case_pieces)
         end
@@ -71,7 +70,7 @@ module Words
 
         Words.db.get_prep_map_for_verb(args[:verb]).each do |case_name, preposition|
             if pieces.size > 0
-                find_prep_phrase(case_name, preposition, pieces, args, true)
+                find_prep_phrase(case_name, preposition.downcase, pieces, args, true)
             end
         end
 
@@ -102,8 +101,8 @@ module Words
     def self.set_case(case_name, args, noun, adjs)
         case_name_adjs = (case_name.to_s + "_adjs").to_sym
         Log.debug("Setting #{case_name.inspect} and #{case_name_adjs.inspect} to #{noun.inspect} and #{adjs.inspect}")
-        args[case_name] = noun
-        args[case_name_adjs] = adjs unless adjs.empty?
+        args[case_name] = noun.downcase
+        args[case_name_adjs] = adjs.map(&:downcase) unless adjs.empty?
     end
 
     # N.B. modifies the pieces array
@@ -135,21 +134,21 @@ module Words
         noun = nil
         size = 0
 
+        # TODO - Join any conjunctions together
+        # The tricky part in real NLP is finding out which kind of conjunction,
+        # it is, but for now we will assume it's a noun conjunction.
+        #while (i = pieces.index(:and))
+        #    first_part = (i > 1)               ? pieces[0...(i-1)] : []
+        #    last_part  = (i < pieces.size - 2) ? pieces[(i+1)..-1] : []
+        #    first_part + [pieces[(i-1)..(i+1)]] + last_part
+        #end
         pieces[index..-1].each_with_index do |piece, i|
-            Log.debug([piece, i], 6)
-            Log.debug([pieces[index + i], Words::Sentence::Preposition.preposition?(pieces[index + i])], 6)
-            if Words::Sentence::Noun.noun?(piece) ||
-                  (index + i) == pieces.size - 1 ||
-                  Words::Sentence::Preposition.preposition?(pieces[index + i + 1])
-                # TODO - Join any conjunctions together
-                # The tricky part in real NLP is finding out which kind of conjunction,
-                # it is, but for now we will assume it's a noun conjunction.
-                #while (i = pieces.index(:and))
-                #    first_part = (i > 1)               ? pieces[0...(i-1)] : []
-                #    last_part  = (i < pieces.size - 2) ? pieces[(i+1)..-1] : []
-                #    first_part + [pieces[(i-1)..(i+1)]] + last_part
-                #end
-                Log.debug(["found noun", piece], 6)
+            Log.debug([piece, i], 9)
+            Log.debug([pieces[index + i], Words::Sentence::Preposition.preposition?(pieces[index + i])], 9)
+            if Words::Sentence::Noun.noun?(piece) || # It's an in-game noun.
+               (index + i) == pieces.size - 1     || # It's at the end of the index.
+               Words::Sentence::Preposition.preposition?(pieces[index + i + 1]) # Or there's a preposition next.
+                Log.debug("found noun #{piece}", 6)
                 if noun
                     # It must be an adjective, instead.
                     adjectives << noun
@@ -157,11 +156,11 @@ module Words
                 noun = piece
                 size += 1
             elsif Words::Sentence::Adjective.adjective?(piece)
-                Log.debug(["found adjective", piece], 6)
+                Log.debug("found adjective #{piece}", 6)
                 adjectives << piece
                 size += 1
             else
-                Log.debug(["invalid piece", piece], 6)
+                Log.debug("invalid piece #{piece}", 6)
                 break
             end
         end
