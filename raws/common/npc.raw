@@ -20,3 +20,12 @@ abstract karmic,aligned,position,has_aspects npc {
 
     class optional sym japanese_name;
 }
+
+abstract root profession {
+    has_many sym uses_skill;
+    has_many sym locations;
+}
+
+abstract root professional {
+    has sym job;
+}

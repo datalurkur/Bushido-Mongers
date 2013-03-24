@@ -33,27 +33,10 @@ monster,corporeal dwarf {
     spawn_rarity uncommon;
 }
 
-abstract npc guard {
-    has_many sym provocations;
-}
-
-guard,corporeal peacekeeper {
+npc,corporeal,professional human {
     size medium;
     body_type humanoid_body;
-    factions peaceful;
-    provocations lie attack steal kill;
-}
+    factions human;
 
-npc,corporeal merchant {
-    size medium;
-    body_type humanoid_body;
-    factions peaceful;
-}
-
-npc,corporeal thug {
-    size medium;
-    body_type humanoid_body;
-    spawns_in sewer meadow mountain dungeon dock pier;
-    spawn_rarity unusual;
-    factions enemy;
+    uses profession;
 }

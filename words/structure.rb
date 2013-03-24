@@ -252,7 +252,11 @@ module Words
                     case noun
                     when Hash
                         # Decompose descriptor hashes into noun name, modifiers, and possession info.
-                        hash[:monicker] = noun[:monicker]
+                        if noun[:properties] && noun[:properties][:job] && noun[:monicker] == noun[:type]
+                            hash[:monicker] = noun[:properties][:job]
+                        else
+                            hash[:monicker] = noun[:monicker]
+                        end
                         raise TypeError, hash[:monicker].class.to_s unless [String, Symbol].include?(hash[:monicker].class)
 
                         hash[:definite]       = noun[:definite] if noun[:definite]
@@ -260,6 +264,7 @@ module Words
                         hash[:adjectives]     = Adjective.new_for_descriptor(noun)
                         # Verb is used for preposition lookups.
                         hash[:adj_phrases]    = AdjectivePhrase.new_for_descriptor(noun.merge(:verb => args[:verb]))
+                        hash[:adj_phrases]   += noun[:adjective_phrases] if noun[:adjective_phrases]
                     else
                         hash[:monicker] = noun
                     end

@@ -13,7 +13,7 @@ zone haven {
     depth_range 1 2 3;
     keywords peaceful;
     child_zones tavern inn;
-    spawn_npcs peacekeeper merchant;
+    spawn_npcs human;
 }
 
 zone meadow {
@@ -56,20 +56,43 @@ monster_spawner boat {
 zone pier {
     depth_range 0 1;
     keywords wooden;
+    spawn_npcs human;
 }
+
 zone jungle {}
 zone forest {}
-zone orchard {}
 zone swamp {}
 zone mountain {}
 zone desert {}
 zone tundra {}
-zone portcullis {}
-inside_zone tower {}
-inside_zone dungeon {}
-inside_zone tavern {}
-inside_zone inn {}
-inside_zone temple {}
+
+zone orchard {
+    spawn_npcs human;
+}
+
+zone portcullis {
+    spawn_npcs human;
+}
+
+inside_zone tower {
+    spawn_npcs human;
+}
+
+inside_zone dungeon {
+    spawn_npcs human spider;
+}
+
+inside_zone tavern {
+    spawn_npcs human;
+}
+
+inside_zone inn {
+    spawn_npcs human;
+}
+
+inside_zone temple {
+    spawn_npcs human;
+}
 
 /*
 zone temple_that_serves_as_the_final_bastion_of_light_in_an_otherwise_evil_forest {
