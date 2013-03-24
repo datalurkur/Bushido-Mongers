@@ -26,7 +26,7 @@ module Words
             elsif target[:is_type].include?(:corporeal)
                 return describe_corporeal(target)
             elsif target[:is_type].include?(:composition_root)
-                return describe_composition_root(target)
+                return describe_whole_composition(target)
             elsif target[:is_type].include?(:item)
                 return gen_sentence(args)
             else
@@ -58,6 +58,11 @@ module Words
         subject = args[:subject] || args[:agent]
         verb    = args[:verb] || args[:action] || args[:command]
 
+        # active is the default; otherwise, swap the subject/D.O.
+        if args[:state].voice == :passive
+            subject, args[:target] = args[:target], subject
+        end
+
         # Subject is you in second person
         if !subject && args[:state].person == :second
             subject = :you
@@ -66,11 +71,6 @@ module Words
         # Second person if subject is you
         if subject == :you || (Hash === subject && subject[:monicker] == :you)
             args[:state].person = :second
-        end
-
-        # active is the default; otherwise, swap the subject/D.O.
-        if args[:state].voice == :passive
-            subject, args[:target] = args[:target], subject
         end
 
         # If subject is plural and person isn't, adjust the person
@@ -84,11 +84,11 @@ module Words
         unless [:say].include?(verb)
             associated_verbs = Words.db.get_related_words(verb.to_sym)
             if associated_verbs && associated_verbs.size > 1
-                verb = associated_verbs.rand
+                verb = args[:verb] = associated_verbs.rand
             end
         end
 
-        subject_np = Sentence::NounPhrase.new(subject)
+        subject_np = Sentence::NounPhrase.new(subject, args)
         verb_np    = Sentence::VerbPhrase.new(verb, args)
 
         sentence = Sentence.new(subject_np, verb_np)
@@ -127,7 +127,7 @@ module Words
         person = :third
         # specifics
         person = :second if possessor[:monicker] == :you
-        { :person => person, :gender => (possessor[:gender] || :inanimate) }
+        { :person => person, :gender => (possessor[:gender] || :inanimate), :possessor => possessor[:monicker] }
     end
     public
 
@@ -137,7 +137,7 @@ module Words
         corporeal[:definite] = true
         sentences = [gen_sentence(:subject => corporeal, :verb => :have, :target => body)]
         body[:possessor_info] = possessor_info(corporeal)
-        sentences << describe_composition_root(body)
+        sentences << describe_whole_composition(body)
 
         # TODO - Add more information about abilities, features, etc.
 
@@ -199,7 +199,7 @@ module Words
                     part[:possessor_info] = composition[:possessor_info]
                 end
                 sentences << gen_sentence(
-                                :subject => composition,
+                                :subject => composition[:possessor],
                                 :verb    => composition_verbs[comp_type],
                                 :target  => list.dup,
                                 # Currently-progressing state, so passive progressive.
@@ -220,43 +220,84 @@ module Words
     def self.describe_whole_composition(composition)
         sentences = []
 
-        comp_types = {
-            :attach => :external,
-            :wear   => :worn,
-            :grasp  => :grasped
+        composition_verbs = {
+            :external => :attach,
+            :worn     => :wear,
+            :grasped  => :hold
         }
 
-        compositions = [composition]
-        comp_lists = {
-            :attach => []
-        }
+        search_list = [composition]
+        external = []
+        worn     = []
+        held     = []
 
-        while !compositions.empty?
-            current_comp = compositions.shift
-            comp_types.each do |verb, comp_name|
-            end
-        end
+        while !search_list.empty?
+            current_comp = search_list.shift
+            composition_verbs.keys.each do |comp_type|
+                list = current_comp[:container_contents][comp_type]
+                if list && !list.empty?
+                    # Add any compositions to the search list.
+                    search_list += list.select { |p| p[:is_type].include?(:composition_root) }
+                    # Cascade possession down.
+                    list.each { |p| p[:possessor_info] = current_comp[:possessor_info] }
 
-        comp_types.each do |verb, list|
-            if list && !list.empty?
-                list.each do |part|
-                    part[:possessor_info] = composition[:possessor_info]
-                end
-                sentences << gen_sentence(
-                                :subject => composition,
-                                :verb    => verb,
-                                :target  => list.dup,
-                                # Currently-progressing state, so passive progressive.
-                                :state   => State.new)
-                sentences += list.collect do |part|
-                    if part[:is_type].include?(:composition_root)
-                        describe_composition_root(part)
-                    else
-                        gen_copula(:subject => part)
+                    location = {:monicker => current_comp[:monicker], :possessor_info => current_comp[:possessor_info] }
+                    case comp_type
+                    when :external
+                        external += list
+                    when :worn
+                        worn += list.each { |p| p[:location] = location }
+                    when :grasped
+                        held += list.each { |p| p[:location] = location }
                     end
                 end
             end
         end
+
+        # FIXME: Here is where we can interpolate the lists and e.g. pluralize where appropriate.
+
+        unless external.empty?
+            sentences << gen_sentence(
+                :subject  => composition,
+                :verb     => composition_verbs[:external],
+                :target   => external,
+                :state    => State.new(:passive, :progressive)
+            )
+        end
+
+        unless worn.empty?
+            sentences << gen_sentence(
+                :subject  => composition[:possessor_info][:possessor],
+                :verb     => composition_verbs[:worn],
+                :target   => worn,
+                :state    => State.new(:progressive)
+            )
+        end
+
+        unless held.empty?
+            sentences << gen_sentence(
+                :subject  => composition[:possessor_info][:possessor],
+                :verb     => composition_verbs[:grasped],
+                :target   => held,
+                :state    => State.new(:progressive)
+            )
+        end
+=begin
+        comp_list.each do |comp_type, list|
+            list.each do |part, part_location|
+                part[:possessor_info] = part_location[:possessor_info]
+                subject = part_location[:possessor_info] ? composition[:possessor_info][:possessor] : nil # And if possessor isn't defined?
+                sentences << gen_sentence(
+                    :subject  => composition[:possessor_info][:possessor],
+                    :verb     => composition_verbs[comp_type],
+                    :target   => part,
+                    :location => part_location,
+                    :state    => State.new(:progressive)
+                )
+            end
+            sentences << "\n"
+        end
+=end
 
         sentences.flatten.join(" ")
     end

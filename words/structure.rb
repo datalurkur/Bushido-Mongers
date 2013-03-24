@@ -106,11 +106,20 @@ module Words
         end
 
         class PrepositionalPhrase < ParseTree::PTInternalNode
+            private
+            def new_prep_noun_phrase(type, args, lookup_type = type)
+                prep = Words.db.get_prep_for_verb(args[:verb], lookup_type)
+                if prep
+                    return prep, NounPhrase.new(args[type])
+                else
+                    return NounPhrase.new(args[type], args)
+                end
+            end
         end
 
         # Types: prepositional (during), infinitive (to work hard)
         # adpositions: preposition (by jove), circumpositions (from then on).
-        class AdverbPhrase < ParseTree::PTInternalNode
+        class AdverbPhrase < PrepositionalPhrase
             USED_ARGS = [:target, :tool, :destination, :receiver, :success, :statement, :location, :origin]
 
             # The type is the part of the args being used to generate an adverb phrase.
@@ -124,17 +133,17 @@ module Words
                 when :target
                     if args[:state].voice == :passive
                         # We switch subject & target in passive, so look up how to treat the subject instead.
-                        super(noun_phrase_with_prep(type, args, :subject))
+                        super(new_prep_noun_phrase(type, args, :subject))
                     else
-                        super(noun_phrase_with_prep(type, args))
+                        super(new_prep_noun_phrase(type, args))
                     end
                     handled = true
                 when :tool, :destination, :location, :origin
                     args[type] = Descriptor.set_definite(args[type])
-                    super(noun_phrase_with_prep(type, args))
+                    super(new_prep_noun_phrase(type, args))
                     handled = true
                 when :receiver
-                    super(noun_phrase_with_prep(type, args))
+                    super(new_prep_noun_phrase(type, args))
                     # In Modern English, an indirect object is often expressed with a prepositional phrase of "to" or "for". If there is a direct object, the indirect object can be expressed by an object pronoun placed between the verb and the direct object. For example, "He gave that to me" and "He built a snowman for me" are the same as "He gave me that" and "He built me a snowman". 
                     handled = true
                 when :success
@@ -164,17 +173,6 @@ module Words
                     AdverbPhrase.new(arg, args)
                 end
             end
-
-            private
-            def noun_phrase_with_prep(type, args, lookup_type = type)
-                prep = Words.db.get_prep_for_verb(args[:verb], lookup_type)
-                Log.debug([type, lookup_type, args[:verb], prep], 7)
-                if prep
-                    return prep, NounPhrase.new(args[type])
-                else
-                    return NounPhrase.new(args[type])
-                end
-            end
         end
 
         # Four kinds of adjectives:
@@ -185,16 +183,16 @@ module Words
 
         # TODO - handle premodifiers and postmodifiers
         # TODO - handle participles
-        class AdjectivePhrase < ParseTree::PTInternalNode
-            USED_ARGS = [:subtarget]
+        class AdjectivePhrase < PrepositionalPhrase
+            USED_ARGS = [:subtarget, :location]
 
             # The type is the part of the args being used to generate an adverb phrase.
             # args must be defined.
             def initialize(type, args)
                 case type
-                when :subtarget
+                when :subtarget, :location
                     args[type] = Descriptor.set_definite(args[type])
-                    super(:in, NounPhrase.new(args[type]))
+                    super(new_prep_noun_phrase(type, args))
                 end
             end
 
@@ -238,7 +236,7 @@ module Words
         class NounPhrase < ParseTree::PTInternalNode
             include Listable
 
-            def initialize(nouns)
+            def initialize(nouns, args={})
                 # can't call Array(hash) because it decomposes to tuples
                 nouns = ((Hash === nouns) ? [nouns] : Array(nouns))
 
@@ -257,11 +255,11 @@ module Words
                         hash[:monicker] = noun[:monicker]
                         raise TypeError, hash[:monicker].class.to_s unless [String, Symbol].include?(hash[:monicker].class)
 
-                        hash[:adjectives] = Adjective.new_for_descriptor(noun)
-                        hash[:definite] = noun[:definite] if noun[:definite]
-                        hash[:possessor_info] = noun[:possessor_info]if noun[:possessor_info]
-
-                        hash[:adj_phrases] = AdjectivePhrase.new_for_descriptor(noun)
+                        hash[:definite]       = noun[:definite] if noun[:definite]
+                        hash[:possessor_info] = noun[:possessor_info] if noun[:possessor_info]
+                        hash[:adjectives]     = Adjective.new_for_descriptor(noun)
+                        # Verb is used for preposition lookups.
+                        hash[:adj_phrases]    = AdjectivePhrase.new_for_descriptor(noun.merge(:verb => args[:verb]))
                     else
                         hash[:monicker] = noun
                     end
