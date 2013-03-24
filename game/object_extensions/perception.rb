@@ -51,10 +51,9 @@ module Perception
                     # TODO - enable searching for internal parts if a body knowledge,
                     # skill-check passes, presumably using can_percieve?.
                     search_space = [:grasped, :stashed, :worn, :external]
-                    result = location.find_object(type, name, search_space)
+                    result = location.find_object(type, name, [], search_space)
                     Log.debug(result)
                     return [result]
-#                    [location.find_object(type, name, search_space)]
                 elsif location.container?
                     if location.open?
                         location.container_contents do |object|
