@@ -23,8 +23,8 @@ module Words
                 end
             elsif target[:is_type].include?(:room)
                 return describe_room(args)
-            elsif target[:is_type].include?(:corporeal)
-                return describe_corporeal(target)
+            elsif target[:is_type].include?(:body)
+                return describe_body(target)
             elsif target[:is_type].include?(:composition_root)
                 return describe_whole_composition(target)
             elsif target[:is_type].include?(:item)
@@ -131,12 +131,10 @@ module Words
     end
     public
 
-    def self.describe_corporeal(corporeal)
-        # Describe the corporeal body
-        body = corporeal[:container_contents][:incidental].first
-        corporeal[:definite] = true
-        sentences = [gen_sentence(:subject => corporeal, :verb => :have, :target => body)]
-        body[:possessor_info] = possessor_info(corporeal)
+    def self.describe_body(body)
+        body[:definite] = true
+        sentences = [gen_sentence(:subject => body, :verb => :have, :target => body)]
+        body[:possessor_info] = possessor_info(body)
         sentences << describe_whole_composition(body)
 
         # TODO - Add more information about abilities, features, etc.

@@ -25,6 +25,7 @@ module Quest
             instance.create_quest
         end
 
+        def listens_for; [:core]; end
         def at_message(instance, message)
             return unless instance.pertinent_event_types.include?(message.type)
             instance.fail_conditions.each do |condition|

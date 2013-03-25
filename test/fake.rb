@@ -8,6 +8,8 @@ class FakeCore
     def create(type, hash={})
         @db.create(self, type, 0, hash)
     end
+    def flag_for_destruction(object, destroyer)
+    end
 end
 
 class FakeRoom

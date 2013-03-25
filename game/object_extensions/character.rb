@@ -48,7 +48,7 @@ module CharacterLoader
         end
 
         def save(username, character)
-            filename = to_filename(character.properties[:name])
+            filename = to_filename(character.name)
             character_data = SafeBushidoObject.pack(character)
             full_filename = File.join(get_user_directory(username), filename)
             f = File.open(full_filename, 'w')
@@ -118,7 +118,7 @@ module Character
                 if (message.agent != instance) && instance.witnesses?([message.location])
                     instance.inform_user(message)
                 end
-            when :object_destroyed
+            when :unit_killed, :object_destroyed
                 if instance.witnesses?([message.location])
                     instance.inform_user(message)
                 end

@@ -23,7 +23,7 @@ constructed,armor head_armor {
 
 constructed,armor body_armor {
     /* FIXME - Make this torso or something */
-    slot humanoid_body;
+    slot humanoid;
     typical_size small;
 
     recipes {

@@ -59,10 +59,10 @@ end
 
 observer = db_create(db, :character, "Kenji Skrimshank")
 agent = Descriptor::BushidoObjectDescriptor.describe(observer, observer)
-Log.debug(Words.describe_corporeal(agent))
+Log.debug(Words.describe_body(agent))
 target = db_create(db, :goat, "Billy Goat Balrog")
 target = Descriptor::BushidoObjectDescriptor.describe(target, observer)
-Log.debug(Words.describe_corporeal(target))
+Log.debug(Words.describe_body(target))
 
 # {:agent => <Ninja, :name => "Kenji Scrimshank">, :target => <Goat, :name => "Billy Goat Balrog">, :verb => :attack, :tool => :agent_current_weapon}
 puts Words.describe_attack(:attacker => agent, :defender => target, :command => :attack, :tool => :dagger, :result_hash => {:damage_type => :piercing})

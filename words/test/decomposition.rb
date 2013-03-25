@@ -14,11 +14,11 @@ WordParser.read_raws(words_db, db)
 
 args = Words.decompose_command("aTTack Spider")
 raise unless args[:command] == :attack
-raise unless args[:target].first == :spider
+raise unless args[:target] == :spider
 
 args = Words.decompose_command("look self")
-raise unless args[:target].first == :self
+raise unless args[:target] == :self
 
 args = Words.decompose_command("look at self with microscope")
-raise unless args[:target].first == :self
-raise unless args[:tool].first == :microscope
+raise unless args[:target] == :self
+raise unless args[:tool] == :microscope

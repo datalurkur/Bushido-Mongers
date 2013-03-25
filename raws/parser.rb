@@ -246,7 +246,7 @@ module ObjectRawParser
                     inheritance_list.index(parent) != inheritance_list.rindex(parent)
                 end.uniq
                 Log.warning(["Object #{object_type} has duplicate parents in its inheritance list", duplicate_elements])
-                raise(ParserError, "Object has duplicate parents.")
+                raise(ParserError, "Object has duplicate parents (#{duplicate_elements.inspect}).")
             end
 
             # Begin accumulating object data for the database
@@ -478,7 +478,7 @@ module ObjectRawParser
                 dest.concat(source)
                 dest.uniq!
             else
-                raise(NotImplementedError, "Can't merge params of type #{dest.class}.")
+                raise(NotImplementedError, "Can't merge params of type #{dest.class} (#{dest.inspect} / #{source.inspect}.")
             end
         end
     end

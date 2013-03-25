@@ -48,10 +48,6 @@ end
 test_test_npc(db, :peacekeeper, "Derpus Maximus")
 #test_test_npc(db, :giant_spider, "Leggus Maximus")
 
-# Body / Corporeal tests
-hb = $core.create(:humanoid_body, :relative_size => :large)
-hb = $core.create(:arachnoid_body, :relative_size => :tiny)
-
 # Recipe and command tests
 Log.debug("How do I produce a dagger?")
 Log.debug(db.info_for(:dagger, :recipes))

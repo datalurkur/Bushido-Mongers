@@ -1,5 +1,5 @@
 /* Must be of type npc to spawn */
-abstract karmic,aligned,position,has_aspects npc {
+abstract karmic,aligned,has_aspects npc {
     has optional sym behavior;
 
     uses npc_behavior perception;
@@ -12,8 +12,6 @@ abstract karmic,aligned,position,has_aspects npc {
 
     /* Maybe use eventually? */
     /* class_many sym never_spawn_in; */
-
-    has_many optional sym adjectives;
 
     class sym spawn_rarity;
     spawn_rarity uncommon;
