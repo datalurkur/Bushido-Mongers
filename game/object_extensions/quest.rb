@@ -70,9 +70,6 @@ module Quest
         @state              = :created
     end
 
-    def quest_triggers
-    end
-
     # Continue listening for success / fail, but blame the quest-taker for the results
     def assign_quest
         @state = :assigned
