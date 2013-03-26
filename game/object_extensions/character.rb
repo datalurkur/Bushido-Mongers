@@ -99,7 +99,7 @@ end
 
 module Character
     class << self
-        def listens_for; [:core]; end
+        def listens_for(i); [:core]; end
 
         def at_message(instance, message)
             case message.type

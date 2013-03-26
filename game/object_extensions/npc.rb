@@ -4,7 +4,7 @@ require './game/commands'
 
 module NpcBehavior
     class << self
-        def listens_for; [:tick]; end
+        def listens_for(i); [:tick]; end
 
         def pack(instance)
         end

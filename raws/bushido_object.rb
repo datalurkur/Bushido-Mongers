@@ -192,7 +192,7 @@ class BushidoObject
         @extensions << extension
         extend extension
         if extension.respond_to?(:listens_for)
-            extension.listens_for.each do |message_type|
+            extension.listens_for(self).each do |message_type|
                 start_listening_for(message_type)
             end
         end
@@ -201,7 +201,7 @@ class BushidoObject
         return unless @extensions.include?(extension)
         @extensions.delete(extension)
         if extension.respond_to?(:listens_for)
-            extension.listens_for.each do |message_type|
+            extension.listens_for(self).each do |message_type|
                 stop_listening_for(message_type)
             end
         end

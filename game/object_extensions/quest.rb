@@ -9,6 +9,10 @@ module Quest
             raise(NotImplementedException)
         end
 
+        def listens_for(instance)
+            instance.pertinent_event_types
+        end
+
         def at_creation(instance, params)
             # TODO - Set up failure / success triggers using the params
             raise(NotImplementedException)
@@ -25,7 +29,6 @@ module Quest
             instance.create_quest
         end
 
-        def listens_for; [:core]; end
         def at_message(instance, message)
             return unless instance.pertinent_event_types.include?(message.type)
             instance.fail_conditions.each do |condition|
@@ -66,6 +69,8 @@ module Quest
 
         @state              = :created
     end
+
+    def quest_triggers
 
     # Continue listening for success / fail, but blame the quest-taker for the results
     def assign_quest

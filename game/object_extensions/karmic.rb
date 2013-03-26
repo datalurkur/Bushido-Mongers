@@ -6,7 +6,7 @@ module Karmic
             instance.set_name(params[:name])
         end
 
-        def listens_for; [:unit_killed,:object_destroyed]; end
+        def listens_for(i); [:unit_killed,:object_destroyed]; end
         def at_message(instance, message)
             case message.type
             when :unit_killed,:object_destroyed
