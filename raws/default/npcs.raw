@@ -29,10 +29,8 @@ humanoid,monster dwarf {
     spawn_rarity uncommon;
 }
 
-npc,professional human {
+humanoid,professional human {
     size medium;
-    body_type humanoid_body;
-    factions human;
 
     uses profession;
 }
