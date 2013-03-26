@@ -17,7 +17,8 @@ Behavior.define(:random_movement) do |actor|
 end
 
 Behavior.define(:flee) do |actor|
-    aligned_list = actor.filter_objects(:position, :aligned)
+    # FIXME - We need a better way to determine if two parties should behave aggressively towards each other
+    aligned_list = actor.filter_objects(:position, {:uses => Perception})
     enemies = aligned_list.select { |npc| Behavior.are_enemies?(npc, actor) }
     if enemies.empty?
         false
@@ -43,7 +44,8 @@ end
 #   by a guard without warning.
 #   Incidentally, this also gives us a logical place to insert taunts and challenges.
 Behavior.define(:attack) do |actor|
-    aligned_list = actor.filter_objects(:position, :aligned)
+    # FIXME - We need a better way to determine if two parties should behave aggressively towards each other
+    aligned_list = actor.filter_objects(:position, {:uses => Perception})
     enemies = aligned_list.select { |npc| Behavior.are_enemies?(npc, actor) }
     if enemies.empty?
         false
@@ -60,7 +62,7 @@ end
 Behavior.define(:consume) do |actor|
     consumable_type = actor.class_info[:consumes] || :consumable
     consumables = [:position, :grasped, :stashed].collect do |location|
-        actor.filter_objects(location, consumable_type)
+        actor.filter_objects(location, {:type => consumable_type})
     end.flatten
 
     if consumables.empty?
@@ -68,6 +70,7 @@ Behavior.define(:consume) do |actor|
         false
     else
         consumable = consumables.first
+        Log.warning("Oh dear, people almost certainly shouldn't eat themselves") if actor == consumable
         actor.do_command(:consume, {:agent => actor, :target => consumable})
         true
     end

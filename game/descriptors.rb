@@ -35,7 +35,7 @@ class Descriptor
                 :type => object.get_type
             }
 
-            d[:name]             = object.properties[:name] if object.properties[:name]
+            d[:name]             = object.name if object.uses?(Karmic)
             d[:monicker]         = (d[:name] || d[:type])
 
             d[:name] = d[:monicker] = :you if observer && d[:monicker] == observer.monicker

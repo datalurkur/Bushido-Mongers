@@ -108,6 +108,10 @@ class BushidoObject
         end
     end
 
+    def transform(type, params)
+        Transforms.transform(type, @core, self, params)
+    end
+
     def start_listening_for(message_type)
         if @listens_for.keys.include?(message_type)
             @listens_for[message_type] += 1
@@ -137,8 +141,13 @@ class BushidoObject
         @listens_for.clear
     end
 
+    def set_called(called)
+        Log.debug("#{monicker} is now called #{called}")
+        @called = called
+    end
+
     def monicker
-        (@properties[:name] || @type).to_s
+        @called || ((uses?(Karmic) && name) ? name : @type.text)
     end
 
     def is_type?(type)
@@ -146,6 +155,7 @@ class BushidoObject
     end
 
     def matches(args = {})
+        (args[:uses] ? self.uses?(args[:uses])    : true) &&
         (args[:type] ? self.is_type?(args[:type]) : true) &&
         (args[:name] ? self.monicker.match(/#{args[:name]}/i) : true)
     end
@@ -182,7 +192,7 @@ class BushidoObject
         @extensions << extension
         extend extension
         if extension.respond_to?(:listens_for)
-            extension.listens_for.each do |message_type|
+            extension.listens_for(self).each do |message_type|
                 start_listening_for(message_type)
             end
         end
@@ -191,7 +201,7 @@ class BushidoObject
         return unless @extensions.include?(extension)
         @extensions.delete(extension)
         if extension.respond_to?(:listens_for)
-            extension.listens_for.each do |message_type|
+            extension.listens_for(self).each do |message_type|
                 stop_listening_for(message_type)
             end
         end
@@ -242,7 +252,7 @@ class SafeBushidoObject < BushidoObject
         super(*args)
     end
 
-    def filter_objects(location, type, name)
+    def filter_objects(location, filters)
         raise(MissingObjectExtensionError, "The perception extension is required to filter objects") unless uses?(Perception)
     end
 end

@@ -31,7 +31,8 @@ extension_of body octiped {
 }
 
 /* Basically, this is the equivalent of a torso */
-body,biped,can_wear humanoid_body {
+abstract body,biped,can_wear humanoid {
+    part_name torso;
     weight 15;
     incidental flesh;
     typical_size medium;
@@ -51,7 +52,8 @@ body,biped,can_wear humanoid_body {
     }
 }
 
-body,octiped arachnoid_body {
+abstract body,octiped arachnoid {
+    part_name thorax;
     weight 10;
     incidental flesh;
     typical_size medium;
@@ -59,28 +61,28 @@ body,octiped arachnoid_body {
     external carapace;
 }
 
-body,quadriped rodent_body {
+abstract body,quadriped rodent {
+    part_name torso;
     weight 2;
     incidental flesh;
     typical_size small;
     external head tail;
 }
 
-body,quadriped canine_body {
-    weight 50;
-    incidental flesh;
-    typical_size medium;
-    external head tail;
-}
-
-body,quadriped ungulate_body {
+abstract body,quadriped ungulate {
+    part_name torso;
     weight 200;
     incidental flesh;
     typical_size medium;
     external head tail;
 }
 
-body sewer_kraken_body {
+abstract ungulate canine {
+    weight 50;
+}
+
+abstract body kraken {
+    part_name mantle;
     weight 400;
     incidental flesh;
     typical_size gargantuan;
@@ -93,14 +95,16 @@ body sewer_kraken_body {
     }
 }
 
-body,quadriped lizard_body {
+abstract body,quadriped lizard {
+    part_name torso;
     weight 1;
     incidental flesh;
     typical_size small;
     external head tail;
 }
 
-body snake_body {
+abstract body snake {
+    part_name body;
     weight 6;
     incidental flesh;
     typical_size small;
@@ -108,7 +112,8 @@ body snake_body {
     internal venom_gland;
 }
 
-body,biped,can_wear tortoise_body {
+abstract body,biped,can_wear tortoise {
+    part_name torso;
     weight 10;
     incidental flesh;
     typical_size small;
@@ -122,10 +127,11 @@ body,biped,can_wear tortoise_body {
     internal liver;
 }
 
-body swarm_body {
+abstract body swarm {
+    part_name husk;
     weight 1;
     typical_size medium;
-    external swarm_husk;
+    incidental chitin;
 }
 
 body_part,can_wear head {
@@ -210,10 +216,4 @@ body_part beak {
     weight 0.5;
     incidental chitin;
     typical_size small;
-}
-
-body_part swarm_husk {
-    weight 1;
-    incidental chitin;
-    typical_size tiny;
 }

@@ -9,6 +9,10 @@ module Quest
             raise(NotImplementedException)
         end
 
+        def listens_for(instance)
+            instance.pertinent_event_types
+        end
+
         def at_creation(instance, params)
             # TODO - Set up failure / success triggers using the params
             raise(NotImplementedException)

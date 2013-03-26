@@ -20,7 +20,7 @@ command inspect {
 command move {}
 
 command attack {
-    target corporeal;
+    target item;
     location body_part;
     tool item; /* weapon-specific lookups happen if no tool is specified */
 }

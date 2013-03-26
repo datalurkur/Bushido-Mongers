@@ -28,6 +28,8 @@ module Composition
         def at_creation(instance, params)
             instance.properties[:weight] = 0
             instance.initial_composure(params)
+            called = params[:called] || instance.properties[:called]
+            instance.set_called(called) if called
         end
 
         def at_destruction(instance, destroyer, vaporize)
@@ -128,7 +130,7 @@ module Composition
     end
 
     def containers(type, recursive=true)
-        select_objects(type, recursive) { |obj| cont.uses?(Composition) && cont.container? }
+        select_objects(type, recursive) { |obj| obj.uses?(Composition) && obj.container? }
     end
 
     def select_objects(type, recursive=false, depth=5, &block)

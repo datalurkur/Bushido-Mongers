@@ -2,16 +2,14 @@ abstract npc monster {
     factions enemy;
 }
 
-monster,corporeal oni {
+humanoid,monster oni {
     size medium;
-    body_type humanoid_body;
     spawns_in mountain;
     spawn_rarity unusual;
 }
 
-monster,corporeal jikininki {
+humanoid,monster jikininki {
     size small;
-    body_type humanoid_body;
     spawns_in mountain sewer meadow dock;
 
     behavior roam_and_consume;
@@ -19,16 +17,14 @@ monster,corporeal jikininki {
     consumes body_part;
 }
 
-monster,corporeal giant {
+humanoid,monster giant {
     size enormous;
-    body_type humanoid_body;
     spawns_in mountain;
     spawn_rarity unusual;
 }
 
-monster,corporeal dwarf {
+humanoid,monster dwarf {
     size small;
-    body_type humanoid_body;
     spawns_in mountain;
     spawn_rarity uncommon;
 }

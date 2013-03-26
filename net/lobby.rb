@@ -253,7 +253,7 @@ class Lobby
                 params = Commands.stage(@game_core, command, params.merge(:agent => character))
             end
         rescue Exception => e
-            Log.debug(["Failed to stage command #{command}", e.message])
+            Log.debug(["Failed to stage command #{command}", e.message, e.backtrace])
             if AmbiguousCommandError === e && allow_clarification
                 send_to_user(username, Message.new(:act_clarify, {:text => e.message}))
             else
@@ -287,7 +287,7 @@ class Lobby
         case message.type
         when :tick
             Log.debug("Lobby tick", 6)
-        when :object_destroyed
+        when :unit_killed,:object_destroyed
             @users.keys.each do |username|
                 # Core messages already protected (issued by a protected method)
                 character = @game_core.get_character(username)

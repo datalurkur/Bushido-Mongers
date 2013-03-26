@@ -15,35 +15,35 @@ module Perception
         !(object.uses?(HasAspects) && object.has_skill?(:hide) && object.skill(:hide).properties[:hidden])
     end
 
-    def filter_objects(location, type=nil, name=nil)
+    def filter_objects(location, filters)
         case location
         when :position
             # A player tied to a long pole can still grab apples
             objects    = perceivable_objects_of(self.absolute_position.objects)
             containers = objects.select { |o| o.uses?(Composition) && o.container? && o.open? }
             # perceivable objects in room + contents of perceivable open containers in room
-            objects.select { |o| o.matches(:type => type, :name => name) } +
-            containers.map { |c| c.container_contents.select { |o| o.matches(:type => type, :name => name) } }.flatten
+            objects.select { |o| o.matches(filters) } +
+            containers.map { |c| c.container_contents.select { |o| o.matches(filters) } }.flatten
         when :grasped, :worn
             return [] unless uses?(Composition) && uses?(Equipment)
             all_equipment(location).select do |object|
-                object.matches(:type => type, :name => name)
+                object.matches(filters)
             end
         when :stashed
             return [] unless uses?(Composition) && uses?(Equipment)
             # Search within the perceiver's open backpacks, sacks, etc.
             containers_in_inventory.select { |c| c.open? }.each do |cont|
                 cont.container_contents.select do |object|
-                    object.matches(:type => type, :name => name)
+                    object.matches(filters)
                 end
             end.flatten
         when :external
             return [] unless uses?(Composition) && uses?(Corporeal)
             external_body_parts.select do |object|
-                object.matches(:type => type, :name => name)
+                object.matches(filters)
             end
         when BushidoObject
-            Log.debug("Finding #{name}, #{type} in #{location.monicker}", 6)
+            Log.debug("Finding #{filters[:name]}, #{filters[:type]} in #{location.monicker}", 6)
             if location.uses?(Composition)
                 if location.uses?(Perception)
                     # TODO - This is weird. We shouldn't be using the external
@@ -51,19 +51,19 @@ module Perception
                     # TODO - enable searching for internal parts if a body knowledge,
                     # skill-check passes, presumably using can_percieve?.
                     search_space = [:grasped, :stashed, :worn, :external]
-                    result = location.find_object(type, name, [], search_space)
+                    result = location.find_object(filters[:type], filters[:name], [], search_space)
                     Log.debug(result)
                     return [result]
                 elsif location.container?
                     if location.open?
                         location.container_contents do |object|
-                            object.matches(:type => type, :name => name)
+                            object.matches(filters)
                         end
                     else
                         raise(FailedCommandError, "You can't search inside the #{location.monicker} because it's closed.")
                     end
                 end
-            elsif location.matches(:type => type, :name => name)
+            elsif location.matches(filters)
                 [location]
             end
         else
@@ -89,7 +89,7 @@ module Perception
         # Sort through the potentials and find out which ones match the query
         potentials = []
         locations.each do |location|
-            results = filter_objects(location, type_class, object)
+            results = filter_objects(location, {:type => type_class, :name => object})
             potentials.concat(results)
             break unless potentials.empty?
         end

@@ -2,7 +2,7 @@ require './util/exceptions'
 
 module HasAspects
     class << self
-        def listens_for; [:tick]; end
+        def listens_for(i); [:tick]; end
 
         def pack(instance)
             raw_data = {:attributes => {}, :skills => {}}

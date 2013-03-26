@@ -5,64 +5,56 @@ abstract npc animal {
 /***********************************************************/
 /* SEWER */
 
-animal,corporeal rat {
+rodent,animal rat {
     size tiny;
-    body_type rodent_body;
     spawns_in sewer dock;
     spawn_rarity common;
 }
 
-animal,corporeal fox {
+canine,animal fox {
     japanese_name kitsune;
     size medium;
-    body_type canine_body;
     spawns_in meadow forest mountain tundra;
     spawn_rarity common;
 }
 
-monster,corporeal spider {
+arachnoid,monster spider {
     adjectives giant; /* It is big for a spider, all right? */
     size medium;
-    body_type arachnoid_body;
     spawns_in sewer;
     spawn_rarity common;
 }
 
-monster,corporeal kraken {
+kraken,monster sewer_kraken {
     adjectives sewer;
     size gargantuan;
-    body_type sewer_kraken_body;
     spawns_in sewer;
     spawn_rarity singular;
 }
 
-animal,corporeal snake {
+snake,animal coral_snake {
     size small;
-    body_type snake_body;
     spawns_in sewer meadow mountain forest jungle swamp desert;
     spawn_rarity common;
 }
 
-animal,corporeal gecko {
+lizard,animal gecko {
     /* TODO - actually make it poisonous */
     adjectives poisonous;
     size small;
-    body_type lizard_body;
     spawns_in sewer forest jungle swamp dungeon;
     spawn_rarity unusual;
 }
 
-monster,corporeal swarm_of_flesh_eating_scarabs {
+swarm,monster swarm_of_flesh_eating_scarabs {
     size medium;
-    body_type swarm_body;
     spawns_in sewer dungeon;
     spawn_rarity rare;
 }
 
-monster,corporeal tortoise {
+tortoise,monster snapping_tortoise {
     adjectives adolescent mutant ninja;
     size medium;
-    body_type tortoise_body;
     spawns_in sewer;
     spawn_rarity rare;
 }
@@ -71,23 +63,20 @@ monster,corporeal tortoise {
 /***********************************************************/
 /* MEADOW */
 
-animal,corporeal mouse {
+rodent,animal mouse {
     size tiny;
-    body_type rodent_body;
     spawns_in meadow;
     spawn_rarity common;
 }
 
-animal,corporeal deer {
+ungulate,animal deer {
     size medium;
-    body_type ungulate_body;
     spawns_in meadow;
     spawn_rarity common;
 }
 
-animal,corporeal goat {
+ungulate,animal goat {
     size medium;
-    body_type ungulate_body;
     spawns_in meadow forest;
     spawn_rarity common;
 }

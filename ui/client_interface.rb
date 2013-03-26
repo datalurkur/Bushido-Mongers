@@ -110,6 +110,8 @@ module VerboseInterface
                 return Words.generate(message.properties)
             elsif message.field == :game_event
                 case message.properties[:event_type]
+                when :unit_killed
+                    return Words.gen_copula(message.properties.merge(:verb=>:kill))
                 when :object_destroyed
                     return Words.gen_copula(message.properties.merge(:verb=>:destroy))
                 when :unit_attacks

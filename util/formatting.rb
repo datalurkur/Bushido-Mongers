@@ -4,6 +4,10 @@ class Symbol
     def title
         self.to_s.gsub(/_/, ' ').gsub(/(^| )(.)/) { "#{$1}#{$2.upcase}" }
     end
+
+    def text
+        self.to_s.gsub(/_/, ' ')
+    end
 end
 
 class String
