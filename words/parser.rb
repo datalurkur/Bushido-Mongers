@@ -118,7 +118,8 @@ module WordParser
         end
         Log.debug("Found #{db.get_keyword_groups(:item).size} item types.")
 
-        raws_db.types_of(:npc).each do |comm|
+        # There is no :npc type anymore, so we have to be more clever about this
+        raws_db.types_of(:archetype).each do |comm|
             db.add_keyword_family(:npc, :noun => comm)
         end
         Log.debug("Found #{db.get_keyword_groups(:npc).size} NPCs.")

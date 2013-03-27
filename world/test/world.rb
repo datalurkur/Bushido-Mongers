@@ -1,11 +1,9 @@
 require './world/world'
-require './raws/db'
 require './test/fake'
 
 Log.setup("Main", "world_test")
 
-db = ObjectDB.get("default")
-$c = FakeCore.new(db)
+$c = CoreWrapper.new
 
 def test_world
     # d---c

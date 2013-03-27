@@ -1,0 +1,14 @@
+abstract profession commoner {
+    skills intrinsic_fighting defense;
+    typical_behavior flee_if_threatened;
+}
+abstract commoner forager {
+    typical_behavior roam_and_consume;
+}
+abstract commoner hunter {}
+abstract commoner guard {}
+abstract commoner blacksmith {}
+abstract commoner merchant {}
+abstract commoner thug {
+    typical_behavior random_attack_and_move;
+}

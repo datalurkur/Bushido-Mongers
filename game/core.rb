@@ -68,6 +68,50 @@ class GameCore
         @db.create(self, type, next_uid, hash)
     end
 
+    # This will likely be moved to the population manager
+    def create_agent(type, player, hash = {})
+        Log.debug("Creating #{type} agent")
+        agent = create(type, hash)
+
+        agent.add_extension(Perception)
+        agent.add_extension(Karmic)
+        if hash[:name]
+            agent.set_name(hash[:name])
+        elsif player
+            raise(ArgumentError, "Player was not given a name")
+        end
+
+        starting_skills = []
+        feral           = agent.class_info[:feral] && !player
+        if player
+            agent.add_extension(Character)
+            # FIXME - Add starting skills from new player info
+            # As a hack, just add a random profession for now
+            random_profession = @db.types_of(:profession, false).rand
+            starting_skills = @db.info_for(random_profession, :skills)
+        else
+            agent.add_extension(NpcBehavior)
+            if agent.class_info[:typical_profession]
+                profession_info = @db.info_for(agent.class_info[:typical_profession])
+                agent.set_behavior(profession_info[:typical_behavior])
+                starting_skills = profession_info[:skills]
+            end
+        end
+        agent.setup_skill_set(starting_skills)
+
+        unless feral
+            agent.add_extension(Equipment)
+            agent.add_random_equipment
+        end
+
+        agent
+    end
+
+    def create_npc(type, hash = {})
+        # TODO - Add random profession generation
+        create_agent(type, false, hash)
+    end
+
     def flag_for_destruction(object, destroyer)
         @awaiting_destruction << [object, destroyer]
     end
@@ -129,7 +173,6 @@ class GameCore
             if character
                 character.set_initial_position(cached_positions[username] || @world.random_starting_location)
                 character.set_user_callback(lobby, username)
-                Message.register_listener(self, :core, character)
 
                 characters[username] = character
                 Log.info("Character #{character.monicker} loaded for #{username}")
@@ -142,12 +185,13 @@ class GameCore
     def create_character(lobby, username, details)
         ret = nil
         @usage_mutex.synchronize do
-            position  = @world.random_starting_location
+            agent_params = details.reject { |k,v| [:race].include?(k) }
+            agent_params[:position] = @world.random_starting_location
 
-            character = CharacterLoader.create(self, details.merge(:position => position))
+            # FIXME - Get type information from the user arguments
+            character = create_agent(details[:race], true, agent_params)
             characters[username] = character
             Log.info("Character #{character.monicker} created for #{username}")
-            Message.register_listener(self, :core, character)
             character.set_user_callback(lobby, username)
 
             ret = character
@@ -175,8 +219,6 @@ class GameCore
     end
     def remove_character(username, character_dies=false)
         character = characters[username]
-
-        Message.unregister_listener(self, :core, character)
 
         if character_dies
             cached_positions[username] = nil

@@ -6,18 +6,19 @@ Log.setup("Main", "test")
 
 # Basic DB parsing tests
 raw_group = "default"
-Log.debug("Loading #{raw_group} raws")
-db = ObjectDB.get(raw_group)
 
 # Basic DB loading tests
+db = ObjectDB.get(raw_group)
 Log.debug("Testing DB Marshal-ability")
 db_data = Marshal.dump(db)
 db = nil
 db = Marshal.load(db_data)
-$core = FakeCore.new(db)
+db = nil
+
+$core = CoreWrapper.new
 
 # Basic DB listing tests
-Log.debug(["Number of types of items:", db.types_of(:item).size])
+Log.debug(["Number of types of items:", $core.db.types_of(:item).size])
 
 # Basic item creation tests
 test_item_type = :head_armor
@@ -29,7 +30,7 @@ Log.debug("Test item is a constructable? #{test_item.is_type?(:constructed)}")
 Log.debug("Test item is a head armor? #{test_item.is_type?(:hear_armor)}")
 
 # NPC tests
-Log.debug(["Types of NPCs:", db.types_of(:npc)])
+Log.debug(["Types of NPCs:", $core.db.types_of(:archetype)])
 
 def test_npc(db, test_npc_type, name)
 #    Log.debug(["Creating a #{test_npc_type} with raw info", db.raw_info_for(test_npc_type)])
@@ -45,35 +46,35 @@ def test_test_npc(db, test_npc_type, name)
     end
 end
 
-test_test_npc(db, :peacekeeper, "Derpus Maximus")
+#test_test_npc($core.db, :peacekeeper, "Derpus Maximus")
 #test_test_npc(db, :giant_spider, "Leggus Maximus")
 
 # Recipe and command tests
 Log.debug("How do I produce a dagger?")
-Log.debug(db.info_for(:dagger, :recipes))
+Log.debug($core.db.info_for(:dagger, :recipes))
 
 Log.debug("What can I produce with iron?")
-Log.debug(db.info_for(:iron, :used_in))
+Log.debug($core.db.info_for(:iron, :used_in))
 
 Log.debug("What can I produce at an anvil?")
-anvil_commands = db.info_for(:anvil, :location_of)
+anvil_commands = $core.db.info_for(:anvil, :location_of)
 Log.debug(["Verbs that happen at an anvil:", anvil_commands])
 selected_command = anvil_commands.first
-anvil_products = db.find_subtypes(:constructed, {:recipes => {:technique => selected_command}})
+anvil_products = $core.db.find_subtypes(:constructed, {:recipes => {:technique => selected_command}})
 Log.debug(["Things produced at an anvil by means of #{selected_command}", anvil_products])
 
 Log.debug("What can I do with a hammer?")
-Log.debug(db.info_for(:hammer, :used_for))
+Log.debug($core.db.info_for(:hammer, :used_for))
 
 Log.debug("What sorts of things can I eat?")
-Log.debug(db.find_subtypes(:item, {:target_of => :eat}))
+Log.debug($core.db.find_subtypes(:item, {:target_of => :eat}))
 
 # Zone tests
 begin
     require 'world/zone'
 
-    Log.debug(["types_of(:zone):", db.types_of(:zone)])
-    Log.debug("Meadow has keywords: #{db.info_for(:meadow, :keywords)}")
+    Log.debug(["types_of(:zone):", $core.db.types_of(:zone)])
+    Log.debug("Meadow has keywords: #{$core.db.info_for(:meadow, :keywords)}")
 
     zone_params = Zone.get_params($core, nil, 3)
     Log.debug(zone_params)

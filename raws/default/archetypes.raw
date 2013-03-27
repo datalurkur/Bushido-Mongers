@@ -1,13 +1,15 @@
-/* TODO - Add in the idea of preferred areas for different archetypes */
-
-humanoid human {
-    size medium;
+abstract archetype monster {
+    factions monster;
+    typical_profession thug;
 }
 
-humanoid dwarf {
-    size small;
+abstract archetype animal {
+    factions neutral;
+    typical_profession commoner;
 }
 
-humanoid giant {
-    size enormous;
+abstract archetype civil {
+    factions civil;
+    typical_profession commoner;
+    feral false;
 }

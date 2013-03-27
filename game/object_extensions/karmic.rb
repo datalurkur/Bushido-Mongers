@@ -40,18 +40,19 @@ module Karmic
         end
 
         def pack(instance)
-            raw_data = {}
-            raw_data[:name]      = instance.name
-            raw_data[:notoriety] = instance.notoriety
-            raw_data[:kills]     = instance.kills
-            raw_data[:titles]    = instance.titles
-            raw_data[:deeds]     = instance.deeds
-            raw_data[:factions]  = instance.factions
+            {
+                :name      => instance.name,
+                :notoriety => instance.notoriety,
+                :kills     => instance.kills,
+                :titles    => instance.titles,
+                :deeds     => instance.deeds,
+                :factions  => instance.factions
+            }
         end
 
         def unpack(core, instance, raw_data)
             [:name, :notoriety, :kills, :titles, :deeds, :factions].each do |key|
-                raise(MissingProperty, "Karmic data corrupted") unless raw_data.has_key?(key)
+                raise(MissingProperty, "Karmic data corrupted - #{key.inspect} data missing") unless raw_data.has_key?(key)
             end
             instance.set_name(raw_data[:name])
             instance.set_notoriety(raw_data[:notoriety])

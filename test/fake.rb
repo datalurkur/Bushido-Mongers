@@ -1,14 +1,18 @@
-class FakeCore
-    attr_reader :db
-    def initialize(db)
-        Message.setup(self)
+require './game/core'
 
-        @db = db
-    end
-    def create(type, hash={})
-        @db.create(self, type, 0, hash)
-    end
-    def flag_for_destruction(object, destroyer)
+class CoreWrapper < GameCore
+    def initialize
+        super
+        Log.info("Setting up fake core")
+
+        @uid_count = 0
+
+        # Read the raws
+        @db       = ObjectDB.get("default")
+        # And the word text information.
+        @words_db = WordParser.load
+        # And finally read in some basic noun & adjective information from the raws db.
+        WordParser.read_raws(@words_db, @db)
     end
 end
 

@@ -1,0 +1,15 @@
+abstract root archetype {
+    class_many optional sym factions;
+    class optional sym typical_profession;
+
+    class_many optional sym spawns_in;
+    class sym spawn_rarity;
+
+    /* Feral creatures don't use weapons or armor */
+    class bool feral;
+
+    class optional string japanese_name;
+
+    spawn_rarity uncommon;
+    feral true;
+}

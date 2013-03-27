@@ -1,6 +1,0 @@
-abstract karmic agent {
-    uses perception;
-
-    /* FIXME - HasAspects needs to read these and initialize them properly */
-    class_many optional sym familiar_skills;
-}

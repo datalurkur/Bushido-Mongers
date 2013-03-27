@@ -10,16 +10,16 @@ def recreate_test_character(username, character_name, raw_group, clean=true)
     end
 
     Log.debug("Creating test character using fake state")
-    fake_core = FakeCore.new(ObjectDB.get(raw_group))
+    fake_core = CoreWrapper.new
     character_archetype = :human
-    character = CharacterLoader.create(fake_core, {:name => character_name})
+    character = fake_core.create_agent(:human, true, {:name => character_name})
     CharacterLoader.save(username, character)
     character
 end
 
 def reload_test_character(username, character_name, raw_group)
     Log.debug("Reloading test character")
-    fake_core = FakeCore.new(ObjectDB.get(raw_group))
+    fake_core = CoreWrapper.new
     character = CharacterLoader.attempt_to_load(fake_core, username, character_name)
 end
 

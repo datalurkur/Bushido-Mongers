@@ -56,29 +56,6 @@ module CharacterLoader
             f.close
         end
 
-        # TODO - Likely this code will be duplicated for NPC creation
-        #   It might warrant a "create_agent" method in core that does things like this
-        def create(core, params)
-            # FIXME - Pull the character archetype details from user parameters
-            # FIXME - Figure out size from the details, rather than just forcing medium
-            # FIXME - Pull relevant skills from details
-            archetype = :human
-            character = core.create(archetype, {:position => params[:position]})
-
-            # FIXME - Figure out a better way to equip new characters
-            character.add_extension(Equipment)
-            character.add_random_equipment
-
-            character.add_extension(Perception)
-
-            character.add_extension(Karmic)
-            character.set_name(params[:name])
-
-            character.add_extension(Character)
-            character
-        end
-
-
         def attempt_to_load(core, username, character_name)
             unless get_characters_for(username).include?(character_name)
                 Log.debug("No character #{character_name} found")

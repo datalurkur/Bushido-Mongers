@@ -1,0 +1,11 @@
+abstract root profession {
+    class_many optional sym skills;
+    class sym typical_behavior;
+
+    typical_behavior random_attack_and_move;
+}
+
+abstract root professional {
+    class_many sym locations;
+    class sym job;
+}

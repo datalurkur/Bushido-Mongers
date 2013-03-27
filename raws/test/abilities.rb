@@ -4,7 +4,7 @@ require 'test/fake'
 Log.setup("Main", "abilities")
 
 db = ObjectDB.get("default")
-core = FakeCore.new(db)
+core = CoreWrapper.new
 
 aspect_list = [:strength, :agility, :intrinsic_fighting_skill, :hide_skill]
 

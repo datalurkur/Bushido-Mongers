@@ -28,62 +28,34 @@ module HasAspects
         end
 
         def at_creation(instance, params)
-            # ATTRIBUTES
-            # Compute a set of variances
-            variances = if instance.class_info[:random_attributes]
-                random_attribute_variances(instance, params)
-            else
-                Array.new(instance.properties[:attributes].size, 0)
-            end
-            # Add the actual attributes
-            instance.properties[:attributes].each_with_index do |name, i|
-                instance.add_attribute(name, :intrinsic_bonus => variances[i])
-            end
-
-            # SKILLS
-            # Add skills from the archetype
-            if instance.class_info[:familiar_skills]
-                instance.properties[:skills].concat(instance.class_info[:familiar_skills])
-            end
-            # Compute a set of variances
-            variances = if instance.class_info[:random_skills]
-                random_skill_variances(instance, params)
-            else
-                Array.new(instance.properties[:skills].size, 0)
-            end
-            # Add the actual skills
-            instance.properties[:skills].each_with_index do |name, i|
-                instance.add_skill(name, :intrinsic_bonus => variances[i])
-            end
+            instance.setup_attribute_set
+            # This is performed after creation, by whatever code has knowledge of the agent's profession
+            #setup_skill_set
         end
 
         def at_message(instance, message)
             instance.attributes.each { |k,a| a.increment_tick }
             instance.skills.each     { |k,s| s.increment_tick }
         end
-
-        private
-        def random_attribute_variances(instance, params)
-            default_values     = instance.get_attribute_defaults(instance.properties[:attributes])
-            relative_offset    = instance.class_info[:attribute_offset] || 0
-            variance_per_value = instance.class_info[:random_variance]
-
-            instance.generate_variances(default_values, variance_per_value, relative_offset)
-        end
-
-        def random_skill_variances(instance, params)
-            default_values     = instance.get_skill_defaults(instance.properties[:skills])
-            relative_offset    = instance.class_info[:skill_offset] || 0
-            # FIXME: this should probably be different for attributes and skills.
-            variance_per_value = instance.class_info[:random_variance]
-
-            instance.generate_variances(default_values, variance_per_value, relative_offset)
-        end
     end
 
     def attributes; @attributes ||= {}; end
-    def add_attribute(attribute, params={})
-        attributes[attribute] = @core.create(attribute, params)
+    def setup_attribute_set
+        # Compute a set of variances
+        variances = if class_info[:random_attributes]
+            default_values     = get_attribute_defaults(properties[:attributes])
+            relative_offset    = class_info[:attribute_offset] || 0
+            variance_per_value = class_info[:random_variance]
+
+            generate_variances(default_values, variance_per_value, relative_offset)
+        else
+            Array.new(properties[:attributes].size, 0)
+        end
+
+        # Add the actual attributes
+        properties[:attributes].each_with_index do |name, i|
+            attributes[name] = @core.create(name, {:intrinsic_bonus => variances[i]})
+        end
     end
     def attribute(attribute)
         raise(UnknownType, "#{attribute} is not an attribute.") unless @core.db.is_type?(attribute, :attribute)
@@ -92,10 +64,28 @@ module HasAspects
     end
 
     def skills; @skills ||= {}; end
-    def add_skill(skill, params={})
-        skill_raw_name = (skill.to_s.match(/_skill$/) ? skill : "#{skill}_skill".to_sym)
-        # TODO - mod bonuses based on attributes
-        skills[skill] = @core.create(skill_raw_name, params)
+    def setup_skill_set(added_skills=[])
+        properties[:skills].concat(added_skills)
+        properties[:skills].uniq!
+
+        # Compute a set of variances
+        variances = if class_info[:random_skills]
+            default_values     = get_skill_defaults(properties[:skills])
+            relative_offset    = class_info[:skill_offset] || 0
+            # FIXME: this should probably be different for attributes and skills.
+            variance_per_value = class_info[:random_variance]
+
+            generate_variances(default_values, variance_per_value, relative_offset)
+        else
+            Array.new(properties[:skills].size, 0)
+        end
+
+        # Add the actual skills
+        properties[:skills].each_with_index do |name, i|
+            skill_raw_name = (name.to_s.match(/_skill$/) ? name : "#{name}_skill".to_sym)
+            # TODO - mod bonuses based on attributes
+            skills[name] = @core.create(skill_raw_name, {:intrinsic_bonus => variances[i]})
+        end
     end
 
     def has_skill?(skill)

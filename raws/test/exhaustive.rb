@@ -3,11 +3,10 @@ require './test/fake'
 
 Log.setup("Main", "test")
 
-$db = ObjectDB.get("default")
-$core = FakeCore.new($db)
-$db.each_type(true) do |type|
+$core = CoreWrapper.new
+$core.db.each_type(true) do |type|
     args = {}
-    required = $db.raw_info_for(type)[:needs]
+    required = $core.db.raw_info_for(type)[:needs]
     required.each do |req|
         value = case req
         when :relative_size; :medium
@@ -18,9 +17,9 @@ $db.each_type(true) do |type|
 
         args[req] = value
     end
-    if $db.is_type?(type, :constructed)
+    if $core.db.is_type?(type, :constructed)
         args[:randomize] = true
     end
     Log.debug(["Creating a #{type.inspect}"])
-    $db.create($core, type, 0, args)
+    $core.create(type, args)
 end

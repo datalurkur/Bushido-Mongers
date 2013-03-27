@@ -90,7 +90,7 @@ module Words
 
         prep_map = Words.db.get_prep_map_for_verb(args[:verb])
         prep_map.each_pair do |case_name, preposition|
-            Log.debug("Testing #{case_name} with #{preposition.inspect}", 6)
+            Log.debug("Testing #{case_name} with #{preposition.inspect}", 9)
             find_prep_phrase(case_name, preposition, pieces, args)
         end
 

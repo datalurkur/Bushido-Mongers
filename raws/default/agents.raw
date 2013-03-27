@@ -1,7 +1,0 @@
-abstract agent basic_agent {
-    familiar_skills intrinsic_fighting defense;
-}
-
-abstract basic_agent equipped_agent {
-    uses equipment;
-}

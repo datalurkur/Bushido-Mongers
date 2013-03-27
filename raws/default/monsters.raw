@@ -1,15 +1,45 @@
 humanoid,monster oni {
     size medium;
+
     spawns_in mountain;
     spawn_rarity unusual;
 }
 
 humanoid,monster jikininki {
     size small;
-    spawns_in mountain sewer meadow dock;
-
-    behavior roam_and_consume;
-
     consumes body_part;
+    typical_profession forager;
+
+    spawns_in mountain sewer meadow dock;
 }
 
+arachnoid,monster spider {
+    adjectives giant; /* It is big for a spider, all right? */
+    size medium;
+
+    spawns_in sewer;
+    spawn_rarity common;
+}
+
+kraken,monster sewer_kraken {
+    adjectives sewer;
+    size gargantuan;
+
+    spawns_in sewer;
+    spawn_rarity singular;
+}
+
+swarm,monster swarm_of_flesh_eating_scarabs {
+    size medium;
+
+    spawns_in sewer dungeon;
+    spawn_rarity rare;
+}
+
+tortoise,monster snapping_tortoise {
+    adjectives adolescent mutant ninja;
+    size medium;
+
+    spawns_in sewer;
+    spawn_rarity rare;
+}

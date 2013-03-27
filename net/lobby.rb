@@ -340,7 +340,7 @@ class Lobby
             opts = case message.property
             # TODO - Read these from the raws
             when :gender; [:male, :female, :neutral]
-            when :race;   [:humanoid]
+            when :race;   @game_core.db.types_of(:civil)
             else
                 Log.warning("Unknown character options property #{message.property}")
                 []
@@ -352,7 +352,9 @@ class Lobby
             begin
                 raise "You must create a game before creating a character" unless @game_core
                 # TODO - Add a check for a character with the same name
+                Log.info("Creating character for #{username}")
                 @game_core.create_character(self, username, message.attributes)
+                Log.info("Character created")
                 send_to_user(username, Message.new(:character_ready))
                 if @game_state == :playing
                     send_to_user(username, Message.new(:begin_playing))

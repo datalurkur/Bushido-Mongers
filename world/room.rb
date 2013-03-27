@@ -66,7 +66,7 @@ class Room < ZoneLeaf
         # Actually spawn the NPCs; just one of each type for now.
         npc_types.each do |type|
             if Rarity.roll(@core.db.info_for(type, :spawn_rarity))
-                @core.create(type, {:position => self })
+                @core.create_agent(type, false, {:position => self })
             end
         end
     end

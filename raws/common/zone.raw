@@ -34,7 +34,7 @@ post_process {
             )
         end
     end
-    self.find_subtypes(:npc, {}, true).each do |npc|
+    self.find_subtypes(:archetype, {}, true).each do |npc|
         if spawns_in = info_for(npc, :spawns_in)
             spawns_in.each do |zone|
                 set_info(zone, name,

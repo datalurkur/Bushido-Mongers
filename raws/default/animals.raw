@@ -1,39 +1,25 @@
-abstract npc,basic_agent animal {
-    factions neutral;
-}
-
 /***********************************************************/
 /* SEWER */
 
 rodent,animal rat {
     size tiny;
+
     spawns_in sewer dock;
     spawn_rarity common;
 }
 
 canine,animal fox {
-    japanese_name kitsune;
     size medium;
+
+    japanese_name kitsune;
+
     spawns_in meadow forest mountain tundra;
     spawn_rarity common;
 }
 
-arachnoid,monster spider {
-    adjectives giant; /* It is big for a spider, all right? */
-    size medium;
-    spawns_in sewer;
-    spawn_rarity common;
-}
-
-kraken,monster sewer_kraken {
-    adjectives sewer;
-    size gargantuan;
-    spawns_in sewer;
-    spawn_rarity singular;
-}
-
 snake,animal coral_snake {
     size small;
+
     spawns_in sewer meadow mountain forest jungle swamp desert;
     spawn_rarity common;
 }
@@ -42,41 +28,28 @@ lizard,animal gecko {
     /* TODO - actually make it poisonous */
     adjectives poisonous;
     size small;
+
     spawns_in sewer forest jungle swamp dungeon;
     spawn_rarity unusual;
 }
 
-swarm,monster swarm_of_flesh_eating_scarabs {
-    size medium;
-    spawns_in sewer dungeon;
-    spawn_rarity rare;
-}
-
-tortoise,monster snapping_tortoise {
-    adjectives adolescent mutant ninja;
-    size medium;
-    spawns_in sewer;
-    spawn_rarity rare;
-}
-
-
-/***********************************************************/
-/* MEADOW */
-
 rodent,animal mouse {
     size tiny;
+
     spawns_in meadow;
     spawn_rarity common;
 }
 
 ungulate,animal deer {
     size medium;
+
     spawns_in meadow;
     spawn_rarity common;
 }
 
 ungulate,animal goat {
     size medium;
+
     spawns_in meadow forest;
     spawn_rarity common;
 }

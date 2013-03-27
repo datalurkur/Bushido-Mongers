@@ -7,14 +7,12 @@ module NpcBehavior
         def listens_for(i); [:tick]; end
 
         def pack(instance)
+            {:behavior => @behavior_type}
         end
 
         def unpack(core, instance, raw_data)
-            instance.set_behavior(instance.class_info[:behavior] || :random_attack_and_move)
-        end
-
-        def at_creation(instance, params)
-            instance.set_behavior(instance.class_info[:behavior] || :random_attack_and_move)
+            raise(MissingProperty, "NpcBehavior data corrupted") unless raw_data[:behavior]
+            instance.set_behavior(raw_data[:behavior])
         end
 
         def at_message(instance, message)
@@ -28,7 +26,8 @@ module NpcBehavior
     attr_accessor :behavior
 
     def set_behavior(behavior)
-        @behavior = BehaviorSet.create(behavior)
+        @behavior_type = behavior
+        @behavior      = BehaviorSet.create(behavior)
     end
 
     def do_command(command, args)
