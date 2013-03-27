@@ -57,7 +57,8 @@ def db_create(db, test_npc_type, name)
     $core.create(test_npc_type, :position => FakeRoom.new, :name => name)
 end
 
-observer = db_create(db, :character, "Kenji Skrimshank")
+require './game/character_loader'
+observer = CharacterLoader.create($core, {:name => "Kenji Skrimshank", :position => FakeRoom.new})
 agent = Descriptor::BushidoObjectDescriptor.describe(observer, observer)
 Log.debug(Words.describe_body(agent))
 target = db_create(db, :goat, "Billy Goat Balrog")

@@ -23,12 +23,12 @@
                             %tr
                                 %th Attribute
                                 %th Intrinsic
-                            -character.attribute_list.each do |attribute|
+                            -character.attributes.each do |attr_name, attr_value|
                                 %tr
-                                    %td=attribute
+                                    %td=attr_name
                                     %td
                                         %div.progress
-                                            %span{:style => "width: #{(character.attribute(attribute).properties[:intrinsic] * 100).to_i}%"}
+                                            %span{:style => "width: #{(attr_value.properties[:intrinsic] * 100).to_i}%"}
                         %h3 Skills
                         %table
                             %tr

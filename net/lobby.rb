@@ -1,4 +1,4 @@
-require './game/game_core'
+require './game/core'
 require './game/descriptors'
 require './http/http_server'
 
@@ -229,8 +229,8 @@ class Lobby
                 params[:agent] = character
                 # FIXME - Allow users to request a specific subset of stats
                 list = []
-                list << character.attribute_list.collect { |name| character.attribute(name) }
-                list << character.skill_list.collect     { |name| character.skill(name) }
+                list << character.attributes.values
+                list << character.skills.values
                 params[:target] = list
                 Words.describe_stats(params)
             else

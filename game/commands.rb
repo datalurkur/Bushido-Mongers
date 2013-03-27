@@ -84,8 +84,8 @@ module Commands
             end
             # Reach into agent and pull out stat details.
             list = []
-            list << params[:agent].attribute_list.collect { |name| params[:agent].attribute(name) }
-            list << params[:agent].skill_list.collect     { |name| params[:agent].skill(name) }
+            list << params[:agent].attributes.values
+            list << params[:agent].skills.values
             params[:target] = list
         end
     end
@@ -146,6 +146,7 @@ module Commands
     module Get
         def self.stage(core, params)
             Commands.find_objects(core, params, :target => [:position, :stashed, :worn])
+            raise(MissingObjectExtensionError, "Agents must have an inventory to pick things up") unless params[:agent].uses?(Equipment)
         end
 
         def self.do(core, params)

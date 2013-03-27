@@ -1,0 +1,13 @@
+/* TODO - Add in the idea of preferred areas for different archetypes */
+
+humanoid human {
+    size medium;
+}
+
+humanoid dwarf {
+    size small;
+}
+
+humanoid giant {
+    size enormous;
+}

@@ -162,40 +162,44 @@ module ObjectRawParser
                 raw_data = File.read(raw_file)
                 raw_data.gsub!(/\/\*(.*?)\*\//m, '')
                 separate_lexical_chunks(raw_data).each do |statement, data|
-                    chunks = statement.split(/\s+/)
-                    if chunks[0] == "post_process"
-                        post_processes << data
-                        next
+                    begin
+                        chunks = statement.split(/\s+/)
+                        if chunks[0] == "post_process"
+                            post_processes << data
+                            next
+                        end
+
+                        case chunks[0]
+                        when "abstract"
+                            abstract     = true
+                            parents      = chunks[1].split(/,/).collect(&:to_sym)
+                            type         = chunks[2].to_sym
+                        when "extension_of"
+                            abstract     = true
+                            extension_of = chunks[1].to_sym
+                            parents      = [:root]
+                            type         = chunks[2].to_sym
+                        else
+                            parents      = chunks[0].split(/,/).collect(&:to_sym)
+                            type         = chunks[1].to_sym
+                        end
+
+                        if typed_objects_hash.has_key?(type)
+                            Log.warning(["Ignoring duplicate type #{type}", statement])
+                            next
+                        end
+
+                        object_metadata = {
+                            :is_type  => parents,
+                            :data     => data,
+                        }
+                        object_metadata[:abstract]     = true         if abstract
+                        object_metadata[:extension_of] = extension_of if extension_of
+
+                        typed_objects_hash[type] = object_metadata
+                    rescue Exception => e
+                        raise(ParserError, "Error while parsing object definition #{statement.inspect}")
                     end
-
-                    case chunks[0]
-                    when "abstract"
-                        abstract     = true
-                        parents      = chunks[1].split(/,/).collect(&:to_sym)
-                        type         = chunks[2].to_sym
-                    when "extension_of"
-                        abstract     = true
-                        extension_of = chunks[1].to_sym
-                        parents      = [:root]
-                        type         = chunks[2].to_sym
-                    else
-                        parents      = chunks[0].split(/,/).collect(&:to_sym)
-                        type         = chunks[1].to_sym
-                    end
-
-                    if typed_objects_hash.has_key?(type)
-                        Log.warning(["Ignoring duplicate type #{type}", statement])
-                        next
-                    end
-
-                    object_metadata = {
-                        :is_type  => parents,
-                        :data     => data,
-                    }
-                    object_metadata[:abstract]     = true         if abstract
-                    object_metadata[:extension_of] = extension_of if extension_of
-
-                    typed_objects_hash[type] = object_metadata
                 end
             end
             [typed_objects_hash, post_processes]
@@ -246,7 +250,7 @@ module ObjectRawParser
                     inheritance_list.index(parent) != inheritance_list.rindex(parent)
                 end.uniq
                 Log.warning(["Object #{object_type} has duplicate parents in its inheritance list", duplicate_elements])
-                raise(ParserError, "Object has duplicate parents (#{duplicate_elements.inspect}).")
+                raise(ParserError, "Object #{object_type} has duplicate parents (#{duplicate_elements.inspect}).")
             end
 
             # Begin accumulating object data for the database

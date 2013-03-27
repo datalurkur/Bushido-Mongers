@@ -1,41 +1,15 @@
-consumable,adjustable_size flesh {
-    typical_size small;
-    weight 1;
-}
-
-extension_of body biped {
-    symmetric {
-        object_type leg;
-        container_class external;
-        symmetry_type balanced_axial;
-        count 2;
-    }
-}
-
-extension_of body quadriped {
-    symmetric {
-        object_type leg;
-        container_class external;
-        symmetry_type balanced_axial;
-        count 4;
-    }
-}
-
-extension_of body octiped {
-    symmetric {
-        object_type leg;
-        container_class external;
-        symmetry_type balanced_axial;
-        count 8;
-    }
+extension_of body basic_attributes {
+    attributes strength perception endurance charisma intelligence agility luck;
 }
 
 /* Basically, this is the equivalent of a torso */
-abstract body,biped,can_wear humanoid {
-    part_name torso;
+abstract body,basic_attributes,biped,can_wear humanoid {
     weight 15;
-    incidental flesh;
     typical_size medium;
+
+    part_name torso;
+
+    incidental flesh;
     internal liver;
     external head;
     symmetric {
@@ -52,28 +26,34 @@ abstract body,biped,can_wear humanoid {
     }
 }
 
-abstract body,octiped arachnoid {
-    part_name thorax;
+abstract body,basic_attributes,octiped arachnoid {
     weight 10;
-    incidental flesh;
     typical_size medium;
+
+    part_name thorax;
+
+    incidental flesh;
     internal spinner;
     external carapace;
 }
 
-abstract body,quadriped rodent {
-    part_name torso;
+abstract body,basic_attributes,quadriped rodent {
     weight 2;
-    incidental flesh;
     typical_size small;
+
+    part_name torso;
+
+    incidental flesh;
     external head tail;
 }
 
-abstract body,quadriped ungulate {
-    part_name torso;
+abstract body,basic_attributes,quadriped ungulate {
     weight 200;
-    incidental flesh;
     typical_size medium;
+
+    part_name torso;
+
+    incidental flesh;
     external head tail;
 }
 
@@ -82,10 +62,12 @@ abstract ungulate canine {
 }
 
 abstract body kraken {
-    part_name mantle;
     weight 400;
-    incidental flesh;
+
     typical_size gargantuan;
+    part_name mantle;
+
+    incidental flesh;
     external beak;
     symmetric {
         object_type tentacle;
@@ -95,28 +77,35 @@ abstract body kraken {
     }
 }
 
-abstract body,quadriped lizard {
-    part_name torso;
+abstract body,basic_attributes,quadriped lizard {
     weight 1;
-    incidental flesh;
     typical_size small;
-    external head tail;
-}
 
-abstract body snake {
-    part_name body;
-    weight 6;
-    incidental flesh;
-    typical_size small;
-    external head tail;
-    internal venom_gland;
-}
-
-abstract body,biped,can_wear tortoise {
     part_name torso;
-    weight 10;
+
     incidental flesh;
+    external head tail;
+}
+
+abstract body,basic_attributes snake {
+    weight 6;
     typical_size small;
+
+    part_name body;
+
+    incidental flesh;
+    internal venom_gland;
+    external head tail;
+}
+
+abstract body,basic_attributes,biped,can_wear tortoise {
+    weight 10;
+    typical_size small;
+
+    part_name torso;
+
+    incidental flesh;
+    internal liver;
     external head carapace; 
     symmetric {
         object_type arm;
@@ -124,96 +113,13 @@ abstract body,biped,can_wear tortoise {
         symmetry_type balanced_axial;
         count 2;
     }
-    internal liver;
 }
 
-abstract body swarm {
-    part_name husk;
+abstract body,basic_attributes swarm {
     weight 1;
     typical_size medium;
+
+    part_name husk;
+
     incidental chitin;
-}
-
-body_part,can_wear head {
-    weight 4;
-    typical_size small;
-    external mouth;
-}
-
-body_part,can_grasp mouth {
-    weight 0.5;
-    typical_size tiny;
-}
-
-body_part,can_wear arm {
-    weight 5;
-    incidental flesh;
-    typical_size small;
-    external hand;
-}
-
-body_part,can_wear,can_grasp hand {
-    weight 2;
-    incidental flesh;
-    typical_size small;
-}
-
-body_part,can_wear leg {
-    weight 10;
-    incidental flesh;
-    typical_size small;
-    external foot;
-}
-
-body_part,can_wear foot {
-    weight 4;
-    incidental flesh;
-    typical_size small;
-}
-
-body_part,can_wear carapace {
-    weight 15;
-    incidental chitin;
-    typical_size small;
-}
-
-body_part spinner {
-    weight 1;
-    incidental flesh;
-    typical_size tiny;
-}
-
-body_part tail {
-    weight 1;
-    incidental flesh;
-    typical_size tiny;
-}
-
-body_part liver {
-    weight 3;
-    incidental flesh;
-    typical_size small;
-}
-
-body_part kidney {
-    weight 2;
-    incidental flesh;
-    typical_size small;
-}
-
-body_part venom_gland {
-    weight 0.2;
-    typical_size tiny;
-}
-
-body_part tentacle {
-    weight 1;
-    incidental flesh;
-    typical_size small;
-}
-
-body_part beak {
-    weight 0.5;
-    incidental chitin;
-    typical_size small;
 }

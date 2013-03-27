@@ -42,6 +42,9 @@ module Corporeal
 
     def kill(attacker)
         Log.debug("Killing #{monicker}!")
+        if attacker == self
+            Log.warning("Something just killed itself...yep, that's a bug.")
+        end
         transform(:death, {:agent => attacker})
     end
 end

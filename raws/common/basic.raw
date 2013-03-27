@@ -6,20 +6,8 @@ abstract root object {
     hardness insubstantial;
 }
 
-abstract root aligned {
-    has_many sym factions;
-}
-
 abstract root karmic {
-    has optional string name;
-
-    has_many optional complex kills;
-    has_many optional complex deeds;
-    has_many optional string titles;
-
-    has sym notoriety;
-    notoriety unknown;
-
+    has_many sym factions;
     uses karmic;
 }
 

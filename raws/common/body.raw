@@ -5,7 +5,7 @@ abstract item,composition,adjustable_size body_part {
     value 0;
 }
 
-abstract body_part body {
+abstract body_part,has_aspects body {
     class optional sym consumes;
     class optional proc on_consume;
     class string part_name;

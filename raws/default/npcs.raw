@@ -1,52 +1,26 @@
-abstract npc monster {
+abstract npc,basic_agent monster {
     factions enemy;
 }
 
-humanoid,monster oni {
-    size medium;
-    spawns_in mountain;
-    spawn_rarity unusual;
-}
-
-humanoid,monster jikininki {
-    size small;
-    spawns_in mountain sewer meadow dock;
-
-    behavior roam_and_consume;
-
-    consumes body_part;
-}
-
-humanoid,monster giant {
-    size enormous;
-    spawns_in mountain;
-    spawn_rarity unusual;
-}
-
-humanoid,monster dwarf {
-    size small;
-    spawns_in mountain;
-    spawn_rarity uncommon;
-}
-
-abstract npc guard {
+/* TODO - Make guard/merchant/thug archetypes, not based on a specific body type */
+abstract npc,equipped_agent guard {
     has_many sym provocations;
+}
+
+humanoid,npc,equipped_agent merchant {
+    size medium;
+    factions peaceful;
+}
+
+humanoid,npc,equipped_agent thug {
+    size medium;
+    spawns_in sewer meadow mountain dungeon dock pier;
+    spawn_rarity unusual;
+    factions enemy;
 }
 
 humanoid,guard peacekeeper {
     size medium;
     factions peaceful;
     provocations lie attack steal kill;
-}
-
-humanoid,npc merchant {
-    size medium;
-    factions peaceful;
-}
-
-humanoid,npc thug {
-    size medium;
-    spawns_in sewer meadow mountain dungeon dock pier;
-    spawn_rarity unusual;
-    factions enemy;
 }

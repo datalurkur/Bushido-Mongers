@@ -18,8 +18,8 @@ class Behavior
         end
 
         def are_enemies?(actor_a, actor_b)
-            # TODO - Make factions more complex
-            (actor_a.properties[:factions] & actor_b.properties[:factions]).empty?
+            # TODO - Make faction interactions more complex
+            (actor_a.factions.keys & actor_b.factions.keys).empty?
         end
     end
 end

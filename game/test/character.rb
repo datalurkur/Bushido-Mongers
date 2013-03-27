@@ -1,6 +1,7 @@
 require './words/words'
 require './raws/db'
 require './test/fake'
+require './game/character_loader'
 
 def recreate_test_character(username, character_name, raw_group, clean=true)
     if clean
@@ -10,7 +11,8 @@ def recreate_test_character(username, character_name, raw_group, clean=true)
 
     Log.debug("Creating test character using fake state")
     fake_core = FakeCore.new(ObjectDB.get(raw_group))
-    character = fake_core.create(:character, {:name => character_name})
+    character_archetype = :human
+    character = CharacterLoader.create(fake_core, {:name => character_name})
     CharacterLoader.save(username, character)
     character
 end

@@ -1,0 +1,15 @@
+humanoid,monster oni {
+    size medium;
+    spawns_in mountain;
+    spawn_rarity unusual;
+}
+
+humanoid,monster jikininki {
+    size small;
+    spawns_in mountain sewer meadow dock;
+
+    behavior roam_and_consume;
+
+    consumes body_part;
+}
+

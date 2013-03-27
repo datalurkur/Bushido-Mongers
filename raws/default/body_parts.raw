@@ -1,0 +1,115 @@
+consumable,adjustable_size flesh {
+    typical_size small;
+    weight 1;
+}
+
+extension_of body biped {
+    symmetric {
+        object_type leg;
+        container_class external;
+        symmetry_type balanced_axial;
+        count 2;
+    }
+}
+
+extension_of body quadriped {
+    symmetric {
+        object_type leg;
+        container_class external;
+        symmetry_type balanced_axial;
+        count 4;
+    }
+}
+
+extension_of body octiped {
+    symmetric {
+        object_type leg;
+        container_class external;
+        symmetry_type balanced_axial;
+        count 8;
+    }
+}
+
+body_part,can_wear head {
+    weight 4;
+    typical_size small;
+    external mouth;
+}
+
+body_part,can_grasp mouth {
+    weight 0.5;
+    typical_size tiny;
+}
+
+body_part,can_wear arm {
+    weight 5;
+    incidental flesh;
+    typical_size small;
+    external hand;
+}
+
+body_part,can_wear,can_grasp hand {
+    weight 2;
+    incidental flesh;
+    typical_size small;
+}
+
+body_part,can_wear leg {
+    weight 10;
+    incidental flesh;
+    typical_size small;
+    external foot;
+}
+
+body_part,can_wear foot {
+    weight 4;
+    incidental flesh;
+    typical_size small;
+}
+
+body_part,can_wear carapace {
+    weight 15;
+    incidental chitin;
+    typical_size small;
+}
+
+body_part spinner {
+    weight 1;
+    incidental flesh;
+    typical_size tiny;
+}
+
+body_part tail {
+    weight 1;
+    incidental flesh;
+    typical_size tiny;
+}
+
+body_part liver {
+    weight 3;
+    incidental flesh;
+    typical_size small;
+}
+
+body_part kidney {
+    weight 2;
+    incidental flesh;
+    typical_size small;
+}
+
+body_part venom_gland {
+    weight 0.2;
+    typical_size tiny;
+}
+
+body_part tentacle {
+    weight 1;
+    incidental flesh;
+    typical_size small;
+}
+
+body_part beak {
+    weight 0.5;
+    incidental chitin;
+    typical_size small;
+}

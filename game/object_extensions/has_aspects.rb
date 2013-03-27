@@ -6,11 +6,11 @@ module HasAspects
 
         def pack(instance)
             raw_data = {:attributes => {}, :skills => {}}
-            instance.attribute_list.each do |attribute|
-                raw_data[:attributes][attribute] = SafeBushidoObject.pack(instance.attribute(attribute))
+            instance.attributes.each do |key, value|
+                raw_data[:attributes][key] = SafeBushidoObject.pack(value)
             end
-            instance.skill_list.each do |skill|
-                raw_data[:skills][skill] = SafeBushidoObject.pack(instance.skill(skill))
+            instance.skills.each do |key, value|
+                raw_data[:skills][key] = SafeBushidoObject.pack(value)
             end
             raw_data
         end
@@ -19,53 +19,61 @@ module HasAspects
             raise(MissingProperty, "HasAspects data corrupted") unless raw_data[:skills] && raw_data[:attributes]
             raw_data[:attributes].each_pair do |attribute, raw_attribute_data|
                 actual = SafeBushidoObject.unpack(core, raw_attribute_data)
-                instance.set_attribute(attribute, actual)
+                instance.attributes[attribute] = actual
             end
             raw_data[:skills].each_pair do |skill, raw_skill_data|
                 actual = SafeBushidoObject.unpack(core, raw_skill_data)
-                instance.set_skill(skill, actual)
+                instance.skills[skill] = actual
             end
         end
 
         def at_creation(instance, params)
+            # ATTRIBUTES
+            # Compute a set of variances
             variances = if instance.class_info[:random_attributes]
                 random_attribute_variances(instance, params)
             else
                 Array.new(instance.properties[:attributes].size, 0)
             end
-
+            # Add the actual attributes
             instance.properties[:attributes].each_with_index do |name, i|
                 instance.add_attribute(name, :intrinsic_bonus => variances[i])
             end
 
+            # SKILLS
+            # Add skills from the archetype
+            if instance.class_info[:familiar_skills]
+                instance.properties[:skills].concat(instance.class_info[:familiar_skills])
+            end
+            # Compute a set of variances
             variances = if instance.class_info[:random_skills]
                 random_skill_variances(instance, params)
             else
                 Array.new(instance.properties[:skills].size, 0)
             end
-
+            # Add the actual skills
             instance.properties[:skills].each_with_index do |name, i|
                 instance.add_skill(name, :intrinsic_bonus => variances[i])
             end
         end
 
         def at_message(instance, message)
-            instance.attribute_list.each { |a| instance.attribute(a).increment_tick }
-            instance.skill_list.each     { |s| instance.skill(s).increment_tick     }
+            instance.attributes.each { |k,a| a.increment_tick }
+            instance.skills.each     { |k,s| s.increment_tick }
         end
 
         private
         def random_attribute_variances(instance, params)
-            default_values = instance.get_attribute_defaults(instance.properties[:attributes])
-            relative_offset = instance.class_info[:attribute_offset] || 0
+            default_values     = instance.get_attribute_defaults(instance.properties[:attributes])
+            relative_offset    = instance.class_info[:attribute_offset] || 0
             variance_per_value = instance.class_info[:random_variance]
 
             instance.generate_variances(default_values, variance_per_value, relative_offset)
         end
 
         def random_skill_variances(instance, params)
-            default_values = instance.get_skill_defaults(instance.properties[:skills])
-            relative_offset = instance.class_info[:skill_offset] || 0
+            default_values     = instance.get_skill_defaults(instance.properties[:skills])
+            relative_offset    = instance.class_info[:skill_offset] || 0
             # FIXME: this should probably be different for attributes and skills.
             variance_per_value = instance.class_info[:random_variance]
 
@@ -73,59 +81,39 @@ module HasAspects
         end
     end
 
+    def attributes; @attributes ||= {}; end
     def add_attribute(attribute, params={})
-        @attributes ||= {}
-        raise(UnknownType, "#{attribute} is not an attribute.") unless @core.db.is_type?(attribute, :attribute)
-        @attributes[attribute] = @core.create(attribute, params)
+        attributes[attribute] = @core.create(attribute, params)
     end
-
-    def set_attribute(attribute, value)
-        @attributes ||= {}
-        @attributes[attribute] = value
-    end
-
-    def add_skill(skill, params={})
-        @skills ||= {}
-        skill_raw_name = (skill.to_s.match(/_skill$/) ? skill : "#{skill}_skill".to_sym)
-        raise(UnknownType, "#{skill} is not a skill.") unless @core.db.is_type?(skill_raw_name, :skill)
-
-        # TODO - mod bonuses based on attributes
-        @skills[skill] = @core.create(skill_raw_name, params)
-    end
-
-    def set_skill(skill, value)
-        @skills ||= {}
-        @skills[skill] = value
-    end
-
-    def has_attribute?(attribute)
-        @attributes.has_key?(attribute)
-    end
-
-    def attribute_list; @attributes.keys; end
-
     def attribute(attribute)
         raise(UnknownType, "#{attribute} is not an attribute.") unless @core.db.is_type?(attribute, :attribute)
-        Log.warning("Doesn't have attribute: #{attribute}") unless @attributes[attribute]
-        @attributes[attribute]
+        Log.warning("Doesn't have attribute: #{attribute}") unless attributes.has_key?(attribute)
+        attributes[attribute]
+    end
+
+    def skills; @skills ||= {}; end
+    def add_skill(skill, params={})
+        skill_raw_name = (skill.to_s.match(/_skill$/) ? skill : "#{skill}_skill".to_sym)
+        # TODO - mod bonuses based on attributes
+        skills[skill] = @core.create(skill_raw_name, params)
     end
 
     def has_skill?(skill)
-        @skills.has_key?(skill.to_s.gsub(/_skill$/, '').to_sym)
+        # TODO - Kill off this horrible _skill crap
+        skills.has_key?(skill.to_s.gsub(/_skill$/, '').to_sym)
     end
 
-    def skill_list; @skills.keys; end
-
     def skill(skill)
+        # TODO - Kill off this horrible _skill crap
         skill_raw_name = (skill.to_s.match(/_skill$/) ? skill : "#{skill}_skill".to_sym)
         raise(UnknownType, "#{skill} is not a skill.") unless @core.db.is_type?(skill_raw_name, :skill)
-        Log.warning("Doesn't have skill: #{skill}") unless @skills[skill]
-        @skills[skill]
+        Log.warning("Doesn't have skill: #{skill}") unless has_skill?(skill)
+        skills[skill]
     end
 
     def get_aspect(aspect)
-        has_attribute?(aspect) ? attribute(aspect) :
-        has_skill?(aspect)     ? skill(aspect) : nil
+        attributes.has_key?(aspect) ? attributes[aspect] :
+        has_skill?(aspect)          ? skill(aspect) : nil
     end
 
     # -- #
@@ -135,7 +123,7 @@ module HasAspects
         raise "No aspect #{aspect_sym} on #{self.monicker}!" if aspect.nil?
 
         aspect.improve(difficulty) if has_skill?(aspect_sym)
-        aspect.check(difficulty, @attributes)
+        aspect.check(difficulty, attributes)
     end
 
     # FIXME - right now difficulty affects aspect, associate attribute, AND opposer difficulty.
@@ -151,6 +139,8 @@ module HasAspects
 
     # Find a list of modifiers to the default attributes whose total fits within the range.
     def generate_variances(default_values, variance_per_value, relative_offset)
+        return [] if default_values.empty?
+
         num_values = default_values.size
         if variance_per_value == 0.0 && relative_offset == 0.0
             # Nothing to be done; return 0 variances.

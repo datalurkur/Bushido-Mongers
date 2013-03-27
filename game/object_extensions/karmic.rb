@@ -4,6 +4,14 @@ module Karmic
     class << self
         def at_creation(instance, params)
             instance.set_name(params[:name])
+            # TODO - Create a notoriety table
+            instance.set_notoriety(params[:notoriety] || :unknown)
+            if params[:factions]
+                params[:factions].each do |faction|
+                    # TODO - Store interesting information about the standing of this object in the factions given
+                    instance.add_faction(faction)
+                end
+            end
         end
 
         def listens_for(i); [:unit_killed,:object_destroyed]; end
@@ -14,8 +22,8 @@ module Karmic
                 if message.target.is_type?(:body)
                     # FIXME - We want to store more than the name of the kill here
                     # Suggestions - notoriety / difficulty of kill, type of monster
-                    instance.properties[:kills] << message.target.monicker
-                    Log.info("#{instance.monicker} increases their notoriety by shedding the blood of #{message.target.monicker} (now has #{instance.properties[:kills].size} kills)")
+                    instance.add_kill(message.target)
+                    Log.info("#{instance.monicker} increases their notoriety by shedding the blood of #{message.target.monicker} (now has #{instance.kills.size} kills)")
                 #else
                     #Log.info("#{instance.monicker} cannot become notorious for killing a mere #{message.target.monicker}")
                 end
@@ -30,13 +38,56 @@ module Karmic
                 Log.info("The great #{instance.monicker} has been utterly destroyed!")
             #end
         end
+
+        def pack(instance)
+            raw_data = {}
+            raw_data[:name]      = instance.name
+            raw_data[:notoriety] = instance.notoriety
+            raw_data[:kills]     = instance.kills
+            raw_data[:titles]    = instance.titles
+            raw_data[:deeds]     = instance.deeds
+            raw_data[:factions]  = instance.factions
+        end
+
+        def unpack(core, instance, raw_data)
+            [:name, :notoriety, :kills, :titles, :deeds, :factions].each do |key|
+                raise(MissingProperty, "Karmic data corrupted") unless raw_data.has_key?(key)
+            end
+            instance.set_name(raw_data[:name])
+            instance.set_notoriety(raw_data[:notoriety])
+            instance.set_kills(raw_data[:kills])
+            instance.set_titles(raw_data[:titles])
+            instance.set_deeds(raw_data[:deeds])
+            instance.set_factions(raw_data[:factions])
+        end
     end
 
-    def name
-        @name
-    end
+    def name; @name; end
+    def set_name(name); @name = name; end
 
-    def set_name(name)
-        @name = name
+    def notoriety; @notoriety; end
+    def set_notoriety(value); @notoriety = value; end
+
+    def kills; @kills ||= []; end
+    def add_kill(target)
+        # TODO - Consider adding a UID here
+        kills << target.monicker
     end
+    def set_kills(value); @kills = value; end
+
+    def deeds; @deeds ||= []; end
+    def add_deed(deed)
+        raise(NotImplementedError, "Adding deeds is not supported")
+    end
+    def set_deeds(value); @deeds = value; end
+
+    def titles; @titles ||= []; end
+    def add_title(title); titles << title; end
+    def set_titles(value); @titles = value; end
+
+    def factions; @factions ||= {}; end
+    def add_faction(faction, info)
+        factions[faction] = info
+    end
+    def set_factions(value); @factions = value; end
 end

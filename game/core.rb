@@ -1,6 +1,7 @@
 require './world/factories'
 require './game/tables'
 require './game/object_extensions'
+require './game/character_loader'
 require './raws/db'
 require './util/exceptions'
 
@@ -142,8 +143,8 @@ class GameCore
         ret = nil
         @usage_mutex.synchronize do
             position  = @world.random_starting_location
-            character = create(:character, details.merge(:position => position))
 
+            character = CharacterLoader.create(self, details.merge(:position => position))
             characters[username] = character
             Log.info("Character #{character.monicker} created for #{username}")
             Message.register_listener(self, :core, character)
