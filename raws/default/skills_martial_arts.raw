@@ -1,5 +1,5 @@
 /* http://en.wikipedia.org/wiki/Kory%C5%AB */
-abstract no_skill fighting_skill {
+abstract low_skill fighting_skill {
     default_intrinsic 0.2;
     default_familiarity 0.0;
 
@@ -12,10 +12,7 @@ abstract no_skill fighting_skill {
 }
 
 /* Used for animals that fight on instinct. */
-fighting_skill intrinsic_fighting_skill {
-    associated_attribute strength;
-    attribute_scaling 0.2;
-}
+fighting_skill intrinsic_fighting {}
 
 /* Yes, karate and kendo did not exist until the 20th century. Too bad! */
 fighting_skill empty_hand_fighting_skill {
@@ -48,7 +45,7 @@ fighting_skill short_staff_skill {
 }
 
 /* using jutte, disarmament, non-lethal, apprehension / blocking, deflecting, grappling swords */
-fighting_skill juttejutsu_skill {
+fighting_skill juttejutsu {
     japanese_name juttejutsu;
     weapons jutte;
 }

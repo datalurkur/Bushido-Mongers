@@ -1,5 +1,5 @@
 abstract skill no_skill {
-    default_intrinsic 0.2;
+    default_intrinsic 0.0;
 }
 
 abstract skill low_skill {
@@ -16,7 +16,7 @@ abstract skill high_skill {
 
 /* -- skills start -- */
 
-low_skill hide_skill {
+low_skill stealth {
     associated_attribute agility;
     attribute_scaling 0.2;
 
@@ -24,7 +24,7 @@ low_skill hide_skill {
     hidden false;
 }
 
-no_skill defense_skill {
+no_skill defense {
     associated_attribute agility;
     attribute_scaling 0.2;
 }

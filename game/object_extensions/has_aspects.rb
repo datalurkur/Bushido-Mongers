@@ -82,37 +82,49 @@ module HasAspects
 
         # Add the actual skills
         properties[:skills].each_with_index do |name, i|
-            skill_raw_name = (name.to_s.match(/_skill$/) ? name : "#{name}_skill".to_sym)
             # TODO - mod bonuses based on attributes
-            skills[name] = @core.create(skill_raw_name, {:intrinsic_bonus => variances[i]})
+            add_skill(name, variances[i])
         end
     end
 
-    def has_skill?(skill)
-        # TODO - Kill off this horrible _skill crap
-        skills.has_key?(skill.to_s.gsub(/_skill$/, '').to_sym)
+    private
+    def add_skill(skill, intrinsic = 0)
+        skills[skill] = @core.create(skill, :intrinsic_bonus => intrinsic)
     end
+    public
 
     def skill(skill)
-        # TODO - Kill off this horrible _skill crap
-        skill_raw_name = (skill.to_s.match(/_skill$/) ? skill : "#{skill}_skill".to_sym)
-        raise(UnknownType, "#{skill} is not a skill.") unless @core.db.is_type?(skill_raw_name, :skill)
-        Log.warning("Doesn't have skill: #{skill}") unless has_skill?(skill)
-        skills[skill]
+        raise(UnknownType, "#{skill} is not a skill.") unless @core.db.is_type?(skill, :skill)
+        if skills.has_key?(skill)
+            skills[skill]
+        else
+            add_skill(skill)
+        end
     end
 
     def get_aspect(aspect)
-        attributes.has_key?(aspect) ? attributes[aspect] :
-        has_skill?(aspect)          ? skill(aspect) : nil
+        if attributes.has_key?(aspect)
+            attributes[aspect]
+        elsif skills.has_key?(aspect)
+            skills[aspect]
+        elsif @core.db.is_type?(aspect, :skill)
+            add_skill(aspect)
+        else
+            nil
+        end
     end
 
     # -- #
 
     def make_check(aspect_sym, difficulty = Difficulty.standard)
+        # FIXME: Use the best? Use them all? Use the most appropriate?
+        if Array === aspect_sym
+            aspect_sym = aspect_sym.first
+        end
         aspect = get_aspect(aspect_sym)
         raise "No aspect #{aspect_sym} on #{self.monicker}!" if aspect.nil?
 
-        aspect.improve(difficulty) if has_skill?(aspect_sym)
+        aspect.improve(difficulty) if skills.has_key?(aspect_sym)
         aspect.check(difficulty, attributes)
     end
 
@@ -200,8 +212,7 @@ module HasAspects
     def get_skill_defaults(names)
         names = Array(names)
         names.collect do |skill|
-            skill_raw_name = (skill.to_s.match(/_skill$/) ? skill : "#{skill}_skill".to_sym)
-            @core.db.info_for(skill_raw_name)[:default_intrinsic]
+            @core.db.info_for(skill)[:default_intrinsic]
         end
     end
 end

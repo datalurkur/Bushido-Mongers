@@ -1,0 +1,4 @@
+low_skill crafting_skill {
+    associated_attribute intelligence;
+    attribute_scaling 0.2;
+}

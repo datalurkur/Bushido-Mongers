@@ -6,7 +6,7 @@ Log.setup("Main", "abilities")
 db = ObjectDB.get("default")
 core = CoreWrapper.new
 
-aspect_list = [:strength, :agility, :intrinsic_fighting_skill, :hide_skill]
+aspect_list = [:strength, :agility, :intrinsic_fighting, :stealth]
 
 aspects = {}
 
@@ -17,8 +17,8 @@ end
 [
     [:strength,                 :easy],
     [:agility,                  :simple],
-    [:hide_skill,               :normal],
-    [:intrinsic_fighting_skill, :trivial]
+    [:stealth,                  :normal],
+    [:intrinsic_fighting,       :trivial]
 ].each do |aspect, difficulty|
     Log.debug("Attempting to #{aspect} with difficulty #{difficulty}")
     result = aspects[aspect].attempt(difficulty, aspects)

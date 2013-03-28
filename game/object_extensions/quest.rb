@@ -26,7 +26,7 @@ module Quest
             # This quest will listen for object destruction and object movement
 
             # When we're all done, start listening for victory / failure conditions
-            instance.create_quest
+            instance.create_quest(params)
         end
 
         def at_message(instance, message)

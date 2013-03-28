@@ -250,25 +250,25 @@ module Commands
 
     module Hide
         def self.stage(core, params)
-            if params[:agent].skill(:hide).properties[:hidden]
+            if params[:agent].get_aspect(:stealth).properties[:hidden]
                 raise(FailedCommandError, "You are already hidden.")
             end
         end
 
         def self.do(core, params)
-            params[:agent].skill(:hide).properties[:hidden] = true
+            params[:agent].skills[:stealth].properties[:hidden] = true
         end
     end
 
     module Unhide
         def self.stage(core, params)
-            unless params[:agent].skill(:hide).properties[:hidden]
+            if !params[:agent].get_aspect(:stealth).properties[:hidden]
                 raise(FailedCommandError, "You are not in hiding.")
             end
         end
 
         def self.do(core, params)
-            params[:agent].skill(:hide).properties[:hidden] = false
+            params[:agent].skills[:stealth].properties[:hidden] = false
         end
     end
 
@@ -321,13 +321,7 @@ module Commands
                 result_hash[:tool] = weapon
             end
 
-            if attacker.has_skill?(skill)
-                success = attacker.opposed_check(skill, Difficulty.standard, defender, :defense)
-            else
-                # TODO - generate skill on attacker
-                Log.debug("#{skill.inspect} doesn't exist for #{attacker.monicker}!")
-                success = (rand > Difficulty.value_of(Difficulty.standard))
-            end
+            success = attacker.opposed_check(skill, Difficulty.standard, defender, :defense)
 
             # Target a random body part if location not specified
             part_targeted = params[:location] || defender.external_body_parts.rand
