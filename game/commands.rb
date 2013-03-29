@@ -382,23 +382,43 @@ module Commands
 
     module Say
         def self.stage(core, params)
-            # Look for receiver in the room.
             if params[:receiver]
+                params[:no_sanity_check] = true
                 Commands.find_objects(core, params, :receiver => [:position])
             end
         end
 
         def self.do(core, params)
+            message = Message.new(:unit_speaks,
+                :agent       => params[:agent],
+                :statement   => params[:statement],
+                :is_whisper  => false
+            )
+            message.params[:receiver] = params[:receiver] if params[:receiver]
+            locations = [params[:agent].absolute_position]
+            Message.dispatch_positional(core, locations, message.type, message.params)
+        end
+    end
+
+    module Whisper
+        def self.stage(core, params)
+            params[:no_sanity_check] = true
+            Commands.find_objects(core, params, :receiver => [:position])
+        end
+
+        def self.do(core, params)
+            message = Message.new(:unit_speaks, {
+                :agent       => params[:agent],
+                :receiver    => params[:receiver],
+                :statement   => params[:statement],
+                :is_whisper  => true
+            })
             if params[:receiver]
-                # TODO - send message only to receiver, for whisper
+                params[:receiver].process_message(message)
             else
+                Log.warning("Whisper with no receiver?")
                 locations = [params[:agent].absolute_position]
-                Message.dispatch_positional(core, locations, :unit_acts, {
-                    :agent       => params[:agent],
-                    :action      => :say,
-                    :location    => locations.first,
-                    :action_hash => {:receiver => params[:receiver], :statement => params[:statement]}
-                })
+                Message.dispatch_positional(core, locations, message.type, message.params.merge(:statement => ''))
             end
         end
     end

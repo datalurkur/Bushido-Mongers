@@ -228,10 +228,7 @@ class Lobby
                 raise(InvalidCommandError, "Character #{character.monicker} has no stats") unless character.uses?(HasAspects)
                 params[:agent] = character
                 # FIXME - Allow users to request a specific subset of stats
-                list = []
-                list << character.attributes.values
-                list << character.skills.values
-                params[:target] = list
+                params[:target] = [character.attributes.values, character.attributes.values]
                 Words.describe_stats(params)
             else
                 raise(ArgumentError, "Unrecognized command '#{params[:command]}'")

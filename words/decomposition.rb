@@ -3,7 +3,7 @@ module Words
     # TODO - Since this exclusively happens on the server-side, we will have access
     # to adjective and noun information, and can store adjectives and pass them along
     # to the object-finder to narrow the search.
-    # parameter: A whitespace-separated list of words.
+    # parameter: A whitespace-separated list of words in string format.
     def self.decompose_command(entire_command)
         Log.debug(["command text entered: #{entire_command.inspect}"], 1)
 
@@ -60,23 +60,19 @@ module Words
     private
     # N.B. modifies the pieces array
     def self.decompose_statement(args, pieces)
-        # This is tricky. The first word might be the receiver:
-        # $ whisper jeff I saw a beaver.
-        # $ tell antonio I loved you in Zorro.
-        # But it might also just be part of the statement:
-        # $ say I saw a beaver.
-        # This is potentially better decided in the command logic.
-        # I believe for most command words it will be the :target.
-
-        Words.db.get_prep_map_for_verb(args[:verb]).each do |case_name, preposition|
-            if pieces.size > 0
-                find_prep_phrase(case_name, preposition.downcase, pieces, args, true)
-            end
+        # Look for a :to to be followed by a single noun.
+        # No adjective trickery here, because we don't fundamentally know
+        # what'll decompose into a noun here and we don't want to snarf any of
+        # the statement.
+        if pieces.first == :to
+            pieces.slice!(0)
+            args[:receiver] = pieces.slice!(0)
         end
 
         # What remains is the statement.
         args[:statement] = pieces
 
+        Log.debug(args, 6)
         args
     end
 
@@ -106,16 +102,8 @@ module Words
     end
 
     # N.B. modifies the pieces array
-    def self.find_prep_phrase(case_name, preposition, pieces, args, initial_only = false)
+    def self.find_prep_phrase(case_name, preposition, pieces, args)
         if (index = pieces.index(preposition))
-            if initial_only
-                if index != 0
-                    Log.debug("Detected initial '#{preposition}' but not at initial position!", 6)
-                    return nil
-                else
-                    Log.debug("Detected initial '#{preposition}'", 6)
-                end
-            end
             Log.debug("Detected '#{preposition}' at #{index}", 6)
             pieces.slice!(index, 1)
             if noun = find_noun_phrase(index, pieces)

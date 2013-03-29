@@ -59,6 +59,7 @@ command close {
 /* PC-NPC Interactions. */
 
 command say {}
+command whisper {}
 
 /* Item construction. */
 

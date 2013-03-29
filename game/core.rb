@@ -70,7 +70,7 @@ class GameCore
 
     # This will likely be moved to the population manager
     def create_agent(type, player, hash = {})
-        Log.debug("Creating #{type} agent")
+        Log.debug("Creating #{type} agent", 6)
         agent = create(type, hash)
 
         agent.add_extension(Perception)
