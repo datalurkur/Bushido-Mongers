@@ -12,4 +12,5 @@ abstract archetype civil {
     factions civil;
     typical_profession commoner;
     feral false;
+    uses conversation;
 }
