@@ -81,6 +81,16 @@ class Array
             string.join("\n")
         end
     end
+
+    def to_list_string
+        if size > 2
+            self[0...-1].join(", ") + " and " + self[-1].to_s
+        elsif size > 1
+            self[0].to_s + " and " + self[1].to_s
+        else
+            self[0].to_s
+        end
+    end
 end
 
 class Hash

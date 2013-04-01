@@ -6,6 +6,7 @@ module Constructed
             Log.debug(["Constructing a #{instance.monicker} with params", params], 8)
             components = params[:components]
             quality    = params[:quality]
+            creator    = nil
             randomized = false
             if params[:randomize]
                 unless components
@@ -14,8 +15,10 @@ module Constructed
                 end
                 quality ||= Quality.random
             else
-                raise(ArgumentError, ":components is a required parameter for non-random equipment.") unless components
-                raise(ArgumentError, ":quality is a required parameter for non-random equipment.") unless quality
+                [:creator, :components, :quality].each do |key|
+                    raise(ArgumentError, "#{key.inspect} is a required parameter for non-random equipment.") unless params[key]
+                end
+                instance.set_creator(params[:creator])
             end
 
             # Remove component items from the world, unless they're freshly created.
@@ -35,6 +38,22 @@ module Constructed
             instance.properties[:quality] = quality_level
             instance.set_container_contents(:incidental, components)
         end
+
+        def pack(instance)
+            {:creator => instance.get_creator}
+        end
+
+        def unpack(core, instance, raw_data)
+            instance.set_creator(raw_data[:creator])
+        end
+    end
+
+    def get_creator
+        @creator
+    end
+
+    def set_creator(value)
+        @creator = value.uid
     end
 
     def get_random_components(params)

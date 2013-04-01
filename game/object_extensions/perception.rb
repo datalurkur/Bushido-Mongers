@@ -72,6 +72,19 @@ module Perception
         end
     end
 
+    def find_all_objects(object_type, object_string, locations)
+        matches = []
+        # Explode inventory into appropriate categories.
+        if i = locations.index(:inventory)
+            locations.insert(i, :grasped, :stashed, :worn)
+            locations.delete(:inventory)
+        end
+        locations.each do |location|
+            matches.concat(filter_objects(location, {:type => object_type, :name => object_string}))
+        end
+        matches
+    end
+
     def find_object(type_class, object, adjectives, locations)
         Log.warning("#{object.monicker} in find_object") if BushidoObject === object
 #        return object if (BushidoObject === object)
@@ -80,10 +93,9 @@ module Perception
         Log.debug(["Adjectives!", adjectives], 6) if adjectives && !adjectives.empty?
 
         # Explode inventory into appropriate categories.
-        # FIXME - changes ordering.
-        if locations.include?(:inventory)
+        if i = locations.index(:inventory)
+            locations.insert(i, :grasped, :stashed, :worn)
             locations.delete(:inventory)
-            locations += [:grasped, :stashed, :worn]
         end
 
         # Sort through the potentials and find out which ones match the query
