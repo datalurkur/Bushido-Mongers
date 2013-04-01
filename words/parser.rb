@@ -70,6 +70,18 @@ module WordParser
             end
         end
 
+=begin
+        load_files(dict_dir, "preposition_noun.txt").each do |match, lines|
+            lines.each do |line|
+                words = line.split(/\s+/).map(&:to_sym)
+                raise "Specifier '#{words.inspect}' should be 3 words!" unless words.size == 3
+                verb, preposition, case_name = words
+                preposition = nil if preposition == :nil
+                db.add_verb_preposition(verb, preposition, case_name)
+                db.add_family(:preposition => preposition) if preposition
+            end
+        end
+=end
         load_files(dict_dir, "preposition_verb.txt").each do |match, lines|
             lines.each do |line|
                 words = line.split(/\s+/).map(&:to_sym)
@@ -107,26 +119,17 @@ module WordParser
     # Can only happen on the server side.
     def self.read_raws(db, raws_db)
         Log.debug("Reading raws")
+        add_raws(db, raws_db, :command,   :verb,      "commands")
+        add_raws(db, raws_db, :item,      :noun,      "item types")
+        add_raws(db, raws_db, :archetype, :noun,      "NPC types")
+        add_raws(db, raws_db, :material,  :adjective, "materials")
+    end
 
-        raws_db.types_of(:command).each do |comm|
-            db.add_keyword_family(:command, :verb => comm)
+    private
+    def self.add_raws(db, raws_db, type, pos, desc)
+        raws_db.types_of(type).each do |raw|
+            db.add_keyword_family(type, pos => raw)
         end
-        Log.debug("Found #{db.get_keyword_groups(:command).size} commands.")
-
-        raws_db.types_of(:item).each do |item|
-            db.add_keyword_family(:item, :noun => item)
-        end
-        Log.debug("Found #{db.get_keyword_groups(:item).size} item types.")
-
-        # There is no :npc type anymore, so we have to be more clever about this
-        raws_db.types_of(:archetype).each do |comm|
-            db.add_keyword_family(:npc, :noun => comm)
-        end
-        Log.debug("Found #{db.get_keyword_groups(:npc).size} NPCs.")
-
-        raws_db.types_of(:material).each do |mat|
-            db.add_keyword_family(:material, :adjective => mat)
-        end
-        Log.debug("Found #{db.get_keyword_groups(:material).size} materials.")
+        Log.debug("Found #{db.get_keyword_groups(type).size} #{desc}.")
     end
 end
