@@ -14,3 +14,4 @@ drop
 hide
 unhide
 attach
+spawn

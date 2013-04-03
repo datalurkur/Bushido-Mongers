@@ -5,7 +5,7 @@ module Words
     # to the object-finder to narrow the search.
     # parameter: A whitespace-separated list of words in string format.
     def self.decompose_command(entire_command)
-        Log.debug(["command text entered: #{entire_command.inspect}"], 1)
+        Log.debug(["Command text entered: #{entire_command.inspect}"], 1)
 
         # handle the special case of command style: 'this is text that i'm speaking, indicated by the initial quote.
         if entire_command[0].chr == "'"
@@ -29,15 +29,11 @@ module Words
         unless commands.include?(verb)
             related = self.db.get_related_words(verb) || []
             matching_commands = commands & related
-            if related.empty? || matching_commands.empty?
-                # Non-existent command; let the playing state handle it.
-                return args
-            end
-
             if matching_commands.size > 1
                 raise(StandardError, "'#{verb}' has too many command synonyms: #{matching_commands.inspect}")
+            elsif matching_commands.size == 1
+                args[:command] = matching_commands.first
             end
-            args[:command] = matching_commands.first
         end
 
         # Commands involving statements need to be parsed differently.

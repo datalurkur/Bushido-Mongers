@@ -16,6 +16,12 @@ args = Words.decompose_command("aTTack Spider")
 raise unless args[:command] == :attack
 raise unless args[:target] == :spider
 
+args = Words.decompose_command("spawn gold")
+raise unless args[:command] == :spawn
+raise unless args[:target] == :gold
+
+args = Words.decompose_command("flibberdygibber whoosafarglebert humperdink")
+
 args = Words.decompose_command("look self")
 raise unless args[:target] == :self
 
