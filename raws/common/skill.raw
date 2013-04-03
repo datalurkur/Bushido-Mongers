@@ -16,5 +16,7 @@ abstract aspect skill {
     has float familiarity_gain_rate;
     familiarity_gain_rate 0.02;
 
+    class_many optional sym opposed_aspects;
+
     uses skill;
 }

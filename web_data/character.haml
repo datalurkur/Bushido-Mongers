@@ -35,15 +35,15 @@
                                 %th Skill
                                 %th Intrinsic
                                 %th Familiarity
-                            -character.skill_list.each do |skill|
+                            -character.skills.each do |skill_name, skill_value|
                                 %tr
-                                    %td=skill
+                                    %td=skill_name
                                     %td
                                         %div.progress
-                                            %span{:style => "width: #{(character.skill(skill).properties[:intrinsic] * 100).to_i}%"}
+                                            %span{:style => "width: #{(skill_value.properties[:intrinsic] * 100).to_i}%"}
                                     %td
                                         %div.progress
-                                            %span{:style => "width: #{(character.skill(skill).properties[:familiarity] * 100).to_i}%"}
+                                            %span{:style => "width: #{(skill_value.properties[:familiarity] * 100).to_i}%"}
                     %div.hiddentab#map
                         %img{:src => lobby.map_uri_for(username)}
         .footer

@@ -5,6 +5,7 @@ abstract root command {
     class optional sym location;
 
     class optional sym invocation;
+    class optional sym skill;
 }
 
 /* Info commands. */
@@ -72,13 +73,21 @@ construct cook {}
 construct forge {
     location anvil;
     tool hammer;
+
+    skill smithing;
 }
 
-construct craft {}
+construct craft {
+    skill crafting;
+}
 
-construct make_bow {}
+construct make_bow {
+    skill bowmaking;
+}
 
-construct fletch {}
+construct fletch {
+    skill fletching;
+}
 
 post_process {
     self.find_subtypes(:command, {}, true).each do |command|

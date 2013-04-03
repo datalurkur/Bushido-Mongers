@@ -324,7 +324,8 @@ module Commands
                 result_hash[:tool] = weapon
             end
 
-            success = attacker.opposed_check(skill, Difficulty.standard, defender, :defense)
+            check_results = attacker.make_opposed_attempt(skill, defender)
+            success = check_results[0]
 
             # Target a random body part if location not specified
             part_targeted = params[:location] || defender.external_body_parts.rand
@@ -338,6 +339,7 @@ module Commands
                 defender.damage(damage, attacker, part_targeted)
             end
 
+            # TODO - Add the results of opposed checks to the message
             locations = [attacker.absolute_position, defender.absolute_position]
             Message.dispatch_positional(core, locations, :unit_attacks, {
                 :attacker      => attacker,
@@ -464,20 +466,30 @@ module Commands
 
         def self.do(core, params)
             # Determine object quality
-            # FIXME - Actually make quality based on a skill roll
-            #related_skill = params[:command]
-            #skill_roll    = params[:agent].make_check(related_skill)
-            quality       = Quality.standard
+            related_skill        = core.db.info_for(params[:command])[:skill] || params[:command]
+            # FIXME - Add difficulties based on materials and recipes (a recipe might be easy to make with copper, but much harder with steel, for example)
+            crafting_difficulty  = Difficulty.standard
+            skill_roll           = params[:agent].make_attempt(related_skill, crafting_difficulty)
+            quality_value        = Quality.value_of(Quality.standard) + skill_roll
 
-            # Construct the new object
-            # The "constructed" extension ensures that components are removed from the world, quality is computed correctly given the quality of the ingredients, and the creator is assigned
-            core.create(params[:target], {
-                :components => params[:components],
-                :quality    => quality,
-                :creator    => params[:agent]
-            })
+            if (0..1).include?(quality_value)
+                quality = Quality.value_at(quality_value)
 
-            Log.debug("#{params[:agent].monicker} has crafted a #{quality} #{params[:target]}")
+                # Construct the new object
+                # The "constructed" extension ensures that components are removed from the world, quality is computed correctly given the quality of the ingredients, and the creator is assigned
+                core.create(params[:target], {
+                    :components => params[:components],
+                    :quality    => quality,
+                    :creator    => params[:agent]
+                })
+                Log.debug("#{params[:agent].monicker} has #{params[:command]}ed a #{quality} #{params[:target]}")
+            else
+                # Failed!  Destroy the components
+                params[:components].each do |component|
+                    component.destroy(params[:agent])
+                end
+                Log.debug("#{params[:agent].monicker} flubbed an attempt to #{params[:command]} a #{params[:target]}")
+            end
         end
 
         def self.contains_type?(core, type, list)

@@ -29,21 +29,24 @@ module HasAspects
 
         def at_creation(instance, params)
             instance.setup_attribute_set
-            # This is performed after creation, by whatever code has knowledge of the agent's profession
-            #setup_skill_set
         end
 
         def at_message(instance, message)
-            instance.attributes.each { |k,a| a.increment_tick }
-            instance.skills.each     { |k,s| s.increment_tick }
+            if message.type == :tick
+                instance.attributes.each { |k,a| a.increment_tick }
+                instance.skills.each     { |k,s| s.increment_tick }
+            end
         end
     end
 
+    # =============================
+    # ATTRIBUTE SETUP AND ACCESSORS
+    # =============================
     def attributes; @attributes ||= {}; end
     def setup_attribute_set
         # Compute a set of variances
         variances = if class_info[:random_attributes]
-            default_values     = get_attribute_defaults(properties[:attributes])
+            default_values     = properties[:attributes].collect { |a| @core.db.info_for(a)[:default_intrinsic] }
             relative_offset    = class_info[:attribute_offset] || 0
             variance_per_value = class_info[:random_variance]
 
@@ -57,20 +60,19 @@ module HasAspects
             attributes[name] = @core.create(name, {:intrinsic_bonus => variances[i]})
         end
     end
-    def attribute(attribute)
-        raise(UnknownType, "#{attribute} is not an attribute.") unless @core.db.is_type?(attribute, :attribute)
-        Log.warning("Doesn't have attribute: #{attribute}") unless attributes.has_key?(attribute)
-        attributes[attribute]
-    end
 
+    # =========================
+    # SKILL SETUP AND ACCESSORS
+    # =========================
     def skills; @skills ||= {}; end
+    # This is performed after creation, by whatever code has knowledge of the agent's profession
     def setup_skill_set(added_skills=[])
         properties[:skills].concat(added_skills)
         properties[:skills].uniq!
 
         # Compute a set of variances
         variances = if class_info[:random_skills]
-            default_values     = get_skill_defaults(properties[:skills])
+            default_values     = properties[:skills].collect { |s| @core.db.info_for(s)[:default_intrinsic] }
             relative_offset    = class_info[:skill_offset] || 0
             # FIXME: this should probably be different for attributes and skills.
             variance_per_value = class_info[:random_variance]
@@ -83,62 +85,73 @@ module HasAspects
         # Add the actual skills
         properties[:skills].each_with_index do |name, i|
             # TODO - mod bonuses based on attributes
-            add_skill(name, variances[i])
+            skills[name] = @core.create(name, :intrinsic_bonus => variances[i])
         end
     end
 
-    private
-    def add_skill(skill, intrinsic = 0)
-        skills[skill] = @core.create(skill, :intrinsic_bonus => intrinsic)
-    end
-    public
-
-    def skill(skill)
-        raise(UnknownType, "#{skill} is not a skill.") unless @core.db.is_type?(skill, :skill)
-        if skills.has_key?(skill)
-            skills[skill]
-        else
-            add_skill(skill)
-        end
-    end
-
+    # =================
+    # COMMON PUBLIC API
+    # =================
     def get_aspect(aspect)
         if attributes.has_key?(aspect)
             attributes[aspect]
         elsif skills.has_key?(aspect)
             skills[aspect]
         elsif @core.db.is_type?(aspect, :skill)
-            add_skill(aspect)
+            skills[aspect] = @core.create(aspect)
         else
             nil
         end
     end
 
-    # -- #
+    def make_attempt(aspect_name, difficulty)
+        (difficulty = Difficulty.value_of(difficulty)) if (Symbol === difficulty)
+        Log.debug("#{monicker} making an attempt to use #{aspect_name} with difficulty #{difficulty}")
 
-    def make_check(aspect_sym, difficulty = Difficulty.standard)
-        # FIXME: Use the best? Use them all? Use the most appropriate?
-        if Array === aspect_sym
-            aspect_sym = aspect_sym.first
+        aspect = get_aspect(aspect_name)
+        raise(MissingProperty, "#{self.monicker} has no aspect #{aspect_name}") if aspect.nil?
+
+        result = aspect.make_check(attributes)
+        margin = result - difficulty
+        Log.debug("Resulting check and margin of success: #{result} / #{margin}")
+
+        aspect.improve(margin)
+        aspect.practice(margin) if aspect.uses?(Skill)
+
+        return margin
+    end
+
+    def make_opposed_attempt(aspect_name, target)
+        aspect = get_aspect(aspect_name)
+        raise(MissingProperty, "#{self.monicker} has no aspect #{aspect_name}") if aspect.nil?
+        attempt_result = aspect.make_check(attributes)
+
+        if target.uses?(HasAspects)
+            opposed_results = []
+            aspect.class_info[:opposed_aspects].each do |opposed|
+                opposition = target.make_attempt(opposed, attempt_result)
+                opposed_results << [opposed, opposition]
+
+                aspect.improve(-opposition)
+                aspect.practice(-opposition) if aspect.uses?(Skill)
+
+                if opposition > 0
+                    return [true, opposed_results]
+                end
+            end
+            return [false, opposed_results]
+        else
+            margin = result - Difficulty.value_of(:trivial)
+            aspect.improve(margin)
+            aspect.practice(margin) if aspect.uses?(Skill)
+            return [margin > 0, [:difficulty, margin]]
         end
-        aspect = get_aspect(aspect_sym)
-        raise "No aspect #{aspect_sym} on #{self.monicker}!" if aspect.nil?
-
-        aspect.improve(difficulty) if skills.has_key?(aspect_sym)
-        aspect.check(difficulty, attributes)
     end
 
-    # FIXME - right now difficulty affects aspect, associate attribute, AND opposer difficulty.
-    def opposed_check(aspect, difficulty, opposer, opposed_aspect)
-        roll = make_check(aspect, difficulty)
-        # If opposer hasn't aspects, just do a regular difficulty check.
-        opposed_roll =  opposer.uses?(HasAspects) ?
-                        opposer.make_check(opposed_aspect, difficulty) :
-                        Difficulty.value_of(difficulty)
-        Log.debug([roll, opposed_roll], 6)
-        return roll > opposed_roll
-    end
-
+    # ================
+    # INTERNAL METHODS
+    # ================
+    private
     # Find a list of modifiers to the default attributes whose total fits within the range.
     def generate_variances(default_values, variance_per_value, relative_offset)
         return [] if default_values.empty?
@@ -200,19 +213,5 @@ module HasAspects
         end while !acceptable_range.include?(defaults_total + variance_total)
         Log.debug("Generated after #{count} iterations.") if report_generation_count
         variances
-    end
-
-    def get_attribute_defaults(names)
-        names = Array(names)
-        names.collect do |name|
-            @core.db.info_for(name)[:default_intrinsic]
-        end
-    end
-
-    def get_skill_defaults(names)
-        names = Array(names)
-        names.collect do |skill|
-            @core.db.info_for(skill)[:default_intrinsic]
-        end
     end
 end

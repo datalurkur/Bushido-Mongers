@@ -6,6 +6,8 @@ abstract low_skill fighting_skill {
     associated_attribute strength;
     attribute_scaling 0.2;
 
+    opposed_aspects defense;
+
     class optional sym japanese_name;
 
     class_many optional sym weapons;

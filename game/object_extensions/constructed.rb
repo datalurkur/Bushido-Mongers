@@ -18,7 +18,7 @@ module Constructed
                 [:creator, :components, :quality].each do |key|
                     raise(ArgumentError, "#{key.inspect} is a required parameter for non-random equipment.") unless params[key]
                 end
-                instance.set_creator(params[:creator])
+                instance.set_creator(params[:creator].uid)
             end
 
             # Remove component items from the world, unless they're freshly created.
@@ -53,7 +53,7 @@ module Constructed
     end
 
     def set_creator(value)
-        @creator = value.uid
+        @creator = value
     end
 
     def get_random_components(params)

@@ -1,4 +1,24 @@
-low_skill crafting_skill {
+low_skill crafting {
+    associated_attribute intelligence;
+    attribute_scaling 0.2;
+}
+
+low_skill cooking {
+    associated_attribute intelligence;
+    attribute_scaling 0.2;
+}
+
+no_skill fletching {
+    associated_attribute intelligence;
+    attribute_scaling 0.2;
+}
+
+no_skill bowmaking {
+    associated_attribute intelligence;
+    attribute_scaling 0.2;
+}
+
+no_skill smithing {
     associated_attribute intelligence;
     attribute_scaling 0.2;
 }

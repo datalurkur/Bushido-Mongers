@@ -36,27 +36,42 @@ module Aspect
         end
     end
 
-    def attempt(difficulty, attributes)
-        roll = check(difficulty, attributes)
-        Log.debug(["Rolled #{roll} from attribute", self.monicker])
-        roll > Difficulty.value_of(difficulty)
+    def current_tick;       @current_tick ||= 0;                       end
+    def current_tick=(val); @current_tick = val;                       end
+
+    def increment_tick;     self.current_tick = self.current_tick + 1; end
+
+    def last_used;          @last_used    ||= 0;                       end
+    def last_used=(val);    @last_used = val;                          end
+
+    def make_check(attributes)
+        self.last_used = self.current_tick
+        base_intrinsic = @properties[:intrinsic]
+
+        # A intrinsic may or may not be affected by another intrinsic or attribute
+        associated_attribute = class_info[:associated_attribute]
+        intrinsic = if associated_attribute
+            attribute_scaling = class_info[:attribute_scaling]
+            attribute_value   = attributes[associated_attribute].make_check(attributes)
+            (attribute_value * attribute_scaling) + (base_intrinsic * (1.0 - attribute_scaling))
+        else
+            base_intrinsic
+        end
+
+        # Use intrinsic as a baseline, and allow familiarity to vary the outcome based on the variance
+        check = roll(intrinsic, class_info[:variance], @properties[:familiarity] || 0.0)
+        Log.debug("Rolled a #{check} for a #{monicker} check", 6)
+        check
     end
 
-    # TODO - Fix this ugly hack
-    # This is required so that Skill can safely overload this method
-    def check(difficulty, attributes)
-        _check(difficulty, attributes)
+    def improve(margin_of_success)
+        aspect_gain = compute_aspect_gain(margin_of_success, @properties[:intrinsic], 0.0025)
+        @properties[:intrinsic] = clamp(@properties[:intrinsic] + aspect_gain)
+        Log.debug("#{self.monicker} intrinsic improved to #{@properties[:intrinsic]}", 8)
     end
 
-    def current_tick;        @current_tick ||= 0;   end
-    def current_tick=(val);  @current_tick = val;   end
-
-    def increment_tick;      self.current_tick = self.current_tick + 1; end
-
-    def last_used;           @last_used    ||= 0;   end
-    def last_used=(val);     @last_used = val;      end
-
-    def make_check(intrinsic, variance, familiarity)
+    private
+    def roll(intrinsic, variance, familiarity)
         clamp(
             intrinsic + (                            # Use intrinsic as a basic offset (ballpark the result)
                 variance * (                         # Scale the result of our randomness by the variance
@@ -73,34 +88,12 @@ module Aspect
         )
     end
 
-    # Increase intrinsic
-    def improve(difficulty)
-        difficulty = Difficulty.value_of(difficulty) if Symbol === difficulty
-
-        amount = 0.0025 * (1 - @properties[:intrinsic])**2 * difficulty
-        @properties[:intrinsic] = clamp(@properties[:intrinsic] + amount)
-        Log.debug("#{self.monicker} improved to #{@properties[:intrinsic]}", 8)
-    end
-
-    private
-    def _check(difficulty, attributes)
-        @last_used  = @current_tick
-        base_intrinsic  = @properties[:intrinsic]
-
-        # A intrinsic may or may not be affected by another intrinsic or attribute
-        associated_attribute = class_info[:associated_attribute]
-        intrinsic = if associated_attribute
-            attribute_scaling = class_info[:attribute_scaling]
-            attribute_value   = attributes[associated_attribute].check(difficulty, attributes)
-            (attribute_value * attribute_scaling) + (base_intrinsic * (1.0 - attribute_scaling))
-        else
-            base_intrinsic
-        end
-
-        # Use intrinsic as a baseline, and allow familiarity to vary the outcome based on the variance
-        roll = make_check(intrinsic, class_info[:variance], @properties[:familiarity] || 0.0)
-        Log.debug("Rolled a #{roll} for a #{difficulty} #{monicker} check", 6)
-        roll
+    # We want the most improvement to happen at the lowest margin of success
+    #  This creates incentive to take on the most challenging tasks one can succeed at
+    def compute_aspect_gain(margin_of_success, current_value, adjustment_scale)
+        improvement_factor = 1 - margin_of_success.abs
+        improvement_amount = adjustment_scale * (1 - current_value)**2 * improvement_factor
+        improvement_amount
     end
 
     def clamp(thing)
@@ -120,22 +113,17 @@ module Skill
     end
 
     def increment_tick
-        super()
-        languish if current_tick - last_used > class_info[:familiarity_loss]
-    end
-
-    def check(difficulty, attributes)
-        practice(difficulty)
-        _check(difficulty, attributes)
+        self.current_tick = self.current_tick + 1
+        languish if self.current_tick - self.last_used > class_info[:familiarity_loss]
     end
 
     # Increase familiarity
-    def practice(difficulty)
-        # Use the difficulty of the training / task being performed to determine familiarity gain
-        # FIXME - Calling .floor here is....of questionable usefulness
-        difficulty_adjustment = 2 ** Difficulty.difference(Difficulty.value_at(@properties[:intrinsic].floor), difficulty)
-        amount = @properties[:familiarity_gain_rate] * difficulty_adjustment
-        @properties[:familiarity] = clamp(@properties[:familiarity] + amount)
+    def practice(margin_of_success)
+        aspect_gain = compute_aspect_gain(margin_of_success,
+                                          @properties[:intrinsic],
+                                          @properties[:familiarity_gain_rate])
+        @properties[:familiarity] = clamp(@properties[:familiarity] + aspect_gain)
+        Log.debug("#{self.monicker} familiarity improved to #{@properties[:familiarity]}", 8)
     end
 
     # Decrease familiarity

@@ -21,6 +21,6 @@ end
     [:intrinsic_fighting,       :trivial]
 ].each do |aspect, difficulty|
     Log.debug("Attempting to #{aspect} with difficulty #{difficulty}")
-    result = aspects[aspect].attempt(difficulty, aspects)
-    Log.debug("Result: #{result}")
+    result = aspects[aspect].make_check(aspects)
+    Log.debug("Result: #{result.inspect}")
 end
