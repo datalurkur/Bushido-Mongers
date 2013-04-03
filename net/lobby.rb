@@ -219,11 +219,17 @@ class Lobby
     def perform_command(username, params)
         begin
             data = case params[:command]
-            when :spawn
+            when :spawn,:summon
                 raise(InvalidCommandError, "Permission denied") unless is_admin?(username)
-                raise(InvalidCommandError, "Spawn what?") unless params[:target]
-                @game_core.create(params[:target])
-                "Spawning a #{params[:target]}"
+                raise(InvalidCommandError, "#{params[:command].title} what?") unless params[:target]
+                creator  = @game_core.get_character(username)
+                position = creator.absolute_position
+                if params[:command] == :spawn
+                    @game_core.create(params[:target], {:position => position})
+                elsif params[:command] == :summon
+                    @game_core.create_agent(params[:target], false, {:position => position})
+                end
+                "#{params[:command].title}ing a #{params[:target]}"
             when :help
                 params[:target] ||= @game_core.db.types_of(:command)
                 Words.describe_help(params)

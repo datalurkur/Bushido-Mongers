@@ -56,6 +56,7 @@ module HasAspects
         end
 
         # Add the actual attributes
+        Log.debug("Adding #{properties[:attributes].size} attributes for #{monicker}", 8)
         properties[:attributes].each_with_index do |name, i|
             attributes[name] = @core.create(name, {:intrinsic_bonus => variances[i]})
         end
@@ -122,11 +123,13 @@ module HasAspects
     end
 
     def make_opposed_attempt(aspect_name, target)
+        Log.debug("#{monicker} making an attempt to use #{aspect_name} against #{target.monicker}")
+
         aspect = get_aspect(aspect_name)
         raise(MissingProperty, "#{self.monicker} has no aspect #{aspect_name}") if aspect.nil?
         attempt_result = aspect.make_check(attributes)
 
-        if target.uses?(HasAspects)
+        if target.uses?(HasAspects) && target.uses?(Perception)
             opposed_results = []
             aspect.class_info[:opposed_aspects].each do |opposed|
                 opposition = target.make_attempt(opposed, attempt_result)

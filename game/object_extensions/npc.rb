@@ -34,7 +34,7 @@ module NpcBehavior
         begin
             Commands.do(@core, command, args)
         rescue Exception => e
-            Log.error(["NPC failed to perform command #{command}", e.message, e.backtrace])
+            Log.error(["#{monicker} failed to perform command #{command}", e.message, e.backtrace])
         end
     end
 end
