@@ -31,7 +31,7 @@ Behavior.define(:flee) do |actor|
         direction = position.connected_directions.rand
         if direction
             location = position.get_adjacent(direction)
-            actor.move_to(location)
+            actor.move_to(location, direction)
             true
         else
             false
