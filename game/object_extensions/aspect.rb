@@ -51,12 +51,13 @@ module Aspect
         # A intrinsic may or may not be affected by another intrinsic or attribute
         associated_attribute = class_info[:associated_attribute]
         intrinsic = if associated_attribute
-            unless attributes[associated_attribute]
-                Log.warning(["Attributes", attributes])
-                raise(MissingProperty, "#{monicker} doesn't have access to a #{associated_attribute} attribute")
+            attribute_value = unless attributes[associated_attribute]
+                Log.debug("#{monicker} does not have a required attribute, #{associated_attribute}")
+                0
+            else
+                attributes[associated_attribute].make_check(attributes)
             end
             attribute_scaling = class_info[:attribute_scaling]
-            attribute_value   = attributes[associated_attribute].make_check(attributes)
             (attribute_value * attribute_scaling) + (base_intrinsic * (1.0 - attribute_scaling))
         else
             base_intrinsic
