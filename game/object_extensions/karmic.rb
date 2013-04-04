@@ -6,11 +6,9 @@ module Karmic
             instance.set_name(params[:name])
             # TODO - Create a notoriety table
             instance.set_notoriety(params[:notoriety] || :unknown)
-            if params[:factions]
-                params[:factions].each do |faction|
-                    # TODO - Store interesting information about the standing of this object in the factions given
-                    instance.add_faction(faction)
-                end
+            instance.class_info[:factions].each do |faction|
+                # TODO - Store interesting information about the standing of this object in the factions given
+                instance.add_faction(faction, nil)
             end
         end
 
@@ -88,6 +86,7 @@ module Karmic
 
     def factions; @factions ||= {}; end
     def add_faction(faction, info)
+        Log.debug("Adding #{monicker} to #{faction} faction", 8)
         factions[faction] = info
     end
     def set_factions(value); @factions = value; end

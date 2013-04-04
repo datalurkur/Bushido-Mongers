@@ -46,6 +46,7 @@ end
 Behavior.define(:attack) do |actor|
     # FIXME - We need a better way to determine if two parties should behave aggressively towards each other
     aligned_list = actor.filter_objects(:position, {:uses => Perception})
+    aligned_list.reject! { |a| a == actor }
     enemies = aligned_list.select { |npc| Behavior.are_enemies?(npc, actor) }
     if enemies.empty?
         false
@@ -64,6 +65,7 @@ Behavior.define(:consume) do |actor|
     consumables = [:position, :grasped, :stashed].collect do |location|
         actor.filter_objects(location, {:type => consumable_type})
     end.flatten
+    consumables.reject! { |c| c == actor }
 
     if consumables.empty?
         Log.debug("#{actor.monicker} finds nothing to consume", 6)

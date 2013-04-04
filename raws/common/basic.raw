@@ -6,11 +6,6 @@ abstract root object {
     hardness insubstantial;
 }
 
-abstract root karmic {
-    has_many sym factions;
-    uses karmic;
-}
-
 abstract root position {
     uses position;
 }

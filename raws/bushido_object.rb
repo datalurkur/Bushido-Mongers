@@ -64,14 +64,7 @@ class BushidoObject
 
             # Add extensions
             type_info[:uses].each do |mod|
-                object.add_extension(mod)
-            end
-
-            # Perform first-time extension creation
-            type_info[:uses].each do |mod|
-                next unless mod.respond_to?(:at_creation)
-                result = mod.at_creation(object, params)
-                object.properties.merge!(result) if Hash === result
+                object.setup_extension(mod, params)
             end
 
             # Initialize property values
@@ -183,6 +176,10 @@ class BushidoObject
         [@type, [@properties]].to_formatted_string(prefix, nest_prefix)
     end
 
+    def setup_extension(extension, params)
+        add_extension(extension)
+        extension.at_creation(self, params) if extension.respond_to?(:at_creation)
+    end
     def add_extension(extension)
         @extensions << extension
         extend extension

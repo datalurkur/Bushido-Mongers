@@ -73,24 +73,22 @@ class GameCore
         Log.debug("Creating #{type} agent", 6)
         agent = create(type, hash)
 
-        agent.add_extension(Perception)
-        agent.add_extension(Karmic)
-        if hash[:name]
-            agent.set_name(hash[:name])
-        elsif player
+        agent.setup_extension(Perception, hash)
+        agent.setup_extension(Karmic, hash)
+        if player && !hash[:name]
             raise(ArgumentError, "Player was not given a name")
         end
 
         starting_skills = []
         feral           = agent.class_info[:feral] && !player
         if player
-            agent.add_extension(Character)
+            agent.setup_extension(Character, hash)
             # FIXME - Add starting skills from new player info
             # As a hack, just add a random profession for now
             random_profession = @db.types_of(:profession, false).rand
             starting_skills = @db.info_for(random_profession, :skills)
         else
-            agent.add_extension(NpcBehavior)
+            agent.setup_extension(NpcBehavior, hash)
             if agent.class_info[:typical_profession]
                 profession_info = @db.info_for(agent.class_info[:typical_profession])
                 agent.set_behavior(profession_info[:typical_behavior])
@@ -99,10 +97,7 @@ class GameCore
         end
         agent.setup_skill_set(starting_skills)
 
-        unless feral
-            agent.add_extension(Equipment)
-            agent.add_random_equipment
-        end
+        agent.setup_extension(Equipment, hash) unless feral
 
         agent
     end
