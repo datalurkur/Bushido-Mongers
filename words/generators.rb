@@ -133,9 +133,16 @@ module Words
 
     def self.describe_body(body)
         body[:definite] = true
-        sentences = [gen_sentence(:subject => body, :verb => :have, :target => body)]
         body[:possessor_info] = possessor_info(body)
-        sentences << describe_whole_composition(body)
+
+        target_body = Marshal.load(Marshal.dump(body))
+        target_body[:properties][:adjectives] ||= []
+        target_body[:properties][:adjectives] << body[:type]
+        target_body[:monicker] = body[:part_name] if body[:part_name]
+        target_body[:definite] = false
+
+        sentences  = [gen_sentence(:subject => body, :verb => :have, :target => target_body)]
+        sentences += [describe_whole_composition(body)]
 
         # TODO - Add more information about abilities, features, etc.
 

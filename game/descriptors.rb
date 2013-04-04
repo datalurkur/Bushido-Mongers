@@ -29,24 +29,21 @@ class Descriptor
 
     class BushidoObjectDescriptor
         def self.describe(object, observer)
-            # FIXME - Take the observer into account
+            # TODO - Take the observer into account
             # TODO - SERIOUSLY obfuscate details if object is :hidden
             d = {
-                :type => object.get_type
+                :type => object.get_type,
+                :uid  => object.uid,
             }
 
             d[:name]             = object.name if object.uses?(Karmic)
             d[:monicker]         = (d[:name] || d[:type])
-
-            d[:name] = d[:monicker] = :you if observer && d[:monicker] == observer.monicker
 
             # Collect parent type information
             d[:is_type]          = object.type_ancestry
 
             # Collect property information
             d[:properties]       = Descriptor.describe(object.properties, observer)
-            # Undecided as to whether these are useful to have - lots of duplication
-            #d[:class_properties] = Descriptor.describe(object.class_info, observer)
 
             if object.uses?(Composition)
                 d[:container_contents] = {}
@@ -78,6 +75,9 @@ class Descriptor
                 end
                 d[:properties].delete(:intrinsic)
             end
+
+            # Copy over from the class info.
+            d[:part_name] = object.class_info[:part_name]
 
             # FIXME - Add more things
 

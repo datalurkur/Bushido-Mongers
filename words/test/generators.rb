@@ -59,6 +59,7 @@ end
 require './game/character_loader'
 observer = $core.create_agent(:human, true, {:name => "Kenji Skrimshank", :position => FakeRoom.new})
 agent = Descriptor::BushidoObjectDescriptor.describe(observer, observer)
+#Log.debug(agent)
 Log.debug(Words.describe_body(agent))
 target = db_create($core.db, :goat, "Billy Goat Balrog")
 target = Descriptor::BushidoObjectDescriptor.describe(target, observer)
@@ -71,3 +72,4 @@ puts Words.describe_attack(:defender => agent, :attacker => target, :command => 
 target = db_create($core.db, :chest, "Bosom")
 target = Descriptor::BushidoObjectDescriptor.describe(target, observer)
 Log.debug(Words.describe_container_class(target))
+Log.debug(Words.describe_composition_root(target))

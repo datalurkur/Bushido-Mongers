@@ -259,12 +259,12 @@ module Words
                         end
                         raise TypeError, hash[:monicker].class.to_s unless [String, Symbol].include?(hash[:monicker].class)
 
-                        hash[:definite]       = noun[:definite] if noun[:definite]
+                        hash[:definite]       = noun[:definite] unless noun[:definite].nil?
                         hash[:possessor_info] = noun[:possessor_info] if noun[:possessor_info]
                         hash[:adjectives]     = Adjective.new_for_descriptor(noun)
                         # Verb is used for preposition lookups.
                         hash[:adj_phrases]    = AdjectivePhrase.new_for_descriptor(noun.merge(:verb => args[:verb]))
-                        hash[:adj_phrases]   += noun[:adjective_phrases] if noun[:adjective_phrases]
+                        hash[:adj_phrases]   += noun[:properties][:adjective_phrases] if noun[:properties] && noun[:properties][:adjective_phrases]
                     else
                         hash[:monicker] = noun
                     end
@@ -572,10 +572,12 @@ module Words
         class Determiner < ParseTree::PTLeaf
             class << self
                 def new_for_noun(noun, first_word, definite)
-                    if noun[:possessor_info]
-                        Possessive.new(noun[:possessor_info])
-                    elsif Noun.needs_article?(noun[:monicker])
-                        Article.new(noun[:monicker], first_word, definite)
+                    if Noun.needs_article?(noun[:monicker])
+                        if noun[:possessor_info] && definite.nil?
+                            Possessive.new(noun[:possessor_info])
+                        else
+                            Article.new(noun[:monicker], first_word, definite)
+                        end
                     else
                         nil
                     end
@@ -622,7 +624,7 @@ module Words
         end
 
         class Article < Determiner
-            def initialize(noun, first_word = nil, definite = false)
+            def initialize(noun, first_word = nil, definite = nil)
                 if Article.article?(noun)
                     super(noun)
                 elsif definite || Noun.definite?(noun)

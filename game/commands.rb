@@ -441,7 +441,7 @@ module Commands
                 a) Return more information about that thing (or query for more information about the intention)
                 b) Link those things into a recipe and prepare to construct it
 =end
-            raise(MissingObjectExtension, "Only creatures with skill can construct objets") unless params[:agent].uses?(HasAspects)
+            raise(MissingObjectExtension, "Only creatures with skill can construct objects") unless params[:agent].uses?(HasAspects)
             Log.debug("#{params[:agent].monicker} is attempting to #{params[:command]} an object")
 
             raise(MissingProperty, "What do you want to #{params[:command]}?") unless params[:target]
