@@ -61,7 +61,7 @@ abstract ungulate canine {
     weight 50;
 }
 
-abstract body kraken {
+abstract body,basic_attributes kraken {
     weight 400;
 
     typical_size gargantuan;
