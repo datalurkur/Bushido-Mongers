@@ -74,6 +74,7 @@ class GameCore
         agent = create(type, hash)
 
         agent.setup_extension(Perception, hash)
+        agent.setup_extension(Knowledge, hash)
         agent.setup_extension(Karmic, hash)
         if player && !hash[:name]
             raise(ArgumentError, "Player was not given a name")
