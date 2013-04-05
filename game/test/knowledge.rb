@@ -13,3 +13,8 @@ guru = core.create_agent(:human, false, {})
 guru.add_knowledge_of([:info], true)
 recipes = guru.get_knowledge_of([:info, :katana, :recipes])
 Log.debug(["Guru knows about the following katana recipes:", recipes])
+
+apprentice = core.create_agent(:human, false, {})
+apprentice.add_knowledge_of([:info, :katana, :recipes])
+recipes = apprentice.get_knowledge_of([:info, :katana, :recipes])
+Log.debug(["Apprentice knows about the following katana recipes:", recipes])
