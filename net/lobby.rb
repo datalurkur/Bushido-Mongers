@@ -368,6 +368,7 @@ class Lobby
                     send_to_user(username, Message.new(:begin_playing))
                 end
             rescue Exception => e
+                Log.error([e.message, e.backtrace])
                 send_to_user(username, Message.new(:character_not_ready, {:reason => e.message}))
             end
         when :list_characters

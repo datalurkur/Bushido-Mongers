@@ -50,25 +50,7 @@ class Room < ZoneLeaf
     # Determines how a leaf populates itself
     def populate
         Log.debug("Populating leaf #{name}")
-
-        # FIXME: This should be somewhere else, and not so inclusive.
-        @parent.add_starting_location(self)# if Chance.take(:coin_toss)
-
-        populate_npcs
         populate_items
-    end
-
-    def populate_npcs
-        npc_types = @core.db.info_for(self.zone_type, :spawn_npcs)
-
-        Log.debug("No acceptable NPC types found for #{self.zone_type}!") if npc_types.empty?
-
-        # Actually spawn the NPCs; just one of each type for now.
-        npc_types.each do |type|
-            if Rarity.roll(@core.db.info_for(type, :spawn_rarity))
-                @core.create_agent(type, false, {:position => self })
-            end
-        end
     end
 
     def populate_items
@@ -89,14 +71,6 @@ class Area < ZoneContainer
         @core   = core
         @params = params
         super(name, size, depth)
-    end
-
-    def add_starting_location(location)
-        if @parent
-            @parent.add_starting_location(location) if @parent
-        else
-            starting_locations << location
-        end
     end
 
     # Decides whether an Area populates its sub-Areas / Leaves directly, or defers to them to do so

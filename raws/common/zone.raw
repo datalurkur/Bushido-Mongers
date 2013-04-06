@@ -26,20 +26,16 @@ abstract root zone {
 }
 
 post_process {
-    name = :spawn_npcs
     self.find_subtypes(:zone, {}, true).each do |zone|
-        unless info_for(zone, name).empty?
-            set_info(zone, name,
-                modify_info(zone, name, []).map { |spawns| types_of(spawns) }.flatten.uniq
-            )
-        end
-    end
-    self.find_subtypes(:archetype, {}, true).each do |npc|
-        if spawns_in = info_for(npc, :spawns_in)
-            spawns_in.each do |zone|
-                set_info(zone, name,
-                    (modify_info(zone, name, []) + [npc]).uniq
-                )
+        unless info_for(zone, :spawn_npcs).empty?
+            # Get a list of non-abstract NPCs that spawn in this zone
+            npc_types = info_for(zone, :spawn_npcs).map { |npc_type| types_of(npc_type) }.flatten.uniq
+            set_info(zone, :spawn_npcs, npc_types)
+
+            # Add this zone's data to the NPCs that spawn here
+            npc_types.each do |npc_type|
+                spawn_zones = info_for(npc_type, :spawns_in)
+                modify_info(npc_type, :spawns_in).concat(zone).uniq!
             end
         end
     end

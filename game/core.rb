@@ -2,6 +2,7 @@ require './world/factories'
 require './game/tables'
 require './game/object_extensions'
 require './game/character_loader'
+require './game/managers/population'
 require './raws/db'
 require './util/exceptions'
 
@@ -21,21 +22,31 @@ class GameCore
         @usage_mutex.synchronize do
             Log.info("Setting up game core")
 
-            @uid_count = 0
-
-            @tick_rate     = args[:tick_rate] || (30)
-            @ticking       = false
+            # Setup various game variables
+            # ----------------------------
+            @tick_rate = args[:tick_rate] || (30)
+            @ticking   = false
 
             # Read the raws
+            # -------------
             raw_group = args[:raw_group] || "default"
             @db       = ObjectDB.get(raw_group)
-            # And the word text information.
             @words_db = WordParser.load
-            # And finally read in some basic noun & adjective information from the raws db.
             WordParser.read_raws(@words_db, @db)
 
-            setup_world(args)
+            # Prepare for object creation
+            # ---------------------------
+            @uid_count            = 0
             @awaiting_destruction = []
+
+            # Setup the physical world
+            # ------------------------
+            setup_world(args)
+
+            # Seed the world with NPCs
+            # ------------------------
+            @population_manager = PopulationManager.new(self)
+            @population_manager.setup
 
             @setup = true
         end
@@ -167,7 +178,13 @@ class GameCore
 
             character, failures = CharacterLoader.attempt_to_load(self, username, character_name)
             if character
-                character.set_initial_position(cached_positions[username] || @world.random_starting_location)
+                starting_location = cached_positions[username]
+                unless starting_location
+                    spawn_location_types = @population_manager.get_info(character.get_type)[:spawns]
+                    starting_location    = @world.get_random_location(spawn_location_types)
+                    starting_location  ||= @world.get_random_location
+                end
+                character.set_initial_position(starting_location)
                 character.set_user_callback(lobby, username)
 
                 characters[username] = character
@@ -182,7 +199,10 @@ class GameCore
         ret = nil
         @usage_mutex.synchronize do
             agent_params = details.reject { |k,v| [:race].include?(k) }
-            agent_params[:position] = @world.random_starting_location
+
+            spawn_location_types      = @population_manager.get_info(details[:race])[:spawns]
+            agent_params[:position]   = @world.get_random_location(spawn_location_types)
+            agent_params[:position] ||= @world.get_random_location
 
             # FIXME - Get type information from the user arguments
             character = create_agent(details[:race], true, agent_params)

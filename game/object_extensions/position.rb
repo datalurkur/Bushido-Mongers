@@ -134,6 +134,6 @@ module Position
     end
 
     def safe_position
-        raise UnexpectedBehaviorError, "#{self.monicker} (#{self.type}) has no position!" unless has_position?
+        raise UnexpectedBehaviorError, "#{self.monicker} (#{self.get_type}) has no position!" unless has_position?
     end
 end

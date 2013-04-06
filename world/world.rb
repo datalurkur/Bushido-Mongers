@@ -11,14 +11,10 @@ class World < Area
         end
     end
 
-    # Also see the recursive method Area::add_starting_location.
-    def starting_locations
-        @starting_locations ||= []
-    end
-
-    def random_starting_location
-        raise(StateError, "No starting locations!") if starting_locations.empty?
-        starting_locations.rand
+    def get_random_location(types=nil)
+        candidates = self.leaves
+        (candidates = candidates.select { |c| types.include?(c) }) if types
+        candidates.rand
     end
 
     def get_room_layout(total_size, corridor_ratio)
