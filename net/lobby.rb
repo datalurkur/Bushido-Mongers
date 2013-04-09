@@ -227,7 +227,7 @@ class Lobby
                 if params[:command] == :spawn
                     @game_core.create(params[:target], {:position => position})
                 elsif params[:command] == :summon
-                    @game_core.create_agent(params[:target], false, {:position => position})
+                    @game_core.create_npc(params[:target], {:position => position})
                 end
                 "#{params[:command].title}ing a #{params[:target]}"
             when :help

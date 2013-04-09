@@ -90,7 +90,7 @@ class GameCore
     end
 
     def create_npc(type, hash = {})
-        @population_manager.create(type, false, hash)
+        @population_manager.create_agent(type, false, hash)
     end
 
     def flag_for_destruction(object, destroyer)
