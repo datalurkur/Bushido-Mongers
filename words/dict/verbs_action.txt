@@ -16,3 +16,4 @@ unhide
 attach
 spawn
 summon
+contain

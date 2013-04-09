@@ -2,7 +2,6 @@
 
 class Descriptor
     def self.container?(args)
-#        Log.debug(args)
         args[:is_type].include?(:composition_root) &&
         args[:container_contents].has_key?(:internal) &&
         args[:properties][:mutable_container_classes].include?(:internal)
@@ -26,6 +25,11 @@ module Words
             elsif target[:is_type].include?(:body)
                 return describe_body(target)
             elsif target[:is_type].include?(:composition_root)
+                if Descriptor.container?(location)
+                    return describe_container_class(location)
+                else
+                    return describe_composition_root(location)
+                end
                 return describe_whole_composition(target)
             elsif target[:is_type].include?(:item)
                 return gen_sentence(args)
@@ -179,17 +183,42 @@ module Words
         args[:target].map { |c| [c, *Words.db.get_related_words(c)].join(" ") }.join("\n") + "\n"
     end
 
-    def self.describe_container_class(composition, klass = :internal)
-        list = composition[:container_contents][klass]
+    def self.describe_container_class(composition, comp_type = :internal)
+        raise unless Hash === composition
 
-        gen_copula(
-            :subject   => (list && !list.empty? ? list : :nothing),
-            :location  => composition
-        )
+        if comp_type == :internal && !composition[:properties][:open]
+            composition[:definite] = true
+            return gen_copula(
+                :subject    => composition,
+                :adjective  => :closed
+            )
+        end
+
+        list = composition[:container_contents][comp_type]
+        composition_verbs = { :internal => :contain }
+
+        if rand(2) == 0
+            gen_copula(
+                :subject   => (list && !list.empty? ? list : Sentence::Noun.new(:nothing)),
+                :location  => composition
+            )
+        else
+            composition[:definite] = true
+            gen_sentence(
+                :subject  => composition,
+                :verb     => composition_verbs[comp_type],
+                :target   => (list && !list.empty? ? list : Sentence::Noun.new(:nothing))
+            )
+        end
+    end
+
+    def self.describe_object(obj)
+        obj[:complement] = Sentence::NounPhrase.new(obj[:type])
+        gen_copula(obj)
     end
 
     def self.describe_composition_root(composition)
-        sentences = []
+        sentences = [describe_object(composition)]
 
         composition_verbs = {
             :external => :attach,
@@ -223,7 +252,7 @@ module Words
     end
 
     def self.describe_whole_composition(composition)
-        sentences = []
+        sentences = []#describe_object(composition)]
 
         composition_verbs = {
             :external => :attach,
@@ -246,7 +275,10 @@ module Words
                     # Cascade possession down.
                     list.each { |p| p[:possessor_info] = current_comp[:possessor_info] }
 
-                    location = {:monicker => current_comp[:monicker], :possessor_info => current_comp[:possessor_info] }
+                    location = {
+                        :monicker => current_comp[:part_name] || current_comp[:monicker],
+                        :possessor_info => current_comp[:possessor_info]
+                    }
                     case comp_type
                     when :external
                         external += list
@@ -307,7 +339,6 @@ module Words
         sentences.flatten.join(" ")
     end
 
-    # TODO - Still not a proper copula.
     def self.gen_copula(args = {})
         unless args[:subject] || args[:agent]
             args[:subject] = :it
