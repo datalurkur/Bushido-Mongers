@@ -49,6 +49,7 @@ class Descriptor
                 d[:container_contents] = {}
                 object.container_classes.each do |prop|
                     contents = object.container_contents(prop)
+                    next if prop == :internal && !object.properties[:open]
                     if contents && !contents.empty?
                         d[:container_contents][prop] = contents.collect do |o|
                             Descriptor.describe(o, observer)
