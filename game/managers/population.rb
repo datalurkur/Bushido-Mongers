@@ -164,11 +164,11 @@ class PopulationManager
     def unit_moves(unit, src, dst)
         type = unit.get_type
         if src
-            unless @groups[type][:populations][location]
-                raise(NoMatchError, "No population of #{type} found at #{location}")
+            unless @groups[type][:populations][src]
+                raise(NoMatchError, "No population of #{type} found at #{src}")
             end
-            @groups[type][:populations][location] -= 1
-            @groups[type][:populations].delete(location) if @groups[type][:populations][location] == 0
+            @groups[type][:populations][src] -= 1
+            @groups[type][:populations].delete(src) if @groups[type][:populations][src] == 0
         end
 
         if dst
