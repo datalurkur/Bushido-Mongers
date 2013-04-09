@@ -13,6 +13,9 @@ class CoreWrapper < GameCore
         @words_db = WordParser.load
         # And finally read in some basic noun & adjective information from the raws db.
         WordParser.read_raws(@words_db, @db)
+
+        @population_manager = PopulationManager.new(self)
+        @population_manager.setup
     end
 end
 

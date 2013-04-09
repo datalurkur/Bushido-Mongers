@@ -47,6 +47,7 @@ class GameCore
             # ------------------------
             @population_manager = PopulationManager.new(self)
             @population_manager.setup
+            @population_manager.seed_population
 
             @setup = true
         end
@@ -58,6 +59,9 @@ class GameCore
             @db            = nil
             @words_db      = nil
             @ticking       = false
+
+            @population_manager.teardown
+            @population_manager = nil
 
             @setup = false
         end
@@ -75,48 +79,18 @@ class GameCore
         @uid_count += 1
     end
 
+    # MANAGER ACCESSORS
+    # =================
+    def populations; @population_manager; end
+
+    # CREATION AND DESTRUCTION
+    # ========================
     def create(type, hash = {})
         @db.create(self, type, next_uid, hash)
     end
 
-    # This will likely be moved to the population manager
-    def create_agent(type, player, hash = {})
-        Log.debug("Creating #{type} agent", 6)
-        agent = create(type, hash)
-
-        agent.setup_extension(Perception, hash)
-        agent.setup_extension(Knowledge, hash)
-        agent.setup_extension(Karmic, hash)
-        if player && !hash[:name]
-            raise(ArgumentError, "Player was not given a name")
-        end
-
-        starting_skills = []
-        feral           = agent.class_info[:feral] && !player
-        if player
-            agent.setup_extension(Character, hash)
-            # FIXME - Add starting skills from new player info
-            # As a hack, just add a random profession for now
-            random_profession = @db.types_of(:profession, false).rand
-            starting_skills = @db.info_for(random_profession, :skills)
-        else
-            agent.setup_extension(NpcBehavior, hash)
-            if agent.class_info[:typical_profession]
-                profession_info = @db.info_for(agent.class_info[:typical_profession])
-                agent.set_behavior(profession_info[:typical_behavior])
-                starting_skills = profession_info[:skills]
-            end
-        end
-        agent.setup_skill_set(starting_skills)
-
-        agent.setup_extension(Equipment, hash) unless feral
-
-        agent
-    end
-
     def create_npc(type, hash = {})
-        # TODO - Add random profession generation
-        create_agent(type, false, hash)
+        @population_manager.create(type, false, hash)
     end
 
     def flag_for_destruction(object, destroyer)
@@ -131,6 +105,7 @@ class GameCore
     end
 
     # TICK MAINTENANCE
+    # ================
     def start_ticking
         already_ticking = false
         @usage_mutex.synchronize do
@@ -171,6 +146,7 @@ class GameCore
     end
 
     # CHARACTER MAINTENANCE
+    # =====================
     def load_character(lobby, username, character_name)
         ret = nil
         @usage_mutex.synchronize do
@@ -180,7 +156,7 @@ class GameCore
             if character
                 starting_location = cached_positions[username]
                 unless starting_location
-                    spawn_location_types = @population_manager.get_info(character.get_type)[:spawns]
+                    spawn_location_types = @population_manager[character.get_type][:spawns]
                     starting_location    = @world.get_random_location(spawn_location_types)
                     starting_location  ||= @world.get_random_location
                 end
@@ -196,16 +172,12 @@ class GameCore
         return ret
     end
     def create_character(lobby, username, details)
+        agent_params = details.reject { |k,v| [:race].include?(k) }
+
         ret = nil
         @usage_mutex.synchronize do
-            agent_params = details.reject { |k,v| [:race].include?(k) }
-
-            spawn_location_types      = @population_manager.get_info(details[:race])[:spawns]
-            agent_params[:position]   = @world.get_random_location(spawn_location_types)
-            agent_params[:position] ||= @world.get_random_location
-
             # FIXME - Get type information from the user arguments
-            character = create_agent(details[:race], true, agent_params)
+            character = @population_manager.create_agent(details[:race], true, agent_params)
             characters[username] = character
             Log.info("Character #{character.monicker} created for #{username}")
             character.set_user_callback(lobby, username)
@@ -249,6 +221,7 @@ class GameCore
     end
 
     # PRIVATE (NOT THREADSAFE) METHODS
+    # ================================
     private
     def setup_world(args)
         Log.debug("Creating world")

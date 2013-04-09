@@ -57,7 +57,7 @@ def db_create(db, test_npc_type, name)
 end
 
 require './game/character_loader'
-observer = $core.create_agent(:human, true, {:name => "Kenji Skrimshank", :position => FakeRoom.new})
+observer = $core.populations.create_agent(:human, true, {:name => "Kenji Skrimshank", :position => FakeRoom.new})
 agent = Descriptor::BushidoObjectDescriptor.describe(observer, observer)
 #Log.debug(agent)
 Log.debug(Words.describe_body(agent))

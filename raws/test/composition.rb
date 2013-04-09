@@ -8,7 +8,7 @@ Log.setup("Main", "test")
 core = CoreWrapper.new
 
 Log.debug("Creating human")
-test_body = core.create_agent(:human, true, {:name => "Kenji Skrimshank", :position => FakeRoom.new})
+test_body = core.populations.create_agent(:human, true, {:name => "Kenji Skrimshank", :position => FakeRoom.new})
 Log.debug("Test body is called #{test_body.monicker}")
 test_body.kill(nil)
 Log.debug("Test body is called #{test_body.monicker}")

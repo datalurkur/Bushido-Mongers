@@ -97,7 +97,11 @@ module Knowledge
         category, path = query_path[0], query_path[1..-1]
         case category
         when :location
-            raise(NotImplementedError, "We are yet unable to locate things")
+            if path.size > 1
+                Log.warning("Location paths are intended to be of singular depth (either a name or a type)")
+                Log.warning("#{path[1..-1].inspect} will be discarded")
+            end
+            @core.populations.locate(path[0])
         when :details
             raise(NotImplementedError, "We are yet unable to detail things")
         when :info
