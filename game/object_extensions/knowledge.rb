@@ -101,6 +101,8 @@ module Knowledge
                 Log.warning("Location paths are intended to be of singular depth (either a name or a type)")
                 Log.warning("#{path[1..-1].inspect} will be discarded")
             end
+            # TODO - Add in factional searching as well
+            #      - "Where is the bandit camp?" should search the factions for bandits of every archetype
             @core.populations.locate(path[0])
         when :details
             raise(NotImplementedError, "We are yet unable to detail things")
