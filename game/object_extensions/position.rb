@@ -105,13 +105,8 @@ module Position
                 :origin        => origin,
                 :destination   => destination
             }
-            if direction
-                # Send different messages to origin and destination
-                Message.dispatch_positional(@core, origin,      :unit_moves, msg_args.merge(:destination => direction))
-                Message.dispatch_positional(@core, destination, :unit_moves, msg_args.merge(:origin      => Zone.direction_opposite(direction)))
-            else
-                Message.dispatch_positional(@core, [origin, destination], :unit_moves, msg_args)
-            end
+            msg_args[:direction] = direction if direction
+            Message.dispatch_positional(@core, [origin, destination], :unit_moves, msg_args)
         end
 
         _set_position(destination)

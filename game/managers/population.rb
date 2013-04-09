@@ -150,7 +150,7 @@ class PopulationManager
 
     def unit_leaves(type, location)
         unless @groups[type][:populations][location]
-            raise(NoMatchError, "No population of #{type} found at #{location.monicker}") 
+            raise(NoMatchError, "No population of #{type} found at #{location}")
         end
         @groups[type][:populations][location] -= 1
         @groups[type][:populations].delete(location) if @groups[type][:populations][location] == 0
