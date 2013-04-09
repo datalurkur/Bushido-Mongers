@@ -1,5 +1,4 @@
 # TODO
-#   - Listen for move / death messages and track population movement / dwindling
 #   - Listen for ticks and automatically spawn new population members
 #   - Listen for death messages and adjust rarity accordingly
 #   - Listen for move messages and disable spawns that have players in them (no fun in spawning things directly on top of players)
@@ -10,13 +9,18 @@ class PopulationManager
         @core = core
     end
 
+    def listens_for; [:unit_moves,:unit_killed,:unit_renamed,:object_destroyed]; end
+
     def setup
+        @named          = {}
         @groups         = {}
         @diabled_spawns = []
 
         load_from_raws
 
-        Message.register_listener(@core, :unit_moves, self)
+        listens_for.each do |message_type|
+            Message.register_listener(@core, message_type, self)
+        end
     end
 
     def seed_population
@@ -31,7 +35,9 @@ class PopulationManager
     end
 
     def teardown
-        Message.unregister_listener(@core, :unit_moves, self)
+        listens_for.each do |message_type|
+            Message.unregister_listener(@core, message_type, self)
+        end
 
         @groups          = nil
         @disabled_spawns = nil
@@ -39,26 +45,34 @@ class PopulationManager
 
     def process_message(message)
         # Get the population type involved if this will affect a population type
-        unit_type = case message.type
+        unit = case message.type
         when :unit_moves
-            message.agent.get_type
+            message.agent
         when :unit_killed,:object_destroyed
-            message.target.get_type
+            message.target
         end
 
-        if unit_type && @groups[unit_type].nil?
-            raise(NoMatchError, "No record of population type #{unit_type.inspect}")
+        if unit && @groups[unit.get_type].nil?
+            raise(NoMatchError, "No record of population type #{unit.get_type.inspect}")
         end
 
         case message.type
         when :unit_moves
-            unit_leaves(unit_type, message.origin)
-            unit_enters(unit_type, message.destination)
+            unit_moves(unit, message.origin, message.destination)
         when :unit_killed,:object_destroyed
-            unit_leaves(unit_type, message.location)
+            unit_moves(unit, message.location, nil)
         when :tick
             Log.info("#{self.class} spawning new population members")
             Log.warning("IMPLEMENT ME")
+        when :unit_renamed
+            if message.params[:old_name]
+                old_name = hash_name(message.old_name)
+                new_name = hash_name(message.name)
+                if @named[old_name]
+                    @named[new_name] = @named[old_name]
+                    @named.delete(old_name)
+                end
+            end
         else
             Log.warning("#{self.class} ignoring message type #{message.type}")
         end
@@ -70,9 +84,14 @@ class PopulationManager
     end
     def locate(type_or_name)
         if @groups[type_or_name]
-            @groups[type_or_name][:populations]
+            return @groups[type_or_name][:populations]
         else
-            raise(NotImplementedError, "#{self.class} does not yet support lookups by name")
+            name = hash_name(type_or_name)
+            if @named[name]
+                return {@named[name] => 1}
+            else
+                return {}
+            end
         end
     end
     def enable_spawn(location)
@@ -91,8 +110,6 @@ class PopulationManager
             hash[:position]      = @core.world.get_random_location(spawn_location_types)
             hash[:position]    ||= @core.world.get_random_location
         end
-        @groups[type][:populations][hash[:position]] ||= 0
-        @groups[type][:populations][hash[:position]] += 1
 
         agent = @core.create(type, hash)
 
@@ -123,6 +140,7 @@ class PopulationManager
 
         agent.setup_extension(Equipment, hash) unless feral
 
+        unit_moves(agent, nil, agent.absolute_position)
         agent
     end
 
@@ -143,16 +161,32 @@ class PopulationManager
         }
     end
 
-    def unit_enters(type, location)
-        @groups[type][:populations][location] ||= 0
-        @groups[type][:populations][location] += 1
+    def unit_moves(unit, src, dst)
+        type = unit.get_type
+        if src
+            unless @groups[type][:populations][location]
+                raise(NoMatchError, "No population of #{type} found at #{location}")
+            end
+            @groups[type][:populations][location] -= 1
+            @groups[type][:populations].delete(location) if @groups[type][:populations][location] == 0
+        end
+
+        if dst
+            @groups[type][:populations][dst] ||= 0
+            @groups[type][:populations][dst] += 1
+        end
+
+        if unit.name
+            unit_name = hash_name(unit.name)
+            if dst
+                @named[unit_name] = dst
+            else
+                @named.delete(unit_name)
+            end
+        end
     end
 
-    def unit_leaves(type, location)
-        unless @groups[type][:populations][location]
-            raise(NoMatchError, "No population of #{type} found at #{location}")
-        end
-        @groups[type][:populations][location] -= 1
-        @groups[type][:populations].delete(location) if @groups[type][:populations][location] == 0
+    def hash_name(name)
+        name.downcase.to_sym
     end
 end

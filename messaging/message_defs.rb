@@ -77,9 +77,8 @@ Message.define(:tick,             :tick)
 Message.define(:unit_moves,       :core, [:agent, :origin, :destination])
 Message.define(:unit_attacks,     :core, [:attacker, :defender, :success, :result_hash])
 Message.define(:unit_acts,        :core, [:agent, :action, :location, :action_hash])
-
+Message.define(:unit_renamed,     :core, [:agent, :name])
 Message.define(:unit_speaks,      :core, [:agent, :statement, :is_whisper])
-
 Message.define(:unit_killed,      :core, [:target, :location])
 Message.define(:object_destroyed, :core, [:target, :location])
 

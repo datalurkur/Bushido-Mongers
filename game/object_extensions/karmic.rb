@@ -3,7 +3,7 @@ require './util/log'
 module Karmic
     class << self
         def at_creation(instance, params)
-            instance.set_name(params[:name])
+            instance.set_name(params[:name]) if params[:name]
             # TODO - Create a notoriety table
             instance.set_notoriety(params[:notoriety] || :unknown)
             instance.class_info[:factions].each do |faction|
@@ -62,7 +62,11 @@ module Karmic
     end
 
     def name; @name; end
-    def set_name(name); @name = name; end
+    def set_name(name)
+        raise(ArgumentError, "No name given when setting name") unless name
+        Message.dispatch(@core, :unit_renamed, {:agent => self, :old_name => @name, :name => name})
+        @name = name
+    end
 
     def notoriety; @notoriety; end
     def set_notoriety(value); @notoriety = value; end
