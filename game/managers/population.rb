@@ -9,7 +9,7 @@ class PopulationManager
         @core = core
     end
 
-    def listens_for; [:unit_moves,:unit_killed,:unit_renamed,:object_destroyed]; end
+    def listens_for; [:unit_moves,:unit_killed,:unit_renamed]; end
 
     def setup
         @named          = {}
@@ -48,7 +48,7 @@ class PopulationManager
         unit = case message.type
         when :unit_moves
             message.agent
-        when :unit_killed,:object_destroyed
+        when :unit_killed
             message.target
         end
 
@@ -59,7 +59,7 @@ class PopulationManager
         case message.type
         when :unit_moves
             unit_moves(unit, message.origin, message.destination)
-        when :unit_killed,:object_destroyed
+        when :unit_killed
             unit_moves(unit, message.location, nil)
         when :tick
             Log.info("#{self.class} spawning new population members")

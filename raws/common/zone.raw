@@ -26,7 +26,8 @@ abstract root zone {
 }
 
 post_process {
-    self.find_subtypes(:zone, {}, true).each do |zone|
+    zone_types = self.find_subtypes(:zone, {}, true)
+    zone_types.each do |zone|
         unless info_for(zone, :spawn_npcs).empty?
             # Get a list of non-abstract NPCs that spawn in this zone
             npc_types = info_for(zone, :spawn_npcs).map { |npc_type| types_of(npc_type) }.flatten.uniq

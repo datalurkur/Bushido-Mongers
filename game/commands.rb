@@ -142,7 +142,8 @@ module Commands
                 # Do normal consumption
                 Log.info("#{agent.monicker} eats #{params[:target].monicker} like a normal person.")
             end
-            params[:target].destroy(agent)
+            # TODO - Move the target to the agent's digester organ (whatever that might be) and let it undergo an acid burn there
+            Transforms.transform(:digest, core, params[:target], {:agent => params[:agent]})
         end
     end
 
