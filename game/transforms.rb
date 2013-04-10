@@ -16,7 +16,7 @@ module Transforms
                 return
             end
 
-            unless object.uses?(Character) || object.uses?(NpcBehavior)
+            unless object.alive?
                 Log.warning("#{object.monicker} would appear to already be dead")
                 return
             end

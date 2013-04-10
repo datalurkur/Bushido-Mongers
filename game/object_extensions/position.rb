@@ -96,7 +96,7 @@ module Position
 
         # FIXME - This is actually a determination of whether something locomotes or *is moved*
         # FIXME - Shouldn't print messages for hidden moving things
-        if self.uses?(Character) || self.uses?(NpcBehavior)
+        if self.uses?(Corporeal) && self.alive?
             origin = self.absolute_position
             msg_args =
             {

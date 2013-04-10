@@ -8,6 +8,12 @@ module Corporeal
             raise(MissingObjectExtensionError, "Corporeal objects are required to be compositions") unless instance.uses?(Composition)
             instance.animate
         end
+
+        def at_destruction(instance, destroyer, vaporize)
+            if instance.alive? && !vaporize
+                instance.kill(destroyer)
+            end
+        end
     end
 
     def animate
@@ -40,8 +46,12 @@ module Corporeal
         end
     end
 
+    def alive?
+        uses?(Character) || uses?(NpcBehavior)
+    end
+
     def kill(attacker)
-        Log.debug("Killing #{monicker}!")
+        raise(StateError, "#{self.monicker} is already dead!") unless alive?
         if attacker == self
             Log.warning("Something just killed itself...yep, that's a bug.")
         end
