@@ -1,12 +1,9 @@
 humanoid,monster oni {
-    size medium;
-
     spawns_in mountain;
     spawn_rarity unusual;
 }
 
 humanoid,monster jikininki {
-    size small;
     consumes body_part;
     typical_profession forager;
 
@@ -15,7 +12,6 @@ humanoid,monster jikininki {
 
 arachnoid,monster spider {
     adjectives giant; /* It is big for a spider, all right? */
-    size medium;
 
     spawns_in sewer;
     spawn_rarity common;
@@ -23,22 +19,20 @@ arachnoid,monster spider {
 
 kraken,monster sewer_kraken {
     adjectives sewer;
-    size gargantuan;
+    typical_size enormous;
 
     spawns_in sewer;
     spawn_rarity singular;
 }
 
 swarm,monster swarm_of_flesh_eating_scarabs {
-    size medium;
-
     spawns_in sewer dungeon;
     spawn_rarity rare;
 }
 
 tortoise,monster snapping_tortoise {
     adjectives adolescent mutant ninja;
-    size medium;
+    typical_size small;
 
     spawns_in sewer;
     spawn_rarity rare;

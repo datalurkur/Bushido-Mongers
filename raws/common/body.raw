@@ -1,6 +1,4 @@
-abstract item,composition,adjustable_size body_part {
-    has int hp;
-
+abstract item,composition body_part {
     /* Body parts are worthless by default */
     value 0;
 }
@@ -9,6 +7,8 @@ abstract body_part,has_aspects body {
     class optional sym consumes;
     class optional proc on_consume;
     class string part_name;
+
+    typical_size medium;
 
     uses corporeal;
 }

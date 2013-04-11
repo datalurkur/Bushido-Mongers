@@ -1,4 +1,4 @@
 item anvil {
-    size medium;
+    typical_size small;
     weight 100;
 }

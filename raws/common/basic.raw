@@ -1,16 +1,17 @@
 abstract root object {
+    class sym typical_size;
+
+    typical_size small;
+
     has float weight;
     has sym size;
+    has float density;
 
-    class float hardness;
-    hardness insubstantial;
+    density 0.5;
+
+    uses destructable;
 }
 
 abstract root position {
     uses position;
-}
-
-abstract root adjustable_size {
-    class sym typical_size;
-    uses adjustable_size;
 }

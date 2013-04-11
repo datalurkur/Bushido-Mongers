@@ -7,7 +7,6 @@ constructed,item,sword katana {
     handedness one;
     /* can_parry */
     length 2..3;
-    size medium;
 
     recipes {
         technique craft;
@@ -20,7 +19,6 @@ constructed,item,sword wakizashi {
     handedness one;
     /* can_parry */
     length 1..2;
-    size medium;
 
     recipes {
         technique craft;
@@ -33,7 +31,6 @@ constructed,item,sword dagger {
     handedness one;
     /* can_parry */
     length 0..1;
-    size medium;
 
     recipes {
         technique craft;
@@ -46,7 +43,6 @@ constructed,item,sword nagamaki {
     handedness two;
     /* can_parry */
     length 4; /* half is the handle */
-    size large;
 
     recipes {
         technique forge;
@@ -60,7 +56,6 @@ constructed,item,sword cavalry_sword {
     /* can_parry */
     /* 165-178 cm; too long for close-quarters combat */
     length 4..5;
-    size large;
 
     recipes {
         technique forge;
@@ -74,7 +69,6 @@ constructed,item,melee_weapon longstaff {
     handedness two;
     /* can_parry */
     length 6..9;
-    size large;
 
     recipes {
         technique craft;
@@ -88,7 +82,6 @@ constructed,item,melee_weapon shortstaff {
     handedness two;
     /* can_parry */
     length 4.2;
-    size medium;
 
     recipes {
         technique craft;
@@ -102,7 +95,6 @@ constructed,item,melee_weapon halfstaff {
     handedness two;
     /* can_parry */
     length 3;
-    size small;
 
     recipes {
         technique craft;
@@ -116,7 +108,6 @@ constructed,item,melee_weapon jutte {
     handedness one;
     /* can_parry, can_block */
     length 1;
-    size small;
 
     recipes {
         technique forge;
@@ -129,7 +120,6 @@ constructed,item,melee_weapon spear {
     type piercing;
     handedness two;
     length 3.5..23; /* !! */
-    size medium; /* should be based on length here. */
 
     recipes {
         technique forge;
@@ -140,7 +130,6 @@ constructed,item,melee_weapon spear {
 constructed,item,melee_weapon sickle {
     type piercing;
     handedness one;
-    size small;
 
     recipes {
         technique forge;
@@ -154,7 +143,6 @@ constructed,item,melee_weapon chain_and_sickle {
     handedness two;
     /* can_grapple */
     /* length based on chain? */
-    size medium;
 
     recipes {
         technique forge;
@@ -165,7 +153,6 @@ constructed,item,melee_weapon chain_and_sickle {
 constructed,item,melee_weapon hammer {
     type blunt;
     handedness one;
-    size large;
 
     recipes {
         technique craft;
@@ -179,7 +166,6 @@ constructed,item,melee_weapon glaive {
     handedness two;
     /* can_parry */
     length 7; /* blade: 2, shaft: 5 */
-    size large;
 
     recipes {
         technique craft;
@@ -193,7 +179,6 @@ constructed,item,melee_weapon sai {
     handedness one;
     /* can_parry */
     length 1;
-    size small;
 
     recipes {
         technique craft;
@@ -207,7 +192,6 @@ constructed,item,melee_weapon nunchucks {
     handedness one;
     /* can_parry? */
     length 2;
-    size small;
 
     recipes {
         technique craft;
@@ -219,7 +203,6 @@ constructed,item,ranged_weapon long_bow {
     japanese_name daikyū;
     type piercing;
     handedness two;
-    size large;
 
     recipes {
         technique bowmaking;
@@ -235,7 +218,6 @@ constructed,item,ranged_weapon short_bow {
     japanese_name hankyū;
     type piercing;
     handedness two;
-    size medium;
 
     recipes {
         technique bowmaking;
@@ -247,7 +229,6 @@ constructed,item,ranged_weapon matchlock {
     japanese_name tanegashima;
     type explosive;
     handedness two;
-    size medium;
 
     recipes {
         technique forge;
@@ -258,7 +239,8 @@ constructed,item,ranged_weapon matchlock {
 constructed,item,ammunition arrow {
     class sym japanese_name;
     japanese_name ya;
-    size medium;
+
+    typical_size tiny;
 
     recipes {
         technique fletching;

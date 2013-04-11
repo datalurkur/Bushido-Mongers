@@ -1,10 +1,9 @@
 item rock {
     weight 5;
-    size small;
 }
 
 item fraggle_rock {
     weight 0.005;
-    size tiny;
+    typical_size tiny;
     /*rarity singular;*/
 }

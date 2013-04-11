@@ -1,4 +1,4 @@
-consumable,adjustable_size flesh {
+consumable flesh {
     typical_size small;
     weight 1;
 }

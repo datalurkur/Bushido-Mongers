@@ -2,15 +2,13 @@
 /* SEWER */
 
 rodent,animal rat {
-    size tiny;
+    typical_size tiny;
 
     spawns_in sewer dock;
     spawn_rarity common;
 }
 
 canine,animal fox {
-    size medium;
-
     japanese_name kitsune;
 
     spawns_in meadow forest mountain tundra;
@@ -18,7 +16,7 @@ canine,animal fox {
 }
 
 snake,animal coral_snake {
-    size small;
+    typical_size tiny;
 
     spawns_in sewer meadow mountain forest jungle swamp desert;
     spawn_rarity common;
@@ -27,29 +25,25 @@ snake,animal coral_snake {
 lizard,animal gecko {
     /* TODO - actually make it poisonous */
     adjectives poisonous;
-    size small;
+    typical_size tiny;
 
     spawns_in sewer forest jungle swamp dungeon;
     spawn_rarity unusual;
 }
 
 rodent,animal mouse {
-    size tiny;
+    typical_size tiny;
 
     spawns_in meadow;
     spawn_rarity common;
 }
 
 ungulate,animal deer {
-    size medium;
-
     spawns_in meadow;
     spawn_rarity common;
 }
 
 ungulate,animal goat {
-    size medium;
-
     spawns_in meadow forest;
     spawn_rarity common;
 }

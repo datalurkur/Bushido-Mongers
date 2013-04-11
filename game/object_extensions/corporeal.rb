@@ -6,7 +6,7 @@ module Corporeal
     class << self
         def at_creation(instance, params)
             raise(MissingObjectExtensionError, "Corporeal objects are required to be compositions") unless instance.uses?(Composition)
-            instance.animate
+            instance.integrity = instance.all_body_parts.inject(0) { |s,p| s + p.integrity }
         end
 
         def at_destruction(instance, destroyer, vaporize)
@@ -14,10 +14,6 @@ module Corporeal
                 instance.kill(destroyer)
             end
         end
-    end
-
-    def animate
-        @properties[:total_hp] = all_body_parts.inject(0) { |s,p| s + p.properties[:hp] }
     end
 
     def all_body_parts(type = [:internal, :external])
@@ -35,9 +31,8 @@ module Corporeal
     def damage(amount, attacker, target=nil)
         # If a body part (target) isn't specified, just damage the body.
         target ||= self
-        target.properties[:hp] -= amount
-        @properties[:total_hp] -= amount
-        if target.properties[:hp] <= 0
+        target.integrity -= amount
+        if target.integrity <= 0
             if target == self
                 kill(attacker)
             else

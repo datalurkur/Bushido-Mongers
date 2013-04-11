@@ -1,16 +1,13 @@
 civil,humanoid human {
-    size medium;
 }
 
 civil,humanoid dwarf {
-    size small;
-
     spawns_in mountain;
     spawn_rarity uncommon;
 }
 
 civil,humanoid giant {
-    size enormous;
+    typical_size large;
 
     spawns_in mountain;
     spawn_rarity unusual;

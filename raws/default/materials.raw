@@ -13,58 +13,51 @@ abstract material organic {}
 organic chitin {
     weight 0.5;
     value 2;
-    size small;
-    hardness keratinous;
 }
 
 metal copper {
     weight 10;
     value 2;
-    size small;
     melting_point 1538;
-    hardness copper;
 }
 
 metal iron {
     weight 10;
     value 5;
-    size small;
     melting_point 1538;
-    hardness iron;
 }
 
 material paper {
     weight 0.1;
     value 1;
-    size tiny;
+    typical_size tiny;
 }
 
 leather leather_scrap {
     weight 2;
     value 10;
-    size tiny;
+    typical_size tiny;
 }
 
 wood alder {
     value 10;
     weight 2;
-    size small;
+    typical_size small;
 }
 
 wood bamboo {
     value 10;
     weight 1;
-    size medium;
 }
 
 thread silk {
     value 50;
     weight 0.1;
-    size tiny;
+    typical_size tiny;
 }
 
 material feather {
     value 5;
     weight 0.1;
-    size tiny;
+    typical_size miniscule;
 }

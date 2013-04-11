@@ -2,11 +2,11 @@ abstract item consumable {
 }
 
 consumable carrot {
-    size tiny;
+    typical_size tiny;
     weight 1;
 }
 
 consumable cooked_carrot {
-    size tiny;
+    typical_size tiny;
     weight 0.5;
 }

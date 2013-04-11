@@ -5,8 +5,6 @@ abstract item,loot equipment {
     class int protection;
     protection 0;
 
-    size small;
-
     class optional sym japanese_name;
 }
 
