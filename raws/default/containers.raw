@@ -1,17 +1,13 @@
 equipment,constructed,container backpack {
-    /* FIXME - This needs to be more generic (torso, for example) */
-    slot humanoid tortoise;
+    slot humanoid;
 
     recipes {
         technique craft;
-        components leather_scrap buckle;
+        components leather buckle;
     }
 }
 
 constructed,container chest {
-    /* randomly fill with 4 items */
-    internal loot loot loot loot;
-
     recipes {
         technique craft;
         components wood wood wood wood;

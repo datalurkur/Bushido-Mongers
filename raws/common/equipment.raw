@@ -1,4 +1,4 @@
-abstract loot equipment {
+abstract equipment {
     class_many sym slot;
 
     /* Protection can be based on a modifier manipulated by the material properties */
@@ -8,7 +8,7 @@ abstract loot equipment {
     class optional sym japanese_name;
 }
 
-abstract loot weapon {
+abstract weapon {
     /* TODO - Work out the slot (or slots) a weapon can go in based on its handedness */
     class sym handedness;
     class sym type;
@@ -23,7 +23,7 @@ abstract weapon melee_weapon {}
 
 abstract weapon ranged_weapon {}
 
-abstract loot ammunition {}
+abstract ammunition {}
 
 post_process {
     self.instantiable_types_of(:equipment).each do |equipment|

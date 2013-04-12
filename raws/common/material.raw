@@ -1,0 +1,5 @@
+abstract material {}
+
+abstract atomic_object,material raw_material {}
+
+abstract constructed,material derived_material {}

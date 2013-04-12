@@ -1,11 +1,46 @@
-material,constructed ingot {
+derived_material paper {
+    typical_size tiny;
+
+    recipes {
+        technique craft;
+        components fiber;
+    }
+}
+
+derived_material thread {
+    typical_size miniscule;
+
+    recipes {
+        technique spin;
+        components fiber;
+    }
+}
+derived_material fabric {
+    typical_size tiny;
+
+    recipes {
+        technique weave;
+        components thread;
+    }
+}
+
+derived_material leather {
+    typical_size tiny;
+
+    recipes {
+        technique tanning;
+        components skin;
+    }
+}
+
+derived_material ingot {
     recipes {
         technique forge;
         components metal;
     }
 }
 
-constructed buckle {
+derived_material buckle {
     typical_size tiny;
 
     recipes {
@@ -14,7 +49,7 @@ constructed buckle {
     }
 }
 
-constructed dagger_blade {
+derived_material dagger_blade {
     typical_size tiny;
 
     recipes {
@@ -23,7 +58,7 @@ constructed dagger_blade {
     }
 }
 
-constructed handle {
+derived_material handle {
     typical_size small;
 
     recipes {
@@ -32,14 +67,14 @@ constructed handle {
     }
 }
 
-constructed long_handle {
+derived_material long_handle {
     recipes {
         technique craft;
         components leather;
     }
 }
 
-constructed chain {
+derived_material chain {
     typical_size tiny;
 
     recipes {
@@ -48,7 +83,7 @@ constructed chain {
     }
 }
 
-constructed axe_blade {
+derived_material axe_blade {
     typical_size tiny;
 
     recipes {
@@ -57,14 +92,14 @@ constructed axe_blade {
     }
 }
 
-constructed sword_blade {
+derived_material sword_blade {
     recipes {
         technique forge;
         components metal;
     }
 }
 
-constructed long_sword_blade {
+derived_material long_sword_blade {
     recipes {
         technique forge;
         components metal;
