@@ -9,58 +9,58 @@ abstract command {
 }
 
 /* Info commands. */
-command stats {}
-command help {}
+static command stats {}
+static command help {}
 
 /* World-interaction commands. */
 
-command inspect {
+static command inspect {
     location composition;
 }
 
-command move {}
+static command move {}
 
-command attack {
+static command attack {
     target object;
     location body_part;
     tool object; /* weapon-specific lookups happen if no tool is specified */
 }
 
-command consume {
+static command consume {
     target consumable;
 }
 
-command get {
+static command get {
     target object;
 }
-command stash {
+static command stash {
     target object;
 }
-command drop {
-    target object;
-}
-
-command equip {
-    target object;
-}
-command unequip {
+static command drop {
     target object;
 }
 
-command hide {}
-command unhide {}
+static command equip {
+    target object;
+}
+static command unequip {
+    target object;
+}
 
-command open {
+static command hide {}
+static command unhide {}
+
+static command open {
     target composition;
 }
-command close {
+static command close {
     target composition;
 }
 
 /* PC-NPC Interactions. */
 
-command say {}
-command whisper {}
+static command say {}
+static command whisper {}
 
 /* Item construction. */
 
@@ -68,45 +68,52 @@ abstract command construct {
     invocation construct;
 }
 
-construct cook {}
+static construct cook {}
 
-construct forge {
+static construct forge {
     location anvil;
     tool hammer;
 
     skill smithing;
 }
 
-construct craft {
+static construct craft {
     skill crafting;
 }
 
-construct make_bow {
+static construct make_bow {
     skill bowmaking;
 }
 
-construct fletch {
+static construct fletch {
     skill fletching;
 }
 
 post_process {
-    self.find_subtypes(:command, {}, true).each do |command|
+    Log.debug("Processing raw command information")
+    self.static_types_of(:command).each do |command|
         Log.debug("Propagating tool information for #{command}", 6)
-        propagate_recursive(info_for(command, :tool)) do |subtype|
+        tool_type = info_for(command, :tool)
+        tools = tool_type ? instantiable_types_of(tool_type) : []
+        tools.each do |subtype|
             Log.debug("#{subtype} is a required tool for #{command}", 6)
             name = :used_for
             modify_info(subtype, name, []) << command
         end
 
         Log.debug("Propagating target information for #{command}", 6)
-        propagate_recursive(info_for(command, :target)) do |subtype|
+        target_type = info_for(command, :target)
+        targets = target_type ? instantiable_types_of(target_type) : []
+        targets.each do |subtype|
             Log.debug("#{subtype} is a target of #{command}", 6)
             name = :target_of
             modify_info(subtype, name, []) << command
         end
 
         Log.debug("Propagating location information for #{command}", 6)
-        propagate_recursive(info_for(command, :location)) do |subtype|
+        location_type = info_for(command, :location)
+        locations = location_type ? instantiable_types_of(location_type) : []
+        locations.each do |subtype|
             Log.debug("#{subtype} is the location at which #{command} happens", 6)
             name = :location_of
             modify_info(subtype, name, []) << command

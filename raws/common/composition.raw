@@ -54,7 +54,7 @@ abstract composition constructed {
 
 post_process {
     Log.debug("Propagating component information for constructed objects", 6)
-    types_of(:constructed, true).each do |constructed|
+    instantiable_types_of(:constructed).each do |constructed|
         recipes = info_for(constructed, :recipes)
         if recipes.nil? || recipes.empty?
             Log.error("No recipes found for #{constructed.inspect}")
@@ -73,7 +73,7 @@ post_process {
                     Log.error("#{component.inspect} not defined as db type")
                     next
                 end
-                propagate_recursive(component) do |subtype|
+                types_of(component) do |subtype|
                     if has_type?(subtype)
                         Log.debug("#{subtype} is used in #{constructed}", 6)
                         name = :used_in

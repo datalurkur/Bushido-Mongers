@@ -3,7 +3,7 @@ require './util/log'
 module Commands
     class << self
         def get_command_module(core, command)
-            unless core.db.types_of(:command).include?(command)
+            unless core.db.static_types_of(:command).include?(command)
                 raise(InvalidCommandError, "Command #{command.to_s.inspect} not found.")
             end
 
@@ -95,7 +95,7 @@ module Commands
 
     module Help
         def self.stage(core, params)
-            params[:target] = core.db.types_of(:command)
+            params[:target] = core.db.static_types_of(:command)
         end
     end
 

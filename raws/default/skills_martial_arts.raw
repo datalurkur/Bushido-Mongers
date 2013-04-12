@@ -104,7 +104,7 @@ fighting_skill hammer_skill {
 
 post_process {
     Log.debug("Propagating component information for martial arts skill", 6)
-    types_of(:fighting_skill, true).each do |skill|
+    instantiable_types_of(:fighting_skill).each do |skill|
         weapons = info_for(skill, :weapons)
         if !(weapons.nil? || weapons.empty?)
             weapons.each do |weapon|

@@ -32,7 +32,7 @@ class Zone
 
         private
         def zones_of_depth(db, depth, list = nil)
-            list ||= db.types_of(:zone, false)
+            list ||= db.static_types_of(:zone)
             list.select do |zone|
                 zone_info = db.info_for(zone)
                 !zone_info[:zone_class] && zone_info[:depth_range].include?(depth)

@@ -1,97 +1,95 @@
 /* === ZONE TYPES === */
 abstract zone inside_zone {
-    zone_class true;
     sideness inside;
     ground_name floor;
 }
 
 abstract zone monster_spawner {
-    zone_class true;
     spawn_npcs monster;
 }
 
 /* === ZONE INSTANTIABLES === */
-abstract zone haven {
+static zone haven {
     depth_range 1 2 3;
     keywords peaceful;
     child_zones tavern inn;
     spawn_npcs human;
 }
 
-abstract zone meadow {
+static zone meadow {
     depth_range 0 1 2 3;
     keywords grassy;
     spawn_npcs monster;
 }
 
-abstract monster_spawner castle {
+static monster_spawner castle {
     depth_range 0 1 2 3 4;
     keywords constructed;
     sideness inside;
     child_zones barracks portcullis sewer tower dungeon;
 }
 
-abstract monster_spawner barracks {
+static monster_spawner barracks {
     depth_range 0 1;
     keywords constructed;
     sideness inside;
     child_zones sewer tower dungeon;
 }
 
-abstract monster_spawner sewer {
+static monster_spawner sewer {
     depth_range 0 1 2;
     keywords dank wet;
     sideness inside;
 }
 
-abstract monster_spawner dock {
+static monster_spawner dock {
     depth_range 1;
     keywords wooden;
     child_zones pier boat;
 }
 
-abstract monster_spawner boat {
+static monster_spawner boat {
     depth_range 0 1;
     keywords wet;
 }
 
-abstract zone pier {
+static zone pier {
     depth_range 0 1;
     keywords wooden;
     spawn_npcs human;
 }
 
-abstract zone jungle {}
-abstract zone forest {}
-abstract zone swamp {}
-abstract zone mountain {}
-abstract zone desert {}
-abstract zone tundra {}
+static zone jungle {}
+static zone forest {}
+static zone swamp {}
+static zone mountain {}
+static zone desert {}
+static zone tundra {}
 
-abstract zone orchard {
+static zone orchard {
     spawn_npcs human;
 }
 
-abstract zone portcullis {
+static zone portcullis {
     spawn_npcs human;
 }
 
-abstract inside_zone tower {
+static inside_zone tower {
     spawn_npcs human;
 }
 
-abstract inside_zone dungeon {
+static inside_zone dungeon {
     spawn_npcs human spider;
 }
 
-abstract inside_zone tavern {
+static inside_zone tavern {
     spawn_npcs human;
 }
 
-abstract inside_zone inn {
+static inside_zone inn {
     spawn_npcs human;
 }
 
-abstract inside_zone temple {
+static inside_zone temple {
     spawn_npcs human;
 }

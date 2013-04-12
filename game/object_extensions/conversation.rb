@@ -19,7 +19,7 @@ module Conversation
     # Eventually this method will be more extensive, deciding based on the status of the requester.
     def will_do_command?(message)
         # For now, just verify that it's a command.
-        @core.db.types_of(:command).include?(message.statement.first)
+        @core.db.static_types_of(:command).include?(message.statement.first)
     end
 
     def perform_command(message)

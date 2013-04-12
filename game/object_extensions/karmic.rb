@@ -12,10 +12,10 @@ module Karmic
             end
         end
 
-        def listens_for(i); [:unit_killed,:object_destroyed]; end
+        def listens_for(i); [:unit_killed]; end
         def at_message(instance, message)
             case message.type
-            when :unit_killed,:object_destroyed
+            when :unit_killed
                 return unless message.has_param?(:agent) && message.agent == instance
                 if message.target.is_type?(:body)
                     # FIXME - We want to store more than the name of the kill here

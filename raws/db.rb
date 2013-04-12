@@ -87,24 +87,9 @@ class ObjectDB
     end
 
     public
-    def types_of(types, instantiable_only=true)
-        list = (Array === types) ? types : [types]
-        list.compact.inject([]) do |arr, type|
-            arr + types_of_singular(type, instantiable_only)
-        end.flatten.uniq
-    end
-
-    def types_of_singular(type, instantiable_only)
-        info = raw_info_for(type)
-        if info[:abstract]
-            subtypes = info[:subtypes].collect do |subtype|
-                types_of_singular(subtype, instantiable_only)
-            end.flatten.compact
-            instantiable_only ? subtypes : [type] + subtypes
-        else
-            [type]
-        end
-    end
+    def static_types_of(types);       search_types(types, false, true ); end
+    def instantiable_types_of(types); search_types(types, true,  false); end
+    def types_of(types);              search_types(types, false, false); end
 
     def is_abstract?(type)
         raw_info_for(type)[:abstract]
@@ -138,15 +123,11 @@ class ObjectDB
         types
     end
 
-    def random(type)
-        types_of(type).rand
-    end
-
     def create(core, type, uid, params)
         raise(UnknownType, "#{type.inspect} not defined as db type.") unless @db[type]
         if @db[type][:abstract]
             if params[:randomize]
-                type = types_of(type).rand
+                type = instantiable_types_of(type).rand
                 raise(UnknownType, "Unable to find a random type of #{type.inspect}") unless type
             else
                 raise(ArgumentError, "#{type.inspect} is not instantiable.")
@@ -162,10 +143,20 @@ class ObjectDB
         binding()
     end
 
-    def find_subtypes(parent_types, criteria={}, instantiable_only=false)
-        Log.debug(["Finding #{parent_types.inspect} that meet criteria", criteria], 9)
+    def find_subtypes(parent_types, criteria={}, instantiable_only=true)
+        archetype = instantiable_only ? "instantiable" : "static"
+        Log.debug(["Finding #{archetype} #{parent_types.inspect} that meet criteria", criteria], 9)
         check = criteria.reject { |k,v| k == :inclusive }
-        types_of(parent_types, instantiable_only).select do |subtype|
+        subtypes = []
+        Array(parent_types).each do |parent_type|
+            subtype_group = if instantiable_only
+                instantiable_types_of(parent_type)
+            else
+                static_types_of(parent_type)
+            end
+            subtypes.concat(subtype_group)
+        end
+        subtypes.select do |subtype|
             Log.debug("Checking #{subtype} for adherence to criteria", 9)
             keep = true
             check.each do |k,v|
@@ -195,13 +186,7 @@ class ObjectDB
         end
     end
 
-    def propagate_recursive(type, instantiable_only=false, &block)
-        types_of(type, instantiable_only).each do |subtype|
-            block.call(subtype)
-        end
-    end
-
-    metered :propagate_recursive, :find_subtypes, :create, :types_of
+    metered :find_subtypes, :create, :types_of
 
     attr_reader :hash
 
@@ -229,6 +214,25 @@ class ObjectDB
             @db[parent_type][:subtypes] << new_type
         end
         @db[new_type] = new_object
+    end
+
+    def search_types(types, instantiable=false, static=false)
+        raise(ArgumentError, "Please search for a type") if types.nil?
+        #Log.debug("Searching for #{instantiable ? "instantiable " : ""}#{static ? "static " : ""}types of #{types.inspect}")
+        results = []
+        search  = Array(types)
+        until search.empty?
+            next_type = search.shift
+            type_info = raw_info_for(next_type)
+            search.concat(type_info[:subtypes]) if type_info[:subtypes]
+            if ( static       &&  type_info[:static])   ||
+               ( instantiable && !type_info[:abstract]) ||
+               (!instantiable && !static)
+                results << next_type
+            end
+        end
+        #Log.debug(["Returning #{results.size} results", results])
+        results
     end
 end
 

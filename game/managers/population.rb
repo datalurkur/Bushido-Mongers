@@ -126,7 +126,7 @@ class PopulationManager
             agent.setup_extension(Character, hash)
             # FIXME - Add starting skills from new player info
             # As a hack, just add a random profession for now
-            random_profession = @core.db.types_of(:profession, false).rand
+            random_profession = @core.db.static_types_of(:profession).rand
             starting_skills = @core.db.info_for(random_profession, :skills)
         else
             agent.setup_extension(NpcBehavior, hash)
@@ -146,7 +146,7 @@ class PopulationManager
 
     private
     def load_from_raws
-        @core.db.find_subtypes(:archetype, {}, true).each do |npc_type|
+        @core.db.instantiable_types_of(:archetype).each do |npc_type|
             npc_info = @core.db.info_for(npc_type)
             add_group(npc_type, npc_info[:spawns_in], npc_info[:spawn_rarity])
         end

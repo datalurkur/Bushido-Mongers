@@ -231,7 +231,7 @@ class Lobby
                 end
                 "#{params[:command].title}ing a #{params[:target]}"
             when :help
-                params[:target] ||= @game_core.db.types_of(:command)
+                params[:target] ||= @game_core.db.static_types_of(:command)
                 Words.describe_help(params)
             when :stats
                 character = @game_core.get_character(username)
@@ -348,7 +348,7 @@ class Lobby
             opts = case message.property
             # TODO - Read these from the raws
             when :gender; [:male, :female, :neutral]
-            when :race;   @game_core.db.types_of(:civil)
+            when :race;   @game_core.db.instantiable_types_of(:civil)
             else
                 Log.warning("Unknown character options property #{message.property}")
                 []

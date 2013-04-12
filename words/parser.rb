@@ -119,15 +119,16 @@ module WordParser
     # Can only happen on the server side.
     def self.read_raws(db, raws_db)
         Log.debug("Reading raws")
-        add_raws(db, raws_db, :command,   :verb,      "commands")
+        add_raws(db, raws_db, :command,   :verb,      "commands",  true)
         add_raws(db, raws_db, :object,    :noun,      "item types")
         add_raws(db, raws_db, :archetype, :noun,      "NPC types")
         add_raws(db, raws_db, :material,  :adjective, "materials")
     end
 
     private
-    def self.add_raws(db, raws_db, type, pos, desc)
-        raws_db.types_of(type).each do |raw|
+    def self.add_raws(db, raws_db, type, pos, desc, static=false)
+        types = static ? raws_db.static_types_of(type) : raws_db.instantiable_types_of(type)
+        types.each do |raw|
             db.add_keyword_family(type, pos => raw)
         end
         Log.debug("Found #{db.get_keyword_groups(type).size} #{desc}.")

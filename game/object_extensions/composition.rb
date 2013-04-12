@@ -53,7 +53,7 @@ module Composition
             instance.container_classes.each do |klass|
                 # Drop these components at the location where this object is
                 instance.container_contents(klass).each do |component|
-                    Log.debug("Dropping #{component.monicker} at #{instance.absolute_position.name}", 6)
+                    Log.debug("Dropping (#{klass}) #{component.monicker} at #{instance.absolute_position.name}", 6)
                     component.drop(instance.absolute_position)
                 end
             end

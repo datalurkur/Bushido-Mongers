@@ -35,6 +35,8 @@ Format: [abstract / extension_of] <parent type(s)> <type>
 
 An "abstract" object is an object not to be instantiated, but to provide a means of categorizing a group of common objects and specifying properties and default values for those objects.
 
+A "static" object is an object not to be instantiated, but not necessarily abstract.  This provides a mechanic for raw types like "command", which don't actually get created, to dictate what is actually a "command" and what is just a class of commands, which wouldn't normally be possible with just the abstract / non-abstract distinction.
+
 An "extension_of" object is an object not to be instantiated, but to provide a means of adding certain properties to another object of the parent type.  Such an object can never be the parent of an object that does not also share its parent object.  Care should be taken when constructing extension objects, since they potentially present a diamond-problem scenario whose behavior is undefined. Extensions are implicitly abstract
 
 An object inherits all the properties, necessary parameters, creation procs, and default values of its parent object(s) (note that this is recursive). Multiple parent objects are delimited using commas (note that whitespace is not allowed within the comma-delimited list).
@@ -121,6 +123,8 @@ module ObjectRawParser
                         node_options[:color] = "orange"
                     elsif data[:is_type].empty?
                         node_options[:color] = "cyan"
+                    elsif data[:static]
+                        node_options[:color] = "purple"
                     elsif data[:abstract]
                         node_options[:color] = "white"
                     else
@@ -199,8 +203,9 @@ module ObjectRawParser
                         when "post_process"
                             post_processes << data
                             next
-                        when "abstract"
+                        when "abstract","static"
                             abstract     = true
+                            static       = true if chunks[0] == "static"
                             if chunks.size > 2
                                 parents      = chunks[1].split(/,/).collect(&:to_sym)
                                 type         = chunks[2].to_sym
@@ -233,6 +238,7 @@ module ObjectRawParser
                             :data     => data,
                         }
                         object_metadata[:abstract]     = true         if abstract
+                        object_metadata[:static]       = true         if static
                         object_metadata[:extension_of] = extension_of if extension_of
 
                         typed_objects_hash[type] = object_metadata
@@ -293,17 +299,19 @@ module ObjectRawParser
 
             # Begin accumulating object data for the database
             object_data = {
-                :abstract       => object_metadata[:abstract],
-                :extension_of   => object_metadata[:extension_of],
                 :is_type        => object_metadata[:is_type].dup,
                 :uses           => [],
                 :has            => {},
                 :needs          => [],
                 :class_values   => {}
             }
+            # Accumulate optional tags
+            [:abstract, :extension_of, :static].each do |key|
+                object_data[key] = object_metadata[key] if object_metadata[key]
+            end
 
             # Set up to accumulate subtypes if this is an abstract type
-            if object_data[:abstract]
+            if object_data[:abstract] && !object_data[:static]
                 object_data[:subtypes] = []
             end
 
@@ -312,7 +320,7 @@ module ObjectRawParser
             # Do this backwards to respect parent ordering (most significant first)
             object_data[:is_type].reverse.each do |parent|
                 parent_object = object_database[parent]
-                raise(ParserError, "Parent object type '#{parent}' not abstract!") unless parent_object[:abstract]
+                raise(ParserError, "Parent object type '#{parent}' not abstract!") unless parent_object[:abstract] && !parent_object[:static]
 
                 [:uses, :has, :needs, :class_values].each do |key|
                     merge_complex(object_data[key], parent_object[key])
@@ -431,6 +439,18 @@ module ObjectRawParser
                             object_data[:class_values][property] = values[0]
                         end
                     end
+                end
+            end
+
+            # Check static objects for properties that don't make sense
+            if object_data[:static]
+                object_data[:has].each do |key,value|
+                    unless value[:class_only]
+                        raise(ParserError, "Instantiable information #{key.inspect} found in static object #{object_type.inspect}") unless value[:class_only]
+                    end
+                end
+                [:needs, :uses].each do |key|
+                    raise(ParserError, "Static object #{object_type.inspect} has no need of #{key.inspect} information") unless object_data[key].empty?
                 end
             end
 

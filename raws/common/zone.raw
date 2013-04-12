@@ -27,17 +27,19 @@ abstract zone {
 }
 
 post_process {
-    zone_types = self.find_subtypes(:zone, {}, true)
-    zone_types.each do |zone|
-        unless info_for(zone, :spawn_npcs).empty?
+    static_types_of(:zone).each do |zone|
+        spawn_types = info_for(zone)[:spawn_npcs]
+        unless spawn_types.empty?
             # Get a list of non-abstract NPCs that spawn in this zone
-            npc_types = info_for(zone, :spawn_npcs).map { |npc_type| types_of(npc_type) }.flatten.uniq
+            npc_types = instantiable_types_of(spawn_types).uniq
             set_info(zone, :spawn_npcs, npc_types)
 
             # Add this zone's data to the NPCs that spawn here
             npc_types.each do |npc_type|
                 spawn_zones = info_for(npc_type, :spawns_in)
-                modify_info(npc_type, :spawns_in).concat(zone).uniq!
+                spawn_zones << zone
+                spawn_zones.uniq!
+                set_info(npc_type, :spawns_in, spawn_zones)
             end
         end
     end
