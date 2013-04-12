@@ -459,6 +459,15 @@ module ObjectRawParser
         end
 
         def separate_lexical_chunks(raw_data, end_char=";", open_char="{", close_char="}")
+            # Do a sanity check on brace matching
+            num_opens  = raw_data.count(open_char) 
+            num_closes = raw_data.count(close_char)
+            if num_opens > num_closes
+                raise(ParserError, "Mismatched #{open_char} in raw data")
+            elsif num_closes > num_opens
+                raise(ParserError, "Mismatched #{close_char} in raw data")
+            end
+
             chunks = []
             start  = 0
             while start < raw_data.size

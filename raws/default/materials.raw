@@ -14,7 +14,10 @@ abstract raw_material organic {}
 abstract raw_material plant {}
 
 /* GENERIC ORGANICS */
-organic skin {}
+organic skin {
+    typical_weight 1;
+    typical_value 1;
+}
 organic chitin {
     typical_weight 0.5;
     typical_value 2;
