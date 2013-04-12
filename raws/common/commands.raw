@@ -1,4 +1,4 @@
-abstract root command {
+abstract command {
     class optional sym target;
     class_many optional sym components;
     class optional sym tool;
@@ -21,9 +21,9 @@ command inspect {
 command move {}
 
 command attack {
-    target item;
+    target object;
     location body_part;
-    tool item; /* weapon-specific lookups happen if no tool is specified */
+    tool object; /* weapon-specific lookups happen if no tool is specified */
 }
 
 command consume {
@@ -31,20 +31,20 @@ command consume {
 }
 
 command get {
-    target item;
+    target object;
 }
 command stash {
-    target item;
+    target object;
 }
 command drop {
-    target item;
+    target object;
 }
 
 command equip {
-    target item;
+    target object;
 }
 command unequip {
-    target item;
+    target object;
 }
 
 command hide {}

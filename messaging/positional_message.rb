@@ -77,7 +77,15 @@ class DebugPositionalMessage < PositionalMessage
               (old_filtered & new_listener_list).size != old_filtered.size
                 Log.error("Positional messaging is broken!")
                 Log.error(["Expected listeners:", old_filtered.size])
+                old_output = old_filtered.collect do |i|
+                    i.class
+                end
+                Log.error(["Old filtered:", old_output])
                 Log.error(["Actual listeners:", new_listener_list.size])
+                new_output = new_listener_list.collect do |i|
+                    i.class
+                end
+                Log.error(["New listener list:", new_output])
             end
 
             super(core, locations, type, args, scope)

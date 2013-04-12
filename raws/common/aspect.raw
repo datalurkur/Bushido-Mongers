@@ -1,4 +1,4 @@
-abstract root aspect {
+abstract aspect {
     has float intrinsic;
 
     class float default_intrinsic;
@@ -13,7 +13,7 @@ abstract root aspect {
     uses aspect;
 }
 
-abstract root has_aspects {
+abstract has_aspects {
     has_many optional sym attributes;
     has_many optional sym skills;
 

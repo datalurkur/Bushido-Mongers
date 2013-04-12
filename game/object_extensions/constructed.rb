@@ -21,13 +21,6 @@ module Constructed
                 instance.set_creator(params[:creator].uid)
             end
 
-            # Remove component items from the world, unless they're freshly created.
-            components.each do |component|
-                if component.has_position?
-                    component.relative_position.remove_object(component)
-                end
-            end
-
             # Created object quality depends on the quality of its components as well
             avg_component_quality = components.inject(0.0) { |s,i|
                 s + Quality.index_of(i.is_type?(:constructed) ? i.properties[:quality] : Quality.standard)
@@ -36,7 +29,11 @@ module Constructed
             quality_level = Quality.value_at(Quality.clamp_index(quality_value.ceil))
 
             instance.properties[:quality] = quality_level
-            instance.set_container_contents(:incidental, components)
+
+            # Remove component items from the world, unless they're freshly created.
+            components.each do |component|
+                component.incorporate_into(instance)
+            end
         end
 
         def pack(instance)
@@ -61,7 +58,7 @@ module Constructed
         # Choose a random recipe
         recipe = class_info[:recipes].rand
         recipe[:components].collect do |component|
-            @core.create(@core.db.random(component), p)
+            @core.create(component, p)
         end
     end
 end

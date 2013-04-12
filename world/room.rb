@@ -46,6 +46,7 @@ class Room < ZoneLeaf
         Log.debug("Removing #{object.monicker} from #{@name}", 6)
         @objects.delete(object)
     end
+    def destroy_object(object,destroyer); remove_object(object); end
 
     # Determines how a leaf populates itself
     def populate
@@ -58,7 +59,7 @@ class Room < ZoneLeaf
 
         # Actually spawn the items.
         item_types.each do |type|
-            @core.create(type, {:position => self })
+            @core.create(type, {:position => self, :randomize => true})
         end
     end
 end

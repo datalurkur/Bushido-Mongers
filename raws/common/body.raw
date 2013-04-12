@@ -1,9 +1,6 @@
-abstract item,composition body_part {
-    /* Body parts are worthless by default */
-    value 0;
-}
+abstract composition body_part {}
 
-abstract body_part,has_aspects body {
+abstract composition,has_aspects body {
     class optional sym consumes;
     class optional proc on_consume;
     class string part_name;
@@ -17,8 +14,6 @@ abstract body_part,has_aspects body {
 extension_of body_part can_wear {
     container_classes           worn;
     mutable_container_classes   worn;
-    /* Worn objects always preserved through destruction? */
-    preserved_container_classes worn;
     has_many optional sym worn;
 }
 
@@ -26,7 +21,5 @@ extension_of body_part can_wear {
 extension_of body_part can_grasp {
     container_classes           grasped;
     mutable_container_classes   grasped;
-    /* Grasped objects always preserved through destruction */
-    preserved_container_classes grasped;
     has_many optional sym grasped;
 }

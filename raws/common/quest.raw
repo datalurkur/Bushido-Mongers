@@ -1,3 +1,3 @@
-abstract root quest {
+abstract quest {
     uses quest;
 }

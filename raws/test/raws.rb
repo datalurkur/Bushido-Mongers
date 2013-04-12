@@ -18,7 +18,7 @@ db = nil
 $core = CoreWrapper.new
 
 # Basic DB listing tests
-Log.debug(["Number of types of items:", $core.db.types_of(:item).size])
+Log.debug(["Number of types of objects:", $core.db.types_of(:object).size])
 
 # Basic item creation tests
 test_item_type = :head_armor
@@ -67,7 +67,7 @@ Log.debug("What can I do with a hammer?")
 Log.debug($core.db.info_for(:hammer, :used_for))
 
 Log.debug("What sorts of things can I eat?")
-Log.debug($core.db.find_subtypes(:item, {:target_of => :eat}))
+Log.debug($core.db.find_subtypes(:object, {:target_of => :eat}))
 
 # Zone tests
 begin
@@ -84,7 +84,7 @@ end
 
 # item composition tests
 begin
-    bp = $core.create(:leather_backpack)
+    bp = $core.create(:backpack, {:randomize => true})
     Log.debug(bp)
     carrot = $core.create(:carrot, :size=>:medium)
     Log.debug(carrot)
@@ -96,14 +96,14 @@ end
 
 # test test.raw
 begin
-    bp = $core.create(:leather_backpack)
+    bp = $core.create(:backpack, {:randomize => true})
     Log.debug(bp)
     carrot = $core.create(:carrot, :size=>:medium)
     Log.debug(carrot)
     bp.add_object(carrot)
     Log.debug(bp)
 
-    sbp = $core.create(:leather_backpack)
+    sbp = $core.create(:backpack, {:randomize => true})
     Log.debug(sbp)
     sbp.add_object(carrot)
     carrot = $core.create(:carrot, :size=>:medium)

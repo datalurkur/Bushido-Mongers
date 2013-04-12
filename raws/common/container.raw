@@ -1,10 +1,6 @@
-abstract composition container {
-    mutable_container_classes     internal            external;
-    preserved_container_classes   internal            external;
-}
+extension_of composition container {
+    mutable_container_classes   internal external;
 
-/* A container with a mutable internal class is assumed to always be open unless it is openable and opened is false. */
-abstract root openable {
     has bool open;
     open false;
 }

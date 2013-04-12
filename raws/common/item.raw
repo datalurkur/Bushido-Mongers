@@ -1,14 +1,2 @@
-abstract object,position item {
-    has int value;
-
-    class bool gettable;
-    gettable true;
-
-    has_many optional sym adjectives;
-
-    weight 0;
-    value 0;
-}
-
 /* Used to mark items as chest loot, so as not to have body part treasure. */
-abstract root loot {}
+abstract loot {}

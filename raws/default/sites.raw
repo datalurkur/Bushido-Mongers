@@ -1,4 +1,7 @@
-item anvil {
+constructed anvil {
     typical_size small;
-    weight 100;
+    recipes {
+        technique forge;
+        components metal metal metal;
+    }
 }

@@ -32,11 +32,14 @@ module Perception
         when :stashed
             return [] unless uses?(Composition) && uses?(Equipment)
             # Search within the perceiver's open backpacks, sacks, etc.
-            containers_in_inventory.select { |c| c.open? }.each do |cont|
-                cont.container_contents.select do |object|
+            matches = []
+            containers_in_inventory.each { |c| c.open? }.each do |cont|
+                submatches = cont.container_contents.select do |object|
                     object.matches(filters)
                 end
-            end.flatten
+                matches.concat(submatches)
+            end
+            matches.flatten
         when :external
             return [] unless uses?(Composition) && uses?(Corporeal)
             external_body_parts.select do |object|
@@ -79,8 +82,11 @@ module Perception
             locations.insert(i, :grasped, :stashed, :worn)
             locations.delete(:inventory)
         end
+        Log.debug(["Searching #{locations.size} locations for #{object_type.inspect}/#{object_string.inspect}", locations])
         locations.each do |location|
-            matches.concat(filter_objects(location, {:type => object_type, :name => object_string}))
+            new_matches = filter_objects(location, {:type => object_type, :name => object_string})
+            Log.debug("#{new_matches.size} matches found at #{location}")
+            matches.concat(new_matches)
         end
         matches
     end

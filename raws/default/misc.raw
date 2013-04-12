@@ -1,9 +1,3 @@
-item rock {
-    weight 5;
-}
-
-item fraggle_rock {
-    weight 0.005;
-    typical_size tiny;
-    /*rarity singular;*/
+atomic_object rock {
+    typical_weight 5;
 }

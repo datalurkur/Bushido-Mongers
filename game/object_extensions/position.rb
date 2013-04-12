@@ -9,8 +9,8 @@ module Position
 
         def at_destruction(instance, destroyer, vaporize)
             if instance.has_position?
-                instance.relative_position.remove_object(instance)
                 instance.dispatch_destruction_message(destroyer) unless vaporize
+                instance.relative_position.destroy_object(instance, destroyer)
             else
                 Log.warning(["Destroying object with no position - #{instance.monicker}", caller])
             end
@@ -89,6 +89,13 @@ module Position
         _set_position(new_position)
         @position_type = :worn
         @position.add_object(self, :worn)
+    end
+
+    def incorporate_into(new_position)
+        Log.debug("#{monicker} incorporated into #{new_position.monicker}", 5)
+        _set_position(new_position)
+        @position_type = :incidental
+        @position.add_object(self, :incidental, false)
     end
 
     def move_to(destination, direction = nil)

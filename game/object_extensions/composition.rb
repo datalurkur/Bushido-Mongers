@@ -1,12 +1,13 @@
 require './util/log'
 require './util/exceptions'
 
-# TODO - check for relative size / max carry number / other restrictions
-
 module Composition
     class << self
         def pack(instance)
-            raw_data = {:containers => {}}
+            raw_data = {
+                :containers => {},
+                :size       => instance.size
+            }
             instance.container_classes.each do |container_class|
                 raw_data[:containers][container_class] = instance.container_contents(container_class).collect do |object|
                     BushidoObject.pack(object)
@@ -16,18 +17,31 @@ module Composition
         end
 
         def unpack(core, instance, raw_data)
-            raise(MissingProperty, "Composition data corrupted") unless raw_data[:containers]
+            [:size, :containers].each do |key|
+                raise(MissingProperty, "Composition data corrupted") unless raw_data[key]
+            end
             raw_data[:containers].each_pair do |container_class, container_contents|
                 instantiated_contents = container_contents.collect do |object|
                     BushidoObject.unpack(core, object)
                 end
                 instance.set_container_contents(container_class, instantiated_contents)
             end
+            instance.size = raw_data[:size]
         end
 
         def at_creation(instance, params)
-            instance.properties[:weight] = 0
+            raise(ObjectExtensionCollision, "Composition and Atomic are not compatible object extensions") if instance.uses?(Atomic)
+
+            instance.size = if params[:size]
+                params[:size]
+            elsif params[:relative_size]
+                Size.adjust(instance.class_info[:typical_size], params[:relative_size])
+            else
+                instance.class_info[:typical_size]
+            end
+
             instance.initial_composure(params)
+
             called = params[:called] || instance.properties[:called]
             instance.set_called(called) if called
         end
@@ -37,19 +51,48 @@ module Composition
 
             Log.debug("Destroying composition #{instance.monicker}", 7)
             instance.container_classes.each do |klass|
-                if instance.preserved?(klass)
-                    # Drop these components at the location where this object is
-                    instance.container_contents(klass).each do |component|
-                        Log.debug("Dropping #{component.monicker} at #{instance.absolute_position.name}", 6)
-                        component.drop(instance.absolute_position)
-                    end
-                    # All components set to a new location. Clear the local references.
-                    instance.set_container_contents(klass, [])
-                else
-                    Log.debug("#{instance.monicker} does not preserve #{klass} components", 8)
+                # Drop these components at the location where this object is
+                instance.container_contents(klass).each do |component|
+                    Log.debug("Dropping #{component.monicker} at #{instance.absolute_position.name}", 6)
+                    component.drop(instance.absolute_position)
                 end
             end
         end
+    end
+
+    attr_accessor :size
+
+    def weight
+        container_classes.inject(0) do |total_sum,klass|
+            total_sum + container_contents(klass).inject(0) do |container_sum,object|
+                container_sum + object.weight
+            end
+        end
+    end
+
+    def value
+        container_classes.select { |i| valued?(i) }.inject(0) do |total_sum,klass|
+            total_sum + container_contents(klass).inject(0) do |container_sum,object|
+                container_sum + object.value
+            end
+        end
+    end
+
+    def integrity
+        raise(UnexpectedBehaviorError, "#{monicker} has no incidentals!") if container_contents(:incidental).empty?
+        container_contents(:incidental).inject(0) do |sum,object|
+            sum + object.integrity
+        end
+    end
+
+    def damage(amount, attacker)
+        if container_contents(:incidental).empty?
+            Log.warning(self)
+            raise(UnexpectedBehaviorError, "#{monicker} has no incidentals!")
+        end
+        part = container_contents(:incidental).rand
+        Log.debug("Composition taking damage (#{amount}), dealt to #{part.monicker}")
+        part.damage(amount, attacker)
     end
 
     def initial_composure(params)
@@ -95,16 +138,30 @@ module Composition
         Log.debug("Removing #{object.monicker} from #{monicker}", 6)
         if klass
             if container_contents(klass).include?(object)
-                return _remove_object(object, klass)
+                return _remove_object(object, klass, true)
             end
         else
             self.container_classes.each do |klass|
                 if container_contents(klass).include?(object)
-                    return _remove_object(object, klass)
+                    return _remove_object(object, klass, true)
                 end
             end
         end
         raise(NoMatchError, "No matching object #{object.monicker} found.")
+    end
+
+    def destroy_object(object, destroyer)
+        container_classes.each do |klass|
+            if container_contents(klass).include?(object)
+                _remove_object(object, klass, false)
+                Log.debug("#{klass} of #{monicker} destroyed")
+                if klass == :incidental
+                    Log.debug("#{monicker} falls to pieces")
+                    @core.flag_for_destruction(self, destroyer)
+                end
+                break
+            end
+        end
     end
 
     def full?(type=:internal)
@@ -169,28 +226,17 @@ module Composition
     def composed_of?(klass);   @properties[:container_classes].include?(klass);             end
     def mutable?(klass);       @properties[:mutable_container_classes].include?(klass);     end
     def valued?(klass);        @properties[:added_value_container_classes].include?(klass); end
-    def preserved?(klass);     @properties[:preserved_container_classes].include?(klass);   end
 
     private
     def _add_object(object, type, respect_mutable)
         raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
         raise(ArgumentError, "Cannot modify #{type} composition of #{monicker}!") if respect_mutable && !mutable?(type)
-        add_weight(object)
-        add_value(object) if valued?(type)
         container_contents(type) << object
-        object
     end
 
-    def _remove_object(object, type)
+    def _remove_object(object, type, respect_mutable)
         raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
-        raise(ArgumentError, "#{type} contents of #{monicker} are immutable.") unless mutable?(type)
-        remove_weight(object)
-        remove_value(object) if valued?(type)
+        raise(ArgumentError, "#{type} contents of #{monicker} are immutable.") unless !respect_mutable || mutable?(type)
         container_contents(type).delete(object)
     end
-
-    def add_weight(object);    @properties[:weight] += object.properties[:weight]; end
-    def remove_weight(object); @properties[:weight] -= object.properties[:weight]; end
-    def add_value(object);     @properties[:value]  += object.properties[:value];  end
-    def remove_value(object);  @properties[:value]  -= object.properties[:value];  end
 end

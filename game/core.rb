@@ -98,10 +98,20 @@ class GameCore
     end
 
     def destroy_flagged
-        @awaiting_destruction.each do |object, destroyer|
-            object.destroy(destroyer)
+        Log.debug("Destroying flagged objects")
+        destroyed = []
+
+        until @awaiting_destruction.empty?
+            to_destroy = @awaiting_destruction.dup
+            @awaiting_destruction = []
+            Log.debug("#{to_destroy.size} objects flagged for destruction")
+            until to_destroy.empty?
+                next_to_destroy, destroyer = to_destroy.shift
+                next if destroyed.include?(next_to_destroy)
+                next_to_destroy.destroy(destroyer)
+                destroyed << next_to_destroy
+            end
         end
-        @awaiting_destruction.clear
     end
 
     # TICK MAINTENANCE

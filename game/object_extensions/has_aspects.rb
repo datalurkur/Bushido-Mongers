@@ -144,7 +144,7 @@ module HasAspects
             end
             return [false, opposed_results]
         else
-            margin = result - Difficulty.value_of(:trivial)
+            margin = attempt_result - Difficulty.value_of(:trivial)
             aspect.improve(margin)
             aspect.practice(margin) if aspect.uses?(Skill)
             return [margin > 0, [:difficulty, margin]]

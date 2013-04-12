@@ -4,9 +4,14 @@ require './game/transforms'
 
 module Corporeal
     class << self
+        def listens_for(i); [:object_destroyed]; end
+
         def at_creation(instance, params)
             raise(MissingObjectExtensionError, "Corporeal objects are required to be compositions") unless instance.uses?(Composition)
-            instance.integrity = instance.all_body_parts.inject(0) { |s,p| s + p.integrity }
+        end
+
+        def at_message(instance, message)
+            # FIXME - Check to see if vital organs are being destroyed
         end
 
         def at_destruction(instance, destroyer, vaporize)
@@ -26,19 +31,6 @@ module Corporeal
 
     def internal_body_parts
         all_body_parts(:internal)
-    end
-
-    def damage(amount, attacker, target=nil)
-        # If a body part (target) isn't specified, just damage the body.
-        target ||= self
-        target.integrity -= amount
-        if target.integrity <= 0
-            if target == self
-                kill(attacker)
-            else
-                @core.flag_for_destruction(target, attacker)
-            end
-        end
     end
 
     def alive?

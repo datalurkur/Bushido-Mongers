@@ -4,7 +4,6 @@ extension_of body basic_attributes {
 
 /* Basically, this is the equivalent of a torso */
 abstract body,basic_attributes,biped,can_wear humanoid {
-    weight 15;
     typical_size medium;
 
     part_name torso;
@@ -27,7 +26,6 @@ abstract body,basic_attributes,biped,can_wear humanoid {
 }
 
 abstract body,basic_attributes,octiped arachnoid {
-    weight 10;
     typical_size medium;
 
     part_name thorax;
@@ -38,7 +36,6 @@ abstract body,basic_attributes,octiped arachnoid {
 }
 
 abstract body,basic_attributes,quadriped rodent {
-    weight 2;
     typical_size small;
 
     part_name torso;
@@ -48,7 +45,6 @@ abstract body,basic_attributes,quadriped rodent {
 }
 
 abstract body,basic_attributes,quadriped ungulate {
-    weight 200;
     typical_size medium;
 
     part_name torso;
@@ -58,12 +54,9 @@ abstract body,basic_attributes,quadriped ungulate {
 }
 
 abstract ungulate canine {
-    weight 50;
 }
 
 abstract body,basic_attributes kraken {
-    weight 400;
-
     typical_size gargantuan;
     part_name mantle;
 
@@ -78,7 +71,6 @@ abstract body,basic_attributes kraken {
 }
 
 abstract body,basic_attributes,quadriped lizard {
-    weight 1;
     typical_size small;
 
     part_name torso;
@@ -88,7 +80,6 @@ abstract body,basic_attributes,quadriped lizard {
 }
 
 abstract body,basic_attributes snake {
-    weight 6;
     typical_size small;
 
     part_name body;
@@ -99,7 +90,6 @@ abstract body,basic_attributes snake {
 }
 
 abstract body,basic_attributes,biped,can_wear tortoise {
-    weight 10;
     typical_size small;
 
     part_name torso;
@@ -116,7 +106,6 @@ abstract body,basic_attributes,biped,can_wear tortoise {
 }
 
 abstract body,basic_attributes swarm {
-    weight 1;
     typical_size medium;
 
     part_name husk;

@@ -1,4 +1,4 @@
-abstract root archetype {
+abstract archetype {
     class_many optional sym factions;
     class optional sym typical_profession;
 

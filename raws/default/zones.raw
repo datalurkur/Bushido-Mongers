@@ -1,102 +1,97 @@
 /* === ZONE TYPES === */
 abstract zone inside_zone {
+    zone_class true;
     sideness inside;
     ground_name floor;
 }
 
 abstract zone monster_spawner {
+    zone_class true;
     spawn_npcs monster;
 }
 
 /* === ZONE INSTANTIABLES === */
-zone haven {
+abstract zone haven {
     depth_range 1 2 3;
     keywords peaceful;
     child_zones tavern inn;
     spawn_npcs human;
 }
 
-zone meadow {
+abstract zone meadow {
     depth_range 0 1 2 3;
     keywords grassy;
     spawn_npcs monster;
 }
 
-monster_spawner castle {
+abstract monster_spawner castle {
     depth_range 0 1 2 3 4;
     keywords constructed;
     sideness inside;
     child_zones barracks portcullis sewer tower dungeon;
 }
 
-monster_spawner barracks {
+abstract monster_spawner barracks {
     depth_range 0 1;
     keywords constructed;
     sideness inside;
     child_zones sewer tower dungeon;
 }
 
-monster_spawner sewer {
+abstract monster_spawner sewer {
     depth_range 0 1 2;
     keywords dank wet;
     sideness inside;
 }
 
-monster_spawner dock {
+abstract monster_spawner dock {
     depth_range 1;
     keywords wooden;
     child_zones pier boat;
 }
 
-monster_spawner boat {
+abstract monster_spawner boat {
     depth_range 0 1;
     keywords wet;
 }
 
-zone pier {
+abstract zone pier {
     depth_range 0 1;
     keywords wooden;
     spawn_npcs human;
 }
 
-zone jungle {}
-zone forest {}
-zone swamp {}
-zone mountain {}
-zone desert {}
-zone tundra {}
+abstract zone jungle {}
+abstract zone forest {}
+abstract zone swamp {}
+abstract zone mountain {}
+abstract zone desert {}
+abstract zone tundra {}
 
-zone orchard {
+abstract zone orchard {
     spawn_npcs human;
 }
 
-zone portcullis {
+abstract zone portcullis {
     spawn_npcs human;
 }
 
-inside_zone tower {
+abstract inside_zone tower {
     spawn_npcs human;
 }
 
-inside_zone dungeon {
+abstract inside_zone dungeon {
     spawn_npcs human spider;
 }
 
-inside_zone tavern {
+abstract inside_zone tavern {
     spawn_npcs human;
 }
 
-inside_zone inn {
+abstract inside_zone inn {
     spawn_npcs human;
 }
 
-inside_zone temple {
+abstract inside_zone temple {
     spawn_npcs human;
 }
-
-/*
-zone temple_that_serves_as_the_final_bastion_of_light_in_an_otherwise_evil_forest {
-    depth_range 0 1;
-    keywords shiny joke_zone;
-}
-*/

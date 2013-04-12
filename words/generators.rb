@@ -31,7 +31,7 @@ module Words
                     return describe_composition_root(location)
                 end
                 return describe_whole_composition(target)
-            elsif target[:is_type].include?(:item)
+            elsif target[:is_type].include?(:object)
                 return gen_sentence(args)
             else
                 return "I don't know how to describe a #{target[:type].inspect}, bother zphobic to fix this"

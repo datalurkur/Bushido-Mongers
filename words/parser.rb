@@ -120,7 +120,7 @@ module WordParser
     def self.read_raws(db, raws_db)
         Log.debug("Reading raws")
         add_raws(db, raws_db, :command,   :verb,      "commands")
-        add_raws(db, raws_db, :item,      :noun,      "item types")
+        add_raws(db, raws_db, :object,    :noun,      "item types")
         add_raws(db, raws_db, :archetype, :noun,      "NPC types")
         add_raws(db, raws_db, :material,  :adjective, "materials")
     end

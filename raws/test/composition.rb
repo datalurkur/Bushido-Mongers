@@ -6,9 +6,11 @@ Log.setup("Main", "test")
 #Log.disable_channel(:debug)
 
 core = CoreWrapper.new
+body_type = :fox
 
-Log.debug("Creating human")
-test_body = core.populations.create_agent(:human, true, {:name => "Kenji Skrimshank", :position => FakeRoom.new})
+Log.debug("Creating #{body_type}")
+test_body = core.populations.create_agent(body_type, true, {:name => "Kenji Skrimshank", :position => FakeRoom.new})
+Log.debug(["Test body", test_body])
 Log.debug("Test body is called #{test_body.monicker}")
 test_body.kill(nil)
 Log.debug("Test body is called #{test_body.monicker}")

@@ -31,9 +31,11 @@ class Zone
         end
 
         private
-        def zones_of_depth(db, depth, list = db.types_of(:zone))
+        def zones_of_depth(db, depth, list = nil)
+            list ||= db.types_of(:zone, false)
             list.select do |zone|
-                db.info_for(zone, :depth_range).include?(depth)
+                zone_info = db.info_for(zone)
+                !zone_info[:zone_class] && zone_info[:depth_range].include?(depth)
             end
         end
 
@@ -50,7 +52,9 @@ class Zone
         end
 
         def find_random(db, depth)
-            return zones_of_depth(db, depth).rand
+            potentials = zones_of_depth(db, depth)
+            raise(NoMatchError, "Unable to find zones of depth #{depth}") if potentials.empty?
+            return potentials.rand
         end
     end
 

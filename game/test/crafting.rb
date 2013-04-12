@@ -26,5 +26,6 @@ command_arguments = {
 test_components.each do |component|
     test_character.stash(component)
 end
+Log.debug(["Inventory:", test_character.all_equipment(:grasped)])
 Commands.stage(core, command, command_arguments)
 Commands.do(core, command, command_arguments)

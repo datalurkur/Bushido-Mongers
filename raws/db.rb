@@ -112,17 +112,17 @@ class ObjectDB
 
     def is_type?(type, parent_type)
         #Log.debug("Is #{type.inspect} a #{parent_type.inspect}? (from #{caller[0]})", 8)
-        return true  if parent_type == :root
-        return false if        type == :root
-        current = Array(type)
-        until current.empty?
-            if current.include?(parent_type)
+        unchecked_types = Array(type)
+        checked_types   = []
+        until unchecked_types.empty?
+            if unchecked_types.include?(parent_type)
                 Log.debug("Yes!", 8)
                 return true
             else
-                current = current.collect { |t| raw_info_for(t)[:is_type] }.flatten.uniq
+                new_types = unchecked_types.collect { |t| raw_info_for(t)[:is_type] }.flatten.uniq
+                checked_types.concat(unchecked_types)
+                unchecked_types = new_types
             end
-            current.reject! { |t| t == :root }
         end
         Log.debug("No!", 8)
         return false
@@ -134,7 +134,6 @@ class ObjectDB
         until current.empty?
             types.concat(current)
             current = current.collect { |t| raw_info_for(t)[:is_type] }.flatten.uniq
-            current.reject! { |t| t == :root }
         end
         types
     end
@@ -148,6 +147,7 @@ class ObjectDB
         if @db[type][:abstract]
             if params[:randomize]
                 type = types_of(type).rand
+                raise(UnknownType, "Unable to find a random type of #{type.inspect}") unless type
             else
                 raise(ArgumentError, "#{type.inspect} is not instantiable.")
             end

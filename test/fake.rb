@@ -23,6 +23,7 @@ class FakeRoom
     def name; "Fake Room"; end
     def add_object(o,t=nil,rm=nil); end
     def remove_object(o); end
+    def destroy_object(o,d); end
     def zone_info(); {}; end
     def monicker() self.name; end
 end

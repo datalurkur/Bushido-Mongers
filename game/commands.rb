@@ -328,16 +328,16 @@ module Commands
             check_results = attacker.make_opposed_attempt(skill, defender)
             success = check_results[0]
 
-            # Target a random body part if location not specified
-            part_targeted = params[:location] || defender.external_body_parts.rand
-            result_hash[:subtarget] = part_targeted
+            # Target the body if location not specified
+            target = params[:location] || defender
+            result_hash[:subtarget] = params[:location]
 
-            print = part_targeted ? "in the #{part_targeted.monicker}" : ''
+            print = params[:location] ? "in the #{params[:location].monicker}" : ''
             Log.debug("#{attacker.monicker} attacks #{defender.monicker} #{print}")
 
             if success
                 result_hash[:damage] = damage
-                defender.damage(damage, attacker, part_targeted)
+                target.damage(damage, attacker)
             end
 
             # TODO - Add the results of opposed checks to the message
@@ -599,7 +599,7 @@ module Commands
                 recipe_data[:requirements].each do |requirement|
                     matches = Commands.find_all_objects(params[:agent], requirement, nil, [:inventory])
                     if matches.size > 1
-                        Log.debug("Multiple matches found for recipe requirement #{requirement}")
+                        Log.debug(["Multiple matches found for recipe requirement #{requirement}", matches])
                         ambiguous_recipes << recipe
                         break
                     elsif matches.empty?

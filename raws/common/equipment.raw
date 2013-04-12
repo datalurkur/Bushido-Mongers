@@ -1,4 +1,4 @@
-abstract item,loot equipment {
+abstract loot equipment {
     class_many sym slot;
 
     /* Protection can be based on a modifier manipulated by the material properties */

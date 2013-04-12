@@ -1,63 +1,95 @@
-abstract item,loot material {}
+abstract loot material {}
 
-abstract material metal {
+abstract atomic_object,material raw_material {}
+
+abstract raw_material metal {
     class int melting_point;
 }
 
-abstract material leather {}
-abstract material wood {}
-abstract material thread {}
-abstract material fabric {}
-abstract material organic {}
+abstract raw_material leather {}
+abstract raw_material wood {}
+abstract raw_material fiber {
+    typical_size tiny;
+    typical_weight 0.1;
+}
+abstract raw_material organic {}
+abstract raw_material plant {}
+
+fiber yak_hair {
+    typical_value 1;
+}
+
+fiber yucca_fiber {
+    typical_value 1;
+}
+
+fiber alpaca_wool {
+    typical_value 2;
+}
+
+fiber cotton {
+    typical_value 4;
+}
+
+constructed,material thread {
+    recipes {
+        technique spin;
+        components fiber;
+    }
+}
+
+constructed,material fabric {
+    recipes {
+        technique weave;
+        components thread;
+    }
+}
 
 organic chitin {
-    weight 0.5;
-    value 2;
+    typical_weight 0.5;
+    typical_value 2;
 }
 
 metal copper {
-    weight 10;
-    value 2;
+    typical_weight 10;
+    typical_value 2;
     melting_point 1538;
 }
 
 metal iron {
-    weight 10;
-    value 5;
+    typical_weight 10;
+    typical_value 5;
     melting_point 1538;
 }
 
-material paper {
-    weight 0.1;
-    value 1;
+constructed,material paper {
     typical_size tiny;
+
+    recipes {
+        technique craft;
+        components fiber;
+    }
 }
 
 leather leather_scrap {
-    weight 2;
-    value 10;
+    typical_weight 2;
+    typical_value 10;
     typical_size tiny;
 }
 
 wood alder {
-    value 10;
-    weight 2;
+    typical_value 10;
+    typical_weight 2;
     typical_size small;
 }
 
 wood bamboo {
-    value 10;
-    weight 1;
+    typical_value 10;
+    typical_weight 1;
 }
 
-thread silk {
-    value 50;
-    weight 0.1;
-    typical_size tiny;
-}
-
-material feather {
-    value 5;
-    weight 0.1;
+organic feather {
+    typical_value 5;
+    typical_weight 0.1;
     typical_size miniscule;
 }

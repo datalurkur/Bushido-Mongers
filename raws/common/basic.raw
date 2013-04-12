@@ -1,17 +1,19 @@
-abstract root object {
+abstract object {
     class sym typical_size;
-
     typical_size small;
 
-    has float weight;
-    has sym size;
-    has float density;
-
-    density 0.5;
-
-    uses destructable;
+    has_many optional sym adjectives;
+    uses position;
 }
 
-abstract root position {
-    uses position;
+/* An object that is nonseparable */
+abstract object atomic_object {
+    class float typical_weight;
+    class float density;
+    density 0.5;
+
+    has int typical_value;
+    typical_value 0;
+
+    uses Atomic;
 }

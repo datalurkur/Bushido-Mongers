@@ -1,19 +1,18 @@
-abstract root symmetry_type {
+abstract symmetry_type {
     has_many string primary_directions;
     has_many optional string secondary_directions;
     has_many optional string tertiary_directions;
 }
 
-symmetry_type balanced_axial {
+abstract symmetry_type balanced_axial {
     primary_directions left right;
     secondary_directions front rear;
     tertiary_directions interior anterior;
 }
 
-abstract root composition_root {
+abstract object composition {
     has_many sym container_classes;
     has_many optional sym mutable_container_classes;
-    has_many optional sym preserved_container_classes;
     has_many optional sym added_value_container_classes;
 
     has_many optional map symmetric {
@@ -24,19 +23,15 @@ abstract root composition_root {
     }
 
     uses composition;
-}
 
-/* The classic composition. */
-/* Internals are the things inside, e.g. a backpack or a stomach.
-   Incidentals are what the thing is made of, e.g. the cloth the backpack is made out of.
-   Externals are things attached to the outside, from paint to a glued-on moose to an article of clothing.
-*/
-abstract composition_root composition {
+    /* The classic composition. */
+    /* Internals are the things inside, e.g. a backpack or a stomach.
+       Incidentals are what the thing is made of, e.g. the cloth the backpack is made out of.
+       Externals are things attached to the outside, from paint to a glued-on moose to an article of clothing.
+    */
     container_classes             internal incidental external;
     /* Determines which components are modifiable after creation */
     mutable_container_classes                         external;
-    /* Determines which components are destroyed if this item is destroyed */
-    preserved_container_classes                       external;
     /* Determines whether the value of the contained item is added to the container */
     added_value_container_classes          incidental external;
 

@@ -47,8 +47,10 @@ module DataTables
         @indices[item]
     end
 
-    def adjust(value, relative_value)
-        offset       = difference(standard, relative_value)
+    # Take the difference between relative_value and reference and apply it to value
+    def adjust(value, relative_value, reference=nil)
+        reference  ||= standard
+        offset       = difference(reference, relative_value)
         normal_index = index_of(value)
 
         new_level = [[normal_index + offset, 0].max, @num_values-1].min

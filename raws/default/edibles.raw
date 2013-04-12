@@ -1,12 +1,6 @@
-abstract item consumable {
-}
+abstract consumable {}
 
-consumable carrot {
+plant,consumable carrot {
     typical_size tiny;
-    weight 1;
-}
-
-consumable cooked_carrot {
-    typical_size tiny;
-    weight 0.5;
+    typical_weight 1;
 }

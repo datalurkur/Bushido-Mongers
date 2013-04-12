@@ -39,8 +39,6 @@ An "extension_of" object is an object not to be instantiated, but to provide a m
 
 An object inherits all the properties, necessary parameters, creation procs, and default values of its parent object(s) (note that this is recursive). Multiple parent objects are delimited using commas (note that whitespace is not allowed within the comma-delimited list).
 
-"root" is a reserved object.  Any object with "root" as its parent object is considered not to have a parent object.
-
 OBJECT DESCRIPTIONS
 ===================
 Format: <keyword> [keyword-specific parameters]
@@ -97,7 +95,7 @@ module ObjectRawParser
 
             if db.nil?
                 Log.debug("Reloading objects")
-                db = load_objects(group)
+                db = load_db(group)
                 preparsed_handle = File.open(preparsed_location(group), "w")
                 preparsed_handle.write(Marshal.dump(db))
                 preparsed_handle.close
@@ -106,13 +104,42 @@ module ObjectRawParser
             db
         end
 
-        private
-        RAWS_LOCATION = "raws"
-
-        def load_objects(group)
+        def load_db(group, grapher=nil)
             object_database = {}
 
             metadata, post_processes = collect_raws_metadata(group)
+
+            if grapher
+                graph_nodes = {}
+                metadata.each do |i,data|
+                    node_name    = i.to_s
+                    node_options = {
+                        :shape => "rect",
+                        :style => "filled"
+                    }
+                    if data[:extension_of]
+                        node_options[:color] = "orange"
+                    elsif data[:is_type].empty?
+                        node_options[:color] = "cyan"
+                    elsif data[:abstract]
+                        node_options[:color] = "white"
+                    else
+                        node_options[:color] = "green"
+                    end
+                    graph_nodes[i] = grapher.add_nodes(node_name, node_options)
+                end
+                metadata.each do |i,data|
+                    data[:is_type].each do |parent_type|
+                        grapher.add_edges(graph_nodes[i], graph_nodes[parent_type])
+                    end
+                    if data[:extension_of]
+                        grapher.add_edges(graph_nodes[i], graph_nodes[data[:extension_of]], {
+                            :style => "dashed",
+                            :color => "orange"
+                        })
+                    end
+                end
+            end
 
             unparsed_objects = metadata.keys
             next_object = nil
@@ -131,6 +158,9 @@ module ObjectRawParser
             end
             db
         end
+
+        private
+        RAWS_LOCATION = "raws"
 
         def group_hash(group)
             pertinent_files = [__FILE__].concat(raws_list(group))
@@ -163,25 +193,34 @@ module ObjectRawParser
                 raw_data.gsub!(/\/\*(.*?)\*\//m, '')
                 separate_lexical_chunks(raw_data).each do |statement, data|
                     begin
-                        chunks = statement.split(/\s+/)
-                        if chunks[0] == "post_process"
-                            post_processes << data
-                            next
-                        end
+                        chunks = statement.split(/\s+/).reject { |i| i.empty? }
 
                         case chunks[0]
+                        when "post_process"
+                            post_processes << data
+                            next
                         when "abstract"
                             abstract     = true
-                            parents      = chunks[1].split(/,/).collect(&:to_sym)
-                            type         = chunks[2].to_sym
+                            if chunks.size > 2
+                                parents      = chunks[1].split(/,/).collect(&:to_sym)
+                                type         = chunks[2].to_sym
+                            else
+                                parents      = []
+                                type         = chunks[1].to_sym
+                            end
                         when "extension_of"
                             abstract     = true
+                            parents      = []
                             extension_of = chunks[1].to_sym
-                            parents      = [:root]
                             type         = chunks[2].to_sym
                         else
-                            parents      = chunks[0].split(/,/).collect(&:to_sym)
-                            type         = chunks[1].to_sym
+                            if chunks.size > 1
+                                parents      = chunks[0].split(/,/).collect(&:to_sym)
+                                type         = chunks[1].to_sym
+                            else
+                                parents      = []
+                                type         = chunks[0].to_sym
+                            end
                         end
 
                         if typed_objects_hash.has_key?(type)
@@ -198,6 +237,7 @@ module ObjectRawParser
 
                         typed_objects_hash[type] = object_metadata
                     rescue Exception => e
+                        Log.error(["Error while parsing object definition #{statement.inspect}", e.message, e.backtrace])
                         raise(ParserError, "Error while parsing object definition #{statement.inspect}")
                     end
                 end
@@ -219,9 +259,9 @@ module ObjectRawParser
 
             object_metadata = metadata[object_type]
 
-            # Ensure parents have already been parsed all the way up to the root object
+            # Ensure parents have already been parsed all the way up
             object_metadata[:is_type].each do |parent|
-                unless object_database.has_key?(parent) || parent == :root
+                unless object_database.has_key?(parent)
                     unparsed_objects.delete(parent)
                     parse_object(parent, unparsed_objects, metadata, object_database)
                 end
@@ -238,7 +278,6 @@ module ObjectRawParser
             running_list = object_metadata[:is_type].dup
             inheritance_list = []
             until running_list.empty?
-                running_list.reject! { |p| p == :root }
                 inheritance_list.concat(running_list)
                 running_list.collect! do |parent|
                     object_database[parent][:is_type]
@@ -249,7 +288,6 @@ module ObjectRawParser
                 duplicate_elements = inheritance_list.select do |parent|
                     inheritance_list.index(parent) != inheritance_list.rindex(parent)
                 end.uniq
-                Log.warning(["Object #{object_type} has duplicate parents in its inheritance list", duplicate_elements])
                 raise(ParserError, "Object #{object_type} has duplicate parents (#{duplicate_elements.inspect}).")
             end
 
@@ -273,7 +311,6 @@ module ObjectRawParser
             # Since this happens for every object (including abstract objects) we only need to do it for one level of parents
             # Do this backwards to respect parent ordering (most significant first)
             object_data[:is_type].reverse.each do |parent|
-                next if parent == :root
                 parent_object = object_database[parent]
                 raise(ParserError, "Parent object type '#{parent}' not abstract!") unless parent_object[:abstract]
 
@@ -298,7 +335,8 @@ module ObjectRawParser
                         modules = chunks.collect do |m|
                             begin
                                 m.to_caml.to_const
-                            rescue
+                            rescue Exception => e
+                                Log.error(["Failure while loading object extension #{m.inspect}", e.message, e.backtrace])
                                 raise(ParserError, "Failed to load object extension #{m.inspect}.")
                             end
                         end.compact
