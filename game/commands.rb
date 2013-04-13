@@ -53,8 +53,10 @@ module Commands
             end
 
             filters.each do |p, lookup_locs|
+                object_type = params[:"#{p}_type_class"] || core.db.info_for(params[:command], p)
+                next unless object_type
                 params[p] = params[:agent].find_object(
-                    params[:"#{p}_type_class"] || core.db.info_for(params[:command], p),
+                    object_type,
                     params[p],
                     params[(p.to_s + "_adjs").to_sym] || [],
                     lookup_locs
@@ -598,6 +600,7 @@ module Commands
                 Log.debug(["Filling in missing requirements for", recipe])
                 recipe_data[:requirements].each do |requirement|
                     matches = Commands.find_all_objects(params[:agent], requirement, nil, [:inventory])
+                    matches.reject! { |o| recipe_data[:components].include?(o) }
                     if matches.size > 1
                         Log.debug(["Multiple matches found for recipe requirement #{requirement}", matches])
                         ambiguous_recipes << recipe

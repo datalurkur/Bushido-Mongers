@@ -173,7 +173,7 @@ class BushidoObject
     end
 
     def to_formatted_string(prefix, nest_prefix=true)
-        [@type, [@properties]].to_formatted_string(prefix, nest_prefix)
+        [@type, @uid, [@properties]].to_formatted_string(prefix, nest_prefix)
     end
 
     def setup_extension(extension, params)
