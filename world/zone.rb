@@ -7,52 +7,44 @@ class Zone
     # Create zones given a parent (nil for the root zone) and depth information.
     class << self
         # Returns args used to populate gen_area_name, Area.new and Room.new.
-        def get_params(core, parent, depth)
-            args = if parent
-                # Inherit a keyword from the parent.
-                #Log.debug(parent)
-                #parent_list = core.db.info_for(parent, :keywords)
-                #Log.debug(["Zone.get_params", parent, parent_list])
-
-                {
-                    :type => find_child(core.db, parent, depth),
-                    :inherited_keywords => []
-                }
+        def get_params(core, args = {})
+            args[:depth] ||= 0
+            args[:type] = case args[:type]
+            when Symbol,String
+                args[:type].to_sym
+            when nil
+                args[:parent] ? find_child(core, args[:parent], args[:depth]) : find_random(core, args[:depth])
             else
-                { :type => find_random(core.db, depth) }
+                Log.warning("Invalid type #{args[:type].class}")
             end
-            #Log.debug("found #{args[:inherited_keywords].inspect}!") if args[:inherited_keywords]
 
-            args[:depth]    = depth
+            # FIXME: Do something more sophisticated with keywords.
             args[:keywords] = core.db.info_for(args[:type], :keywords)
 
-            args.delete(:inherited_keywords) # Shouldn't need this again.
             return args
         end
 
-        private
-        def zones_of_depth(db, depth, list = nil)
-            list ||= db.static_types_of(:zone)
+        def zones_at_depth(core, depth = 0, list = core.db.static_types_of(:zone))
             list.select do |zone|
-                zone_info = db.info_for(zone)
-                !zone_info[:zone_class] && zone_info[:depth_range].include?(depth)
+                core.db.info_for(zone)[:depth_range].include?(depth)
             end
         end
 
-        def find_child(db, parent, depth)
-            potential_zones = zones_of_depth(db, depth, db.info_for(parent, :child_zones))
+        private
+        def find_child(core, parent, depth)
+            potential_zones = zones_at_depth(core, depth, core.db.info_for(parent, :child_zones))
 
             if potential_zones.empty?
-                potential_zones = zones_of_depth(db, depth)
+                potential_zones = zones_at_depth(core, depth)
             end
 
             type = potential_zones.rand
-            raise(UnexpectedBehaviorError, "Found invalid child zone type #{type} in #{parent}!") unless db[type]
+            raise(UnexpectedBehaviorError, "Found invalid child zone type #{type} in #{parent}!") unless core.db[type]
             return type
         end
 
-        def find_random(db, depth)
-            potentials = zones_of_depth(db, depth)
+        def find_random(core, depth)
+            potentials = zones_at_depth(core, depth)
             raise(NoMatchError, "Unable to find zones of depth #{depth}") if potentials.empty?
             return potentials.rand
         end

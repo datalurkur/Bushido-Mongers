@@ -235,7 +235,8 @@ class GameCore
     private
     def setup_world(args)
         Log.debug("Creating world")
-        @world = WorldFactory.generate(self, args)
+        factory_klass = args[:factory_klass] || WorldFactory
+        @world = factory_klass.generate(self, args)
 
         Log.debug("Populating world with NPCs and items")
         @world.populate

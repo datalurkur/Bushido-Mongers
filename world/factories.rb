@@ -5,12 +5,7 @@ require './util/timer'
 class WorldFactory
 class << self
     def generate(core, config={})
-        config[:world_size]         ||= 3
-        config[:world_depth]        ||= 3
-        config[:openness]           ||= 0.75 # Larger numbers lead to more rooms overall
-        config[:connectedness]      ||= 0.75 # Larger numbers lead to more passageways
-        config[:area_size_tendency] ||= 0.35 # Larger numbers move the balance of small/large rooms towards the large end
-
+        set_defaults(config)
         Log.info(["Generating world with config", config])
 
         size, depth = config[:world_size], config[:world_depth]
@@ -20,7 +15,7 @@ class << self
         Log.debug("Seeding world with #{seed}")
         srand(seed)
 
-        params = Zone.get_params(core, nil, depth)
+        params = Zone.get_params(core, :depth => depth)
 
         world_name = Words.gen_area_name(params)
 
@@ -30,13 +25,22 @@ class << self
         world
     end
 
+    private
+    def set_defaults(config)
+        config[:world_size]         ||= 3
+        config[:world_depth]        ||= 3
+        config[:openness]           ||= 0.75 # Larger numbers lead to more rooms overall
+        config[:connectedness]      ||= 0.75 # Larger numbers lead to more passageways
+        config[:area_size_tendency] ||= 0.35 # Larger numbers move the balance of small/large rooms towards the large end
+    end
+
     def generate_area(core, size, depth, parent_area, config)
         Log.debug("Generating area of size #{size} in #{parent_area.name}", 6)
 
         # Find and add a suitable zone template.
         parent_zone_type = parent_area.respond_to?(:zone_type) ? parent_area.zone_type : nil
 
-        params = Zone.get_params(core, parent_zone_type, depth)
+        params = Zone.get_params(core, :parent => parent_zone_type, :depth => depth)
 
         Log.debug(params.inspect, 6)
         name = "#{Words.gen_area_name(params)}-#{rand(1000)}"
@@ -144,3 +148,41 @@ class << self
     metered :generate, :generate_area, :populate_area
 end
 end
+
+class ZoneLineWorldFactory < WorldFactory
+class << self
+    def generate(core, config = {}, zone_types = [])
+        set_defaults(config)
+
+        if zone_types.empty?
+            Log.debug("generating default types")
+            zone_types = Array.new(2) { Zone.zones_at_depth(core).rand }
+            Log.debug(zone_types)
+        end
+
+        world = World.new(core, "Fantasmagoria", zone_types.size, 1, Zone.get_params(core, :depth => 1))
+
+        zones = []
+        zone_types.each_with_index do |zone_type, i|
+            params = Zone.get_params(core, :type => zone_type)
+            r = Room.new(core, "Fantasm of #{zone_type}", params)
+            r.connect_to(:east)
+            r.connect_to(:west)
+
+            Log.debug("setting #{i}")
+            world.set_zone(i, 0, r)
+
+            zones << r
+        end
+        Log.debug('--')
+
+         zones[0].remove_connection(:west)
+        zones[-1].remove_connection(:east)
+
+        world.check_consistency
+        world.finalize
+        world
+    end
+end
+end
+

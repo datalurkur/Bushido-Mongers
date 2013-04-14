@@ -76,9 +76,9 @@ begin
     Log.debug(["types_of(:zone):", $core.db.static_types_of(:zone)])
     Log.debug("Meadow has keywords: #{$core.db.info_for(:meadow, :keywords)}")
 
-    zone_params = Zone.get_params($core, nil, 3)
+    zone_params = Zone.get_params($core, :depth => 3)
     Log.debug(zone_params)
-    zone2 = Zone.get_params($core, zone_params[:type], 2)
+    zone2 = Zone.get_params($core, :parent => zone_params[:type], :depth => 2)
     Log.debug(zone2)
 end
 
