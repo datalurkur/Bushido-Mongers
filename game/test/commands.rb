@@ -34,7 +34,11 @@ $client.stack.specify_response_for(:begin_playing) do |stack, message|
     cmd_and_wait(stack, "get rock")
     cmd_and_wait(stack, "look self")
     cmd_and_wait(stack, "drop rock")
+    $client.release_control
 end
 
 $client.start
-sleep 2
+
+while $client.running?
+    sleep 10
+end
