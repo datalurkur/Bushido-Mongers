@@ -179,11 +179,9 @@ module Composition
         self.composed_of?(:internal) && self.mutable?(:internal)
     end
 
-    # the openable raw type doesn't have its own object, but the
-    # method makes sense in composition too.
     def open?
         # If it's a container, assume open unless directly contradicted.
-        self.container? && (self.is_type?(:openable) ? @properties[:open] : true)
+        self.container? && (self.is_type?(:container) ? @properties[:open] : true)
     end
 
     def containers(type, recursive=true)

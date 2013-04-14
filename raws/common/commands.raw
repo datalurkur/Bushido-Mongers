@@ -65,7 +65,9 @@ static command ask {}
 
 /* Item construction. */
 
-abstract command construct {}
+abstract command construct {
+    invocation construct;
+}
 
 static construct cook {}
 

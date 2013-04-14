@@ -25,6 +25,13 @@ class GameClient < MuxedClientBase
         @running_thread = start_main_loop
     end
 
+    def restart(&block)
+        @running_thread.kill
+        ret = block.call
+        @running_thread = start_main_loop
+        return ret
+    end
+
     def stop
         return unless @running
         @running = false

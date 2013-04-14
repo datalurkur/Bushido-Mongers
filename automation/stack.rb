@@ -13,10 +13,12 @@ class AutomationStack
     end
 
     def setup
+        @delta_bytes = 0
         @read_pipe, @write_pipe = IO.pipe
     end
 
     def teardown
+        Log.debug("Tearing down with #{@delta_bytes} bytes remaining", 8)
         @read_pipe.close;  @read_pipe = nil
         @write_pipe.close; @write_pipe = nil
         @message_buffer.report
@@ -36,7 +38,7 @@ class AutomationStack
     end
 
     def find_response_for(message)
-        Log.debug(["Handling message #{message.type}", message.params], 4)
+        #Log.debug(["Handling message #{message.type}", message.params], 4)
         matching_types = @response_procs.keys.select do |hash|
             Message.match_message(message, hash)
         end
@@ -56,6 +58,8 @@ class AutomationStack
         until message
             Log.debug("Getting stack response", 6)
             data = @read_pipe.read_nonblock(DEFAULT_BUFFER_SIZE)
+            @delta_bytes -= data.size
+            Log.debug("Unpacking #{data.size} bytes from read pipe (#{@delta_bytes})", 8)
             message = @message_buffer.unpack_message(data)
         end
         message
@@ -73,6 +77,9 @@ class AutomationStack
 
     def put_response(response)
         Log.debug(["Putting response", response], 6)
-        @write_pipe.write(@message_buffer.pack_message(response))
+        packed = @message_buffer.pack_message(response)
+        @write_pipe.write(packed)
+        @delta_bytes += packed.size
+        Log.debug("#{packed.size} bytes packed to write pipe (#{@delta_bytes})", 8)
     end
 end

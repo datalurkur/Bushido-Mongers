@@ -360,7 +360,7 @@ module Commands
 
             if params[:target].open?
                 raise(FailedCommandError, "#{params[:target].monicker} is already open.")
-            elsif !params[:target].is_type?(:openable)
+            elsif !params[:target].is_type?(:container)
                 raise(FailedCommandError, "#{params[:target].monicker} cannot be opened.")
             end
         end
@@ -376,7 +376,7 @@ module Commands
 
             if !params[:target].open?
                 raise(FailedCommandError, "#{params[:target].monicker} is already closed.")
-            elsif !params[:target].is_type?(:openable)
+            elsif !params[:target].is_type?(:container)
                 raise(FailedCommandError, "#{params[:target].monicker} cannot be opened.")
             end
         end

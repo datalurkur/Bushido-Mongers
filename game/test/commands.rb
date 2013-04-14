@@ -35,10 +35,8 @@ $client.stack.specify_response_for(:begin_playing) do |stack, message|
     cmd_and_wait(stack, "look self")
     cmd_and_wait(stack, "drop rock")
     $client.release_control
+    $client.stop
 end
 
 $client.start
-
-while $client.running?
-    sleep 10
-end
+while $client.running?; end

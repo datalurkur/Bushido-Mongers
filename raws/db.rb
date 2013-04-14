@@ -101,7 +101,7 @@ class ObjectDB
         checked_types   = []
         until unchecked_types.empty?
             if unchecked_types.include?(parent_type)
-                Log.debug("Yes!", 8)
+                #Log.debug("Yes!", 8)
                 return true
             else
                 new_types = unchecked_types.collect { |t| raw_info_for(t)[:is_type] }.flatten.uniq
@@ -109,7 +109,7 @@ class ObjectDB
                 unchecked_types = new_types
             end
         end
-        Log.debug("No!", 8)
+        #Log.debug("No!", 8)
         return false
     end
 

@@ -7,24 +7,32 @@ class StackClient < GameClient
 
     def initialize(config={})
         @stack = AutomationStack.new
-        seize_control
+        setup_control_pipeline
         super(MetaDataInterface,config)
     end
 
-    def release_control
-        Log.info("Releasing control to user")
-        return unless AutomationStack === @pipeline
+    def setup_control_pipeline
+        @interface = MetaDataInterface
+        @pipeline  = @stack
+        @pipeline.setup
+    end
+
+    def setup_user_pipeline
         @interface = VerboseInterface
         @pipeline.teardown
         @pipeline  = Kernel
     end
 
+    def release_control
+        Log.info("Releasing control to user")
+        return unless AutomationStack === @pipeline
+        restart { setup_user_pipeline }
+    end
+
     def seize_control
         Log.info("Seizing control from user")
         return if AutomationStack === @pipeline
-        @interface = MetaDataInterface
-        @pipeline  = @stack
-        @pipeline.setup
+        restart { setup_control_pipeline }
     end
 
     def send_to_client(message)
