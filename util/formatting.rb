@@ -11,7 +11,7 @@ class Symbol
 end
 
 class String
-    def sentence
+    def sentence(end_punc = '.')
         # Capitalize the beginning.
         word = self.gsub(/^(\w)/) { $1.upcase }
         # Clobber underscores.
@@ -19,7 +19,7 @@ class String
         # Drop whitespace before punctuation.
         word.gsub!(/\s+([\,\.\?\!])/, '\1')
         # Add ending punctuation, if it doesn't already exist.
-        word += '.' unless word.match(/[\.\!\?]['"]?$/)
+        word += end_punc unless word.match(/[\.\!\?]['"]?$/)
         # Swap the sentence punctuation with the quote.
         word.gsub!(/(['"]?)([\.\!\?])?/, '\2\1')
         # Whitespace cleanup.

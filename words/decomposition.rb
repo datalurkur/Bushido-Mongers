@@ -53,7 +53,43 @@ module Words
         args
     end
 
+    def self.decompose_ambiguous(statement)
+        statement = case statement
+        when String, Symbol
+            statement.to_s.downcase.split_to_sym
+        when Array
+            statement.map(&:to_s).map(&:downcase).map(&:to_sym)
+        else
+            Log.error("Don't know how to handle input of type #{statement.class}")
+        end
+
+        args = {}
+
+        # Is it a question?
+        if Question.question?(statement)
+            # We have no further need of a question mark.
+            statement[-1] = statement.last.to_s.chomp('?').to_sym
+            Log.debug("Question: #{statement.join(" ")}")
+            args = decompose_question(args, statement)
+        end
+        # Check if it's a statement. Decompose it and store in memory.
+
+        args
+    end
+
     private
+    def self.decompose_question(args, pieces)
+        args[:query] = true
+        if Question.wh_word?(pieces.first)
+            args[:lookup] = Question::WH_MEANINGS[pieces.first]
+            pieces.slice!(0)
+        end
+        # FIXME - search for verb here (probably is/are?)
+        args[:noun] = find_noun_phrase(0, pieces).first
+
+        args
+    end
+
     # N.B. modifies the pieces array
     def self.decompose_statement(args, pieces)
         # Look for a :to to be followed by a single noun.
@@ -127,11 +163,11 @@ module Words
         #    first_part + [pieces[(i-1)..(i+1)]] + last_part
         #end
         pieces[index..-1].each_with_index do |piece, i|
-            Log.debug([piece, i], 9)
-            Log.debug([pieces[index + i], Words::Sentence::Preposition.preposition?(pieces[index + i])], 9)
-            if Words::Sentence::Noun.noun?(piece) || # It's an in-game noun.
+            Log.debug([piece, i], 1)
+            Log.debug([pieces[index + i], Sentence::Preposition.preposition?(pieces[index + i])], 1)
+            if Sentence::Noun.noun?(piece) || # It's an in-game noun.
                (index + i) == pieces.size - 1     || # It's at the end of the index.
-               Words::Sentence::Preposition.preposition?(pieces[index + i + 1]) # Or there's a preposition next.
+               Sentence::Preposition.preposition?(pieces[index + i + 1]) # Or there's a preposition next.
                 Log.debug("found noun #{piece}", 6)
                 if noun
                     # It must be an adjective, instead.
@@ -139,13 +175,12 @@ module Words
                 end
                 noun = piece
                 size += 1
-            elsif Words::Sentence::Adjective.adjective?(piece)
+            elsif Sentence::Adjective.adjective?(piece)
                 Log.debug("found adjective #{piece}", 6)
                 adjectives << piece
                 size += 1
             else
                 Log.debug("invalid piece #{piece}", 6)
-                break
             end
         end
         pieces.slice!(index, size).last

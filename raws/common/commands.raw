@@ -61,12 +61,11 @@ static command close {
 
 static command say {}
 static command whisper {}
+static command ask {}
 
 /* Item construction. */
 
-abstract command construct {
-    invocation construct;
-}
+abstract command construct {}
 
 static construct cook {}
 

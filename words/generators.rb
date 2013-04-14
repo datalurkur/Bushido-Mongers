@@ -51,7 +51,7 @@ module Words
         end
     end
 
-    # TODO - action descriptors: The generic ninja generically slices the goat with genericness.
+    # FIXME: Currently only does declarative.
     def self.gen_sentence(args = {})
         to_print = args.dup
         to_print.delete(:agent)

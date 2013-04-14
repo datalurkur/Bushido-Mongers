@@ -80,7 +80,7 @@ module Words
 
     class Sentence < ParseTree
         # Most of the time, we only want to print spaces between words.
-        # Sometimes we want commas, spaces, and ands.
+        # Nodes include Listable to print commas, spaces, and ands between their children.
         # TODO - make coordination more generic: http://en.wikipedia.org/wiki/Coordination_(linguistics)
         module Listable
             def to_s
@@ -667,6 +667,35 @@ module Words
 
         def to_s
             super.sentence
+        end
+    end
+
+    class Question < Sentence
+        WH_MEANINGS = {
+            :who   => :civil,
+            :what  => :object,
+            :when  => :event,
+            :where => :location,
+            :why   => :meaning,
+            :how   => :skill
+        }
+
+        def self.question?(children)
+            children.last.to_s.match(/\?$/) ||
+            self.wh_word?(children.first)
+        end
+
+        def self.wh_word?(word)
+            case word
+            when :who, :what, :when, :where, :why, :how
+                true
+            else
+                false
+            end
+        end
+
+        def to_s
+            super.sentence('?')
         end
     end
 end

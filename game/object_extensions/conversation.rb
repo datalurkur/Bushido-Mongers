@@ -8,11 +8,15 @@ module Conversation
             return if instance.uses?(Character)
             case message.type
             when :unit_speaks
-                Log.debug(["Statement received by #{instance.monicker}", message])
+                Log.debug(["Statement received by #{instance.monicker}", message], 6)
                 if message.has_param?(:receiver) && message.receiver === instance && instance.will_do_command?(message)
                     instance.perform_command(message)
+                else
+                    params = Words.decompose_ambiguous(message.statement)
                 end
             end
+
+            return params
         end
     end
 
@@ -28,7 +32,7 @@ module Conversation
         Log.debug(params)
 
         begin
-            Log.debug("#{self} performing command #{command}", 8)
+            Log.debug("#{self.monicker} performing command #{command}", 8)
             params = Commands.stage(@core, command, params.merge(:agent => self))
         rescue Exception => e
             Log.debug(["Failed to stage command #{command}", e.message, e.backtrace])
@@ -52,15 +56,15 @@ module Conversation
         end
     end
 
-    private
     def say(receiver, statement)
-        locations = [self.absolute_position]
-        Message.dispatch_positional(@core, locations, :unit_speaks, {
+        message = Message.new(:unit_speaks, {
             :agent       => self,
             :receiver    => receiver,
             :statement   => statement,
             :is_whisper  => false
         })
+        locations = [self.absolute_position]
+        Message.dispatch_positional(@core, locations, message.type, message.params)
+        message
     end
-
 end

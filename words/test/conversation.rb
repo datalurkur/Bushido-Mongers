@@ -19,14 +19,32 @@ tests = [
     # ==============================
     # Names don't have to be in any particular format
     # FIXME - These will probably look different and use a different API before being passed to the knowledge system as a query
-    {:phrase => "Where is kenji?",                  :result => [:location, "kenji"]},
-    {:phrase => "Where can I find rabbits?",        :result => [:location, :rabbit]},
+    {:phrase => "Where is kenji?",                  :result => {:query => true, :lookup => :location, :noun => :kenji}},
+    {:phrase => "Where is Kenji",                   :result => {:query => true, :lookup => :location, :noun => :kenji}},
+    {:phrase => "Do you know where kenji is?",      :result => {:query => true, :lookup => :location, :noun => :kenji}},
+    {:phrase => "Where are rabbits?",               :result => {:query => true, :lookup => :location, :noun => :rabbit}},
+    {:phrase => "Where can I find rabbits?",        :result => {:query => true, :lookup => :location, :noun => :rabbit}},
     {:phrase => "How do I make a katana?",          :result => [:info, :katana, :recipe]},
 ]
 
+require './raws/db'
+require './messaging/positional_message'
+Message = DebugPositionalMessage
+require './messaging/message_defs'
+require './test/fake'
+require './game/descriptors'
+require './game/object_extensions'
+
+core = CoreWrapper.new
+
+speaker  = core.populations.create_agent(:human, true, :name => "Kenji Skrimshank", :position => FakeRoom.new)
+receiver =                   core.create(:human,       :name => "Bob",              :position => FakeRoom.new)
+
+
 tests.each do |test|
-    # FIXME ZPHOBIC - Fill in the appropriate method call once the grammar stuff is ready
-    test_result = test[:phrase]
+    message = speaker.say(receiver, test[:phrase])
+    test_result = Conversation.at_message(receiver, message)
+
     if test_result != test[:result]
         Log.error(["Phrase was incorrectly parsed", test, test_result])
         raise

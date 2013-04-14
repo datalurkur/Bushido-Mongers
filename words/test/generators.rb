@@ -49,16 +49,16 @@ Log.debug(
 # Action tests.
 require './raws/db'
 require './test/fake'
-$core = CoreWrapper.new
 require './game/descriptors'
 
-require './game/character_loader'
-observer = $core.populations.create_agent(:human, true, {:name => "Kenji Skrimshank", :position => FakeRoom.new})
-agent = Descriptor::BushidoObjectDescriptor.describe(observer, observer)
+$core = CoreWrapper.new
+
+observer = $core.populations.create_agent(:human, true, :name => "Kenji Skrimshank", :position => FakeRoom.new)
+agent = Descriptor.describe(observer, observer)
 #Log.debug(agent)
 Log.debug(Words.describe_body(agent))
 target = $core.create(:goat, {:position => FakeRoom.new, :name => "Billy Goat Balrog"})
-target = Descriptor::BushidoObjectDescriptor.describe(target, observer)
+target = Descriptor.describe(target, observer)
 Log.debug(Words.describe_body(target))
 
 # {:agent => <Ninja, :name => "Kenji Scrimshank">, :target => <Goat, :name => "Billy Goat Balrog">, :verb => :attack, :tool => :agent_current_weapon}
@@ -66,6 +66,10 @@ puts Words.describe_attack(:attacker => agent, :defender => target, :command => 
 puts Words.describe_attack(:defender => agent, :attacker => target, :command => :attack,                   :result_hash => {:damage_type => [:piercing, :blunt, :nonlethal].rand})
 
 target = $core.create(:chest, {:name => "Bosom", :randomize => true})
-target = Descriptor::BushidoObjectDescriptor.describe(target, observer)
-Log.debug(Words.describe_container_class(target))
-Log.debug(Words.describe_composition_root(target))
+target_description = Descriptor.describe(target, observer)
+Log.debug(Words.describe_container_class(target_description))
+
+target.properties[:open] = true
+target_description = Descriptor.describe(target, observer)
+Log.debug(Words.describe_container_class(target_description))
+Log.debug(Words.describe_composition_root(target_description))

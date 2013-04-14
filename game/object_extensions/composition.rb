@@ -179,7 +179,7 @@ module Composition
         self.composed_of?(:internal) && self.mutable?(:internal)
     end
 
-    # the openable raw type doesn't have its own objext, but the
+    # the openable raw type doesn't have its own object, but the
     # method makes sense in composition too.
     def open?
         # If it's a container, assume open unless directly contradicted.
