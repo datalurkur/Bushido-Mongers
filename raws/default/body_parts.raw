@@ -99,3 +99,18 @@ body_part beak {
     incidental chitin;
     typical_size small;
 }
+
+body_part breast {
+    incidental flesh;
+    typical_size small;
+}
+
+body_part testicle {
+    incidental flesh;
+    typical_size tiny;
+}
+
+body_part penis {
+    incidental flesh;
+    typical_size tiny;
+}

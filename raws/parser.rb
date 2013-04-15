@@ -418,6 +418,7 @@ module ObjectRawParser
                             separate_lexical_chunks(data).each do |substatement, subdata|
                                 sub_chunks    = substatement.split(/\s+/)
                                 key           = sub_chunks[0].to_sym
+                                raise(ParserError, "Unknown map key #{key.inspect}") unless property_info[:keys][key]
                                 key_type      = property_info[:keys][key][:type]
                                 values        = extract_property_values(key_type, sub_chunks[1..-1])
                                 if property_info[:keys][key][:many]

@@ -22,6 +22,16 @@ abstract object composition {
         sym symmetry_type;
     }
 
+    has_many optional map morphic {
+        many sym morphism_classes;
+
+        sym container_class;
+        sym object_type;
+
+        int count;
+        sym symmetry_type;
+    }
+
     uses composition;
 
     /* The classic composition. */

@@ -343,17 +343,33 @@ class Lobby
             send_to_user(username, Message.new(:game_params, {:params=>{}}))
         when :generate_game
             generate_game(username)
+        when :set_character_opt
+            @users[username][:character_options] ||= {}
+            @users[username][:character_options][message.property] = message.value
+            send_to_user(username, Message.new(:opt_set_ok))
         when :get_character_opts
-            # This is a query for a list of character options
-            opts = case message.property
-            # TODO - Read these from the raws
-            when :gender; [:male, :female, :neutral]
-            when :race;   @game_core.db.instantiable_types_of(:civil)
-            else
-                Log.warning("Unknown character options property #{message.property}")
-                []
+            begin
+                # This is a query for a list of character options
+                opts = case message.property
+                when :morphism
+                    archetype = @users[username][:character_options][:archetype]
+                    raise(MissingProperty, "Character archetype must be set before morphism can be selected") unless archetype
+
+                    morphic_choices = []
+                    morphic_parts   = @game_core.db.info_for(archetype, :morphic)
+                    morphic_parts.each do |morphic_part|
+                        morphic_choices.concat(morphic_part[:morphism_classes])
+                    end
+                    morphic_choices.uniq
+                when :archetype
+                    @game_core.db.instantiable_types_of(:civil)
+                else
+                    raise(NotImplementedError, "Unknown character options property #{message.property.inspect}")
+                end
+                send_to_user(username, Message.new(:character_opts, {:options => opts}))
+            rescue Exception => e
+                send_to_user(username, Message.new(:opts_unavailable, {:reason => e.message}))
             end
-            send_to_user(username, Message.new(:character_opts, {:options => opts}))
         when :create_character
             # Basically, this is the event that triggers the character to be saved and used
             # The server isn't involved in the character creation dialog at all, only the committing of that data
@@ -361,7 +377,7 @@ class Lobby
                 raise "You must create a game before creating a character" unless @game_core
                 # TODO - Add a check for a character with the same name
                 Log.info("Creating character for #{username}")
-                @game_core.create_character(self, username, message.attributes)
+                @game_core.create_character(self, username, @users[username][:character_options])
                 Log.info("Character created")
                 send_to_user(username, Message.new(:character_ready))
                 if @game_state == :playing

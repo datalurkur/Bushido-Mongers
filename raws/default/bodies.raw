@@ -23,6 +23,25 @@ abstract body,basic_attributes,biped,can_wear humanoid {
         symmetry_type balanced_axial;
         count 2;
     }
+    morphic {
+        morphism_classes male hermaphrodite;
+        container_class external;
+        object_type penis;
+    }
+    morphic {
+        morphism_classes male hermaphrodite;
+        container_class external;
+        object_type testicle;
+        count 2;
+        symmetry_type balanced_axial;
+    }
+    morphic {
+        morphism_classes female hermaphrodite;
+        container_class external;
+        object_type breast;
+        count 2;
+        symmetry_type balanced_axial;
+    }
 }
 
 abstract body,basic_attributes,octiped arachnoid {

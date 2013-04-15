@@ -96,7 +96,16 @@ module Composition
     end
 
     def initial_composure(params)
-        symmetric_parts.each do |symmetric_part|
+        parts_to_generate = @properties[:symmetric].dup
+        if params[:morphism]
+            @properties[:morphic].each do |morphic_part|
+                if morphic_part[:morphism_classes].include?(params[:morphism])
+                    parts_to_generate << morphic_part
+                end
+            end
+        end
+
+        parts_to_generate.each do |symmetric_part|
             unless composed_of?(symmetric_part[:container_class])
                 Log.error("No container class #{symmetric_part[:container_class].inspect} found for #{monicker}")
                 next
@@ -104,7 +113,7 @@ module Composition
             # FIXME - Generate symmetric part names
             symmetric_names = []
 
-            symmetric_part[:count].times do |i|
+            (symmetric_part[:count] || 1).times do |i|
                 # FIXME - Actually use the symmetry class to assign names here
                 symmetric_params = {
                     :position      => self,
@@ -219,7 +228,6 @@ module Composition
     def container_classes;     @properties[:container_classes];             end
     def mutable_classes;       @properties[:mutable_container_classes];     end
     def valued_classes;        @properties[:added_value_container_classes]; end
-    def symmetric_parts;       @properties[:symmetric];                     end
 
     def composed_of?(klass);   @properties[:container_classes].include?(klass);             end
     def mutable?(klass);       @properties[:mutable_container_classes].include?(klass);     end

@@ -111,6 +111,17 @@ class PopulationManager
             hash[:position]    ||= @core.world.get_random_location
         end
 
+        # Determine the specific morphism of the agent
+        unless hash[:morphism]
+            morphic_choices = []
+            morphic_parts   = @core.db.info_for(type, :morphic)
+            morphic_parts.each do |morphic_part|
+                morphic_choices.concat(morphic_part[:morphism_classes])
+            end
+            hash[:morphism] = morphic_choices.uniq.rand
+        end
+        Log.debug("#{type} will be #{hash[:morphism]}")
+
         agent = @core.create(type, hash)
 
         agent.setup_extension(Perception, hash)

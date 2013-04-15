@@ -85,10 +85,10 @@ end
 $client.stack.specify_response_for(:text_field, {:field => :character_name}) do |stack, message|
     stack.put_response($config[:character_name])
 end
-$client.stack.specify_response_for(:choose_from_list, {:field => :character_race}) do |stack, message|
+$client.stack.specify_response_for(:choose_from_list, {:field => :character_archetype}) do |stack, message|
     stack.put_response(message.choices.rand)
 end
-$client.stack.specify_response_for(:choose_from_list, {:field => :character_gender}) do |stack, message|
+$client.stack.specify_response_for(:choose_from_list, {:field => :character_morphism}) do |stack, message|
     stack.put_response(message.choices.rand)
 end
 $client.stack.specify_response_for(:choose_from_list, {:field => :character_options}) do |stack, message|

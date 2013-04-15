@@ -37,9 +37,13 @@ Message.define(:generation_success,  :lobby, [],        "World generated")      
 Message.define(:generation_fail,     :lobby, [:reason], "World failed to generate")         # S->C
 
 # Character creation / selection
-Message.define(:create_character,    :lobby, [:attributes])                                 # C->S
-Message.define(:get_character_opts,  :lobby, [:property])
-Message.define(:character_opts,      :lobby, [:options])
+Message.define(:create_character,    :lobby)                                                # C->S
+Message.define(:get_character_opts,  :lobby, [:property])                                   # C->S
+Message.define(:character_opts,      :lobby, [:options])                                    # S->C
+Message.define(:opts_unavailable,    :lobby, [:reason], "Options unavailable")              # S->C
+Message.define(:set_character_opt,   :lobby, [:property, :value])                           # C->S
+Message.define(:opt_set_ok,          :lobby, [],        "Option set")                       # S->C
+Message.define(:opt_set_failed,      :lobby, [:reason], "Option not set")                   # S->C
 Message.define(:list_characters,     :lobby)                                                # C->S
 Message.define(:no_characters,       :lobby, [:reason], "No characters available")          # S->C
 Message.define(:character_list,      :lobby, [:characters])                                 # S->C
