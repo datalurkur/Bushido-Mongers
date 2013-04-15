@@ -66,7 +66,7 @@ class AutomationStack
     end
 
     def puts(message)
-        Log.debug("Putting stack query", 6)
+        Log.debug(["Putting stack query", message], 6)
         response_proc = find_response_for(message)
         if response_proc
             Thread.new do

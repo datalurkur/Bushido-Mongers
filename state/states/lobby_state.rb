@@ -59,8 +59,8 @@ class LobbyState < State
             pass_to_client(message)
             begin_exchange(@lobby_menu_exchange)
         when :begin_playing
-            pass_to_client(message)
             PlayingState.new(@client)
+            pass_to_client(message)
         else
             super(message)
         end
