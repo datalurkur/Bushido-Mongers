@@ -220,7 +220,7 @@ class ObjectDB
         raise(ArgumentError, "Please search for a type") if types.nil?
         #Log.debug("Searching for #{instantiable ? "instantiable " : ""}#{static ? "static " : ""}types of #{types.inspect}")
         results = []
-        search  = Array(types)
+        search  = (Array === types ? types.dup : Array(types))
         until search.empty?
             next_type = search.shift
             type_info = raw_info_for(next_type)

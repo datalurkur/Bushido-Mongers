@@ -28,7 +28,9 @@ abstract ammunition {}
 post_process {
     self.instantiable_types_of(:equipment).each do |equipment|
         Log.debug("Propagating slot information for #{equipment}", 6)
-        types_of(info_for(equipment, :slot)) do |subtype|
+        slot_type = info_for(equipment, :slot)
+        subtypes = instantiable_types_of(slot_type)
+        subtypes.each do |subtype|
             raise(StandardError, "Can't equip on unequippable part #{subtype}!") unless is_type?(subtype, :can_wear)
             Log.debug("#{subtype} can equip #{equipment}", 6)
             modify_info(subtype, :can_equip, []) << equipment

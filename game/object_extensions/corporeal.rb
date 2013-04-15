@@ -24,14 +24,8 @@ module Corporeal
     def all_body_parts(type = [:internal, :external])
         [self] + select_objects(type, true) { |obj| obj.is_type?(:body_part) }
     end
-
-    def external_body_parts
-        all_body_parts(:external)
-    end
-
-    def internal_body_parts
-        all_body_parts(:internal)
-    end
+    def external_body_parts; all_body_parts(:external); end
+    def internal_body_parts; all_body_parts(:internal); end
 
     def alive?
         uses?(Character) || uses?(NpcBehavior)

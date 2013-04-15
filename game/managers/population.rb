@@ -149,7 +149,11 @@ class PopulationManager
         end
         agent.setup_skill_set(starting_skills)
 
-        agent.setup_extension(Equipment, hash) unless feral
+        unless feral
+            agent.setup_extension(Equipment, hash)
+        else
+            Log.debug("Since agent is feral, no equipment will be generated")
+        end
 
         unit_moves(agent, nil, agent.absolute_position)
         agent
