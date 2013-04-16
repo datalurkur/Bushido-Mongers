@@ -71,7 +71,7 @@ Log.debug($core.db.find_subtypes(:object, {:target_of => :eat}, true))
 
 # Zone tests
 begin
-    require 'world/zone'
+    require './world/zone'
 
     Log.debug(["types_of(:zone):", $core.db.static_types_of(:zone)])
     Log.debug("Meadow has keywords: #{$core.db.info_for(:meadow, :keywords)}")

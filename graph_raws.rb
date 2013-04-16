@@ -1,8 +1,8 @@
 require 'rubygems'
 require 'graphviz'
 
-require 'raws/bushido_object'
-require 'raws/db'
+require './raws/bushido_object'
+require './raws/db'
 
 Log.setup("Main", "grapher")
 

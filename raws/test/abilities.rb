@@ -1,5 +1,5 @@
-require 'raws/db'
-require 'test/fake'
+require './raws/db'
+require './test/fake'
 
 Log.setup("Main", "abilities")
 
