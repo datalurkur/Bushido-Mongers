@@ -1,13 +1,5 @@
 # TODO - add info on acceptable/used arguments to generators
 
-class Descriptor
-    def self.container?(args)
-        args[:is_type].include?(:composition_root) &&
-        args[:container_contents].has_key?(:internal) &&
-        args[:properties][:mutable_container_classes].include?(:internal)
-    end
-end
-
 module Words
     def self.generate(args)
         case args[:command]
@@ -15,22 +7,20 @@ module Words
             target = args[:target]
             location = args[:location]
             if location
-                if Descriptor.container?(location)
+                if location[:is_type].include?(:container)
                     return describe_container_class(location)
                 else
-                    return describe_composition_root(location)
+                    return describe_composition(location)
                 end
             elsif target[:is_type].include?(:room)
                 return describe_room(args)
             elsif target[:is_type].include?(:body)
                 return describe_body(target)
-            elsif target[:is_type].include?(:composition_root)
-                if Descriptor.container?(location)
-                    return describe_container_class(location)
-                else
-                    return describe_composition_root(location)
-                end
-                return describe_whole_composition(target)
+            elsif target[:is_type].include?(:container)
+                # Needs to be ahead of :composition, as containers are compositions.
+                return describe_container_class(target)
+            elsif target[:is_type].include?(:composition)
+                return describe_composition(target)
             elsif target[:is_type].include?(:object)
                 return gen_sentence(args)
             else
@@ -217,7 +207,7 @@ module Words
         gen_copula(obj)
     end
 
-    def self.describe_composition_root(composition)
+    def self.describe_composition(composition)
         sentences = [describe_object(composition)]
 
         composition_verbs = {
@@ -239,8 +229,8 @@ module Words
                                 # Currently-progressing state, so passive progressive.
                                 :state   => State.new)
                 sentences += list.collect do |part|
-                    if part[:is_type].include?(:composition_root)
-                        describe_composition_root(part)
+                    if part[:is_type].include?(:composition)
+                        describe_composition(part)
                     else
                         gen_copula(:subject => part)
                     end
@@ -271,7 +261,7 @@ module Words
                 list = current_comp[:container_contents][comp_type]
                 if list && !list.empty?
                     # Add any compositions to the search list.
-                    search_list += list.select { |p| p[:is_type].include?(:composition_root) }
+                    search_list += list.select { |p| p[:is_type].include?(:composition) }
                     # Cascade possession down.
                     list.each { |p| p[:possessor_info] = current_comp[:possessor_info] }
 

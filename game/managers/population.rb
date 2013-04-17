@@ -120,7 +120,7 @@ class PopulationManager
             end
             hash[:morphism] = morphic_choices.uniq.rand
         end
-        Log.debug("#{type} will be #{hash[:morphism]}")
+        Log.debug("#{type} will be #{hash[:morphism]}", 6)
 
         agent = @core.create(type, hash)
 
@@ -152,7 +152,7 @@ class PopulationManager
         unless feral
             agent.setup_extension(Equipment, hash)
         else
-            Log.debug("Since agent is feral, no equipment will be generated")
+            Log.debug("Since agent is feral, no equipment will be generated", 6)
         end
 
         unit_moves(agent, nil, agent.absolute_position)
