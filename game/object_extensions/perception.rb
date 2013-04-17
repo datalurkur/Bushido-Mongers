@@ -23,7 +23,7 @@ module Perception
             containers = objects.select { |o| o.is_type?(:container) && o.open? }
             # perceivable objects in room + contents of perceivable open containers in room
             objects.select { |o| o.matches(filters) } +
-            containers.map { |c| c.container_contents.select { |o| o.matches(filters) } }.flatten
+            containers.map { |c| c.container_contents(:internal).select { |o| o.matches(filters) } }.flatten
         when :grasped, :worn
             return [] unless uses?(Composition) && uses?(Equipment)
             all_equipment(location).select do |object|
@@ -34,7 +34,7 @@ module Perception
             # Search within the perceiver's open backpacks, sacks, etc.
             matches = []
             containers_in_inventory.each { |c| c.open? }.each do |cont|
-                submatches = cont.container_contents.select do |object|
+                submatches = cont.container_contents(:internal).select do |object|
                     object.matches(filters)
                 end
                 matches.concat(submatches)
@@ -59,7 +59,7 @@ module Perception
                     return [result]
                 elsif location.is_type?(:container)
                     if location.open?
-                        location.container_contents do |object|
+                        location.container_contents(:internal) do |object|
                             object.matches(filters)
                         end
                     else
