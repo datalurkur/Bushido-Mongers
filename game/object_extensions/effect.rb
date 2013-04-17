@@ -32,14 +32,14 @@ module EffectSource
     def applied_windups; @applied_windups ||= {}; end
 
     def apply_effect_sources
-        Log.debug("Applying #{effect_sources.size} effects from #{monicker}", 4)
+        Log.debug("Applying #{effect_sources.size} effects from #{monicker}", 6)
         effect_sources.each do |effect|
             target_type = @core.db.info_for(effect, :target)
             windup      = @core.db.info_for(effect, :windup)
             wound_up    = []
             targets     = []
 
-            Log.debug("#{monicker} applying #{effect} to all #{target_type} objects", 4)
+            Log.debug("#{monicker} applying #{effect} to all #{target_type} objects", 6)
 
             # Get a list of targets to which this effect is applied
             if uses?(Composition)
