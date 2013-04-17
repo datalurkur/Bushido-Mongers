@@ -10,7 +10,7 @@ abstract symmetry_type balanced_axial {
     tertiary_directions interior anterior;
 }
 
-abstract object composition {
+abstract object,effect_target composition {
     has_many sym container_classes;
     has_many optional sym mutable_container_classes;
     has_many optional sym added_value_container_classes;

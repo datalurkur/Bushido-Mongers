@@ -5,7 +5,9 @@ module Transforms
             method(transformation).call(core, object, params)
         end
 
-        def digest(core, object, params)
+        def acid_burn(core, object, params)
+            Log.debug("Burning #{object.monicker} with acid")
+            Log.error("NOT IMPLEMENTED")
             # TODO - Figure out how to burn things with acid / determine what strength of acid is required to eat away at something / etc
             object
         end

@@ -7,7 +7,7 @@ abstract object {
 }
 
 /* An object that is nonseparable */
-abstract object atomic_object {
+abstract object,effect_target atomic_object {
     class float typical_weight;
     class float density;
     density 0.5;

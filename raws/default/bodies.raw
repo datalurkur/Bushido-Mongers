@@ -9,7 +9,7 @@ abstract body,basic_attributes,biped,can_wear humanoid {
     part_name torso;
 
     incidental flesh;
-    internal liver;
+    internal liver stomach;
     external head;
     symmetric {
         object_type arm;
@@ -60,6 +60,7 @@ abstract body,basic_attributes,quadriped rodent {
     part_name torso;
 
     incidental flesh;
+    internal liver stomach;
     external head tail;
 }
 
@@ -69,6 +70,7 @@ abstract body,basic_attributes,quadriped ungulate {
     part_name torso;
 
     incidental flesh;
+    internal liver stomach;
     external head tail;
 }
 
@@ -95,6 +97,7 @@ abstract body,basic_attributes,quadriped lizard {
     part_name torso;
 
     incidental flesh;
+    internal stomach;
     external head tail;
 }
 
@@ -104,7 +107,7 @@ abstract body,basic_attributes snake {
     part_name body;
 
     incidental flesh;
-    internal venom_gland;
+    internal venom_gland stomach;
     external head tail;
 }
 
@@ -114,7 +117,7 @@ abstract body,basic_attributes,biped,can_wear tortoise {
     part_name torso;
 
     incidental flesh;
-    internal liver;
+    internal liver stomach;
     external head carapace; 
     symmetric {
         object_type arm;

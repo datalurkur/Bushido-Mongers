@@ -21,6 +21,9 @@ module Corporeal
         end
     end
 
+    def find_body_parts(type)
+        all_body_parts.select { |p| p.get_type == type }
+    end
     def all_body_parts(type = [:internal, :external])
         [self] + select_objects(type, true) { |obj| obj.is_type?(:body_part) }
     end

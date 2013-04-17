@@ -24,12 +24,12 @@ class PopulationManager
     end
 
     def seed_population
-        Log.debug("Seeding initial population")
+        Log.debug("Seeding initial population", 4)
         @groups.each do |type, info|
             real_spawn_locations = @core.world.leaves.select { |leaf| info[:spawns].include?(leaf.zone_type) }
             mobs_to_spawn        = (Rarity.value_of(info[:rarity]) * real_spawn_locations.size).ceil
 
-            Log.debug("Seeding #{mobs_to_spawn} #{type}s")
+            Log.debug("Seeding #{mobs_to_spawn} #{type}s", 4)
             mobs_to_spawn.to_i.times { create_agent(type, false, {:position => real_spawn_locations.rand}) }
         end
     end
@@ -62,7 +62,7 @@ class PopulationManager
         when :unit_killed
             unit_moves(unit, message.location, nil)
         when :tick
-            Log.info("#{self.class} spawning new population members")
+            Log.info("#{self.class} spawning new population members", 4)
             Log.warning("IMPLEMENT ME")
         when :unit_renamed
             if message.params[:old_name]
@@ -120,7 +120,7 @@ class PopulationManager
             end
             hash[:morphism] = morphic_choices.uniq.rand
         end
-        Log.debug("#{type} will be #{hash[:morphism]}")
+        Log.debug("#{type} will be #{hash[:morphism]}", 6)
 
         agent = @core.create(type, hash)
 
@@ -152,7 +152,7 @@ class PopulationManager
         unless feral
             agent.setup_extension(Equipment, hash)
         else
-            Log.debug("Since agent is feral, no equipment will be generated")
+            Log.debug("Since agent is feral, no equipment will be generated", 6)
         end
 
         unit_moves(agent, nil, agent.absolute_position)
@@ -168,7 +168,7 @@ class PopulationManager
     end
 
     def add_group(type, spawn_locations, rarity)
-        Log.debug(["Adding #{rarity.inspect} population group #{type.inspect}", spawn_locations])
+        Log.debug(["Adding #{rarity.inspect} population group #{type.inspect}", spawn_locations], 5)
         @groups[type] = {
             :spawns         => spawn_locations,
             :populations    => {},

@@ -1,0 +1,8 @@
+/* Stomach acid is continually produced by the stomach and affects things within, wearing off rather quickly when contact is broken */
+static effect stomach_acid {
+    target internal;
+    transform acid_burn;
+    windup 1;
+    duration 2;
+    magnitude 0.5;
+}

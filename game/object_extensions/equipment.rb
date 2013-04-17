@@ -13,7 +13,7 @@ module Equipment
     end
 
     def add_random_equipment
-        Log.debug("Adding random equipment to #{monicker}")
+        Log.debug("Adding random equipment to #{monicker}", 6)
         external_body_parts.each do |part|
             if part.properties[:can_equip] && !part.properties[:can_equip].empty?
                 #Log.debug(["Looking for equipment worn on #{part.monicker}", part.properties[:can_equip]], 6)

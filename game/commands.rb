@@ -144,8 +144,14 @@ module Commands
                 # Do normal consumption
                 Log.info("#{agent.monicker} eats #{params[:target].monicker} like a normal person.")
             end
-            # TODO - Move the target to the agent's digester organ (whatever that might be) and let it undergo an acid burn there
-            Transforms.transform(:digest, core, params[:target], {:agent => params[:agent]})
+            # TODO - Determine what organ to use for digestion based on the raws, rather than assuming the eater has a stomach
+            digesters = params[:agent].find_body_parts(:stomach)
+            if digesters.empty?
+                Log.error("#{params[:agent].monicker} has no organs that can digest things!")
+                return
+            else
+                params[:target].move_to(digesters.rand)
+            end
         end
     end
 
