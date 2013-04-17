@@ -49,14 +49,37 @@ module Composition
         def at_destruction(instance, destroyer, vaporize)
             return if vaporize
 
-            Log.debug("Destroying composition #{instance.monicker}", 7)
             instance.container_classes.each do |klass|
-                # Drop these components at the location where this object is
-                instance.container_contents(klass).each do |component|
-                    Log.debug("Dropping (#{klass}) #{component.monicker} at #{instance.absolute_position.name}", 6)
-                    component.set_position(instance.absolute_position, :internal)
+                # Drop these parts at the location where this object is
+                instance.container_contents(klass).dup.each do |part|
+                    Log.debug("Dropping (#{klass}) #{part.monicker} at #{instance.absolute_position.name}", 6)
+                    part.set_position(instance.absolute_position, :internal)
                 end
             end
+        end
+
+        def typical_parts_of(core, type, morphism)
+            type_info     = core.db.info_for(type)
+            typical_parts = []
+            type_info[:container_classes].each do |klass|
+                new_parts = type_info[klass].collect do |part|
+                    {
+                        :type  => part,
+                        :count => 1,
+                        :klass => klass
+                    }
+                end
+                typical_parts.concat(new_parts)
+            end
+            complex_parts = type_info[:symmetric] + (morphism ? type_info[:morphic] : [])
+            complex_parts.each do |part|
+                typical_parts << {
+                    :type  => part[:object_type],
+                    :count => part[:count] || 1,
+                    :klass => part[:container_class]
+                }
+            end
+            typical_parts
         end
     end
 
@@ -96,40 +119,16 @@ module Composition
     end
 
     def initial_composure(params)
-        parts_to_generate = @properties[:symmetric].dup
-        if params[:morphism]
-            @properties[:morphic].each do |morphic_part|
-                if morphic_part[:morphism_classes].include?(params[:morphism])
-                    parts_to_generate << morphic_part
-                end
-            end
-        end
-
-        parts_to_generate.each do |symmetric_part|
-            unless composed_of?(symmetric_part[:container_class])
-                Log.error("No container class #{symmetric_part[:container_class].inspect} found for #{monicker}")
+        Composition.typical_parts_of(@core, get_type, params[:morphism]).each do |part|
+            unless composed_of?(part[:klass])
+                Log.error("No container class #{part[:klass].inspect} found for #{monicker}")
                 next
             end
-            # FIXME - Generate symmetric part names
-            symmetric_names = []
-
-            (symmetric_part[:count] || 1).times do |i|
+            part[:count].times do |i|
                 # FIXME - Actually use the symmetry class to assign names here
-                symmetric_params = {
+                @core.create(part[:type], params.merge(
                     :position      => self,
-                    :position_type => symmetric_part[:container_class],
-                    :randomize     => true
-                }
-                @core.create(symmetric_part[:object_type], params.merge(symmetric_params))
-            end
-        end
-
-        container_classes.each do |comp_type|
-            raise(MissingProperty, "Container class #{comp_type} specified but not created.") unless @properties[comp_type]
-            @properties[comp_type].each do |component|
-                @core.create(component, params.merge(
-                    :position      => self,
-                    :position_type => comp_type,
+                    :position_type => part[:klass],
                     :randomize     => true
                 ))
             end
@@ -137,7 +136,6 @@ module Composition
     end
 
     # TODO - check for relative size / max carry number / other restrictions
-    # respect_mutable=false is used by various at_creation methods to assemble objects sans-sanity checks
     def add_object(object, type)
         Log.debug("Assembling #{monicker} - #{object.monicker} added to list of #{type} parts", 6)
         raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
@@ -204,7 +202,7 @@ module Composition
         list
     end
 
-    def container_contents(type=:internal)
+    def container_contents(type)
         @container_contents       ||= {}
         raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
         @container_contents[type] ||= []
@@ -223,4 +221,17 @@ module Composition
     def composed_of?(klass);   @properties[:container_classes].include?(klass);             end
     def mutable?(klass);       @properties[:mutable_container_classes].include?(klass);     end
     def valued?(klass);        @properties[:added_value_container_classes].include?(klass); end
+
+    # DEBUG
+    def composition_layout
+        layout = {}
+        container_classes.each do |klass|
+            layout[klass] = {}
+            container_contents(klass).each do |part|
+                key = "#{part.monicker} (#{part.uid})"
+                layout[klass][key] = part.uses?(Composition) ? part.composition_layout : nil
+            end
+        end
+        layout
+    end
 end
