@@ -27,12 +27,12 @@ module Equipment
 
     def wear(part, equipment)
         raise(FailedCommandError, "Can't wear #{equipment.monicker}; already wearing #{part.worn}") if part.full?(:worn)
-        equipment.equip_on(part)
+        equipment.set_position(part, :worn)
     end
 
     def grasp(part, object)
         raise(FailedCommandError, "Can't hold #{object.monicker}; already holding #{part.grasped}") if part.full?(:graped)
-        object.grasped_by(part)
+        object.set_position(part, :grasped)
     end
 
     # TODO - stash priorities for a) particular items (e.g. arrows go in quiver) and b) particular commands.
@@ -41,7 +41,7 @@ module Equipment
         if grasper = available_grasper
             grasp(grasper, object)
         elsif container = available_container
-            object.move_to(container)
+            object.set_position(container, :internal)
         else
             raise(FailedCommandError, "Couldn't stash #{object.monicker}; no place to put it.")
         end
@@ -52,7 +52,7 @@ module Equipment
         # TODO - check that equipment is actually equipped
         raise(FailedCommandError, "Not wearing #{equipment.monicker}.") unless all_equipment(:worn).include?(equipment)
         unless stash(equipment)
-            equipment.move_to(self.absolute_position)
+            equipment.set_position(self.absolute_position, :internal)
         end
     end
 

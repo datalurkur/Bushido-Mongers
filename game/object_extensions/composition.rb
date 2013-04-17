@@ -54,7 +54,7 @@ module Composition
                 # Drop these components at the location where this object is
                 instance.container_contents(klass).each do |component|
                     Log.debug("Dropping (#{klass}) #{component.monicker} at #{instance.absolute_position.name}", 6)
-                    component.drop(instance.absolute_position)
+                    component.set_position(instance.absolute_position, :internal)
                 end
             end
         end
@@ -138,38 +138,29 @@ module Composition
 
     # TODO - check for relative size / max carry number / other restrictions
     # respect_mutable=false is used by various at_creation methods to assemble objects sans-sanity checks
-    def add_object(object, type=:internal, respect_mutable=true)
+    def add_object(object, type)
         Log.debug("Assembling #{monicker} - #{object.monicker} added to list of #{type} parts", 6)
-        _add_object(object, type, respect_mutable)
+        raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
+        container_contents(type) << object
     end
 
-    def remove_object(object, klass = nil)
+    def remove_object(object, type)
         Log.debug("Removing #{object.monicker} from #{monicker}", 6)
-        if klass
-            if container_contents(klass).include?(object)
-                return _remove_object(object, klass, true)
-            end
-        else
-            self.container_classes.each do |klass|
-                if container_contents(klass).include?(object)
-                    return _remove_object(object, klass, true)
-                end
-            end
+        raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
+        unless container_contents(type).include?(object)
+            Log.error("No object #{object.monicker} found in #{monicker}'s #{type}s")
+            return
         end
-        raise(NoMatchError, "No matching object #{object.monicker} found.")
+        container_contents(type).delete(object)
     end
 
-    def destroy_object(object, destroyer)
-        container_classes.each do |klass|
-            if container_contents(klass).include?(object)
-                _remove_object(object, klass, false)
-                Log.debug("#{klass} of #{monicker} destroyed")
-                if klass == :incidental
-                    Log.debug("#{monicker} falls to pieces")
-                    @core.flag_for_destruction(self, destroyer)
-                end
-                break
-            end
+    def component_destroyed(object, type, destroyer)
+        remove_object(object, type)
+
+        Log.debug("#{type} of #{monicker} destroyed")
+        if type == :incidental
+            Log.debug("#{monicker} falls to pieces")
+            @core.flag_for_destruction(self, destroyer)
         end
     end
 
@@ -232,17 +223,4 @@ module Composition
     def composed_of?(klass);   @properties[:container_classes].include?(klass);             end
     def mutable?(klass);       @properties[:mutable_container_classes].include?(klass);     end
     def valued?(klass);        @properties[:added_value_container_classes].include?(klass); end
-
-    private
-    def _add_object(object, type, respect_mutable)
-        raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
-        raise(ArgumentError, "Cannot modify #{type} composition of #{monicker}!") if respect_mutable && !mutable?(type)
-        container_contents(type) << object
-    end
-
-    def _remove_object(object, type, respect_mutable)
-        raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
-        raise(ArgumentError, "#{type} contents of #{monicker} are immutable.") unless !respect_mutable || mutable?(type)
-        container_contents(type).delete(object)
-    end
 end

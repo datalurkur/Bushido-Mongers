@@ -4,9 +4,7 @@ module EffectSource
             instance.class_info[:native_effects].each { |e| instance.add_effect_source(e) }
         end
         def at_message(instance, message)
-            case message.type
-            when :tick; instance.apply_effect_sources
-            end
+            instance.apply_effect_sources if message.type == :tick
         end
     end
 
@@ -94,7 +92,7 @@ end
 module EffectTarget
     class << self
         def at_message(instance, message)
-            instance.tick_effects
+            instance.tick_effects if message.type == :tick
         end
     end
 
@@ -108,6 +106,8 @@ module EffectTarget
     def applied_effects; @applied_effects ||= {}; end
 
     def tick_effects
+        return if applied_effects.empty?
+
         finished = []
         applied_effects.each do |effect,info|
             Log.debug("Ticking #{effect} on #{monicker} for #{info[:duration]} more tick(s)", 4)
@@ -116,6 +116,7 @@ module EffectTarget
             Transforms.transform(info[:transform], @core, self, info)
         end
         finished.each { |e| applied_effects.delete(e) }
+
         stop_listening_for(:tick) if applied_effects.empty?
     end
 end

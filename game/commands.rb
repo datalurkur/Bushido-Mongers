@@ -150,7 +150,7 @@ module Commands
                 Log.error("#{params[:agent].monicker} has no organs that can digest things!")
                 return
             else
-                params[:target].move_to(digesters.rand)
+                params[:target].set_position(digesters.rand, :internal)
             end
         end
     end
@@ -182,7 +182,7 @@ module Commands
         end
 
         def self.do(core, params)
-            params[:target].move_to(params[:agent].absolute_position)
+            params[:target].set_position(params[:agent].absolute_position, :internal)
         end
     end
 

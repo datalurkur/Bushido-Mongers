@@ -32,7 +32,7 @@ module Constructed
 
             # Remove component items from the world, unless they're freshly created.
             components.each do |component|
-                component.incorporate_into(instance)
+                component.set_position(instance, :incidental)
             end
         end
 

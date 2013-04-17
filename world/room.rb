@@ -31,22 +31,23 @@ class Room < ZoneLeaf
         super(name)
     end
 
-    def add_object(object, type=:internal, ignored=true)
+    def monicker; @name; end
+
+    def add_object(object, type)
+        raise(UnexpectedBehaviorError, "Rooms cannot be comprised of #{type.inspect} objects") unless type == :internal
         Log.debug("Adding #{object.monicker} into #{@name}", 6)
-        if type != :internal
-            Log.warning(["Rooms cannot be comprised of #{type.inspect} objects", caller])
-        end
         @objects << object
     end
 
-    def remove_object(object)
+    def remove_object(object, type)
+        raise(UnexpectedBehaviorError, "Rooms cannot be comprised of #{type.inspect} objects") unless type == :internal
         unless @objects.include?(object)
             Log.error("#{object.monicker} not found in #{@name}") 
         end
         Log.debug("Removing #{object.monicker} from #{@name}", 6)
         @objects.delete(object)
     end
-    def destroy_object(object,destroyer); remove_object(object); end
+    def component_destroyed(object, type, destroyer); remove_object(object, type); end
 
     # Determines how a leaf populates itself
     def populate
