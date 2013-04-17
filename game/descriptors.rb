@@ -17,10 +17,6 @@ class Descriptor
             object.each do |k,v|
                 next if v.nil?
                 h[k] = Descriptor.describe(v, observer)
-                if k == :agent
-                    # Drop non-essential agent body information, since it's gigantic
-                    h[k][:properties].delete(:incidental)
-                end
             end
             h
         else; raise(NotImplementedError, "Cannot describe objects of type #{object.class}.")
@@ -38,6 +34,7 @@ class Descriptor
 
             d[:name]             = object.name if object.uses?(Karmic)
             d[:monicker]         = (d[:name] || d[:type])
+            d[:monicker]         = :you if object.uid == observer.uid
 
             # Collect parent type information
             d[:is_type]          = object.type_ancestry

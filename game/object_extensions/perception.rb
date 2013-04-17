@@ -20,7 +20,7 @@ module Perception
         when :position
             # A player tied to a long pole can still grab apples
             objects    = perceivable_objects_of(self.absolute_position.objects)
-            containers = objects.select { |o| o.uses?(Composition) && o.container? && o.open? }
+            containers = objects.select { |o| o.is_type?(:container) && o.open? }
             # perceivable objects in room + contents of perceivable open containers in room
             objects.select { |o| o.matches(filters) } +
             containers.map { |c| c.container_contents.select { |o| o.matches(filters) } }.flatten
@@ -57,7 +57,7 @@ module Perception
                     result = location.find_object(filters[:type], filters[:name], [], search_space)
                     Log.debug(result)
                     return [result]
-                elsif location.container?
+                elsif location.is_type?(:container)
                     if location.open?
                         location.container_contents do |object|
                             object.matches(filters)

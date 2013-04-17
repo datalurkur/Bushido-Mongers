@@ -72,4 +72,4 @@ Log.debug(Words.describe_container_class(target_description))
 target.properties[:open] = true
 target_description = Descriptor.describe(target, observer)
 Log.debug(Words.describe_container_class(target_description))
-Log.debug(Words.describe_composition_root(target_description))
+Log.debug(Words.describe_composition(target_description))

@@ -123,7 +123,7 @@ module HasAspects
     end
 
     def make_opposed_attempt(aspect_name, target)
-        Log.debug("#{monicker} making an attempt to use #{aspect_name} against #{target.monicker}")
+        Log.debug("#{monicker} uses #{aspect_name} against #{target.monicker}")
 
         aspect = get_aspect(aspect_name)
         raise(MissingProperty, "#{self.monicker} has no aspect #{aspect_name}") if aspect.nil?

@@ -107,7 +107,7 @@ module Commands
         def self.stage(core, params)
             if params[:location]
                 Commands.find_objects(core, params, :location => [:grasped, :worn, :stashed, :position])
-                if params[:location].container? && !params[:location].open?
+                if params[:location].is_type?(:container) && !params[:location].open?
                     raise(FailedCommandError, "#{params[:location].monicker} is closed.")
                 end
             end
@@ -116,7 +116,8 @@ module Commands
             if !target.nil? && (params[:agent].monicker.match(target.to_s) || (Words.db.get_related_words(:self)+[:self]).include?(target))
                 # Examine the agent.
                 params[:target] = params[:agent]
-            elsif params[:target]
+            elsif target
+                params[:target_type_class] = :object
                 Commands.find_objects(core, params, :target => [:grasped, :worn, :stashed, :position, :body])
             else
                 # Assume the player wants a broad overview of what he can see, describe the room
@@ -418,6 +419,28 @@ module Commands
         def self.stage(core, params)
             params[:no_sanity_check] = true
             Commands.find_objects(core, params, :receiver => [:position])
+        end
+
+        def self.do(core, params)
+            message = Message.new(:unit_speaks,
+                :agent       => params[:agent],
+                :receiver    => params[:receiver],
+                :statement   => params[:statement],
+                :is_whisper  => true
+            )
+            if params[:receiver]
+                params[:receiver].process_message(message)
+            else
+                Log.warning("Whisper with no receiver?")
+                locations = [params[:agent].absolute_position]
+                Message.dispatch_positional(core, locations, message.type, message.params.merge(:statement => ''))
+            end
+        end
+    end
+
+    module Ask
+        def self.stage(core, params)
+            Commands.find_objects(core, params, {:receiver => [:position]}, [:target])
         end
 
         def self.do(core, params)
