@@ -1,3 +1,8 @@
 atomic_object rock {
     typical_weight 5;
 }
+
+atomic_object,effect_source orb_of_death {
+    typical_weight 10;
+    native_effects delayed_death;
+}

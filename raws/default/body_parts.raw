@@ -1,6 +1,6 @@
 organic,consumable flesh {
     typical_size small;
-    typical_weight 1.0;
+    typical_weight 3.0;
 }
 
 extension_of body biped {

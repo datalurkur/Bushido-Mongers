@@ -8,13 +8,19 @@ module Transforms
         def acid_burn(core, object, params)
             Log.debug("Burning #{object.monicker} with acid")
 
-            # TODO - Make this a more interesting calculation
-            # For now, we just take the difference between the hardness and the magnitude of the acid and scale the damage by that difference (exponentially)
-            acidity_factor = object.class_info[:hardness] - params[:magnitude]
-            damage = 0.1 ** acidity_factor
-            object.damage(damage, nil)
-            core.destroy_flagged
+            if object.uses?(Composition)
+                object.apply_transform(:acid_burn, params)
+            elsif object.uses?(Atomic)
+                # TODO - Make this a more interesting calculation
+                # For now, we just take the difference between the hardness and the magnitude of the acid and scale the damage by that difference (exponentially)
+                acidity_factor = object.class_info[:hardness] - params[:magnitude]
+                damage = 0.1 ** acidity_factor
+                object.damage(damage, nil)
+            else
+                Log.warning("Unable to apply targeted transform to an object that is neither atomic nor a composition")
+            end
 
+            core.destroy_flagged
             object
         end
 

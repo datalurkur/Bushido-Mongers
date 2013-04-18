@@ -41,21 +41,29 @@ module EffectSource
 
             Log.debug("#{monicker} applying #{effect} to all #{target_type} objects", 6)
 
-            # Get a list of targets to which this effect is applied
-            if uses?(Composition)
-                unless container_classes.include?(target_type)
-                    Log.error("Effect target #{target} is unimplemented")
-                    return
+            case target_type
+            when :possessor
+                targets = [possessive_position]
+            when :internal,:incidental,:external,:worn,:grasped
+                # Get a list of targets to which this effect is applied
+                if uses?(Composition)
+                    unless container_classes.include?(target_type)
+                        Log.warning("#{monicker} has no #{target_type} parts")
+                        return
+                    end
+                    targets = container_contents(target_type)
+                elsif uses?(Atomic)
+                    unless target_type == :incidental
+                        Log.warning("Composite effects can only apply to incidentals on an atomic object")
+                        return
+                    end
+                    targets = [self]
+                else
+                    Log.warning("Composite effects can only apply to physically-derived objects (#{monicker} is neither Atomic nor a Composition)")
+                    targets = []
                 end
-                targets = container_contents(target_type)
-            elsif uses?(Atomic)
-                unless target == :incidental
-                    Log.warning("Atomic objects only care about incidental effects")
-                    return
-                end
-                targets = [self]
             else
-                Log.warning("Effects can only be applied to physically-derived objects (#{monicker} is neither ATomic nor a Composition)")
+                Log.error("Effect target type #{target_type} not implemented")
                 targets = []
             end
 

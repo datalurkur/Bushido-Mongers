@@ -6,3 +6,10 @@ static effect stomach_acid {
     duration 2;
     magnitude 0.5;
 }
+
+static effect delayed_death {
+    target possessor;
+    transform death;
+    windup 10;
+    duration 0;
+}

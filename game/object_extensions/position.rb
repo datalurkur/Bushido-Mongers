@@ -33,12 +33,20 @@ module Position
 
     def absolute_position
         safe_position
-        case @position_type
-        when :internal
-            @position
-        else
-            @position.absolute_position
+        obj = self
+        while obj.relative_position_type != :internal
+            obj = obj.relative_position
         end
+        return obj.relative_position
+    end
+
+    # Find the top-level "possessor" of an object
+    def possessive_position
+        obj = self
+        while obj.relative_position_type != :internal
+            obj = obj.relative_position
+        end
+        return obj
     end
 
     def relative_position

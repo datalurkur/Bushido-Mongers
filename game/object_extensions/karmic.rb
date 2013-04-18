@@ -16,7 +16,7 @@ module Karmic
         def at_message(instance, message)
             case message.type
             when :unit_killed
-                return unless message.has_param?(:agent) && message.agent == instance
+                return unless message.params[:agent] == instance
                 if message.target.is_type?(:body)
                     # FIXME - We want to store more than the name of the kill here
                     # Suggestions - notoriety / difficulty of kill, type of monster

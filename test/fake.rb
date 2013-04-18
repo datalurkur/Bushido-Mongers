@@ -21,9 +21,16 @@ class CoreWrapper < GameCore
 end
 
 class FakeRoom
+    attr_reader :objects
     def name; "Fake Room"; end
-    def add_object(o,t=nil); end
-    def remove_object(o,t=nil); end
+    def add_object(o,t=nil)
+        @objects ||= []
+        @objects << o
+    end
+    def remove_object(o,t=nil)
+        @objects ||= []
+        @objects.delete(o)
+    end
     def component_destroyed(o,t,d); end
     def zone_info(); {}; end
     def monicker() self.name; end

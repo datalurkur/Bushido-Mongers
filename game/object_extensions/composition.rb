@@ -118,6 +118,15 @@ module Composition
         part.damage(amount, attacker)
     end
 
+    def apply_transform(transform, params)
+        # TODO - Figure out how this should work in light of layering
+        (container_classes - [:internal]).each do |klass|
+            container_contents(klass).each do |part|
+                Transforms.transform(transform, @core, part, params)
+            end
+        end
+    end
+
     def initial_composure(params)
         Composition.typical_parts_of(@core, get_type, params[:morphism]).each do |part|
             unless composed_of?(part[:klass])

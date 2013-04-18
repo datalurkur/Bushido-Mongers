@@ -107,7 +107,7 @@ class MessageBase
     end
 
     def has_param?(name)
-        @args.has_key?(name)
+        !@args[name].nil?
     end
 
     def params
