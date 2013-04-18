@@ -9,8 +9,12 @@ abstract object {
 /* An object that is nonseparable */
 abstract object,effect_target atomic_object {
     class float typical_weight;
+
     class float density;
     density 0.5;
+
+    class float hardness;
+    hardness 0.5;
 
     has int typical_value;
     typical_value 0;

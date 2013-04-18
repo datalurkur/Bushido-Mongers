@@ -7,8 +7,14 @@ module Transforms
 
         def acid_burn(core, object, params)
             Log.debug("Burning #{object.monicker} with acid")
-            Log.error("NOT IMPLEMENTED")
-            # TODO - Figure out how to burn things with acid / determine what strength of acid is required to eat away at something / etc
+
+            # TODO - Make this a more interesting calculation
+            # For now, we just take the difference between the hardness and the magnitude of the acid and scale the damage by that difference (exponentially)
+            acidity_factor = object.class_info[:hardness] - params[:magnitude]
+            damage = 0.1 ** acidity_factor
+            object.damage(damage, nil)
+            core.destroy_flagged
+
             object
         end
 

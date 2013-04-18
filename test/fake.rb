@@ -6,6 +6,7 @@ class CoreWrapper < GameCore
         Log.info("Setting up fake core")
 
         @uid_count = 0
+        @awaiting_destruction = []
 
         # Read the raws
         @db       = ObjectDB.get("default")
