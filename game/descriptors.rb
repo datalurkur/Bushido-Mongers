@@ -90,7 +90,7 @@ class Descriptor
                 :is_type    => [:room, room.zone_type],
                 :monicker   => room.zone_type,   # friendly_name.to_sym # TODO - change when name isn't just <keywords> <zone>
                 :adjectives => room.keywords,
-                :objects    => observer.perceivable_objects_of(room.objects - [observer]).collect { |o| BushidoObjectDescriptor.describe(o, observer) },
+                :objects    => observer.perceivable_objects_of(room.contents - [observer]).collect { |o| BushidoObjectDescriptor.describe(o, observer) },
                 :exits      => room.connected_directions
             }
         end

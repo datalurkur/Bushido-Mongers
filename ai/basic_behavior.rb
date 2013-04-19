@@ -9,7 +9,7 @@ Behavior.define(:random_movement) do |actor|
     direction = position.connected_directions.rand
     if direction
         location = position.get_adjacent(direction)
-        actor.move_to(location, direction)
+        actor.set_position(location, :internal, true)
         true
     else
         false
@@ -31,7 +31,7 @@ Behavior.define(:flee) do |actor|
         direction = position.connected_directions.rand
         if direction
             location = position.get_adjacent(direction)
-            actor.move_to(location, direction)
+            actor.set_position(location, :internal, true)
             true
         else
             false

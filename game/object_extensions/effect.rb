@@ -66,6 +66,7 @@ module EffectSource
                 Log.error("Effect target type #{target_type} not implemented")
                 targets = []
             end
+            targets.compact!
 
             # Apply windup to any objects in the effect's influence
             applied_windups[effect] ||= {}

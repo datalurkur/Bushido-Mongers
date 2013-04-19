@@ -19,13 +19,17 @@ class PositionalMessage < MessageBase
         end
 
         def clear_listener_position(core, listener, position)
-            @positions[core][position].delete(listener) if @positions[core][position]
+            if @positions[core][position]
+                @positions[core][position].delete(listener)
+                @positions[core].delete(position) if position && @positions[core][position].empty?
+            end
         end
 
         def change_listener_position(core, listener, position, previous_position)
             @positions[core][position] ||= []
             @positions[core][position] << listener unless @positions[core][position].include?(listener)
             @positions[core][previous_position].delete(listener)
+            @positions[core].delete(previous_position) if previous_position && @positions[core][previous_position].empty?
         end
 
         def register_listener(core, message_type, listener)
@@ -60,7 +64,14 @@ class PositionalMessage < MessageBase
         end
 
         def get_listeners_at(core, locations, klass, type)
-            locations_array = locations.inject(@positions[core][nil]) { |s,i| s | @positions[core][i] }
+            locations_array = locations.inject(@positions[core][nil]) do |s,i|
+                listeners_here = @positions[core][i]
+                if listeners_here.nil?
+                    s
+                else
+                    s | listeners_here
+                end
+            end
             locations_array & (@listeners[core][type] | @listeners[core][klass])
         end
     end

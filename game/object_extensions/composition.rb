@@ -144,13 +144,14 @@ module Composition
         end
     end
 
+    def contents; container_contents(:internal); end
+
     # TODO - check for relative size / max carry number / other restrictions
     def add_object(object, type)
         Log.debug("Assembling #{monicker} - #{object.monicker} added to list of #{type} parts", 6)
         raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
         container_contents(type) << object
     end
-
     def remove_object(object, type)
         Log.debug("Removing #{object.monicker} from #{monicker}", 6)
         raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)

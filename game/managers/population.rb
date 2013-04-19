@@ -9,7 +9,7 @@ class PopulationManager
         @core = core
     end
 
-    def listens_for; [:unit_moves,:unit_killed,:unit_renamed]; end
+    def listens_for; [:unit_moves,:unit_moved,:unit_killed,:unit_renamed]; end
 
     def setup
         @named          = {}
@@ -46,18 +46,16 @@ class PopulationManager
     def process_message(message)
         # Get the population type involved if this will affect a population type
         unit = case message.type
-        when :unit_moves
+        when :unit_moves,:unit_moved
             message.agent
         when :unit_killed
             message.target
         end
 
-        if unit && @groups[unit.get_type].nil?
-            raise(NoMatchError, "No record of population type #{unit.get_type.inspect}")
-        end
+        return if unit && @groups[unit.get_type].nil?
 
         case message.type
-        when :unit_moves
+        when :unit_moves,:unit_moved
             unit_moves(unit, message.origin, message.destination)
         when :unit_killed
             unit_moves(unit, message.location, nil)
@@ -191,7 +189,7 @@ class PopulationManager
             @groups[type][:populations][dst] += 1
         end
 
-        if unit.name
+        if unit.uses?(Karmic) && unit.name
             unit_name = hash_name(unit.name)
             if dst
                 @named[unit_name] = dst

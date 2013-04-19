@@ -257,7 +257,7 @@ module Commands
         end
 
         def self.do(core, params)
-            params[:agent].move_to(params[:destination], params[:direction])
+            params[:agent].set_position(params[:destination], :internal, true)
         end
     end
 

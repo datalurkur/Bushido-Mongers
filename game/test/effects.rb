@@ -16,14 +16,28 @@ stomach = core.create(:stomach)
 # Test various things to watch them dissolve in stomach acid
 flesh = core.create(:flesh, {:position => stomach})
 
-2.times { Message.dispatch(core, :tick) }
+4.times { |i|
+    Log.debug("(#{i}) Acid burns!")
+    Message.dispatch(core, :tick)
+}
 
 # ORB OF DEATH TEST
 # =================
 fake_room = FakeRoom.new
+
 human     = core.populations.create_agent(:human, false, {:position => fake_room})
 orb       = core.create(:orb_of_death)
 human.stash(orb)
+
+giant     = core.populations.create_agent(:giant, false, {:position => fake_room})
+backpack  = core.create(:backpack, {:randomize => true})
+human.set_position(backpack, :internal)
+giant.stash(backpack)
+
 Log.debug("Orb's position : #{orb.relative_position.monicker} / #{orb.possessive_position.monicker} / #{orb.absolute_position.monicker}")
 
-12.times { Message.dispatch(core, :tick) }
+25.times { |i|
+    possessor = orb.possessive_position
+    Log.debug("(#{i}) Death draws nearer for #{possessor ? possessor.monicker : "no-one, as the orb lies dormant"}")
+    Message.dispatch(core, :tick)
+}

@@ -128,7 +128,7 @@ module Words
     private
     def self.set_case(case_name, args, noun, adjs)
         case_name_adjs = (case_name.to_s + "_adjs").to_sym
-        Log.debug("Setting #{case_name.inspect} and #{case_name_adjs.inspect} to #{noun.inspect} and #{adjs.inspect}")
+        Log.debug("Setting #{case_name.inspect} and #{case_name_adjs.inspect} to #{noun.inspect} and #{adjs.inspect}", 2)
         args[case_name] = noun.downcase
         args[case_name_adjs] = adjs.map(&:downcase) unless adjs.empty?
     end
@@ -163,8 +163,8 @@ module Words
         #    first_part + [pieces[(i-1)..(i+1)]] + last_part
         #end
         pieces[index..-1].each_with_index do |piece, i|
-            Log.debug([piece, i], 1)
-            Log.debug([pieces[index + i], Sentence::Preposition.preposition?(pieces[index + i])], 1)
+            Log.debug([piece, i], 4)
+            Log.debug([pieces[index + i], Sentence::Preposition.preposition?(pieces[index + i])], 4)
             if Sentence::Noun.noun?(piece) || # It's an in-game noun.
                (index + i) == pieces.size - 1     || # It's at the end of the index.
                Sentence::Preposition.preposition?(pieces[index + i + 1]) # Or there's a preposition next.

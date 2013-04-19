@@ -19,7 +19,7 @@ module Perception
         case location
         when :position
             # A player tied to a long pole can still grab apples
-            objects    = perceivable_objects_of(self.absolute_position.objects)
+            objects    = perceivable_objects_of(self.absolute_position.contents)
             containers = objects.select { |o| o.is_type?(:container) && o.open? }
             # perceivable objects in room + contents of perceivable open containers in room
             objects.select { |o| o.matches(filters) } +

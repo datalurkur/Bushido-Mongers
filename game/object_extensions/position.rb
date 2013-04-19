@@ -40,8 +40,18 @@ module Position
         return obj.relative_position
     end
 
-    # Find the top-level "possessor" of an object
+    # The corporeal that possesses the object
     def possessive_position
+        obj = self
+        until (obj.relative_position_type == :internal && obj.uses?(Corporeal) && obj.alive?)
+            obj = obj.relative_position
+            break unless (BushidoObject === obj)
+        end
+        return (BushidoObject === obj) ? obj : nil
+    end
+
+    # The position of the construct/composition that includes this object
+    def unit_position
         obj = self
         while obj.relative_position_type != :internal
             obj = obj.relative_position
@@ -59,26 +69,15 @@ module Position
         @position_type
     end
 
-    # This method indicates locomotion (willed movement on the part of the mover)
-    def move_to(destination, direction)
-        Log.debug("#{monicker} moved to #{destination.monicker} with direction #{direction}", 5)
-
-        # FIXME - Shouldn't print messages for hidden moving things
-        origin = self.absolute_position
-        msg_args =
-        {
-            :agent         => self,
-            :action        => :move,
-            :origin        => origin,
-            :destination   => destination
-        }
-        msg_args[:direction] = direction if direction
-        Message.dispatch_positional(@core, [origin, destination], :unit_moves, msg_args)
-
-        set_position(destination, :internal)
-    end
-
-    def set_position(new_position, position_type)
+    def set_position(new_position, position_type, locomotes=false)
+        message_type = locomotes ? :unit_moves : :unit_moved
+        locations    = [@position, new_position].compact
+        Message.dispatch_positional(@core, locations, message_type, {
+            :agent       => self,
+            :action      => :move,
+            :origin      => @position,
+            :destination => new_position
+        })
         Message.change_listener_position(@core, self, new_position, @position)
         @position.remove_object(self, @position_type) if @position
         @position      = new_position

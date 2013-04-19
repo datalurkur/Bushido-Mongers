@@ -21,8 +21,8 @@ class CoreWrapper < GameCore
 end
 
 class FakeRoom
-    attr_reader :objects
     def name; "Fake Room"; end
+    def contents; @objects; end
     def add_object(o,t=nil)
         @objects ||= []
         @objects << o

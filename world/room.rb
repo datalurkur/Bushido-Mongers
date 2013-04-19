@@ -20,8 +20,6 @@ end
 class Room < ZoneLeaf
     include ZoneWithKeywords
 
-    attr_reader :objects
-
     def initialize(core, name, params={})
         @core    = core
         @params  = params
@@ -32,6 +30,8 @@ class Room < ZoneLeaf
     end
 
     def monicker; @name; end
+
+    def contents; @objects; end
 
     def add_object(object, type)
         raise(UnexpectedBehaviorError, "Rooms cannot be comprised of #{type.inspect} objects") unless type == :internal

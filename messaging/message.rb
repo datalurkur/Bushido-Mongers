@@ -76,7 +76,7 @@ class MessageBase
         def check_message(type, args)
             raise(ArgumentError, "Unknown message type #{type}") unless type_defined?(type)
             types[type][:required_args].each do |arg|
-                unless args.has_key?(arg) && !args[arg].nil?
+                unless args.has_key?(arg)
                     raise(ArgumentError, "#{arg} required for message type #{type.inspect}.")
                 end
             end
@@ -120,7 +120,7 @@ class MessageBase
     end
 
     def method_missing(name, *args)
-        if @args[name].nil?
+        unless @args.has_key?(name)
             raise(StandardError, "No parameter #{name.inspect} for message type #{type.inspect}.")
         end
         @args[name]
