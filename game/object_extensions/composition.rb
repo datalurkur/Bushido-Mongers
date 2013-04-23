@@ -52,7 +52,7 @@ module Composition
             instance.container_classes.each do |klass|
                 # Drop these parts at the location where this object is
                 instance.container_contents(klass).dup.each do |part|
-                    Log.debug("Dropping (#{klass}) #{part.monicker} at #{instance.absolute_position.name}", 6)
+                    Log.debug("Dropping (#{klass}) #{part.monicker} at #{instance.absolute_position.monicker}", 6)
                     part.set_position(instance.absolute_position, :internal)
                 end
             end
