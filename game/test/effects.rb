@@ -25,11 +25,11 @@ flesh = core.create(:flesh, {:position => stomach})
 # =================
 fake_room = FakeRoom.new
 
-human     = core.populations.create_agent(:human, false, {:position => fake_room})
+human     = core.create_npc(:human, {:position => fake_room})
 orb       = core.create(:orb_of_death)
 human.stash(orb)
 
-giant     = core.populations.create_agent(:giant, false, {:position => fake_room})
+giant     = core.create_npc(:giant, {:position => fake_room})
 backpack  = core.create(:backpack, {:randomize => true})
 human.set_position(backpack, :internal)
 giant.stash(backpack)

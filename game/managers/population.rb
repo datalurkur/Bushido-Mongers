@@ -1,15 +1,13 @@
+require './game/managers/manager'
+
 # TODO
 #   - Listen for ticks and automatically spawn new population members
 #   - Listen for death messages and adjust rarity accordingly
 #   - Listen for move messages and disable spawns that have players in them (no fun in spawning things directly on top of players)
+#   - Make the population manager save-/load-friendly
 
-class PopulationManager
-    # TODO - Make the population manager save-/load-friendly
-    def initialize(core)
-        @core = core
-    end
-
-    def listens_for; [:unit_moves,:unit_moved,:unit_killed,:unit_renamed]; end
+class PopulationManager < Manager
+    def listens_for; [:unit_animated,:unit_moves,:unit_moved,:unit_killed,:unit_renamed]; end
 
     def setup
         @named          = {}
@@ -18,37 +16,23 @@ class PopulationManager
 
         load_from_raws
 
-        listens_for.each do |message_type|
-            Message.register_listener(@core, message_type, self)
-        end
-    end
-
-    def seed_population
-        Log.debug("Seeding initial population", 4)
-        @groups.each do |type, info|
-            real_spawn_locations = @core.world.leaves.select { |leaf| info[:spawns].include?(leaf.zone_type) }
-            mobs_to_spawn        = (Rarity.value_of(info[:rarity]) * real_spawn_locations.size).ceil
-
-            Log.debug("Seeding #{mobs_to_spawn} #{type}s", 4)
-            mobs_to_spawn.to_i.times { create_agent(type, false, {:position => real_spawn_locations.rand}) }
-        end
+        super()
     end
 
     def teardown
-        listens_for.each do |message_type|
-            Message.unregister_listener(@core, message_type, self)
-        end
+        super()
 
         @groups          = nil
         @disabled_spawns = nil
     end
+
 
     def process_message(message)
         # Get the population type involved if this will affect a population type
         unit = case message.type
         when :unit_moves,:unit_moved
             message.agent
-        when :unit_killed
+        when :unit_animated,:unit_killed
             message.target
         end
 
@@ -59,6 +43,8 @@ class PopulationManager
             unit_moves(unit, message.origin, message.destination)
         when :unit_killed
             unit_moves(unit, message.location, nil)
+        when :unit_animated
+            unit_moves(unit, nil, message.location)
         when :tick
             Log.info("#{self.class} spawning new population members", 4)
             Log.warning("IMPLEMENT ME")
@@ -80,6 +66,13 @@ class PopulationManager
         raise(ArgumentError, "Unknown population #{type.inspect}") unless @groups.has_key?(type)
         @groups[type]
     end
+
+    def each(&block)
+        @groups.each do |type|
+            yield(type)
+        end
+    end
+
     def locate(type_or_name)
         if @groups[type_or_name]
             return @groups[type_or_name][:populations]
@@ -99,63 +92,6 @@ class PopulationManager
         (@disabled_spawns << location) unless @disabled_spawns.include?(location)
     end
 
-    def create_agent(type, player, hash = {})
-        Log.debug("Creating #{type} agent", 6)
-
-        raise(NoMatchError, "No record of population type #{type.inspect}") unless @groups[type]
-        unless hash[:position]
-            spawn_location_types = @groups[type][:spawns]
-            hash[:position]      = @core.world.get_random_location(spawn_location_types)
-            hash[:position]    ||= @core.world.get_random_location
-        end
-
-        # Determine the specific morphism of the agent
-        unless hash[:morphism]
-            morphic_choices = []
-            morphic_parts   = @core.db.info_for(type, :morphic)
-            morphic_parts.each do |morphic_part|
-                morphic_choices.concat(morphic_part[:morphism_classes])
-            end
-            hash[:morphism] = morphic_choices.uniq.rand
-        end
-        Log.debug("#{type} will be #{hash[:morphism]}", 6)
-
-        agent = @core.create(type, hash)
-
-        agent.setup_extension(Perception, hash)
-        agent.setup_extension(Knowledge, hash)
-        agent.setup_extension(Karmic, hash)
-        if player && !hash[:name]
-            raise(ArgumentError, "Player was not given a name")
-        end
-
-        starting_skills = []
-        feral           = agent.class_info[:feral] && !player
-        if player
-            agent.setup_extension(Character, hash)
-            # FIXME - Add starting skills from new player info
-            # As a hack, just add a random profession for now
-            random_profession = @core.db.static_types_of(:profession).rand
-            starting_skills = @core.db.info_for(random_profession, :skills)
-        else
-            agent.setup_extension(NpcBehavior, hash)
-            if agent.class_info[:typical_profession]
-                profession_info = @core.db.info_for(agent.class_info[:typical_profession])
-                agent.set_behavior(profession_info[:typical_behavior])
-                starting_skills = profession_info[:skills]
-            end
-        end
-        agent.setup_skill_set(starting_skills)
-
-        unless feral
-            agent.setup_extension(Equipment, hash)
-        else
-            Log.debug("Since agent is feral, no equipment will be generated", 6)
-        end
-
-        unit_moves(agent, nil, agent.absolute_position)
-        agent
-    end
 
     private
     def load_from_raws
