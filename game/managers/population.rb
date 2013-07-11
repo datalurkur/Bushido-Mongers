@@ -118,7 +118,7 @@ class PopulationManager
             end
             hash[:morphism] = morphic_choices.uniq.rand
         end
-        Log.debug("#{type} will be #{hash[:morphism]}", 6)
+        Log.debug("#{type} will be #{hash[:morphism]}", 6) if hash[:morphism]
 
         agent = @core.create(type, hash)
 
