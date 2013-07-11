@@ -57,9 +57,8 @@ module Quest
         @fail_conditions    = params[:fail_conditions]
         @success_conditions = params[:success_conditions]
 
-        @pertinent_event_types = (@fail_conditions + @success_conditions).collect do |i|
-            i[:type]
-        end.uniq
+        all_conditions = (@fail_conditions + @success_conditions)
+        @pertinent_event_types = all_conditions.collect { |i| i[:type] }.uniq
         @pertinent_event_types.each do |event_type|
             start_listening_for(event_type)
         end

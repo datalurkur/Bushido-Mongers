@@ -405,9 +405,9 @@ module Commands
 
         def self.do(core, params)
             message = Message.new(:unit_speaks,
-                :agent       => params[:agent],
-                :statement   => params[:statement],
-                :is_whisper  => false
+                :agent           => params[:agent],
+                :statement       => params[:statement],
+                :response_needed => true
             )
             message.params[:receiver] = params[:receiver] if params[:receiver]
             locations = [params[:agent].absolute_position]
@@ -422,16 +422,17 @@ module Commands
         end
 
         def self.do(core, params)
-            message = Message.new(:unit_speaks,
-                :agent       => params[:agent],
-                :receiver    => params[:receiver],
-                :statement   => params[:statement],
-                :is_whisper  => true
+            message = Message.new(:unit_whispers,
+                :agent           => params[:agent],
+                :receiver        => params[:receiver],
+                :statement       => params[:statement],
+                :response_needed => true
             )
             if params[:receiver]
                 params[:receiver].process_message(message)
             else
                 Log.warning("Whisper with no receiver?")
+                message.params[:receiver] = :nobody
                 locations = [params[:agent].absolute_position]
                 Message.dispatch_positional(core, locations, message.type, message.params.merge(:statement => ''))
             end
@@ -445,15 +446,16 @@ module Commands
 
         def self.do(core, params)
             message = Message.new(:unit_speaks, {
-                :agent       => params[:agent],
-                :receiver    => params[:receiver],
-                :statement   => params[:statement],
-                :is_whisper  => true
+                :agent           => params[:agent],
+                :receiver        => params[:receiver],
+                :statement       => params[:statement],
+                :response_needed => true
             })
             if params[:receiver]
                 params[:receiver].process_message(message)
             else
-                Log.warning("Whisper with no receiver?")
+                Log.warning("Ask with no receiver?")
+                message.params[:receiver] = :nobody
                 locations = [params[:agent].absolute_position]
                 Message.dispatch_positional(core, locations, message.type, message.params.merge(:statement => ''))
             end

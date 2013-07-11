@@ -83,7 +83,8 @@ Message.define(:unit_moved,       :core, [:agent, :origin, :destination]) # Draw
 Message.define(:unit_attacks,     :core, [:attacker, :defender, :success, :result_hash])
 Message.define(:unit_acts,        :core, [:agent, :action, :location, :action_hash])
 Message.define(:unit_renamed,     :core, [:agent, :name])
-Message.define(:unit_speaks,      :core, [:agent, :statement, :is_whisper])
+Message.define(:unit_speaks,      :core, [:agent, :statement, :response_needed])
+Message.define(:unit_whispers,    :core, [:agent, :statement, :response_needed])
 
 Message.define(:unit_animated,    :core, [:target, :location])
 Message.define(:unit_killed,      :core, [:target, :location])

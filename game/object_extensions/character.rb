@@ -16,7 +16,7 @@ module Character
                 if (message.attacker == instance) || (message.defender == instance) || instance.witnesses?(locations)
                     instance.inform_user(message)
                 end
-            when :unit_acts, :unit_speaks
+            when :unit_acts, :unit_speaks, :unit_whispers
                 # TODO - Add in distance scoping for different actions (shouting can be witnessed from further away than talking)
                 if (message.agent != instance) && instance.witnesses?([message.location])
                     instance.inform_user(message)
