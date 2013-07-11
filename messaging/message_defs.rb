@@ -84,7 +84,11 @@ Message.define(:unit_attacks,     :core, [:attacker, :defender, :success, :resul
 Message.define(:unit_acts,        :core, [:agent, :action, :location, :action_hash])
 Message.define(:unit_renamed,     :core, [:agent, :name])
 Message.define(:unit_speaks,      :core, [:agent, :statement, :is_whisper])
+
+Message.define(:unit_animated,    :core, [:target, :location])
 Message.define(:unit_killed,      :core, [:target, :location])
+
+Message.define(:object_created,   :core, [:target, :location])
 Message.define(:object_destroyed, :core, [:target, :location])
 
 # Client / Interface Messages

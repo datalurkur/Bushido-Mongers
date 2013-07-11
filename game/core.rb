@@ -2,7 +2,6 @@ require './world/factories'
 require './game/tables'
 require './game/object_extensions'
 require './game/character_loader'
-require './game/managers/population'
 require './raws/db'
 require './util/exceptions'
 
@@ -43,11 +42,9 @@ class GameCore
             # ------------------------
             setup_world(args)
 
-            # Seed the world with NPCs
-            # ------------------------
-            @population_manager = PopulationManager.new(self)
-            @population_manager.setup
-            @population_manager.seed_population
+            # Setup the world object managers
+            # -------------------------------
+            setup_managers(args)
 
             @setup = true
         end
@@ -55,13 +52,13 @@ class GameCore
 
     def teardown
         @usage_mutex.synchronize do
+            teardown_managers
+
             teardown_world
+
             @db            = nil
             @words_db      = nil
             @ticking       = false
-
-            @population_manager.teardown
-            @population_manager = nil
 
             @setup = false
         end
@@ -79,18 +76,10 @@ class GameCore
         @uid_count += 1
     end
 
-    # MANAGER ACCESSORS
-    # =================
-    def populations; @population_manager; end
-
     # CREATION AND DESTRUCTION
     # ========================
     def create(type, hash = {})
         @db.create(self, type, next_uid, hash)
-    end
-
-    def create_npc(type, hash = {})
-        @population_manager.create_agent(type, false, hash)
     end
 
     def flag_for_destruction(object, destroyer)
@@ -166,8 +155,11 @@ class GameCore
             if character
                 starting_location = cached_positions[username]
                 unless starting_location
+# TODO - Find a better way to determine random starting locations for players
+=begin
                     spawn_location_types = @population_manager[character.get_type][:spawns]
                     starting_location    = @world.get_random_location(spawn_location_types)
+=end
                     starting_location  ||= @world.get_random_location
                 end
                 character.set_initial_position(starting_location)
@@ -178,20 +170,6 @@ class GameCore
             end
 
             ret = [character, failures]
-        end
-        return ret
-    end
-    def create_character(lobby, username, details)
-        agent_params = details.reject { |k,v| [:archetype].include?(k) }
-
-        ret = nil
-        @usage_mutex.synchronize do
-            character = @population_manager.create_agent(details[:archetype], true, agent_params)
-            characters[username] = character
-            Log.info("Character #{character.monicker} created for #{username}")
-            character.set_user_callback(lobby, username)
-
-            ret = character
         end
         return ret
     end
@@ -233,16 +211,16 @@ class GameCore
     # ================================
     private
     def setup_world(args)
-        Log.debug("Creating world")
-        factory_klass = args[:factory_klass] || WorldFactory
-        @world = factory_klass.generate(self, args)
-
-        Log.debug("Populating world with NPCs and items")
-        @world.populate
+        raise(NotImplementedError, "Core must be subclassed with setup_world implemented")
     end
-
+    def setup_managers(args)
+        raise(NotImplementedError, "Core must be subclassed with setup_managers implemented")
+    end
     def teardown_world
-        @world = nil
+        raise(NotImplementedError, "Core must be subclassed with teardown_world implemented")
+    end
+    def teardown_managers
+        raise(NotImplementedError, "Core must be subclassed with teardown_managers implemented")
     end
 
     def dispatch_ticks

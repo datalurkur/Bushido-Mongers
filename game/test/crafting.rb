@@ -12,7 +12,7 @@ test_objects.each do |object_type|
     test_components << core.create(object_type, {:randomize => true, :position => test_room})
 end
 
-test_character = core.populations.create_agent(:human, true, {:name => "Test Character", :position => test_room})
+test_character = core.create_npc(:human, {:name => "Test Character", :position => test_room})
 
 # TODO - Add a test for actual phrase decomp here, once that code is done
 

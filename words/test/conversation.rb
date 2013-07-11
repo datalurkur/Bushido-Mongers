@@ -37,8 +37,8 @@ require './game/object_extensions'
 
 core = CoreWrapper.new
 
-speaker  = core.populations.create_agent(:human, true, :name => "Kenji Skrimshank", :position => FakeRoom.new)
-receiver =                   core.create(:human,       :name => "Bob",              :position => FakeRoom.new)
+speaker  = core.create_npc(:human, :name => "Kenji Skrimshank", :position => FakeRoom.new)
+receiver = core.create_npc(:human, :name => "Bob",              :position => FakeRoom.new)
 
 
 tests.each do |test|

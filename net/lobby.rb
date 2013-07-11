@@ -1,4 +1,4 @@
-require './game/core'
+require './game/cores/default'
 require './game/descriptors'
 require './http/http_server'
 
@@ -162,7 +162,7 @@ class Lobby
             @game_state = :generating
 
             # Create the new game core
-            @game_core = GameCore.new
+            @game_core = DefaultCore.new
             @game_core.setup(@game_args)
             # Start listening for messages from this core
             Message.register_listener(@game_core, :core, self)

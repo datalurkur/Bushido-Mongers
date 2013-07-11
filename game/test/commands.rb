@@ -4,7 +4,7 @@ require './test/fake'
 Log.setup("Main", "command_test")
 
 # FIXME: Used as a stand-in until we have proper game_args being passed into GameCore.
-class GameCore
+class DefaultCore
     private
     def setup_world(args)
         Log.debug("Creating world")

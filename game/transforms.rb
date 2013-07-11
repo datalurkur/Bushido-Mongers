@@ -24,7 +24,28 @@ module Transforms
             object
         end
 
-        def death(core, object, params)
+        def animate(core, object, params)
+            unless object.uses?(Corporeal)
+                Log.warning("Animate is a transformation intended to be used on corporeal objects")
+                return
+            end
+
+            if object.alive?
+                Log.warning("#{object.monicker} would appear to already be alive")
+                return
+            end
+
+            Message.dispatch_positional(core, [object.absolute_position], :unit_animated, {
+                :agent    => params[:agent],
+                :target   => object,
+                :location => object.absolute_position
+            })
+
+            object.setup_extension(Perception, params)
+            object.setup_extension(Karmic, params)
+        end
+
+        def kill(core, object, params)
             unless object.uses?(Corporeal)
                 Log.warning("Death is a transformation intended to be used on corporeal objects")
                 return
@@ -35,7 +56,7 @@ module Transforms
                 return
             end
 
-            Message.dispatch(core, :unit_killed, {
+            Message.dispatch_positional(core, [object.absolute_position], :unit_killed, {
                 :agent    => params[:agent],
                 :target   => object,
                 :location => object.absolute_position

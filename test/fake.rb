@@ -1,6 +1,6 @@
-require './game/core'
+require './game/cores/default'
 
-class CoreWrapper < GameCore
+class CoreWrapper < DefaultCore
     def initialize
         super
         Log.info("Setting up fake core")

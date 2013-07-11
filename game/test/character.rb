@@ -12,7 +12,8 @@ def recreate_test_character(username, character_name, raw_group, clean=true)
     Log.debug("Creating test character using fake state")
     fake_core = CoreWrapper.new
     character_archetype = :human
-    character = fake_core.populations.create_agent(:human, true, {:position => FakeRoom.new, :name => character_name})
+    fake_lobby = nil
+    character = fake_core.create_character(fake_lobby, "fake_username", {:position => FakeRoom.new, :archetype => character_archetype, :name => character_name})
     CharacterLoader.save(username, character)
     character
 end

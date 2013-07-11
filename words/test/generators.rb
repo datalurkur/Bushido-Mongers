@@ -53,7 +53,7 @@ require './game/descriptors'
 
 $core = CoreWrapper.new
 
-observer = $core.populations.create_agent(:human, true, :name => "Kenji Skrimshank", :position => FakeRoom.new)
+observer = $core.create_npc(:human, :name => "Kenji Skrimshank", :position => FakeRoom.new)
 agent = Descriptor.describe(observer, observer)
 #Log.debug(agent)
 Log.debug(Words.describe_body(agent))
