@@ -349,6 +349,8 @@ class Lobby
             send_to_user(username, Message.new(:opt_set_ok))
         when :get_character_opts
             begin
+                raise "You must create a game before fetching character options" unless @game_core
+
                 # This is a query for a list of character options
                 opts = case message.property
                 when :morphism
