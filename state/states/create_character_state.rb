@@ -55,6 +55,9 @@ class CreateCharacterState < State
         when :opt_set_ok
             pass_to_client(message)
             begin_exchange(@next_exchange)
+        when :opts_unavailable
+            pass_to_client(message)
+            @client.pop_state
         when :opt_set_failed
             pass_to_client(message)
             begin_exchange(@previous_exchange || @character_name)
