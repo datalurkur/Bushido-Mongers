@@ -6,7 +6,7 @@ require './raws/db'
 require './util/exceptions'
 
 class GameCore
-    attr_reader :world, :db
+    attr_reader :world, :db, :kb
 
     def initialize
         Message.setup(self)
@@ -30,6 +30,7 @@ class GameCore
             # -------------
             raw_group = args[:raw_group] || "default"
             @db       = ObjectDB.get(raw_group)
+            @kb       = ObjectKB.new(@db)
             @words_db = WordParser.load
             WordParser.read_raws(@words_db, @db)
 

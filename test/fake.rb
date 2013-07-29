@@ -1,4 +1,5 @@
 require './game/cores/default'
+require './knowledge/raw_kb'
 
 class CoreWrapper < DefaultCore
     def initialize
@@ -10,6 +11,8 @@ class CoreWrapper < DefaultCore
 
         # Read the raws
         @db       = ObjectDB.get("default")
+        # Set up knowledge based on the raws.
+        @kb       = ObjectKB.new(@db)
         # And the word text information.
         @words_db = WordParser.load
         # And finally read in some basic noun & adjective information from the raws db.

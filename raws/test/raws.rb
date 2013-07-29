@@ -109,4 +109,5 @@ begin
     carrot = $core.create(:carrot, :size=>:medium)
     sbp.add_object(carrot, :external)
     Log.debug(sbp)
+    Log.debug(carrot.type_ancestry)
 end

@@ -22,100 +22,85 @@
     =====================
     IMPLEMENTATION
     =====================
-    Internally, there are concepts of inclusive and exclusive knowledge.  Inclusive knowledge means you know everything about a subject (or sub-subject) all the time, with no exceptions.  You've learned it, any sub-queries are handled as such.  Exclusive knowledge is used for knowledge gained on-the-fly, such as the location of a person.  Obviously, you can never know the location of a person all the time unless you happen to be omniscient / omnipresent / etc (which can be reflected in inclusive knowledge if need be).
+    Internally, there are concepts of inclusive and exclusive knowledge.  Inclusive knowledge means you
+    know everything about a subject (or sub-subject) all the time, with no exceptions.  You've learned
+    it, any sub-queries are handled as such.  Exclusive knowledge is used for knowledge gained on-the-fly,
+    such as the location of a person.  Obviously, you can never know the location of a person all the time
+    unless you happen to be omniscient / omnipresent / etc (which can be reflected in inclusive knowledge
+    if need be).
     
 =end
+
+require './knowledge/kb'
+
 module Knowledge
     class << self
         def pack(instance)
-            {:inclusive => instance.inclusive_knowledge, :exclusive => instance.exclusive_knowledge}
+            {:knowledge => instance.knowledge}
         end
 
         def unpack(core, instance, raw_data)
-            instance.unpack_knowledge_base(raw_data[:inclusive], raw_data[:exclusive])
+            instance.unpack_knowledge(raw_data[:knowledge])
+        end
+
+        def at_creation(instance, params)
+            instance.add_basic_knowledge(params)
         end
 
         def categories; [:location, :details, :info]; end
     end
 
-    def inclusive_knowledge; @inclusive_knowledge ||= {}; end
-    def exclusive_knowledge; @exclusive_knowledge ||= {}; end
-    def unpack_knowledge_base(inclusive, exclusive)
-        @inclusive_knowledge = inclusive
-        @exclusive_knowledge = exclusive
+    def knowledge() @knowledge; end
+
+    def add_basic_knowledge(params)
+        @knowledge = ObjectKB.new(@core.db)
+        # TODO: Fill out knowledge based on :know identities.
     end
 
-    def add_knowledge_of(query_path, inclusive=false, data=nil)
-        raise(ArgumentError, "Inclusive knowledge cannot have associated data") if inclusive && data
-        raise(ArgumentError, ":data is a reserved keyword") if query_path.include?(:data)
-        raise(ArgumentError, "Query path must begin with one of the following: #{Knowledge.categories.inspect}") unless Knowledge.categories.include?(query_path[0])
-
-        Log.debug("Adding #{inclusive ? "inclusive" : "exclusive"} knowledge of #{query_path.inspect} to #{monicker} #{data ? "(with data)" : ""}")
-
-        current = inclusive ? inclusive_knowledge : exclusive_knowledge
-        path    = query_path.dup
-        while (next_key = path.shift)
-            return if current.has_key?(next_key) && inclusive
-            current[next_key] ||= {}
-            current = current[next_key]
-        end
-        (current[:data] = data) if data
-        Log.debug("Knowledge added")
+    def unpack_knowledge(knowledge)
+        @knowledge = knowledge
     end
 
-    def get_knowledge_of(query_path)
-        raise(ArgumentError, ":data is a reserved keyword") if query_path.include?(:data)
-        raise(ArgumentError, "Query path must begin with one of the following: #{Knowledge.categories.inspect}") unless Knowledge.categories.include?(query_path[0])
-
-        # Try inclusive knowledge first
-        current = inclusive_knowledge
-        path    = query_path.dup
-        while (next_key = path.shift)
-            if current[next_key]
-                return fetch_data_for(query_path)
-            else
-                break
-            end
-        end
-
-        # Fall back to exclusive knowledge, most commonly
-        current = exclusive_knowledge
-        path    = query_path.dup
-        while (next_key = path.shift)
-            if current[next_key]
-                current = current[next_key]
-            else
-                return nil
-            end
-        end
-        # Barring actual factually stored data, seek out the requisite data and return it
-        return current[:data] || fetch_data_for(query_path)
+    def add_knowledge(thing, connector, property)
+        @knowledge.add_knowledge(:thing => thing, :connector => connector, :property => property)
     end
 
-    private
-    def fetch_data_for(query_path)
-        category, path = query_path[0], query_path[1..-1]
-        case category
-        when :location
-            if path.size > 1
-                Log.warning("Location paths are intended to be of singular depth (either a name or a type)")
-                Log.warning("#{path[1..-1].inspect} will be discarded")
-            end
-            # TODO - Add in factional searching as well
-            #      - "Where is the bandit camp?" should search the factions for bandits of every archetype
-            @core.populations.locate(path[0])
-        when :details
-            raise(NotImplementedError, "We are yet unable to detail things")
-        when :info
-            basic_info = @core.db.info_for(path.shift)
-            info = basic_info
-            while (next_key = path.shift)
-                raise(MissingProperty, "Info #{next_key} missing from #{query_path}") unless info.has_key?(next_key)
-                info = info[next_key]
-            end
-            return info
+    def remove_knowledge(thing, connector, property)
+        # TODO
+    end
+
+    def get_knowledge(thing, connector, property)
+        if @core.db.has_type?(thing)
+            get_group_knowledge(thing, connector, property)
         else
-            raise(NotImplementedError, "Unrecognized query type #{category}")
+            get_specific_knowledge(thing, connector, property)
         end
+    end
+
+    #def known_types(type)
+    #    (get_group_knowledge(type) + kb.type_knowledge(type)).uniq.map { |q| q.connector == :is }
+    #end
+
+    def get_all_knowledge_of_group(raw_type)
+        raise "#{raw_type} is not an object type!" unless @core.db.has_type?(raw_type)
+        # Check basic raw knowledge first, then look in memory (local knowledge).
+        knows = (@core.kb.all_quanta_for_type(raw_type) + @knowledge.all_quanta_for_type(raw_type)).uniq
+        Log.debug([knows.inspect])
+        knows
+    end
+
+    def get_group_knowledge(raw_type, connector, property)
+        Log.debug("looking for knowledge of #{raw_type}, #{connector}, #{property}")
+        raise "#{raw_type} is not an object type!" unless @core.db.has_type?(raw_type)
+        all = get_all_knowledge_of_group(raw_type)
+
+        found = all.select { |q| q.connector == connector && q.property == property }
+        Log.debug([found.size, found.inspect])
+        found.first
+    end
+
+    def get_specific_knowledge(thing, connector, property)
+        Log.debug([thing, connector, property])
+        @knowledge.get_thing_knowledge(:thing => thing, :connector => connector, :property => property)
     end
 end
