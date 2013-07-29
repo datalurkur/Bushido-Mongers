@@ -3,6 +3,7 @@ require './game/tables'
 require './game/object_extensions'
 require './game/character_loader'
 require './raws/db'
+require './knowledge/raw_kb'
 require './util/exceptions'
 
 class GameCore
