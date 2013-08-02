@@ -65,14 +65,15 @@ module Words
 
         args = {}
 
-        # Is it a question?
         if Question.question?(statement)
-            # We have no further need of a question mark.
+            # Is it a question? Make a query path that can be asked of the knowledge extension.
+            # We have no further need of the question mark.
             statement[-1] = statement.last.to_s.chomp('?').to_sym
             Log.debug("Question: #{statement.join(" ")}")
             args = decompose_question(args, statement)
+        elsif Statement.statement?(statement)
+            # Decompose the statement and store in memory (if it's believed!)
         end
-        # Check if it's a statement. Decompose it and store in memory.
 
         args
     end
@@ -80,13 +81,16 @@ module Words
     private
     def self.decompose_question(args, pieces)
         args[:query] = true
-        if Question.wh_word?(pieces.first)
-            args[:lookup] = Question::WH_MEANINGS[pieces.first]
-            pieces.slice!(0)
+        query_path = []
+        if index = Question.find_wh_word(pieces)
+            args[:query_lookup] = Question::WH_MEANINGS[pieces.delete(index)]
         end
-        # FIXME - search for verb here (probably is/are?)
-        args[:noun] = find_noun_phrase(0, pieces).first
+        # FIXME - search for verb here. is/are should be taught first.
+        query_path << find_noun_phrase(0, pieces).first
+        #query_path << find_noun_phrase(0, pieces).first
 
+        Log.debug([query_path])
+        args[:query_path] = query_path
         args
     end
 

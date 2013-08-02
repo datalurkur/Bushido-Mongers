@@ -677,25 +677,35 @@ module Words
             :when  => :event,
             :where => :location,
             :why   => :meaning,
-            :how   => :skill
+            :how   => :task
         }
 
-        def self.question?(children)
-            children.last.to_s.match(/\?$/) ||
-            self.wh_word?(children.first)
+        def self.question?(pieces)
+            pieces.last.to_s.match(/\?$/) ||
+            self.wh_word?(pieces.first)
+        end
+
+        def self.find_wh_word(pieces)
+            pieces.find { |p| self.wh_word?(p) }
+        end
+
+        def self.wh_words
+            WH_MEANINGS.keys
         end
 
         def self.wh_word?(word)
-            case word
-            when :who, :what, :when, :where, :why, :how
-                true
-            else
-                false
-            end
+            self.wh_words.include?(word)
         end
 
         def to_s
             super.sentence('?')
+        end
+    end
+
+    class Statement < Sentence
+        def statement?(pieces)
+            # ??
+            false
         end
     end
 end
