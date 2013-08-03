@@ -27,7 +27,7 @@ class ObjectKB < KB
                 end
             end
         end
-        Log.debug("Added #{dbg_list.size} quanta to #{self} for type #{raw_type})")
+        Log.debug("Added #{dbg_list.size} quanta to #{self} for type #{raw_type}", 6)
     end
 
     # Lazily evaluated per-type.
@@ -38,8 +38,6 @@ class ObjectKB < KB
         #    return @groups_read[raw_type]
         #end
 
-        Log.debug("Reading type knowledge for #{raw_type}")
-
         add_identities_for_type(raw_type) if @use_identities
 
         # Check all parent types. Could use 'types known by kb' here for more dynamism.
@@ -47,7 +45,14 @@ class ObjectKB < KB
             known_bits += @by_thing[parent] || []
         end
 
-        Log.debug("read known_bits #{known_bits.inspect}")
+        # Check all child types if it's abstract. Could use 'types known by kb' here for more dynamism.
+        if @raws.is_abstract?(raw_type)
+            @raws.types_of(raw_type).each do |parent|
+                known_bits += @by_thing[parent] || []
+            end
+        end
+
+        Log.debug("known_bits for #{raw_type}: #{known_bits.inspect}", 6)
         @groups_read[raw_type] = known_bits
     	known_bits
     end
