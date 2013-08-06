@@ -1,7 +1,12 @@
 IGNORED_CONNECTORS =
 [
 	:atomic_object,
-	:effect_target
+	:effect_target,
+	:can_wear,
+	:civil,
+	:archetype,
+	:basic_attributes,
+	:has_aspects
 ]
 
 GROUP_KNOWLEDGE =
