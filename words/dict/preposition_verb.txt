@@ -29,6 +29,6 @@ send to receiver
 say to receiver
 talk to receiver
 tell nil receiver
-ask nil receiver
 ask about target
-ask for target
+nil for target
+ask nil receiver

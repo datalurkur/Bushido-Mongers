@@ -5,6 +5,10 @@ do   present do do does
 do   past    did
 be   present am  are is are are are
 be   past    was were was were were were
+is   present am  are is are are are
+is   past    was were was were were were
+make present make make makes
+make past    made
 find past    found
 sneak past   sneaked
 wear past    wore
