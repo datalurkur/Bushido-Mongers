@@ -17,16 +17,25 @@ Log.debug(human_quanta)
 params = {:position => FakeRoom.new}
 
 smith = core.create_npc(:human, params)
-smith.add_knowledge(:melee_weapon, :made, :recipe)
-recipes = smith.get_knowledge_of_group(:katana, :made, :recipe)
+smith.add_knowledge(:melee_weapon, :make, :recipe)
+recipes = smith.get_knowledge_of_group(:katana, :make, :recipe)
 Log.debug(["Smith knows about the following katana recipes:", recipes.inspect])
 
 guru = core.create_npc(:human, params)
-guru.add_knowledge(:constructed, :made, :recipe)
-recipes = guru.get_knowledge_of_group(:katana, :made, :recipe)
+guru.add_knowledge(:constructed, :make, :recipe)
+recipes = guru.get_knowledge_of_group(:katana, :make, :recipe)
 Log.debug(["Guru knows about the following katana recipes:", recipes.inspect])
 
 apprentice = core.create_npc(:human, params)
-apprentice.add_knowledge(:katana, :made, :recipe)
-recipes = apprentice.get_knowledge_of_group(:melee_weapon, :made, :recipe)
+apprentice.add_knowledge(:katana, :make, :recipe)
+recipes = apprentice.get_knowledge_of_group(:melee_weapon, :make, :recipe)
 Log.debug(["Apprentice knows about the following weapon recipes:", recipes.inspect])
+
+=begin
+seer = core.create_npc(:human, params)
+seer.add_knowledge_of([:location], true)
+humans = seer.get_knowledge_of([:location, :human])
+Log.debug(["Seer knows about the following places humans can be found:", humans])
+kenji_loc = seer.get_knowledge_of([:location, "kenji"])
+Log.debug(["Seer knows about the following places Kenji can be found:", kenji_loc])
+=end

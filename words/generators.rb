@@ -2,6 +2,14 @@
 
 module Words
     def self.generate(args)
+        if args[:command]
+            generate_command(args)
+        elsif args[:thing]
+            generate_knowledge(args)
+        end
+    end
+
+    def self.generate_command(args)
         case args[:command]
         when :inspect
             target = args[:target]
@@ -39,6 +47,13 @@ module Words
         else
             return "I don't know how to express the results of a(n) #{args[:command]}, pester zphobic to work on this"
         end
+    end
+
+    def self.generate_knowledge(args)
+        args[:subject] = args[:thing]
+        args[:verb]    = args[:connector]
+        args[:target]  = args[:property]
+        gen_sentence(args)
     end
 
     # FIXME: Currently only does declarative.

@@ -25,6 +25,11 @@ args = Words.decompose_command("flibberdygibber whoosafarglebert humperdink")
 args = Words.decompose_command("look self")
 raise unless args[:target] == :self
 
+args = Words.decompose_command("ask self about beef")
+raise unless args[:receiver] == :self
+raise unless args[:target] == :beef
+
 args = Words.decompose_command("look at self with microscope")
+raise unless args[:command] == :inspect
 raise unless args[:target] == :self
 raise unless args[:tool] == :microscope

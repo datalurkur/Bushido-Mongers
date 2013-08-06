@@ -69,34 +69,37 @@ module Knowledge
         # TODO
     end
 
-    def get_knowledge(thing, connector, property)
-        if @core.db.has_type?(thing)
-            get_group_knowledge(thing, connector, property)
+    def get_knowledge(thing, connector=nil, property=nil)
+        if knows_of_class?(thing)
+            get_knowledge_of_group(thing, connector, property)
         else
             get_specific_knowledge(thing, connector, property)
         end
     end
 
-    #def known_types(type)
-    #    (get_group_knowledge(type) + kb.type_knowledge(type)).uniq.map { |q| q.connector == :is }
-    #end
+    def known_types(type)
+        (get_knowledge_of_group(type) + kb.type_knowledge(type)).uniq.map { |q| q.connector == :is }
+    end
+
+    # Eventually we want to check the object's knowledge here, but this will suffice for now.
+    def knows_of_class?(raw_type)
+        @core.db.has_type?(raw_type)
+    end
 
     def get_all_knowledge_of_group(raw_type)
         raise "#{raw_type} is not an object type!" unless @core.db.has_type?(raw_type)
         # Check basic raw knowledge first, then look in memory (local knowledge).
-        knows = (@core.kb.all_quanta_for_type(raw_type) + @knowledge.all_quanta_for_type(raw_type)).uniq
-        Log.debug([knows.inspect])
-        knows
+        (@core.kb.all_quanta_for_type(raw_type) + @knowledge.all_quanta_for_type(raw_type)).uniq
     end
 
-    def get_group_knowledge(raw_type, connector, property)
-        Log.debug("looking for knowledge of #{raw_type}, #{connector}, #{property}")
+    def get_knowledge_of_group(raw_type, connector=nil, property=nil)
         raise "#{raw_type} is not an object type!" unless @core.db.has_type?(raw_type)
         all = get_all_knowledge_of_group(raw_type)
 
-        found = all.select { |q| q.connector == connector && q.property == property }
-        Log.debug([found.size, found.inspect])
-        found.first
+        return all.select do |q|
+            (connector.nil? || q.connector == connector) &&
+            (property.nil?  || q.property == property)
+        end || []
     end
 
     def get_specific_knowledge(thing, connector, property)

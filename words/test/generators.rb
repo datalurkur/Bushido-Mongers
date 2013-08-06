@@ -73,3 +73,10 @@ target.properties[:open] = true
 target_description = Descriptor.describe(target, observer)
 Log.debug(Words.describe_container_class(target_description))
 Log.debug(Words.describe_composition(target_description))
+
+# Knowledge stuff.
+require './knowledge/knowledge'
+human_quanta = $core.kb.all_quanta_for_type(:human)
+human_quanta.each do |q|
+    Log.debug(Words.generate(q.args))
+end

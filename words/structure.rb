@@ -110,6 +110,7 @@ module Words
             def new_prep_noun_phrase(type, args, lookup_type = type)
                 prep = Words.db.get_prep_for_verb(args[:verb], lookup_type)
                 if prep
+                    # Here's a place where we have leaf and internal nodes in the same internal...
                     return prep, NounPhrase.new(args[type])
                 else
                     return NounPhrase.new(args[type], args)
@@ -144,7 +145,13 @@ module Words
                     handled = true
                 when :receiver
                     super(new_prep_noun_phrase(type, args))
-                    # In Modern English, an indirect object is often expressed with a prepositional phrase of "to" or "for". If there is a direct object, the indirect object can be expressed by an object pronoun placed between the verb and the direct object. For example, "He gave that to me" and "He built a snowman for me" are the same as "He gave me that" and "He built me a snowman". 
+                    # In Modern English, an indirect object is often expressed
+                    # with a prepositional phrase of "to" or "for". If there
+                    # is a direct object, the indirect object can be expressed
+                    # by an object pronoun placed between the verb and the
+                    # direct object. For example, "He gave that to me" and
+                    # "He built a snowman for me" are the same as
+                    # "He gave me that" and "He built me a snowman".
                     handled = true
                 when :success
                     # Eventually this will be more complex, and describe either
@@ -473,6 +480,18 @@ module Words
                 infinitive.match(/[sc]h$/) ||
                 (Words::CONSONANTS.include?(infinitive[-2].chr) && infinitive[-1].chr == 'o')
             end
+
+            # Hardcode some basic verbage for now.
+            def self.verb?(verb)
+                if verb == :is || verb == :are || verb == :be
+                    return :is
+                elsif verb == :make || verb == :made
+                    return :make
+                elsif verb == :find
+                    return :find
+                end
+                nil
+            end
         end
 
         # FIXME: Handle Gerunds
@@ -686,7 +705,7 @@ module Words
         end
 
         def self.find_wh_word(pieces)
-            pieces.find { |p| self.wh_word?(p) }
+            pieces.find_index { |p| self.wh_word?(p) }
         end
 
         def self.wh_words

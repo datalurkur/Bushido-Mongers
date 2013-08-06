@@ -77,6 +77,7 @@ class KB
 
     def add_knowledge(args = {})
         _init_indices
+        # FIXME: If basic args already exist, ideally we'd reinforce the memory.
         q = KBQuanta.new(args)
         _add(q)
     end
@@ -92,7 +93,7 @@ class KB
     end
 
     def _add(quanta)
-        Log.debug("Adding #{quanta.inspect}")
+        Log.debug("Adding #{quanta.inspect}", 6)
         _init_indices
         
         @by_thing[quanta.thing]         ||= []

@@ -69,10 +69,10 @@ module Words
             # Is it a question? Make a query path that can be asked of the knowledge extension.
             # We have no further need of the question mark.
             statement[-1] = statement.last.to_s.chomp('?').to_sym
-            Log.debug("Question: #{statement.join(" ")}")
+            Log.debug("Question: #{statement.join(" ")}", 6)
             args = decompose_question(args, statement)
         elsif Statement.statement?(statement)
-            # Decompose the statement and store in memory (if it's believed!)
+            # TODO: Decompose the statement and store in memory (if it's believed!)
         end
 
         args
@@ -81,17 +81,31 @@ module Words
     private
     def self.decompose_question(args, pieces)
         args[:query] = true
-        query_path = []
+        find_and_delete(args, pieces, 0, [:do, :you, :know])
         if index = Question.find_wh_word(pieces)
-            args[:query_lookup] = Question::WH_MEANINGS[pieces.delete(index)]
+            args[:query_lookup] = Question::WH_MEANINGS[pieces.delete_at(index)]
+            # These can affect more complex constructions, but just ignore them for now.
+            find_and_delete(args, pieces, index, [:do, :i])
+            find_and_delete(args, pieces, index, [:can, :i])
         end
-        # FIXME - search for verb here. is/are should be taught first.
-        query_path << find_noun_phrase(0, pieces).first
-        #query_path << find_noun_phrase(0, pieces).first
+        verb = find_verb_phrase(0, pieces)
+        args[:connector] = verb
 
-        Log.debug([query_path])
-        args[:query_path] = query_path
+        if noun = find_noun_phrase(0, pieces)
+            set_case(:thing, args, noun.first, noun.last)
+        end
+
         args
+    end
+
+    # Used for deleting unused (so far) phrases to help/hack decomposition.
+    def self.find_and_delete(args, pieces, index, phrase)
+        orig_pieces = pieces.dup
+        Log.debug([args, pieces, index, phrase], 7)
+        if pieces[index..(index+phrase.size-1)].zip(phrase).all? { |a, b| a == b }
+            pieces.slice!(index, phrase.size)
+        end
+        Log.debug("#{__method__} changed #{orig_pieces.inspect} to #{pieces.inspect}", 6) if pieces != orig_pieces
     end
 
     # N.B. modifies the pieces array
@@ -114,9 +128,10 @@ module Words
 
     # N.B. modifies the pieces array
     def self.decompose_phrases(args, pieces)
+        # The default case is what case of the sentence a noun with no preposition serves as.
         default_case = Words.db.get_default_case_for_verb(args[:verb])
         Log.debug("Testing #{default_case} with nil", 6)
-        if pieces.size > 0 && default_case && noun = find_noun_phrase(0, pieces)
+        if default_case && noun = find_noun_phrase(0, pieces)
             set_case(default_case, args, noun.first, noun.last)
         end
 
@@ -132,7 +147,7 @@ module Words
     private
     def self.set_case(case_name, args, noun, adjs)
         case_name_adjs = (case_name.to_s + "_adjs").to_sym
-        Log.debug("Setting #{case_name.inspect} and #{case_name_adjs.inspect} to #{noun.inspect} and #{adjs.inspect}", 2)
+        Log.debug("Setting #{case_name.inspect} and #{case_name_adjs.inspect} to #{noun.inspect} and #{adjs.inspect}", 6)
         args[case_name] = noun.downcase
         args[case_name_adjs] = adjs.map(&:downcase) unless adjs.empty?
     end
@@ -149,10 +164,28 @@ module Words
     end
 
     # N.B. modifies the pieces array
-    def self.find_noun_phrase(index, pieces)
-        if index >= pieces.size
-            return nil
+    def self.find_verb_phrase(index, pieces)
+        return nil if index >= pieces.size
+
+        set_snarfback = false
+        pieces[index..-1].each_with_index do |piece, i|
+            if verb = Sentence::Verb.verb?(piece)
+                if set_snarfback
+                    # delete the :to as well
+                    pieces.slice!(i - 1, 2)
+                else
+                    pieces.slice!(i, 1)
+                end
+                return verb
+            end
+            set_snarfback = (piece == :to)
         end
+        return nil
+    end
+
+    # N.B. modifies the pieces array
+    def self.find_noun_phrase(index, pieces)
+        return nil if index >= pieces.size
 
         adjectives = []
         noun = nil
@@ -160,7 +193,7 @@ module Words
 
         # TODO - Join any conjunctions together
         # The tricky part in real NLP is finding out which kind of conjunction,
-        # it is, but for now we will assume it's a noun conjunction.
+        # it is, but for now we should assume it's a noun conjunction.
         #while (i = pieces.index(:and))
         #    first_part = (i > 1)               ? pieces[0...(i-1)] : []
         #    last_part  = (i < pieces.size - 2) ? pieces[(i+1)..-1] : []
@@ -168,7 +201,6 @@ module Words
         #end
         pieces[index..-1].each_with_index do |piece, i|
             Log.debug([piece, i], 4)
-            Log.debug([pieces[index + i], Sentence::Preposition.preposition?(pieces[index + i])], 4)
             if Sentence::Noun.noun?(piece) || # It's an in-game noun.
                (index + i) == pieces.size - 1     || # It's at the end of the index.
                Sentence::Preposition.preposition?(pieces[index + i + 1]) # Or there's a preposition next.
@@ -183,6 +215,9 @@ module Words
                 Log.debug("found adjective #{piece}", 6)
                 adjectives << piece
                 size += 1
+            elsif Sentence::Preposition.preposition?(piece)
+                # Moving on...
+                break
             else
                 Log.debug("invalid piece #{piece}", 6)
             end

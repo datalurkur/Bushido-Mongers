@@ -5,50 +5,28 @@ module Conversation
         end
 
         def at_message(instance, message)
+            # Characters engage in conversation themselves.
             return     if instance.uses?(Character)
+            # But other entities need perception and knowledge to talk.
             return unless instance.uses?(Perception)
+            return unless instance.uses?(Knowledge)
 
             case message.type
             when :unit_speaks, :unit_whispers
-                return unless message.response_needed
-                Log.debug(["Statement received by #{instance.monicker}", message], 4)
-                if message.has_param?(:receiver) && message.receiver === instance && instance.will_do_command?(message)
+                return unless instance == message.receiver && message.response_needed
+                Log.debug(["Statement received by #{instance.monicker}: #{message.statement}"], 6)
+                if message.has_param?(:receiver) && instance.will_do_command?(message)
                     instance.perform_command(message)
                 else
                     params = Words.decompose_ambiguous(message.statement)
                     if params[:query]
-                        query_path = []
-                        # Look up the words based on Questions::WH_MEANINGS.
-                        case params[:query_class]
-                        when :civil
-                            params[:query]
-                        when :object
-                        when :event
-                        when :location
-                            # FIXME - Can only ask the location of things in the
-                            # same room ATM. Kind of pointless, really.
-                            query_path << :location
-                            #query_path << filter_objects(:position, stuff)
-                        when :meaning
-                        when :skill
-                        else
-                            # Something like an 'ask about'. We should report a random fact related to the subject.
-                            instance.say(message.agent, "I don't know how to decide what to tell you about that.")
-                            return
-                        end
-
-                        knowledge = instance.get_knowledge_of(query_path)
-                        if knowledge
-                            instance.say(message.agent, Words.describe_knowledge(knowledge))
-                        else
-                            instance.say(message.agent, "I don't know anything about that.")
-                        end
+                        return instance.answer_question(message.agent, params)
                     elsif params[:statement_path]
                         # FIXME - This should only happen if the speaker is believed.
                         # For now it is a naive world, without the considered
                         # possibility of a lie. Please don't abuse this!
-                        if true # believes_statement(agent, params[:statement_path])
-                            instance.add_knowledge_of(params[:statement_path])
+                        if true # believes_statement(agent, params[:statement])
+                            instance.add_knowledge_of(params[:thing])
                             instance.say(message.agent, Words.describe_knowledge(params[:statement_path]))
                         else
                             instance.say(message.agent, "I don't believe you!")
@@ -57,6 +35,49 @@ module Conversation
                 end
             end
         end
+    end
+
+    def answer_question(asker, params)
+        Log.debug("#{monicker} answering query #{params.inspect}")
+
+        # Look up the words based on Questions::WH_MEANINGS.
+        knowledge = []
+        case params[:query_lookup]
+        when :civil
+        when :object
+            if self.knows_of_class?(params[:thing])
+                Log.debug("#{monicker} knows of class #{params[:thing]}.", 9)
+                knowledge = self.get_knowledge(params[:thing], params[:connector], params[:property])
+            else
+                Log.debug("#{monicker} doesn't know of class #{params[:thing]}.", 9)
+                # TODO: find object by name search, search
+                # self.kb.object_knowledge(thing)
+            end
+        when :event
+        when :location
+            #Find potential_locations, and answer appropriately.
+        when :meaning
+        when :task
+            if params[:thing] == :quest
+                # TODO
+            elsif self.knows_of_class?(params[:thing])
+                Log.debug("#{monicker} knows of class #{params[:thing]}.", 9)
+                knowledge = self.get_knowledge(params[:thing], params[:connector], params[:property])
+            end
+        else
+            # Something like an 'ask about'. We should report a random fact related to the subject.
+            self.say(asker, "What a strange way to ask a question.")
+            return
+        end
+
+        # Do final selection.
+        if knowledge && !knowledge.empty?
+            self.say(asker, Words.generate(knowledge.rand.args.merge(:knower => self)))
+        else
+            self.say(asker, "I don't know anything about that.")
+        end
+
+        return params
     end
 
     # Eventually this method will be more extensive, deciding based on the status of the requester.
@@ -97,6 +118,7 @@ module Conversation
 
 #private
     def say(receiver, statement, response_needed = false)
+        Log.debug("#{self.monicker} says, \"#{statement}\"")
         message = Message.new(:unit_speaks, {
             :agent           => self,
             :receiver        => receiver,
@@ -109,6 +131,7 @@ module Conversation
     end
 
     def whisper(receiver, statement, response_needed = false)
+        Log.debug("#{self.monicker} whispers, \"#{statement}\"")
         message = Message.new(:unit_whispers, {
             :agent           => self,
             :receiver        => receiver,
