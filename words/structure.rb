@@ -34,50 +34,43 @@ end
 
 module Words
     # Each node in the tree is either a root node, a branch node, or a leaf node.
-    class ParseTree
-        attr_accessor :root
-        class PTNode
-            # Children in PTInternalNodes are other PTInternalNodes or PTLeafs. Children in PTLeaves are strings.
-            attr_reader :children
+    class PTNode
+        # Children in PTInternalNodes are other PTInternalNodes or PTLeafs. Children in PTLeaves are strings.
+        attr_reader :children
 
-            def initialize(*children)
-                raise(StandardError, "Can't instantiate PTNode class!") if self.class == PTNode
-                @children = children.flatten
-            end
-
-            def to_s
-                if @children.nil?
-                    Log.warning("PTNode of type #{self.class} has nil children!")
-                    ''
-                else
-                    @children.join(" ")
-                end
-            end
-
-            def to_sym
-                self.to_s.to_sym
-            end
-        end
-
-        class PTInternalNode < PTNode
-            # Uncomment this to display parens around each parent node.
-#           def to_s
-#               "(" + @children.join(" ") + ")"
-#           end
-        end
-
-        class PTLeaf < PTNode
-        end
-
-        def initialize(*args)
-            @root = PTInternalNode.new(*args)
+        def initialize(*children)
+            raise(StandardError, "Can't instantiate PTNode class!") if self.class == PTNode
+            @children = children.flatten
         end
 
         def to_s
-            @root.to_s
+            if @children.nil?
+                Log.warning("PTNode of type #{self.class} has nil children!")
+                ''
+            else
+                @children.join(" ")
+            end
+        end
+
+        def to_sym
+            self.to_s.to_sym
         end
     end
 
+    class PTInternalNode < PTNode
+        # Uncomment this to display parens around each parent node.
+#           def to_s
+#               "(" + @children.join(" ") + ")"
+#           end
+
+        # Uncomment this to display <PartOfSpeech>(children) for each node.
+#        def to_s
+#            self.class.to_s.split(/::/).last + "(" + @children.join(",") + ")"
+#        end
+    end
+
+    class PTLeaf    < PTNode; end
+    class ParseTree < PTInternalNode; end
     class Sentence < ParseTree
         # Most of the time, we only want to print spaces between words.
         # Nodes include Listable to print commas, spaces, and ands between their children.
@@ -96,16 +89,16 @@ module Words
 
         # http://en.wikipedia.org/wiki/Subordinate_clause
         # TODO
-        class RelativeClause < ParseTree::PTInternalNode
+        class RelativeClause < PTInternalNode
         end
 
-        class Preposition < ParseTree::PTLeaf
+        class Preposition < PTLeaf
             def self.preposition?(word)
                 Words.db.all_pos(:preposition).include?(word)
             end
         end
 
-        class PrepositionalPhrase < ParseTree::PTInternalNode
+        class PrepositionalPhrase < PTInternalNode
             private
             def new_prep_noun_phrase(type, args, lookup_type = type)
                 prep = Words.db.get_prep_for_verb(args[:verb], lookup_type)
@@ -211,7 +204,7 @@ module Words
             end
         end
 
-        class VerbPhrase < ParseTree::PTInternalNode
+        class VerbPhrase < PTInternalNode
             include Listable
             # modal auxiliary: will, has
             # modal semi-auxiliary: be going to
@@ -240,14 +233,14 @@ module Words
             end
         end
 
-        class NounPhrase < ParseTree::PTInternalNode
+        class NounPhrase < PTInternalNode
             include Listable
 
             def initialize(nouns, args={})
                 # can't call Array(hash) because it decomposes to tuples
                 nouns = ((Hash === nouns) ? [nouns] : Array(nouns))
 
-                if nouns.all? { |n| n.is_a?(ParseTree::PTNode) }
+                if nouns.all? { |n| n.is_a?(PTNode) }
                     # Nouns already created; just attach them.
                     super(nouns)
                     return
@@ -295,7 +288,7 @@ module Words
                 monicker = noun[:monicker]
                 children = []
 
-                if monicker.is_a?(ParseTree::PTNode)
+                if monicker.is_a?(PTNode)
                     # Just return the PTNode.
                     return [monicker]
                 end
@@ -319,7 +312,7 @@ module Words
             end
         end
 
-        class Adjective < ParseTree::PTLeaf
+        class Adjective < PTLeaf
             def self.new_for_descriptor(descriptor_hash)
                 return [] unless Hash === descriptor_hash
                 # Look in the highest layer
@@ -361,7 +354,7 @@ module Words
         # http://en.wikipedia.org/wiki/Predicate_(grammar)
         # http://en.wikipedia.org/wiki/Phrasal_verb
         # http://www.verbix.com/webverbix/English/have.html
-        class Verb < ParseTree::PTLeaf
+        class Verb < PTLeaf
             def initialize(verb, args = {})
                 super(Verb.state_conjugate(verb, args[:state]))
             end
@@ -495,7 +488,7 @@ module Words
         end
 
         # FIXME: Handle Gerunds
-        class Noun < ParseTree::PTLeaf
+        class Noun < PTLeaf
             def initialize(noun)
                 @children = [Noun.gen_noun_text(noun)]
             end
@@ -588,7 +581,7 @@ module Words
             end
         end
 
-        class Determiner < ParseTree::PTLeaf
+        class Determiner < PTLeaf
             class << self
                 def new_for_noun(noun, first_word, definite)
                     if Noun.needs_article?(noun[:monicker])
@@ -696,7 +689,8 @@ module Words
             :when  => :event,
             :where => :location,
             :why   => :meaning,
-            :how   => :task
+            :how   => :task,
+            :if    => :conditional
         }
 
         def self.question?(pieces)
