@@ -153,7 +153,7 @@ class WordDB
         @verb_default_case[verb] || @verb_default_case[:default]
     end
 
-    # For 'special' conjugations. Basic rules are in Sentence::Verb::conjugate.
+    # For 'special' conjugations. Basic rules are in Verb::conjugate.
     def conjugate(infinitive, state)
         @conjugations[state][infinitive]
     end

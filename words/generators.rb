@@ -155,8 +155,8 @@ module Words
             end
         end
 
-        subject   = Sentence::NounPhrase.new(subject, args)
-        predicate = Sentence::VerbPhrase.new(verb, args)
+        subject   = NounPhrase.new(subject, args)
+        predicate = VerbPhrase.new(verb, args)
         sentence = clause_class.new(subject, predicate)
         sentence.finalize(args) if sentence.respond_to?(:finalize)
         sentence
@@ -261,7 +261,7 @@ module Words
 
         if rand(2) == 0
             gen_copula(
-                :subject   => (list && !list.empty? ? list : Sentence::Noun.new(:nothing)),
+                :subject   => (list && !list.empty? ? list : Noun.new(:nothing)),
                 :location  => composition
             )
         else
@@ -269,13 +269,13 @@ module Words
             gen_sentence(
                 :subject  => composition,
                 :verb     => composition_verbs[comp_type],
-                :target   => (list && !list.empty? ? list : Sentence::Noun.new(:nothing))
+                :target   => (list && !list.empty? ? list : Noun.new(:nothing))
             )
         end
     end
 
     def self.describe_object(obj)
-        obj[:complement] = Sentence::NounPhrase.new(obj[:type])
+        obj[:complement] = NounPhrase.new(obj[:type])
         gen_copula(obj)
     end
 
@@ -419,7 +419,7 @@ module Words
         if args[:complement]
             args[:complements] = [args[:complement]]
         else
-            args[:complements] = Sentence::Adjective.new_for_descriptor(args[:subject]) +
+            args[:complements] = Adjective.new_for_descriptor(args[:subject]) +
                                  Array(args[:complements]) +
                                  Array(args[:adjectives]) +
                                  Array(args[:keywords])
@@ -449,7 +449,7 @@ module Words
 
         exits   = room[:exits]
         if exits && !exits.empty?
-            sentences << gen_sentence(args.merge(:target => Sentence::Noun.new("exits to #{Sentence::NounPhrase.new(exits)}")))
+            sentences << gen_sentence(args.merge(:target => Noun.new("exits to #{NounPhrase.new(exits)}")))
         end
 
         sentences.join(" ")
@@ -457,7 +457,7 @@ module Words
 
     def self.gen_area_name(args = {})
         noun    = { :monicker => args[:type], :adjectives => args[:keywords], :definite => true }
-        name    = Sentence::NounPhrase.new(noun)
+        name    = NounPhrase.new(noun)
 #        descriptor = db.get_keyword_words(:abstract, :noun).rand
 
         name.to_s.title

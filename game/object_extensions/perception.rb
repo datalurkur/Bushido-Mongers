@@ -121,7 +121,7 @@ module Perception
             return potentials.first
         else
             if adjectives
-                number = adjectives.map { |a| Words::Sentence::Adjective.ordinal?(a) }.flatten.first
+                number = adjectives.map { |a| Words::Adjective.ordinal?(a) }.flatten.first
                 if number
                     return potentials[number - 1]
                 else

@@ -22,7 +22,7 @@ module Words
 
         # Strip out articles, since they aren't necessary yet.
         # TODO - use possessives to narrow down the search space.
-        pieces = pieces.select { |p| !Sentence::Article.article?(p) }
+        pieces = pieces.select { |p| !Article.article?(p) }
 
         # Look for matching command.
         commands = self.db.get_keyword_words(:command, :verb)
@@ -169,7 +169,7 @@ module Words
 
         set_snarfback = false
         pieces[index..-1].each_with_index do |piece, i|
-            if verb = Sentence::Verb.verb?(piece)
+            if verb = Verb.verb?(piece)
                 if set_snarfback
                     # delete the :to as well
                     pieces.slice!(i - 1, 2)
@@ -201,9 +201,9 @@ module Words
         #end
         pieces[index..-1].each_with_index do |piece, i|
             Log.debug([piece, i], 4)
-            if Sentence::Noun.noun?(piece) || # It's an in-game noun.
+            if Noun.noun?(piece) || # It's an in-game noun.
                (index + i) == pieces.size - 1     || # It's at the end of the index.
-               Sentence::Preposition.preposition?(pieces[index + i + 1]) # Or there's a preposition next.
+               Preposition.preposition?(pieces[index + i + 1]) # Or there's a preposition next.
                 Log.debug("found noun #{piece}", 6)
                 if noun
                     # It must be an adjective, instead.
@@ -211,11 +211,11 @@ module Words
                 end
                 noun = piece
                 size += 1
-            elsif Sentence::Adjective.adjective?(piece)
+            elsif Adjective.adjective?(piece)
                 Log.debug("found adjective #{piece}", 6)
                 adjectives << piece
                 size += 1
-            elsif Sentence::Preposition.preposition?(piece)
+            elsif Preposition.preposition?(piece)
                 # Moving on...
                 break
             else
