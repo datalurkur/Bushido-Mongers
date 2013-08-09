@@ -71,7 +71,8 @@ module Composition
                 end
                 typical_parts.concat(new_parts)
             end
-            complex_parts = type_info[:symmetric] + (morphism ? type_info[:morphic] : [])
+            complex_parts = type_info[:symmetric]
+            complex_parts += type_info[:morphic].select { |p| p[:morphism_classes].include?(morphism) } if morphism
             complex_parts.each do |part|
                 typical_parts << {
                     :type  => part[:object_type],

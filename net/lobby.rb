@@ -346,6 +346,7 @@ class Lobby
         when :set_character_opt
             @users[username][:character_options] ||= {}
             @users[username][:character_options][message.property] = message.value
+            Log.debug("Character property #{message.property} set to #{message.value}")
             send_to_user(username, Message.new(:opt_set_ok))
         when :get_character_opts
             begin
