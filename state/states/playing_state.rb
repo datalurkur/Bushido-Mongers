@@ -3,10 +3,8 @@ require './state/state'
 class PlayingState < State
     def setup_exchanges
         @clarification = define_exchange(:text_field, {:field => :clarification}) do |data|
-            Log.error("FIXME - We need to allow the clarification of multiple fields")
-            # in the store with a hatchet => {:location => store, :tool => hatchet}
             Log.info("Clarified : #{data.inspect}")
-            @client.send_to_server(Message.new(:clarification, {:command => data}))
+            @client.send_to_server(Message.new(:clarification, {:missing_param => data}))
         end
     end
     def make_current; end
@@ -22,7 +20,7 @@ class PlayingState < State
             pass_to_client(message)
         when :act_clarify
             pass_to_client(message)
-            begin_exchange(@clarification)
+            begin_exchange(@clarification) if(message.missing_params.size <= 1)
         when :act_fail
             pass_to_client(message)
         when :act_success

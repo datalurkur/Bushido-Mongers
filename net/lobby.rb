@@ -318,9 +318,13 @@ class Lobby
 
         case message.type
         when :clarification
-            Log.error("FIXME")
             # Just assume an affirmative response with no clarification and proceed
-            perform_action(username, @users[username][:last_action_params], false)
+            last_command = @users[username][:last_action_params][:command]
+            reconstructed_phrase = "#{last_command} #{message.missing_param}"
+            reconstructed_params = Words.decompose_command(reconstructed_phrase)
+
+            new_params = @users[username][:last_action_params].merge(reconstructed_params)
+            perform_action(username, new_params, false)
         when :command
             params = Words.decompose_command(message.text)
             perform_command(username, params)
