@@ -34,23 +34,7 @@ module Commands
             filters.keys.each do |req|
                 missing_params << req unless params[req] || optional.include?(req)
             end
-            unless missing_params.empty?
-                clarify_string = "#{params[:command].title}"
-                missing_params.each do |missing|
-                    case missing
-                    when :target
-                        clarify_string += " what"
-                    when :tool
-                        clarify_string += " with what"
-                    when :location
-                        clarify_string += " where"
-                    else
-                        Log.error("Can't format parameter #{missing}")
-                    end
-                end
-                clarify_string += "?"
-                raise(AmbiguousCommandError, clarify_string)
-            end
+            raise AmbiguousCommandError.new(params[:command], missing_params) unless missing_params.empty?
 
             filters.each do |p, lookup_locs|
                 object_type = params[:"#{p}_type_class"] || core.db.info_for(params[:command], p)
@@ -243,9 +227,7 @@ module Commands
 
     module Move
         def self.stage(core, params)
-            unless params[:destination]
-                raise(AmbiguousCommandError, "#{params[:command].title} where? (north, south, east, west)")
-            end
+            raise AmbiguousCommandError.new(params[:command], [:destination]) unless params[:destination]
             destination = params[:destination]
 
             position = params[:agent].absolute_position

@@ -12,6 +12,22 @@ module TextInterface
         when :choose_from_list; list(message.choices, message.field)
         when :list;             list(message.items)
         when :properties;       properties(message)
+        when :act_clarify
+            clarify_string = message.verb.title
+            message.missing_params.each do |missing|
+                case missing
+                when :target
+                    clarify_string += " what"
+                when :tool
+                    clarify_string += " with what"
+                when :location, :destination
+                    clarify_string += " where"
+                else
+                    Log.error("Can't format parameter #{missing}")
+                end
+            end
+            clarify_string += "?"
+            clarify_string
         else
             if message.has_param?(:text)
                 if message.has_param?(:reason)

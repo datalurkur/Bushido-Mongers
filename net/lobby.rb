@@ -263,7 +263,7 @@ class Lobby
         rescue Exception => e
             Log.debug(["Failed to stage command #{command}", e.message, e.backtrace])
             if AmbiguousCommandError === e && allow_clarification
-                send_to_user(username, Message.new(:act_clarify, {:text => e.message}))
+                send_to_user(username, Message.new(:act_clarify, {:verb => e.verb, :missing_params => e.missing_params}))
             else
                 send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
             end
