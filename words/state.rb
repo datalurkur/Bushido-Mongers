@@ -2,7 +2,7 @@ module Words
     # http://en.wikipedia.org/wiki/English_verbs#Syntactic_constructions
     # http://en.wikipedia.org/wiki/English_clause_syntax
 
-    # TODO - distinguish between patient (action receiver) and direct object (part of sentence), esp. useful for passive case.
+    # TODO - distinguish between patient (action receiver) and direct object (part of sentence), Useful for passive case?
     # Aspect descriptions: actions that are processes (bhāva), from those where the action is considered as a completed whole (mūrta). This is the key distinction between the imperfective and perfective.
     # further :aspects => [:inchoative,  # starting a state (not really used in English)
     #                      :prospective, # describing an event that occurs subsequent to a given reference time

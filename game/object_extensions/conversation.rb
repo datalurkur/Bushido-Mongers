@@ -45,6 +45,7 @@ module Conversation
         case params[:query_lookup]
         when :civil
         when :object
+            # Something like an 'ask about'. We should report a random fact related to the subject.
             if self.knows_of_class?(params[:thing])
                 Log.debug("#{monicker} knows of class #{params[:thing]}.", 9)
                 knowledge = self.get_knowledge(params[:thing], params[:connector], params[:property])
@@ -64,20 +65,28 @@ module Conversation
                 Log.debug("#{monicker} knows of class #{params[:thing]}.", 9)
                 knowledge = self.get_knowledge(params[:thing], params[:connector], params[:property])
             end
+        when :conditional
         else
-            # Something like an 'ask about'. We should report a random fact related to the subject.
             self.say(asker, "What a strange way to ask a question.")
             return
         end
 
+        talk_about_knowledge(asker, knowledge)
+        return params
+    end
+
+
+    def talk_about_knowledge(asker, knows)
         # Do final selection.
-        if knowledge && !knowledge.empty?
-            self.say(asker, Words.generate(knowledge.rand.args.merge(:knower => self)))
+        if knows && !knows.empty?
+            args = knows.rand.args
+
+            args.merge!(:knower => self, :db => @core.db)
+
+            self.say(asker, Words.generate(args))
         else
             self.say(asker, "I don't know anything about that.")
         end
-
-        return params
     end
 
     # Eventually this method will be more extensive, deciding based on the status of the requester.

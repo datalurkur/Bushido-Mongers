@@ -1,5 +1,7 @@
-# TODO - add info on acceptable/used arguments to generators
+# Generators return strings. Creators return some form of ParseTree or PTNode.
 
+# TODO - add info on acceptable/used arguments to generators
+# TODO - distinguish between adjunct and argument phrases
 module Words
     def self.generate(args)
         if args[:command]
@@ -49,15 +51,61 @@ module Words
         end
     end
 
-    def self.generate_knowledge(args)
+    # Basic, stupid clause-making from the knowledge quanta triad, to be modified as appropriately for separate knowledge bits.
+    def self.quanta2clause(old_args)
+        args = old_args.dup
         args[:subject] = args[:thing]
         args[:verb]    = args[:connector]
         args[:target]  = args[:property]
-        gen_sentence(args)
+
+        # Raw DB gets passed in by the object_extension method conversation::talk_about_knowledge.
+        # This should only happen server-side.
+        if args[:db]
+            # Extrapolate and describe the recipe.
+            if args[:property] == :recipe
+                recipes = args[:db].raw_info_for(args[:thing])[:class_values][:recipes]
+                recipe  = recipes.rand
+
+                args[:subject]    = (rand(2) == 0) ? :i : :you
+                args[:target]     = args[:thing]
+                args[:material]   = recipe[:components]
+            end
+        end
+
+        args
+    end
+
+    def self.generate_knowledge(args)
+        # I know <clause>!
+        # I know that <is_a>.
+        # I know how <make>.
+        if know_statement = (rand(2) == 0)
+            args[:target]  = create_dependent_clause(quanta2clause(args))
+            args[:subject] = :i
+            args[:verb]    = :know
+            gen_sentence(args)
+        else
+            gen_sentence(quanta2clause(args))
+        end
     end
 
     # FIXME: Currently only does declarative.
-    def self.gen_sentence(args = {})
+    # Imperative is just implied-receiver, no subject.
+    # Questions follow subject-auxiliary inversion
+    # http://en.wikipedia.org/wiki/Subject%E2%80%93auxiliary_inversion
+    def self.gen_sentence(args={})
+        create_clause(Sentence, args).to_s
+    end
+
+    def self.create_independent_clause(args)
+        create_clause(IndependentClause, args)
+    end
+
+    def self.create_dependent_clause(args)
+        create_clause(DependentClause, args)
+    end
+
+    def self.create_clause(clause_class, args)
         to_print = args.dup
         to_print.delete(:agent)
         Log.debug(to_print, 7)
@@ -70,6 +118,16 @@ module Words
         # active is the default; otherwise, swap the subject/D.O.
         if args[:state].voice == :passive
             subject, args[:target] = args[:target], subject
+        end
+
+        # Subject is i in first person
+        if !subject && args[:state].person == :first
+            subject = :i
+        end
+
+        # First person if subject is :i
+        if subject == :i || (Hash === subject && subject[:monicker] == :i)
+            args[:state].person = :first
         end
 
         # Subject is you in second person
@@ -97,12 +155,11 @@ module Words
             end
         end
 
-        subject_np = Sentence::NounPhrase.new(subject, args)
-        verb_np    = Sentence::VerbPhrase.new(verb, args)
-
-        sentence = Sentence.new(subject_np, verb_np)
-        Log.debug(sentence, 7)
-        sentence.to_s
+        subject   = Sentence::NounPhrase.new(subject, args)
+        predicate = Sentence::VerbPhrase.new(verb, args)
+        sentence = clause_class.new(subject, predicate)
+        sentence.finalize(args) if sentence.respond_to?(:finalize)
+        sentence
     end
 
     def self.describe_attack(args = {})
@@ -296,7 +353,7 @@ module Words
             end
         end
 
-        # FIXME: Here is where we can interpolate the lists and e.g. pluralize where appropriate.
+        # FIXME: Here is where we can interpolate the lists and e.g. pluralize where appropriate ("a leg and a leg" => "two legs").
 
         unless external.empty?
             sentences << gen_sentence(
@@ -344,25 +401,31 @@ module Words
         sentences.flatten.join(" ")
     end
 
+    # identity - noun copula definite-noun - The cat is Garfield; the cat is my only pet.
+    # class membership - noun copula noun - the cat is a feline.
+    # predication - noun copula adjective
+    # auxiliary - noun copula verb - The cat is sleeping (progressive); The cat is bitten by the dog (passive).
+    # existence - there copula noun. "There is a cat." => "There exists a cat."?
+    # location - noun copula place-phrase
     def self.gen_copula(args = {})
-        unless args[:subject] || args[:agent]
-            args[:subject] = :it
-        end
-        unless args[:verb] || args[:action] || args[:command]
-            args[:verb]    = :be
+        create_copula(args).to_s.sentence
+    end
+
+    def self.create_copula(args)
+        args[:subject] = :it unless args[:subject]
+        args[:verb] = :is unless args[:verb] || args[:action] || args[:command]
+
+        # If :complement is defined, it's assumed to be the only one.
+        if args[:complement]
+            args[:complements] = [args[:complement]]
+        else
+            args[:complements] = Sentence::Adjective.new_for_descriptor(args[:subject]) +
+                                 Array(args[:complements]) +
+                                 Array(args[:adjectives]) +
+                                 Array(args[:keywords])
         end
 
-        adjectives = Sentence::Adjective.new_for_descriptor(args[:subject])
-        args[:subject_complement] = adjectives + [:adjective, :adjectives, :complement, :keywords].inject([]) { |a, s| a + Array(args[s]) }
-
-        # TODO - Use expletive / inverted copula construction
-        # TODO - expletive more often for second person
-#        if Chance.take(:coin_toss)
-            # <Agent> <verbs> <target>
-            self.gen_sentence(args)
-#        else
-            # passive: <target> is <verbed> <preposition <Agent>>
-#        end
+        create_independent_clause(args)
     end
 
     def self.describe_room(args = {})

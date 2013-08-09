@@ -19,6 +19,12 @@ The locative case (loc) indicates a location: We live in China. => :location
 The lative case (lat) indicates motion to a location. It corresponds to the English prepositions "to" and "into". => :destination
 The instrumental case indicates an object used in performing an action: We wiped the floor with a mop. and Written by hand. => :tool, :material
 
+TODO:
+There needs to be some way of representing similar syntactic function - might help for coordinating conjunction determination.
+Make coordinators not suck.
+Start fleshing out auxiliaries.
+LOTS
+
 =end
 
 class Descriptor
@@ -26,6 +32,8 @@ class Descriptor
         if Hash === args
             args[:definite] = true
             return args
+        elsif Array === args
+            args.map { |thing| set_definite(thing) }
         else
             {:monicker => args, :definite => true}
         end
@@ -59,19 +67,21 @@ module Words
 
     class PTInternalNode < PTNode
         # Uncomment this to display parens around each parent node.
-#           def to_s
-#               "(" + @children.join(" ") + ")"
-#           end
-
-        # Uncomment this to display <PartOfSpeech>(children) for each node.
+        # e.g. ((a human) (is ((a biped)))).
 #        def to_s
-#            self.class.to_s.split(/::/).last + "(" + @children.join(",") + ")"
+#           "(" + @children.join(" ") + ")"
+#        end
+
+        # Uncomment this to display <PartOfSpeech>(children) for each node except Listables.
+        # e.g. Sentence(NounPhrase(the, chest), VerbPhrase(is, closed)).
+#        def to_s
+#            self.class.to_s.split(/::/).last + "(" + @children.join(", ") + ")"
 #        end
     end
 
     class PTLeaf    < PTNode; end
     class ParseTree < PTInternalNode; end
-    class Sentence < ParseTree
+    class IndependentClause < ParseTree
         # Most of the time, we only want to print spaces between words.
         # Nodes include Listable to print commas, spaces, and ands between their children.
         # TODO - make coordination more generic: http://en.wikipedia.org/wiki/Coordination_(linguistics)
@@ -88,7 +98,9 @@ module Words
         end
 
         # http://en.wikipedia.org/wiki/Subordinate_clause
-        # TODO
+        # http://en.wikipedia.org/wiki/Relative_clause
+        # Basically clauses that share some info bit with each other and thus
+        # the latter can gap the shared bit
         class RelativeClause < PTInternalNode
         end
 
@@ -101,12 +113,15 @@ module Words
         class PrepositionalPhrase < PTInternalNode
             private
             def new_prep_noun_phrase(type, args, lookup_type = type)
-                prep = Words.db.get_prep_for_verb(args[:verb], lookup_type)
-                if prep
-                    # Here's a place where we have leaf and internal nodes in the same internal...
-                    return prep, NounPhrase.new(args[type])
+                new_phrase(NounPhrase.new(args[type]), lookup_type, args)
+            end
+
+            def new_phrase(phrase, lookup_type, args)
+                # Determine preposition based on verb lookup (and dict/preposition_verb.txt).
+                if prep = Words.db.get_prep_for_verb(args[:verb], lookup_type)
+                    return Preposition.new(prep), phrase
                 else
-                    return NounPhrase.new(args[type], args)
+                    return phrase
                 end
             end
         end
@@ -114,10 +129,9 @@ module Words
         # Types: prepositional (during), infinitive (to work hard)
         # adpositions: preposition (by jove), circumpositions (from then on).
         class AdverbPhrase < PrepositionalPhrase
-            USED_ARGS = [:target, :tool, :destination, :receiver, :success, :statement, :location, :origin]
+            USED_ARGS = [:target, :tool, :destination, :receiver, :material, :success, :statement, :location, :origin]
 
-            # The type is the part of the args being used to generate an adverb phrase.
-            # args must be defined.
+            # The type is the part of the args being used to generate an adverb phrase, and also the third entry in dict/preposition_verb.txt...
             def initialize(type, args)
                 handled = false
 
@@ -132,8 +146,8 @@ module Words
                         super(new_prep_noun_phrase(type, args))
                     end
                     handled = true
-                when :tool, :destination, :location, :origin
-                    args[type] = Descriptor.set_definite(args[type])
+                when :tool, :destination, :location, :origin, :material
+                    args[type] = Descriptor.set_definite(args[type]) unless type == :material
                     super(new_prep_noun_phrase(type, args))
                     handled = true
                 when :receiver
@@ -196,6 +210,7 @@ module Words
                 end
             end
 
+            # The hash here expects a :verb entry, which is used for preposition lookups.
             def self.new_for_descriptor(descriptor_hash)
                 return [] unless Hash === descriptor_hash
                 (USED_ARGS & descriptor_hash.keys).collect do |arg|
@@ -209,23 +224,26 @@ module Words
             # modal auxiliary: will, has
             # modal semi-auxiliary: be going to
             # TODO - add modals based on tense/aspect
-            def initialize(verbs, args = {})
+            def initialize(verbs, args = {:state => State.new})
                 verbs = Array(verbs)
 
                 @children = verbs.map do |verb|
                     Verb.new(verb, args)
                 end
 
-                args_for_adverb_phrases = args.dup
-                args_for_adverb_phrases.merge!(args[:action_hash]) if args[:action_hash]
-                args_for_adverb_phrases.merge!(:verb => verbs.last)
-                @children += AdverbPhrase.new_for_args(args_for_adverb_phrases)
+                # The non-finite ("verbal") verb forms found in English are infinitives, participles and gerunds.
+                # Only generate adverbs for the finite verb.
+                unless args[:verb_form] == :infinitive
+                    args_for_adverb_phrases = args.dup
+                    args_for_adverb_phrases.merge!(args[:action_hash]) if args[:action_hash]
+                    args_for_adverb_phrases.merge!(:verb => verbs.last)
+                    @children += AdverbPhrase.new_for_args(args_for_adverb_phrases)
+                end
 
-                if args[:subject_complement]
+                if args[:complements]
                     # FIXME: Technically we're not supposed to insert symbol children into PTInternalNode, but hack it.
-                    # Subject complements can be adjectives or nouns (or NPs). How should we distinguish?
                     # Maybe generate during copula creation...
-                    @children += Array(args[:subject_complement])
+                    @children += args[:complements].map { |c| NounPhrase.new(c) }
                 end
 
                 # FIXME - listing won't work while AdverbPhrases are children of VerbPhrase. Add to last V to form second VP?
@@ -233,11 +251,19 @@ module Words
             end
         end
 
+        # Similar to a substantive clause. (in practice the term is restricted
+        # to clauses which represent a nominative or an accusative case; the
+        # clauses which stand for an ablative are sometimes called adverbial clauses)
+
+        # First argument: A list or a single item of either noun barewords or noun hash descriptors.
+        # Second argument: Standard args list as created in generators.
+        # Stores one of: (Determiner, Noun), (Noun), or (NounPhrase, ..., NounPhrase)
         class NounPhrase < PTInternalNode
             include Listable
 
             def initialize(nouns, args={})
-                # can't call Array(hash) because it decomposes to tuples
+                # Convert nouns into an array, if it isn't already.
+                # Can't call Array(hash) because it decomposes to tuples.
                 nouns = ((Hash === nouns) ? [nouns] : Array(nouns))
 
                 if nouns.all? { |n| n.is_a?(PTNode) }
@@ -257,12 +283,14 @@ module Words
                         else
                             hash[:monicker] = noun[:monicker]
                         end
-                        raise TypeError, hash[:monicker].class.to_s unless [String, Symbol].include?(hash[:monicker].class)
+
+                        unless [String, Symbol].include?(hash[:monicker].class)
+                            raise TypeError, "Expected String or Symbol monicker; got #{hash[:monicker].inspect} of class #{hash[:monicker].class} instead!"
+                        end
 
                         hash[:definite]       = noun[:definite] unless noun[:definite].nil?
                         hash[:possessor_info] = noun[:possessor_info] if noun[:possessor_info]
                         hash[:adjectives]     = Adjective.new_for_descriptor(noun)
-                        # Verb is used for preposition lookups.
                         hash[:adj_phrases]    = AdjectivePhrase.new_for_descriptor(noun.merge(:verb => args[:verb]))
                         hash[:adj_phrases]   += noun[:properties][:adjective_phrases] if noun[:properties] && noun[:properties][:adjective_phrases]
                     else
@@ -293,6 +321,7 @@ module Words
                     return [monicker]
                 end
 
+                # Turn bare-symbol adjectives into Adjectives
                 if noun[:adjectives]
                     noun[:adjectives].each do |adj|
                         adj = Adjective.new(adj) unless adj.is_a?(Adjective)
@@ -356,14 +385,21 @@ module Words
         # http://www.verbix.com/webverbix/English/have.html
         class Verb < PTLeaf
             def initialize(verb, args = {})
-                super(Verb.state_conjugate(verb, args[:state]))
+                case args[:verb_form]
+                when :infinitive
+                    super(:to, verb)
+                else
+                    super(Verb.state_conjugate(verb, args[:state]))
+                end
             end
 
-            # Used for adding modals, aspects, etc.
+            # Used for adding auxiliaries, modals, aspects, etc.
+            # List of auxiliaries:
+            # be (am, are, is, was, were, being), can, could, dare*, do (does, did), have (has, had, having), may, might, must, need*, ought*, shall, should, will, would
+            # TODO - Thus 'shall' is used with the meaning of obligation and 'will' with the meaning of desire or intention.
             def self.state_conjugate(verb, state)
                 case state.aspect
                 when :stative
-                    # TODO - Thus 'shall' is used with the meaning of obligation and 'will' with the meaning of desire or intention.
                     case state.tense
                     when :future
                         [conjugate(:will, State.new), verb]
@@ -376,9 +412,9 @@ module Words
                     be_state.person = state.person
                     case state.voice
                     when :active
-                        [conjugate(:be, be_state), gerund_participle(verb)]
+                        [conjugate(:be, be_state),  active_participle(verb)]
                     when :passive
-                        [conjugate(:be, be_state), past_participle(verb)]
+                        [conjugate(:be, be_state), passive_participle(verb)]
                     else
                         raise(StandardError, "Invalid voice #{state.voice}!")
                     end
@@ -422,7 +458,11 @@ module Words
             # or progressive participle, is identical in form to the gerund;
             # the term present participle is sometimes used to include the
             # gerund. The term gerund-participle is also used.
-            def self.gerund_participle(infinitive)
+            def self.present_participle(infinitive)     gerund(infinitive); end
+            def self.active_participle(infinitive)      gerund(infinitive); end
+            def self.imperfect_participle(infinitive)   gerund(infinitive); end
+            def self.progressive_participle(infinitive) gerund(infinitive); end
+            def self.gerund(infinitive)
                 # handle irregular forms.
                 case infinitive
                 when :be
@@ -439,9 +479,10 @@ module Words
             # [The other participle], called variously the past, passive, or
             # perfect participle, is usually identical to the verb's preterite
             # (past tense) form, though in irregular verbs the two usually differ.
+            def self.passive_participle(infinitive) past_participle(infinitive); end
+            def self.perfect_participle(infinitive) past_participle(infinitive); end
             def self.past_participle(infinitive)
-                # handle irregular forms.
-                # TODO - put these in dictionary.
+                # TODO - put these irregular forms in dictionary.
                 case infinitive
                 when :do
                     :done
@@ -449,6 +490,8 @@ module Words
                     :eaten
                 when :write
                     :written
+                when :bite
+                    :bitten
                 when :beat
                     :beaten
                 when :wear
@@ -487,7 +530,6 @@ module Words
             end
         end
 
-        # FIXME: Handle Gerunds
         class Noun < PTLeaf
             def initialize(noun)
                 @children = [Noun.gen_noun_text(noun)]
@@ -676,9 +718,31 @@ module Words
                 end
             end
         end
+    end
 
-        def to_s
+    class Sentence < IndependentClause
+       def to_s
             super.sentence
+        end
+    end
+
+    class DependentClause < ParseTree
+        def finalize(args)
+            @children.insert(0, Subordinator.of_verb?(args[:verb]))
+            self
+        end
+    end
+
+    class Subordinator < PTLeaf
+        def self.of_verb?(verb)
+            case verb
+            when :is, :be
+                Subordinator.new(:that)
+            when :make
+                Subordinator.new(:how)
+            else
+                Subordinator.new(:that) # ??
+            end
         end
     end
 

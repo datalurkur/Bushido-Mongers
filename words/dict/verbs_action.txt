@@ -18,3 +18,4 @@ spawn
 summon
 contain
 make
+know

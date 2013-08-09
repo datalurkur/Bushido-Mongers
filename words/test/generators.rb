@@ -80,3 +80,8 @@ human_quanta = $core.kb.all_quanta_for_type(:human)
 human_quanta.each do |q|
     Log.debug(Words.generate(q.args))
 end
+
+# Fred and Jim fell asleep.
+# Fred fell asleep, and Jim fell asleep too.
+# Fred fell asleep, and so did Jim.
+# Fred fell asleep, as did Jim.

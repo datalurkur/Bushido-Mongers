@@ -5,7 +5,9 @@ Log.setup("Main", "test")
 tests = [
     # GREETINGS AND SALUTATIONS
     # =========================
-    # FIXME
+    # <basic response to PC / human arrival>
+    # <talk about weather, current events, or nothing, depending on inclination>
+    # <response, discussion of quest / help needed>
 
     # TRADING AND TRANSACTIONS
     # ========================
@@ -24,9 +26,44 @@ tests = [
     {:phrase => "How do I make a katana?",          :result => {:query => true, :query_lookup => :task,   :thing => :katana,    :connector => :make}},
     {:phrase => "Where is kenji?",                  :result => {:query => true, :query_lookup => :location, :thing => :kenji,   :connector => :is}},
     {:phrase => "Where is Kenji",                   :result => {:query => true, :query_lookup => :location, :thing => :kenji,   :connector => :is}},
+    {:phrase => "Where can I find Kenji",           :result => {:query => true, :query_lookup => :location, :thing => :kenji,   :connector => :find}},
     {:phrase => "Do you know where kenji is?",      :result => {:query => true, :query_lookup => :location, :thing => :kenji,   :connector => :is}},
     {:phrase => "Where are rabbits?",               :result => {:query => true, :query_lookup => :location, :thing => :rabbits, :connector => :is}},
     {:phrase => "Where can I find rabbits?",        :result => {:query => true, :query_lookup => :location, :thing => :rabbits, :connector => :find}}
+    # "How much does a tunic cost?"
+
+    # AREA KNOWLEDGE
+
+    # "Does ivy grow near here?" / "Where do blisterworts grow?"
+    # "What can I make with rat's hair?"
+    # "Where can I buy a hammer?"
+    # "Are thieves common in these parts?"
+    # How far is it to the Deserted Castle?
+
+    # SELF KNOWLEDGE
+
+    # Do you have any relatives?
+    # Do you know Archimedes?
+    # Did you kill the rat?
+
+    # REQUESTS
+    # <@datalurkur> A user could propose quests to NPCs
+
+    # "If I killed Hun-shi, how much would you pay me?" / "How much would you pay me to kill Hun-shi?" # ADVANCED!
+    # How much will you give me for these iron daggers?
+    # "Do you have any high-quality swords?"
+    # Will you train me to use armor?
+
+    # PREFERENCES / OPINIONS
+    # <@datalurkur> I would imagine we can cue off of keywords like "favourite" and "prefer" and "like" to jump into personality code
+
+    # What do you think of the emperor?
+    # What do you think of my sword technique?
+    # What is your favorite food?
+    # What is your favourite colour?
+    # "What is the emperor's favorite food?" / "Do you know what the emperor likes to eat?""
+    # "What types of weapons do you prefer?""
+
 ]
 
 require './raws/db'
