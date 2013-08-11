@@ -30,15 +30,17 @@ module Commands
         #  value: where to look for the object, in order.
         # Takes optional parameter value :'key'_type_class, where 'key' is a key of :needed.
         def find_objects(core, params, filters, optional=[])
-            missing_params = []
-            filters.keys.each do |req|
-                missing_params << req unless params[req] || optional.include?(req)
-            end
+            # Complain about missing parameters unless they're optional
+            missing_params = filters.keys.select { |req| !(params[req] || optional.include?(req)) }
             raise AmbiguousCommandError.new(params[:command], missing_params) unless missing_params.empty?
 
             filters.each do |p, lookup_locs|
                 object_type = params[:"#{p}_type_class"] || core.db.info_for(params[:command], p)
-                next unless object_type
+                if !object_type
+                    Log.debug("No object type found for #{params[:command]} #{p.inspect} field!")
+                    next
+                end
+                next unless lookup_locs
                 params[p] = params[:agent].find_object(
                     object_type,
                     params[p],
@@ -381,19 +383,13 @@ module Commands
         def self.stage(core, params)
             if params[:receiver]
                 params[:no_sanity_check] = true
-                Commands.find_objects(core, params, :receiver => [:position])
+                Commands.find_objects(core, params, :receiver => [:position], :statement => nil)
+                params.delete(:no_sanity_check)
             end
         end
 
         def self.do(core, params)
-            message = Message.new(:unit_speaks,
-                :agent           => params[:agent],
-                :statement       => params[:statement],
-                :response_needed => true
-            )
-            message.params[:receiver] = params[:receiver] if params[:receiver]
-            locations = [params[:agent].absolute_position]
-            Message.dispatch_positional(core, locations, message.type, message.params)
+            params[:agent].say(params[:receiver], params[:statement], true)
         end
     end
 
@@ -423,6 +419,7 @@ module Commands
 
     module Ask
         def self.stage(core, params)
+            params[:no_sanity_check] = true
             Commands.find_objects(core, params, {:receiver => [:position]}, [:target])
         end
 

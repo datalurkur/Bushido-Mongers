@@ -36,13 +36,24 @@ s.tense = :past
 john_and_mary(s)
 
 Log.debug(Words.gen_copula)
-Log.debug(Words.gen_copula(:adjectives=>:sunny))
+Log.debug(Words.gen_copula(:complement => :sunny))
 
 Log.debug(
     Words.gen_sentence(
         :subject => [:Billy_Bob, :beaver],
         :verb    => :walk,
         :destination => :bar
+    )
+)
+
+Log.debug(
+    Words.gen_sentence(
+        :receiver => :human,
+        :statement => "Man is a miserable little pile of secrets.",
+        :response_needed => nil,
+        :verb => :speak,
+        :agent => :human,
+        :event_type => :unit_says
     )
 )
 

@@ -19,3 +19,5 @@ summon
 contain
 make
 know
+say
+whisper

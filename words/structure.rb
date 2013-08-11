@@ -236,10 +236,12 @@ module Words
                     super(:",", :missing)
                 end
             when :statement
-                Log.debug(args[:statement])
-                args[:statement][0]  =  '"' + args[:statement][0].to_s
-                args[:statement][-1] = args[:statement][-1].to_s + '"'
-                super(:",", args[:statement])
+                if Array === args[:statement]
+                    # It's an array of Symbols; combine 'em.
+                    args[:statement] = args[:statement].join(" ")
+                end
+
+                super(:",", "\"#{args[:statement]}\"")
             else
                 Log.warning("Don't know how to handle argument of type #{type}!")
             end

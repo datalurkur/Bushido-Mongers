@@ -59,9 +59,14 @@ static command close {
 
 /* PC-NPC Interactions. */
 
-static command say {}
-static command whisper {}
-static command ask {}
+abstract command towards_civil {
+    class optional sym receiver;
+    receiver civil;
+}
+
+static towards_civil say {}
+static towards_civil whisper {}
+static towards_civil ask {}
 
 /* Item construction. */
 

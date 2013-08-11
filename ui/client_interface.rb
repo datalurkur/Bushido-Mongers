@@ -125,6 +125,7 @@ module VerboseInterface
             if message.field == :action_results
                 return Words.generate(message.properties)
             elsif message.field == :game_event
+                # FIXME PRW - This whole passing-in-the-verb thing is bad, and I should feel bad for implementing it this way.
                 case message.properties[:event_type]
                 when :unit_killed
                     return Words.gen_copula(message.properties.merge(:verb=>:kill))
@@ -132,8 +133,12 @@ module VerboseInterface
                     return Words.gen_copula(message.properties.merge(:verb=>:destroy))
                 when :unit_attacks
                     return Words.describe_attack(message.properties)
-                when :unit_acts, :unit_moves, :unit_speaks, :unit_whispers
+                when :unit_acts, :unit_moves
                     return Words.gen_sentence(message.properties)
+                when :unit_speaks
+                    return Words.gen_sentence(message.properties.merge(:verb=>:speak))
+                when :unit_whispers
+                    return Words.gen_sentence(message.properties.merge(:verb=>:whisper))
                 else
                     return "I don't know how to express a game event of type #{message.properties[:event_type]}"
                 end

@@ -32,3 +32,4 @@ tell nil receiver
 ask about target
 nil for target
 ask nil receiver
+speak to receiver
