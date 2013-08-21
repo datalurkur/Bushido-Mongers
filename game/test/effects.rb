@@ -6,7 +6,7 @@ require './test/fake'
 
 Log.setup("Main", "effects")
 
-core = CoreWrapper.new
+core = FakeCore.new
 
 
 # STOMACH TEST

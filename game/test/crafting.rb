@@ -2,7 +2,7 @@ require './test/fake'
 
 Log.setup("Main", "abilities")
 
-core = CoreWrapper.new
+core = FakeCore.new
 
 test_room = Room.new(core, "Test Room")
 

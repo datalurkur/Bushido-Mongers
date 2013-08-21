@@ -3,7 +3,7 @@ require './test/fake'
 
 Log.setup("Main", "world_test")
 
-$c = CoreWrapper.new
+$c = FakeCore.new
 
 def test_world
     # d---c

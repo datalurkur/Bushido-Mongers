@@ -3,7 +3,7 @@ require './test/fake'
 
 Log.setup("Main", "test")
 
-$core = CoreWrapper.new
+$core = FakeCore.new
 $core.db.each_type(true) do |type|
     args = {}
     required = $core.db.raw_info_for(type)[:needs]

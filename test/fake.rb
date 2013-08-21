@@ -1,25 +1,37 @@
 require './game/cores/default'
 require './knowledge/raw_kb'
 
-class CoreWrapper < DefaultCore
+class FakeCore < DefaultCore
+    # No need to call setup separately for FakeCore.
     def initialize
         super
+        setup({})
+    end
+
+    def setup(args)
+        # Cribbed directly from GameCore.setup. Does everything except set
+        # up the world and the world managers.
         Log.info("Setting up fake core")
 
-        @uid_count = 0
-        @awaiting_destruction = []
+        # Setup various game variables
+        # ----------------------------
+        @tick_rate = args[:tick_rate] || (30)
+        @ticking   = false
 
         # Read the raws
-        @db       = ObjectDB.get("default")
-        # Set up knowledge based on the raws.
+        # -------------
+        raw_group = args[:raw_group] || "default"
+        @db       = ObjectDB.get(raw_group)
         @kb       = ObjectKB.new(@db)
-        # And the word text information.
         @words_db = WordParser.load
-        # And finally read in some basic noun & adjective information from the raws db.
         WordParser.read_raws(@words_db, @db)
 
-        @population_manager = PopulationManager.new(self)
-        @population_manager.setup
+        # Prepare for object creation
+        # ---------------------------
+        @uid_count            = 0
+        @awaiting_destruction = []
+
+        @setup = true
     end
 end
 

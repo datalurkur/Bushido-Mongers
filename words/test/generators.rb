@@ -4,9 +4,13 @@ require './util/basic'
 Log.setup("Vocabulary Test", "wordtest")
 
 require './words/words'
+require './test/fake'
+
+$core = FakeCore.new
 
 Log.debug(Words.gen_area_name({:type => :mountain, :keywords => [:beautiful]}))
 Log.debug(Words.gen_area_name({:type => :sewer,    :keywords => [:dank]}))
+
 Log.debug(
     Words.describe_room(
         :command => :inspect,
@@ -61,8 +65,6 @@ Log.debug(
 require './raws/db'
 require './test/fake'
 require './game/descriptors'
-
-$core = CoreWrapper.new
 
 observer = $core.create_npc(:human, :name => "Kenji Skrimshank", :position => FakeRoom.new)
 agent = Descriptor.describe(observer, observer)

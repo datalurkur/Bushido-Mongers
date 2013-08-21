@@ -3,7 +3,7 @@ require './raws/db'
 
 Log.setup("Main", "db_sandbox")
 
-core = CoreWrapper.new
+core = FakeCore.new
 
 while (str = gets)
     ret = eval str

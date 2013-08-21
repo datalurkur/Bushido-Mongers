@@ -74,7 +74,7 @@ require './test/fake'
 require './game/descriptors'
 require './game/object_extensions'
 
-core = CoreWrapper.new
+core = FakeCore.new
 
 speaker  = core.create_npc(:human, :name => "Kenji Skrimshank", :position => FakeRoom.new)
 receiver = core.create_npc(:human, :name => "Bob",              :position => FakeRoom.new)

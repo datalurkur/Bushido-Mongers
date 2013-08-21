@@ -15,7 +15,7 @@ db = nil
 db = Marshal.load(db_data)
 db = nil
 
-$core = CoreWrapper.new
+$core = FakeCore.new
 
 # Basic DB listing tests
 Log.debug(["Number of types of objects:", $core.db.instantiable_types_of(:object).size])

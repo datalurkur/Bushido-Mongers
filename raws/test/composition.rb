@@ -5,7 +5,7 @@ require './test/fake'
 Log.setup("Main", "test")
 #Log.disable_channel(:debug)
 
-core = CoreWrapper.new
+core = FakeCore.new
 body_type = :fox
 
 Log.debug("Creating #{body_type}")

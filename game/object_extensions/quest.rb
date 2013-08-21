@@ -54,7 +54,7 @@ module Quest
 
     # Start listening for success / fail
     def create_quest(params)
-        @fail_conditions    = params[:fail_conditions]
+        @fail_conditions    = params[:failure_conditions]
         @success_conditions = params[:success_conditions]
 
         all_conditions = (@fail_conditions + @success_conditions)

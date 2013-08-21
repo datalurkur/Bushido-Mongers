@@ -6,7 +6,7 @@ Log.setup("Main", "raw_kb_test")
 db   = ObjectDB.get("default")
 kb   = ObjectKB.new(db, true)
 
-core = CoreWrapper.new
+core = FakeCore.new
 
 carrot_quanta = kb.all_quanta_for_type(:carrot)
 katana_quanta = kb.all_quanta_for_type(:katana)
