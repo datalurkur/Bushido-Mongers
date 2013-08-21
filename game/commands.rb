@@ -35,12 +35,12 @@ module Commands
             raise AmbiguousCommandError.new(params[:command], missing_params) unless missing_params.empty?
 
             filters.each do |p, lookup_locs|
+                next unless lookup_locs
                 object_type = params[:"#{p}_type_class"] || core.db.info_for(params[:command], p)
                 if !object_type
                     Log.debug("No object type found for #{params[:command]} #{p.inspect} field!")
                     next
                 end
-                next unless lookup_locs
                 params[p] = params[:agent].find_object(
                     object_type,
                     params[p],
@@ -396,7 +396,8 @@ module Commands
     module Whisper
         def self.stage(core, params)
             params[:no_sanity_check] = true
-            Commands.find_objects(core, params, :receiver => [:position])
+            Commands.find_objects(core, params, :receiver => [:position], :statement => nil)
+            params.delete(:no_sanity_check)
         end
 
         def self.do(core, params)

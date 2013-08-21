@@ -116,17 +116,26 @@ module Perception
 
         case potentials.size
         when 0
-            raise(NoMatchError, "No object #{object} found.")
+            objects = find_all_objects(nil, object, locations)
+            Log.debug([type_class, object, locations, objects])
+            if objects && objects.is_a?(Array) && !objects.empty?
+                raise(NoMatchError, "You can't do that to a #{objects.first.get_type}!")
+            else
+                raise(NoMatchError, "No object #{object} found.")
+            end
         when 1
             return potentials.first
         else
             if adjectives
-                number = adjectives.map { |a| Words::Adjective.ordinal?(a) }.flatten.first
+                number = adjectives.select { |a| Words::Adjective.ordinal?(a) }.first
                 if number
                     return potentials[number - 1]
                 else
+                    Log.debug("#{self.monicker} assumes the first #{object}.")
                     return potentials.first
-                    # TODO - We should try re-searching here based on other descriptive information/heuristics.
+                    # TODO: Possibilities:
+                    # * try re-searching here based on other descriptive information/heuristics.
+                    # * Throw AmbiguousCommandError and request more info
                 end
             else
                 return potentials.first
