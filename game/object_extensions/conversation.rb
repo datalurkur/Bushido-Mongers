@@ -92,6 +92,7 @@ module Conversation
     # Eventually this method will be more extensive, deciding based on the status of the requester.
     def will_do_command?(message)
         # For now, just verify that it's a command.
+        return false if message.statement.first.nil?
         @core.db.static_types_of(:command).include?(message.statement.first)
     end
 
@@ -106,10 +107,8 @@ module Conversation
         rescue Exception => e
             Log.debug(["Failed to stage command #{command}", e.message, e.backtrace])
             if AmbiguousCommandError === e
-                Log.debug("Ambiguous!")
                 say(message.agent, "Ambiguous!")
             else
-                Log.debug("I don't understand: #{e.message}")
                 say(message.agent, "I don't understand: #{e.message}")
             end
             return
