@@ -1,5 +1,6 @@
 # Some rump definitions that don't fit anywhere else.
 module Words
+    # Used for dictionary lookups.
     TYPES = :noun, :name, :verb, :adjective, :adverb
 
     VOWELS = ['a', 'e', 'i', 'o', 'u']

@@ -3,21 +3,24 @@ Grammar in Bushido Mongers uses concepts from phrase structure grammar, generall
 
 http://en.wikipedia.org/wiki/Constituent_(linguistics)
 
-PTNodes are the nodes of the tree, with further differentiation between internal nodes (nodes with node children) and leaf nodes. Internal nodes should not have non-node (i.e. symbol) children, and leaf nodes should not have node children, but in practice this is not strictly enforced.
+PTNodes are the nodes of the tree, with further differentiation between internal nodes (nodes with node children) and
+leaf nodes. Internal nodes should not have non-node (i.e. symbol) children, and leaf nodes should not have node
+children, but in practice this is not strictly enforced.
 
-The sentence structures have been designed to be as flexible as possible given their current basic nature. For example, descriptor hashes (see ./game/descriptors) or symbols can be passed in as nouns in any context, and many placements will also accept pre-created parts of speech (all the PTNode subclasses defined under Sentence). Verb conjugation is dependent on both abnormal word knowledge and generic rules, which work for most cases.
+The sentence structures have been designed to be as flexible as possible given their current basic nature. For example,
+descriptor hashes (see ./game/descriptors) or symbols can be passed in as nouns in any context, and many placements will
+also accept pre-created parts of speech (all the PTNode subclasses defined under Sentence). Verb conjugation is
+dependent on both abnormal word knowledge and generic rules, which work for most cases.
 
-Cases
-
-The nominative case indicates the subject of a finite verb: We went to the store. => :subject
-The accusative case indicates the direct object of a verb: The clerk remembered us. => :target
-The dative case indicates the indirect object of a verb: The clerk gave us a discount. or The clerk gave a discount to us. => :hasnt_come_up_yet
-The ablative case indicates movement from something, or cause: The victim went from us to see the doctor. and He was unhappy because of depression. => :hasnt_come_up_yet
-The genitive case, which roughly corresponds to English's possessive case and preposition of, indicates the possessor of another noun: John's book was on the table. and The pages of the book turned yellow. => possessor_info?
-The vocative case indicates an addressee: John, are you all right? or simply Hello, John! => :hasnt_come_up_yet
-The locative case (loc) indicates a location: We live in China. => :location
-The lative case (lat) indicates motion to a location. It corresponds to the English prepositions "to" and "into". => :destination
-The instrumental case indicates an object used in performing an action: We wiped the floor with a mop. and Written by hand. => :tool, :material
+Certain word classes have overloaded the base initialize class that just takes children. Those special word classes are:
+Article
+Possessive
+Noun
+Verb
+NounPhrase
+VerbPhrase
+AdjectivePhrase
+AdverbPhrase
 
 TODO:
 There needs to be some way of representing similar syntactic function - might help for coordinating conjunction determination.
@@ -82,6 +85,8 @@ module Words
     class PTLeaf    < PTNode; end
     class ParseTree < PTInternalNode; end
     class IndependentClause < ParseTree; end
+
+    # http://en.wikipedia.org/wiki/Subordinate_clause
     class DependentClause < ParseTree
         def finalize(args)
             @children.insert(0, Subordinator.of_verb?(args[:verb]))
@@ -163,10 +168,42 @@ module Words
         end
     end
 
-    # http://en.wikipedia.org/wiki/Subordinate_clause
     # http://en.wikipedia.org/wiki/Relative_clause
-    # Basically clauses that share some info bit with each other and thus
-    # the latter can gap the shared bit
+
+    # It will begin with a relative adverb [when, where, or why in English] or a relative pronoun [who, whom, whose,
+    # that, or which in English]. However, the English relative pronoun may be omitted and only implied if it plays the
+    # role of the object of the verb or object of a preposition in a restrictive clause; for example, He is the boy I
+    # saw is equivalent to He is the boy whom I saw, and I saw the boy you are talking about is equivalent to the more
+    # formal I saw the boy about whom you are talking.
+=begin
+(Relative_Pronoun, IC) => pronoun functions as object of verb in IC
+(Relative_Adverb,  IC) => outer IC serves as when, where, or why context for IC
+(Relative_Pronoun, IC without subject) => pronoun functions as subject of IC
+(Relative_Pronoun, IC, Preposition) => pronoun functions as object of preposition
+(Preposition, Relative_Pronoun, IC) => pronoun functions as object of preposition
+(Possessive_Pronoun)
+
+
+Relative Pronoun [Functioning as Object of Verb] + Subject + Verb
+This is the ball that I was bouncing.
+Relative Adverb + Subject + Verb (possibly + Object of Verb)
+That is the house where I grew up.
+That is the house where I met her.
+Relative Pronoun [Functioning as Subject] + Verb (possibly + Object of Verb)
+That is the person who hiccuped.
+That is the person who saw me.
+Relative Pronoun [Functioning as Object of Preposition] + Subject + Verb (possibly + Object of Verb) + Preposition
+That is the person who(m) I was talking about.
+That is the person who(m) I was telling you about.
+Preposition + Relative Pronoun [Functioning as Object of Preposition] + Subject + Verb (possibly + Object of Verb)
+That is the person about whom I was talking.
+That is the person about whom I was telling you.
+Possessive Relative Pronoun + Noun [Functioning as Subject] + Verb (possibly + Object of Verb)
+That is the dog whose big brown eyes pleaded for another cookie.
+That is the dog whose big brown eyes begged me for another cookie.
+Possessive Relative Pronoun + Noun [Functioning as Object of Verb] + Subject + Verb
+That is the person whose car I saw.
+=end
     class RelativeClause < PTInternalNode
     end
 
@@ -192,8 +229,22 @@ module Words
         end
     end
 
+=begin
     # Types: prepositional (during), infinitive (to work hard)
     # adpositions: preposition (by jove), circumpositions (from then on).
+
+    Cases
+
+    The nominative case indicates the subject of a finite verb: We went to the store. => :subject
+    The accusative case indicates the direct object of a verb: The clerk remembered us. => :target
+    The dative case indicates the indirect object of a verb: The clerk gave us a discount. or The clerk gave a discount to us. => :hasnt_come_up_yet
+    The ablative case indicates movement from something, or cause: The victim went from us to see the doctor. and He was unhappy because of depression. => :hasnt_come_up_yet
+    The genitive case, which roughly corresponds to English's possessive case and preposition of, indicates the possessor of another noun: John's book was on the table. and The pages of the book turned yellow. => possessor_info?
+    The vocative case indicates an addressee: John, are you all right? or simply Hello, John! => :hasnt_come_up_yet
+    The locative case (loc) indicates a location: We live in China. => :location
+    The lative case (lat) indicates motion to a location. It corresponds to the English prepositions "to" and "into". => :destination
+    The instrumental case indicates an object used in performing an action: We wiped the floor with a mop. and Written by hand. => :tool, :material
+=end
     class AdverbPhrase < PrepositionalPhrase
         USED_ARGS = [:target, :tool, :destination, :receiver, :material, :success, :statement, :location, :origin]
 
@@ -348,12 +399,14 @@ module Words
                     # Decompose descriptor hashes into noun name, modifiers, and possession info.
                     if noun[:properties] && noun[:properties][:job] && noun[:monicker] == noun[:type]
                         hash[:monicker] = noun[:properties][:job]
-                    else
+                    elsif noun[:monicker]
                         hash[:monicker] = noun[:monicker]
+                    else
+                        hash[:monicker] = :thing
                     end
 
                     unless [String, Symbol].include?(hash[:monicker].class)
-                        raise TypeError, "Expected String or Symbol monicker; got #{hash[:monicker].inspect} of class #{hash[:monicker].class} instead!"
+                        raise TypeError, "Expected String or Symbol monicker; got #{hash[:monicker].inspect} (#{hash[:monicker].class}) instead!"
                     end
 
                     hash[:definite]       = noun[:definite] unless noun[:definite].nil?
@@ -442,8 +495,13 @@ module Words
         end
 
         def self.adjective?(word)
-            Words.db.all_pos(:adjective).include?(word) ||
+            (lexeme = Words.db.get_lexeme(word) && lexeme.args[:type]) ||
             ordinal_adjectives.any? { |k, v| v.include?(word) }
+        end
+
+        def self.rand
+            #Log.debug(Words.db.lexemes_of_type(:adjective))
+            Words.db.lexemes_of_type(:adjective).rand.lemma
         end
     end
 
@@ -674,6 +732,10 @@ module Words
             end
         end
 
+        def self.rand
+            Words.db.lexemes_of_type(:noun).rand.lemma
+        end
+
         # TODO - use
         def plural?
             return true if @plural
@@ -743,6 +805,9 @@ module Words
                 true
             end
         end
+    end
+
+    class PossessivePronoun < Noun
     end
 
     class Article < Determiner

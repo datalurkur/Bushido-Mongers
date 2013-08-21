@@ -28,7 +28,7 @@ class String
     end
 
     def title
-        self.split(' ').map(&:capitalize).join(' ')
+        self.gsub(/_/, ' ').split(' ').map(&:capitalize).join(' ')
     end
 
     def capitalized?

@@ -1,15 +1,18 @@
 require 'set'
 require './util/log'
+require './words/lexemes'
 
 class WordDB
     def initialize
         @groups       = []
         @associations = []
-        @keywords     = {}
         @conjugations = {}
 
         @verb_case_maps     = {}
         @verb_default_case  = {}
+
+        @lexemes = []
+        @lemmas  = []
     end
 
     def collect_groups(*list_of_words)
@@ -80,16 +83,6 @@ class WordDB
         list_of_groups
     end
 
-    def add_keyword_family(keyword, *list_of_words)
-        Log.debug("Adding keyword family #{keyword}, #{list_of_words.inspect}", 6)
-        list_of_groups = add_family(*list_of_words)
-
-        @keywords[keyword] ||= []
-        @keywords[keyword].concat(list_of_groups)
-    end
-
-    # Basically the reason this isn't a keyword_family is because we don't know
-    # which part of speech the word is.
     def add_verb_preposition(verb, preposition, case_name)
         @verb_case_maps[verb] ||= {}
         if preposition
@@ -122,20 +115,6 @@ class WordDB
             end
         end
         nil
-    end
-
-    # Get a list of groups attached to the keyword
-    def get_keyword_groups(keyword)
-        @keywords[keyword]
-    end
-
-    def get_keyword_words(keyword, pos)
-        keyword_groups = get_keyword_groups(keyword)
-        if keyword_groups.nil? || keyword_groups.empty?
-            Log.warning(["No keyword groups found for #{keyword.inspect}", @keywords])
-            return []
-        end
-        keyword_groups.select { |g| g.has?(pos) }.collect { |g| g[pos] }
     end
 
     # Verbs have different prepositions for different cases.
@@ -201,6 +180,33 @@ class WordDB
         else
             raise(ArgumentError, "Can't find groups given type #{word.class}.")
         end
+    end
+
+    public
+    def add_lexeme(lemma, l_type, args = {})
+        lemma = lemma.to_sym
+        Log.debug("db.add_lexeme(#{lemma.inspect} (#{l_type.inspect}) #{args.inspect})", 8)
+        if !@lemmas.include?(lemma)
+            @lemmas  << lemma
+            l = Lexicon::Lexeme.new(lemma, l_type, args)
+            @lexemes << l
+        else
+            l = get_lexeme(lemma)
+            l.add_type(l_type)
+            l.add_args(args)
+        end
+    end
+
+    def get_lexeme(lemma)
+        @lexemes.find { |l| l.lemma == lemma }
+    end
+
+    def lexemes_of_type(l_type)
+        @lexemes.find_all { |l| l.types.include?(l_type) }
+    end
+
+    def words_of_type(l_type)
+        lexemes_of_type(l_type).map(&:lemma)
     end
 end
 

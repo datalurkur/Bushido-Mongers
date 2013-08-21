@@ -26,7 +26,7 @@ Log.debug(["Nouns", nouns])
 
 Log.debug(db.get_related_groups(:inspect))
 
-japanese_names = Words.db.get_keyword_words(:japanese, :name)
+japanese_names = Words.db.words_of_type(:japanese)
 
 Log.debug("Japanese names: #{japanese_names.inspect}")
 Log.debug("Character name: #{japanese_names.rand}")

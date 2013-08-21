@@ -46,8 +46,8 @@ module WordParser
         db = WordDB.new
 
         Words::TYPES.each do |type|
-            load_files(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/).each do |keyword, lines|
-                lines.map(&:chomp).each { |l| db.add_keyword_family(keyword, type => l) }
+            load_files(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/).each do |additional_type, lines|
+                lines.map(&:chomp).each { |l| db.add_lexeme(l, [type, additional_type]) }
             end
         end
 
@@ -126,11 +126,11 @@ module WordParser
     end
 
     private
-    def self.add_raws(db, raws_db, type, pos, desc, static=false)
-        types = static ? raws_db.static_types_of(type) : raws_db.instantiable_types_of(type)
-        types.each do |raw|
-            db.add_keyword_family(type, pos => raw)
+    def self.add_raws(db, raws_db, raw_category, word_type, desc, static=false)
+        types = static ? raws_db.static_types_of(raw_category) : raws_db.instantiable_types_of(raw_category)
+        types.each do |raw_type|
+            db.add_lexeme(raw_type, [raw_category, word_type])
         end
-        Log.debug("Found #{db.get_keyword_groups(type).size} #{desc}.")
+        Log.debug("Found #{types.size} #{desc}.")
     end
 end

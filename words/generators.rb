@@ -113,7 +113,6 @@ module Words
         args[:state] ||= State.new
 
         subject = args[:subject] || args[:agent]
-        verb    = args[:verb] || args[:action] || args[:command]
 
         # active is the default; otherwise, swap the subject/D.O.
         if args[:state].voice == :passive
@@ -143,6 +142,20 @@ module Words
         # If subject is plural and person isn't, adjust the person
         if Array === subject && subject.size > 1
             args[:state].plural_person!
+        end
+
+        verb = args[:verb] || args[:action] || args[:command]
+
+        # Failing that, try to identify the verb from the :event_type key (:game_event message)
+        if verb.nil? && args[:event_type]
+            event_mapping = {
+                :unit_killed      => :kill,
+                :object_destroyed => :destroy,
+                :unit_speaks      => :speak,
+                :unit_whispers    => :whisper
+            }
+            verb = event_mapping[args[:event_type]]
+            Log.debug("No verb for event_type #{args[:event_type].inspect}!") unless verb
         end
 
         raise unless verb
@@ -412,13 +425,19 @@ module Words
     end
 
     def self.create_copula(args)
-        args[:subject] = :it unless args[:subject]
-        args[:verb] = :is unless args[:verb] || args[:action] || args[:command]
+        args[:subject] = args[:subject] || args[:agent] || :it
+
+        if verb = args[:verb] || args[:action] || args[:command]
+            args[:complement] = verb unless args[:complement]
+        end
+
+        args[:verb] = :is
 
         # If :complement is defined, it's assumed to be the only one.
         if args[:complement]
-            args[:complements] = [args[:complement]]
+            args[:complements] = [Adjective.new(args[:complement])]
         else
+            # Or, you know, some subset of these.
             args[:complements] = Adjective.new_for_descriptor(args[:subject]) +
                                  Array(args[:complements]) +
                                  Array(args[:adjectives]) +
@@ -456,9 +475,23 @@ module Words
     end
 
     def self.gen_area_name(args = {})
-        noun    = { :monicker => args[:type], :adjectives => args[:keywords], :definite => true }
+        noun    = {
+                    :monicker => args[:type] || Noun.rand,
+                    :adjectives => args[:keywords] || Adjective.rand,
+                    :definite => true,
+                  }
         name    = NounPhrase.new(noun)
-#        descriptor = db.get_keyword_words(:abstract, :noun).rand
+
+        name.to_s.title
+    end
+
+    def self.random_name(args = {})
+        noun    = {
+                    :monicker => args[:type] || Noun.rand,
+                    :adjectives => args[:keywords] || Adjective.rand,
+                    :definite => true,
+                  }
+        name    = NounPhrase.new(noun)
 
         name.to_s.title
     end

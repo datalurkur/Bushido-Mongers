@@ -25,7 +25,7 @@ module Words
         pieces = pieces.select { |p| !Article.article?(p) }
 
         # Look for matching command.
-        commands = self.db.get_keyword_words(:command, :verb)
+        commands = self.db.words_of_type(:command)
         unless commands.include?(verb)
             related = self.db.get_related_words(verb) || []
             matching_commands = commands & related
