@@ -13,8 +13,11 @@ use utilize manipulate
 equip wear
 remove unequip
 throw toss
-say talk tell
+say talk tell speak
 close shut
 construct craft build
 spawn
 summon
+attach
+contain
+know
