@@ -360,8 +360,6 @@ That is the person whose car I saw.
             end
 
             if args[:complements]
-                # FIXME: Technically we're not supposed to insert symbol children into PTInternalNode, but hack it.
-                # Maybe generate during copula creation...
                 @children += args[:complements].map { |c| NounPhrase.new(c) }
             end
 
@@ -460,6 +458,9 @@ That is the person whose car I saw.
 
             children
         end
+    end
+
+    class Adverb < PTLeaf
     end
 
     class Adjective < PTLeaf
