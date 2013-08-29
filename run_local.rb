@@ -15,7 +15,7 @@ $client_config = {
 
 Log.setup("Main", "local")
 
-$server = GameServer.new("test")
+$server = GameServer.new("test", Time.now.to_i, "latest.repro")
 $client = StackClient.new($client_config)
 
 trap_signals do
@@ -110,4 +110,6 @@ if __FILE__ == $0
     while $client.running?
         sleep 10
     end
+
+    $server.stop
 end

@@ -125,4 +125,12 @@ class MessageBase
         end
         @args[name]
     end
+
+    def ==(other)
+      return false if @type != other.type
+      other.params.each do |param, val|
+        return false if @args[param] != val
+      end
+      return true
+    end
 end

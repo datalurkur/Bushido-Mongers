@@ -10,11 +10,6 @@ class << self
 
         size, depth = config[:world_size], config[:world_depth]
 
-        # TODO - Make the seeding a bit more intelligent
-        seed = Time.now.to_i
-        Log.debug("Seeding world with #{seed}")
-        srand(seed)
-
         params = Zone.get_params(core, :depth => depth)
 
         world_name = Words.gen_area_name(params)

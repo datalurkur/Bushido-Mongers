@@ -2,6 +2,7 @@ require './net/server'
 require './net/web_enabled_lobby'
 require './http/web_renderer'
 require './http/web_socket_client'
+require './util/repro'
 
 # GameServer is responsible for handling client communications above the socket layer and delegating them where appropriate
 # Handles logins and authentication
@@ -9,8 +10,14 @@ require './http/web_socket_client'
 class GameServer < Server
     include WebRenderer
 
-    def initialize(config_file)
+    def initialize(config_file, seed, repro_file=nil)
+        srand(seed)
+
+        @repro_file = repro_file
+        @repro      = Repro.new(:seed => seed, :start_time => Time.now) if repro_file
+
         super(config_file)
+
         @config[:web_port] ||= DEFAULT_HTTP_PORT
         @config[:web_root] ||= DEFAULT_WEB_ROOT
 
@@ -55,6 +62,7 @@ class GameServer < Server
     end
 
     def stop
+        @repro.save_events(@repro_file) if @repro_file
         @web_server.stop
         super()
     end
@@ -81,6 +89,8 @@ class GameServer < Server
             Log.warning("Can't send data to nonexistent socket")
         end
 
+        @repro.add_event(message, :to_client, socket.object_id) if @repro_file
+
         unless !socket.closed? && super(socket, message)
             @user_mutex.synchronize do
                 Log.warning("Failed to send data to #{@user_info[socket][:username].inspect}, clearing socket")
@@ -90,6 +100,8 @@ class GameServer < Server
     end
 
     def process_client_message(message, socket)
+        @repro.add_event(message, :from_client, socket.object_id) if @repro_file
+
         case message.message_class
         when :login;       process_login_message(message, socket)
         when :server_menu; process_server_menu_message(message, socket)
