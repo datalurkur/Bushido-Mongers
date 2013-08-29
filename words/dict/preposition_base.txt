@@ -1,7 +1,8 @@
 nil target
 to destination
 with tool
-using material
+using tool
+from material
 by subject
 in location
 from origin

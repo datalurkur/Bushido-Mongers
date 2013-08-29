@@ -1,6 +1,5 @@
 require 'set'
 require './util/log'
-require './words/lexemes'
 
 class WordDB
     def initialize
@@ -13,6 +12,7 @@ class WordDB
 
         @lexemes = []
         @lemmas  = []
+        @derivations = []
     end
 
     def collect_groups(*list_of_words)
@@ -195,6 +195,7 @@ class WordDB
             l.add_type(l_type)
             l.add_args(args)
         end
+        l
     end
 
     def get_lexeme(lemma)
@@ -207,6 +208,17 @@ class WordDB
 
     def words_of_type(l_type)
         lexemes_of_type(l_type).map(&:lemma)
+    end
+
+    def add_derivation(derivation)
+        @derivations << derivation
+        if @lemmas.include?(derivation.derived.lemma)
+            Log.debug("adding derivation of pre-existing lexeme #{derivation.derived}")
+        else
+            @lexemes << derivation.derived
+            @lemmas  << derivation.derived.lemma
+        end
+        derivation.derived
     end
 end
 
