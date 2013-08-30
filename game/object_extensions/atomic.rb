@@ -49,7 +49,7 @@ module Atomic
     attr_accessor :integrity, :size, :weight, :value
 
     def damage(amount, attacker)
-        Log.debug("Atomic #{monicker} taking damage (#{amount})")
+        Log.debug("#{monicker} takes #{amount} damage")
         self.integrity -= amount
         if self.integrity <= 0
             Log.debug("#{monicker}'s integrity is reduced to zero")

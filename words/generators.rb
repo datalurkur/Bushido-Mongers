@@ -214,18 +214,33 @@ module Words
         body[:definite] = true
         body[:possessor_info] = possessor_info(body)
 
-        target_body = Marshal.load(Marshal.dump(body))
-        target_body[:properties][:adjectives] ||= []
-        target_body[:properties][:adjectives] << body[:type]
-        target_body[:monicker] = body[:part_name] if body[:part_name]
-        target_body[:definite] = false
-
-        sentences  = [gen_sentence(:subject => body, :verb => :have, :target => target_body)]
-        sentences += [describe_whole_composition(body)]
+        sentences = []
+        if body[:missing_parts].empty?
+            sentences << gen_sentence(:subject => body, :verb => :have, :target => "normal #{body[:type]} body")
+        else
+            sentences << gen_sentence(:subject => body, :verb => :have, :target => "#{body[:type]} body")
+            sentences << gen_sentence(:subject => body,
+                                      :verb    => :miss,
+                                      :target  => plural_hash_to_list(body[:missing_parts]),
+                                      :state   => State.new(:progressive))
+        end
 
         # TODO - Add more information about abilities, features, etc.
 
         sentences.join(" ")
+    end
+
+    # expects list entries in the form {:type => Symbol, :count => Numeric}
+    def self.plural_hash_to_list(list)
+        list.map do |i|
+            if i[:count] > 1
+                Noun.pluralize(i[:type])
+            elsif i[:count] == 1
+                i[:type]
+            else
+                nil
+            end
+        end.compact
     end
 
     def self.describe_stats(args)
@@ -252,7 +267,6 @@ module Words
         sentences.flatten.join(" ")
     end
 
-    # Yeah, I don't want to auto-generate this info.
     def self.describe_help(args)
         "Basic commands:\n"+
         args[:target].map { |c| [c, *Words.db.get_related_words(c)].join(" ") }.join("\n") + "\n"

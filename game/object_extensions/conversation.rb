@@ -21,13 +21,13 @@ module Conversation
                     params = Words.decompose_ambiguous(message.statement)
                     if params[:query]
                         return instance.answer_question(message.agent, params)
-                    elsif params[:statement_path]
+                    elsif params[:statement]
                         # FIXME - This should only happen if the speaker is believed.
                         # For now it is a naive world, without the considered
                         # possibility of a lie. Please don't abuse this!
                         if true # believes_statement(agent, params[:statement])
                             instance.add_knowledge_of(params[:thing])
-                            instance.say(message.agent, Words.describe_knowledge(params[:statement_path]))
+                            instance.say(message.agent, Words.describe_knowledge(params[:statement]))
                         else
                             instance.say(message.agent, "I don't believe you!")
                         end
@@ -45,7 +45,7 @@ module Conversation
         case params[:query_lookup]
         when :civil
         when :object
-            # Something like an 'ask about'. We should report a random fact related to the subject.
+            # Something like an 'ask about': report a random fact related to the subject.
             if self.knows_of_class?(params[:thing])
                 Log.debug("#{monicker} knows of class #{params[:thing]}.", 9)
                 knowledge = self.get_knowledge(params[:thing], params[:connector], params[:property])

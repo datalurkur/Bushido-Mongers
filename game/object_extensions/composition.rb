@@ -62,14 +62,13 @@ module Composition
             type_info     = core.db.info_for(type)
             typical_parts = []
             type_info[:container_classes].each do |klass|
-                new_parts = type_info[klass].collect do |part|
-                    {
+                type_info[klass].each do |part|
+                    typical_parts << {
                         :type  => part,
                         :count => 1,
                         :klass => klass
                     }
                 end
-                typical_parts.concat(new_parts)
             end
             complex_parts = type_info[:symmetric]
             complex_parts += type_info[:morphic].select { |p| p[:morphism_classes].include?(morphism) } if morphism
@@ -129,7 +128,8 @@ module Composition
     end
 
     def initial_composure(params)
-        Composition.typical_parts_of(@core, get_type, params[:morphism]).each do |part|
+        @morphism = params[:morphism]
+        Composition.typical_parts_of(@core, get_type, @morphism).each do |part|
             unless composed_of?(part[:klass])
                 Log.error("No container class #{part[:klass].inspect} found for #{monicker}")
                 next
@@ -146,6 +146,10 @@ module Composition
     end
 
     def contents; container_contents(:internal); end
+
+    def typical_parts
+        Composition.typical_parts_of(@core, get_type, @morphism)
+    end
 
     # TODO - check for relative size / max carry number / other restrictions
     def add_object(object, type)
