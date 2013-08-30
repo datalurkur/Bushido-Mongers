@@ -738,19 +738,14 @@ That is the person whose car I saw.
         end
 
         # TODO - use
-        def plural?
-            return true if @plural
-            # Otherwise, make a nasty first-guess.
-            @main[-1] == 's' || @main.match(' and ')
+        def self.plural?(string)
+            # Make a simple basic guess.
+            string[-1] == 's' || string.match(' and ')
         end
 
-        # TODO - use
-        def pluralize
-            # Make a nasty first-approximation.
-            if (plural? && noun?) || (!plural? && verb?)
-                @main.gsub!(/s?$/, 's')
-            end
-            self
+        def self.pluralize(string)
+            # Make a simple basic attempt.
+            string.gsub(/s?$/, 's')
         end
     end
 

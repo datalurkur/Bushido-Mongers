@@ -25,7 +25,7 @@ class Descriptor
 
     class BushidoObjectDescriptor
         def self.describe(object, observer)
-            # TODO - Take the observer into account
+            # TODO - Take the observer into account more
             # TODO - SERIOUSLY obfuscate details if object is :hidden
             d = {
                 :type => object.get_type,
@@ -53,6 +53,22 @@ class Descriptor
                         end
                     end
                 end
+            end
+
+            # Find missing body parts by subtraction from the typical parts.
+            if object.uses?(Corporeal)
+                # External body parts here should really be something like perceivable-body-parts.
+                externals = object.typical_parts.select { |bp| bp[:klass] == :external }
+                part_list = object.external_body_parts.collect(&:get_type) - [object.get_type]
+
+                part_list.each do |p|
+                    if index = externals.find_index { |bp| bp[:type] == p }
+                        externals[index][:count] -= 1
+                    end
+                end
+
+                d[:missing_parts] = externals.select { |bp| bp[:count] > 0 }
+                  d[:extra_parts] = externals.select { |bp| bp[:count] < 0 }
             end
 
             # The user doesn't need to know any of this. If they do, we can deal with it on a case-by-case basis.

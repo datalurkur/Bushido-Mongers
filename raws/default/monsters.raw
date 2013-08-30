@@ -18,7 +18,6 @@ arachnoid,monster spider {
 }
 
 kraken,monster sewer_kraken {
-    adjectives sewer;
     typical_size enormous;
 
     spawns_in sewer;
