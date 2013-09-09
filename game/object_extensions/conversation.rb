@@ -50,9 +50,11 @@ module Conversation
                 Log.debug("#{monicker} knows of class #{params[:thing]}.", 9)
                 knowledge = self.get_knowledge(params[:thing], params[:connector], params[:property])
             else
-                Log.debug("#{monicker} doesn't know of class #{params[:thing]}.", 9)
-                # TODO: find object by name search, search
-                # self.kb.object_knowledge(thing)
+                # TODO: Narrow down the thing further.
+                Log.debug(params)
+                thing = params[:thing]
+                thing = self if thing == :self
+                knowledge = self.get_knowledge(thing, params[:connector], params[:property])
             end
         when :event
         when :location
@@ -81,7 +83,12 @@ module Conversation
         if knows && !knows.empty?
             args = knows.rand.args
 
-            args.merge!(:knower => self, :db => @core.db)
+            args.merge!(:observer => self, :speaker => self, :db => @core.db)
+
+            # Make sure there aren't any BOs passed to Words.
+            args.each do |k, v|
+                args[k] = Descriptor.describe(v, self) if v.is_a?(BushidoObject)
+            end
 
             self.say(asker, Words.generate(args))
         else

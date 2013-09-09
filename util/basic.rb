@@ -14,6 +14,11 @@ class Array
     end
 end
 
+def ArrayEvenAHash(to_ary)
+    # Can't call Array(hash) because it decomposes to tuples.
+    to_ary = ((Hash === to_ary) ? [to_ary] : Array(to_ary))
+end
+
 class Hash
     def to_sym
         self.each do |key, value|

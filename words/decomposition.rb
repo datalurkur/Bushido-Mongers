@@ -1,3 +1,5 @@
+require './words/structure.rb'
+
 module Words
     # Decompose a given command into pieces usable by the command.rb object-finder.
     # TODO - Since this exclusively happens on the server-side, we will have access
@@ -92,7 +94,22 @@ module Words
         args[:connector] = verb
 
         if noun = find_noun_phrase(0, pieces)
-            set_case(:thing, args, noun.first, noun.last)
+            set_case(:thing, args, *noun)
+
+            possessive = nil
+            if noun.last.any? { |adj| possessive = adj if PossessiveDeterminer.possessive?(adj) }
+                noun.last.delete(possessive)
+                # Swap the positionality of first person/second person. This should maybe be somewhere else?
+                if possessive == :your
+                    Log.warn("Overriding connector #{args[:connector]}") unless args[:connector] == :is
+                    args[:property] = args[:thing]
+                    args[:thing] = :self
+                end
+            end
+            is_has_mapping = [:name]
+            if is_has_mapping.include?(args[:property])
+                args[:connector] = :have
+            end
         end
 
         args
@@ -213,6 +230,10 @@ module Words
                 size += 1
             elsif Adjective.adjective?(piece)
                 Log.debug("found adjective #{piece}", 6)
+                adjectives << piece
+                size += 1
+            elsif PossessiveDeterminer.possessive?(piece)
+                Log.debug("found possessive determiner #{piece}", 6)
                 adjectives << piece
                 size += 1
             elsif Preposition.preposition?(piece)

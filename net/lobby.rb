@@ -48,7 +48,10 @@ class Lobby
         character = is_playing?(username) ? @game_core.get_character(username) : nil
         message.alter_params do |params|
             Descriptor.describe(params, character)
+            params[:observer] = Descriptor.describe(character, character)
+            params[:speaker]  = :game
         end
+
 
         if !@send_callback.call(username, message)
             Log.debug("No socket for user #{username}, client likely disconnected")

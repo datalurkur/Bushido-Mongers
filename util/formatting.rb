@@ -18,6 +18,8 @@ class String
         word.gsub!(/_/, ' ')
         # Drop whitespace before punctuation.
         word.gsub!(/\s+([\,\.\?\!])/, '\1')
+        # Capitalize 'I' (where else is a good place for this?)
+        word.gsub!(/(\s)i(\s)/, '\1I\2')
         # Add ending punctuation, if it doesn't already exist.
         word += end_punc unless word.match(/[\.\!\?]['"]?$/)
         # Swap the sentence punctuation with the quote.

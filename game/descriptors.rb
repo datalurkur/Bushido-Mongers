@@ -34,7 +34,6 @@ class Descriptor
 
             d[:name]             = object.name if object.uses?(Karmic)
             d[:monicker]         = (d[:name] || d[:type])
-            d[:monicker]         = :you if object.uid == observer.uid
 
             # Collect parent type information
             d[:is_type]          = object.type_ancestry

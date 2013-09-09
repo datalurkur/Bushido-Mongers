@@ -29,7 +29,8 @@ tests = [
     {:phrase => "Where can I find Kenji",           :result => {:query => true, :query_lookup => :location, :thing => :kenji,   :connector => :find}},
     {:phrase => "Do you know where kenji is?",      :result => {:query => true, :query_lookup => :location, :thing => :kenji,   :connector => :is}},
     {:phrase => "Where are rabbits?",               :result => {:query => true, :query_lookup => :location, :thing => :rabbits, :connector => :is}},
-    {:phrase => "Where can I find rabbits?",        :result => {:query => true, :query_lookup => :location, :thing => :rabbits, :connector => :find}}
+    {:phrase => "Where can I find rabbits?",        :result => {:query => true, :query_lookup => :location, :thing => :rabbits, :connector => :find}},
+    {:phrase => "What is your name?",               :result => {:query => true, :query_lookup => :object,   :thing => :self,    :connector => :have, :property=>:name, :thing_adjs => [ :your ]}}
     # "How much does a tunic cost?"
 
     # AREA KNOWLEDGE
@@ -39,9 +40,14 @@ tests = [
     # "Where can I buy a hammer?"
     # "Are thieves common in these parts?"
     # How far is it to the Deserted Castle?
+    # What is the name of this area?
 
     # SELF KNOWLEDGE
 
+    # What is your name?
+    # What is your clan's name?
+    # What is your shugo's name?
+    # What is your job?
     # Do you have any relatives?
     # Do you know Archimedes?
     # Did you kill the rat?

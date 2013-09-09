@@ -170,7 +170,7 @@ class WordDB
         when Symbol,String
             matching = @groups.select { |group| group.contains?(word.to_sym) }
             Log.debug("Warning - '#{word}' appears in more than one word group") if matching.size > 1
-            Log.debug("No reference to '#{word}' found!") if matching.size <= 0 && verbose
+            Log.debug("No reference to '#{word}' found!", 9) if matching.size <= 0 && verbose
             matching.first
         when WordGroup, Hash
             matching = @groups.select { |group| group == word.to_sym }

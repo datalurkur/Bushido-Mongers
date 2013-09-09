@@ -72,8 +72,10 @@ Log.debug(Words.describe_body(agent))
 # Test missing parts.
 kenji_leg = observer.container_contents(:external).find { |bp| bp.get_type == :leg }
 observer.component_destroyed(kenji_leg, :external, observer)
-agent = Descriptor.describe(observer, observer)
-Log.debug(Words.describe_body(agent))
+Log.debug(Words.describe_body(Descriptor.describe(observer, observer)))
+kenji_leg = observer.container_contents(:external).find { |bp| bp.get_type == :leg }
+observer.component_destroyed(kenji_leg, :external, observer)
+Log.debug(Words.describe_body(Descriptor.describe(observer, observer)))
 
 target = $core.create(:goat, {:position => FakeRoom.new, :name => "Billy Goat Balrog"})
 target = Descriptor.describe(target, observer)
@@ -96,7 +98,7 @@ Log.debug(Words.describe_composition(target_description))
 require './knowledge/knowledge'
 human_quanta = $core.kb.all_quanta_for_type(:human)
 human_quanta.each do |q|
-    Log.debug(Words.generate(q.args))
+    Log.debug(Words.generate(q.args.dup))
 end
 
 # Fred and Jim fell asleep.

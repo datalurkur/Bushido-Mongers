@@ -12,10 +12,9 @@ descriptor hashes (see ./game/descriptors) or symbols can be passed in as nouns 
 also accept pre-created parts of speech (all the PTNode subclasses defined under Sentence). Verb conjugation is
 dependent on both abnormal word knowledge and generic rules, which work for most cases.
 
-Certain word classes have overloaded the base initialize class that just takes children. Those special word classes are:
-Article
-Possessive
-Noun
+N.B. Certain word classes have overloaded the base initialize class that just takes children. word classes are:
+Article and subclasses
+Noun and subclasses
 Verb
 NounPhrase
 VerbPhrase
@@ -26,19 +25,26 @@ TODO:
 There needs to be some way of representing similar syntactic function - might help for coordinating conjunction determination.
 Make coordinators not suck.
 Start fleshing out auxiliaries.
-LOTS
+Read word DB automatically in a way that doesn't involve the game core, which is quite unintuitive.
+http://en.wikipedia.org/wiki/Phraseme
+Plurals.
+Refactoring preposition associations.
+Negatives of nouns, negatives of verbs, negatives of adjectives.
+LOTS BESIDES
 
 =end
 
+require './util/basic'
+
 class Descriptor
-    def self.set_definite(args)
+    def self.set_unique(args)
         if Hash === args
-            args[:definite] = true
+            args[:unique] = true
             return args
         elsif Array === args
-            args.map { |thing| set_definite(thing) }
+            args.map { |thing| set_unique(thing) }
         else
-            {:monicker => args, :definite => true}
+            {:monicker => args, :unique => true}
         end
     end
 end
@@ -84,7 +90,9 @@ module Words
 
     class PTLeaf    < PTNode; end
     class ParseTree < PTInternalNode; end
-    class IndependentClause < ParseTree; end
+    class IndependentClause < ParseTree
+        def sentence; self.to_s.sentence; end
+    end
 
     # http://en.wikipedia.org/wiki/Subordinate_clause
     class DependentClause < ParseTree
@@ -108,9 +116,8 @@ module Words
     end
 
     class Sentence < IndependentClause
-       def to_s
-            super.sentence
-        end
+        def to_s; super.sentence; end
+        def sentence; self.to_s; end
     end
 
     class Question < Sentence
@@ -264,7 +271,7 @@ That is the person whose car I saw.
                 end
                 handled = true
             when :tool, :destination, :location, :origin, :material
-                args[type] = Descriptor.set_definite(args[type]) unless type == :material
+                args[type] = Descriptor.set_unique(args[type]) unless type == :material
                 super(new_prep_noun_phrase(type, args))
                 handled = true
             when :receiver
@@ -324,7 +331,7 @@ That is the person whose car I saw.
         def initialize(type, args)
             case type
             when :subtarget, :location
-                args[type] = Descriptor.set_definite(args[type])
+                args[type] = Descriptor.set_unique(args[type])
                 super(new_prep_noun_phrase(type, args))
             end
         end
@@ -372,6 +379,9 @@ That is the person whose car I saw.
     # to clauses which represent a nominative or an accusative case; the
     # clauses which stand for an ablative are sometimes called adverbial clauses)
 
+    # Kinds of modifiers: determiners, attributive adjectives, adjective phrases & participial phrases,
+    # noun adjuncts, prepositional phrases, relative clauses, other clauses, infinitive phrases.
+
     # First argument: A list or a single item of either noun barewords or noun hash descriptors.
     # Second argument: Standard args list as created in generators.
     # Stores one of: (Determiner, Noun), (Noun), or (NounPhrase, ..., NounPhrase)
@@ -380,8 +390,7 @@ That is the person whose car I saw.
 
         def initialize(nouns, args={})
             # Convert nouns into an array, if it isn't already.
-            # Can't call Array(hash) because it decomposes to tuples.
-            nouns = ((Hash === nouns) ? [nouns] : Array(nouns))
+            nouns = ArrayEvenAHash(nouns)
 
             if nouns.all? { |n| n.is_a?(PTNode) }
                 # Nouns already created; just attach them.
@@ -399,15 +408,22 @@ That is the person whose car I saw.
                         hash[:monicker] = noun[:properties][:job]
                     elsif noun[:monicker]
                         hash[:monicker] = noun[:monicker]
+                    elsif noun[:type]
+                        hash[:monicker] = noun[:type]
                     else
                         hash[:monicker] = :thing
+                    end
+
+                    if noun[:count] && noun[:count] > 1
+                        hash[:monicker] = Noun.pluralize(hash[:monicker])
                     end
 
                     unless [String, Symbol].include?(hash[:monicker].class)
                         raise TypeError, "Expected String or Symbol monicker; got #{hash[:monicker].inspect} (#{hash[:monicker].class}) instead!"
                     end
 
-                    hash[:definite]       = noun[:definite] unless noun[:definite].nil?
+                    hash[:plural]         = (noun[:count] && noun[:count] > 1)
+                    hash[:unique]         = noun[:unique] unless noun[:unique].nil?
                     hash[:possessor_info] = noun[:possessor_info] if noun[:possessor_info]
                     hash[:adjectives]     = Adjective.new_for_descriptor(noun)
                     hash[:adj_phrases]    = AdjectivePhrase.new_for_descriptor(noun.merge(:verb => args[:verb]))
@@ -452,7 +468,7 @@ That is the person whose car I saw.
 
             children += noun[:adj_phrases] if noun[:adj_phrases]
 
-            if determiner = Determiner.new_for_noun(noun, children.first, noun[:definite])
+            if !noun[:plural] && determiner = Determiner.new_for_noun(noun, children.first, noun[:unique])
                 children.insert(0, determiner)
             end
 
@@ -466,8 +482,19 @@ That is the person whose car I saw.
     class Adjective < PTLeaf
         def self.new_for_descriptor(descriptor_hash)
             return [] unless Hash === descriptor_hash
+            adjectives = []
+            # Look for plurality or a specific count.
+            if descriptor_hash[:count]
+                if (2...10).include?(descriptor_hash[:count])
+                    adjectives << descriptor_hash[:count].to_s.to_sym
+                elsif descriptor_hash[:count] >= 10
+                    adjectives << :many
+                elsif descriptor_hash[:count] == 0
+                    adjectives << :no
+                end
+            end
             # Look in the highest layer
-            adjectives = Array(descriptor_hash[:adjectives])
+            adjectives += Array(descriptor_hash[:adjectives])
             # Look in the properties
             if descriptor_hash[:properties]
                 adjectives += Array(descriptor_hash[:properties][:adjectives])
@@ -510,6 +537,7 @@ That is the person whose car I saw.
     # http://en.wikipedia.org/wiki/Predicate_(grammar)
     # http://en.wikipedia.org/wiki/Phrasal_verb
     # http://www.verbix.com/webverbix/English/have.html
+    # http://en.wikipedia.org/wiki/Future_tense
     class Verb < PTLeaf
         def initialize(verb, args = {})
             case args[:verb_form]
@@ -625,6 +653,10 @@ That is the person whose car I saw.
                 :worn
             when :throw
                 :thrown
+            when :grow
+                :grown
+            when :fly
+                :flown
             else
                 # Regular form.
                 state = State.new
@@ -657,6 +689,12 @@ That is the person whose car I saw.
         end
     end
 
+    # http://en.wikipedia.org/wiki/Genitive_case
+    # http://en.wikipedia.org/wiki/Declension#Modern_English
+    # he (subjective) and him (objective)
+    # who (subjective), and the somewhat archaic whom (objective)
+    # Then there are distinct possessive forms such as his and whose.
+    # For nouns, possession is shown by the clitic -'s attached to a possessive noun phrase.
     class Noun < PTLeaf
         def initialize(noun)
             @children = [Noun.gen_noun_text(noun)]
@@ -673,6 +711,7 @@ That is the person whose car I saw.
         end
 
         # Determine whether noun is definite (e.g. uses 'the') or indefinite (e.g. a/an)
+        # definite: unique, or specific, or identifiable in a given context.
         # http://en.wikipedia.org/wiki/Definiteness
         # TODO - store always-definite words in dictionary
         def self.definite?(noun)
@@ -705,22 +744,19 @@ That is the person whose car I saw.
             Words.db.all_pos(:noun).include?(word) || definite?(word) || pronoun?(word)
         end
 
-        # http://en.wikipedia.org/wiki/Pro-form
-        # TODO: We'll want to stand in pronouns for certain words (based
-        # on previous usage) to avoid repetition. Maybe. Not even DF does this.
         # N.B. There's overlap between certain pronouns and certain possessive determiners.
         def self.pronoun?(noun)
             # If it's e.g. a BushidoObject then it's not a pronoun.
             return false unless noun.respond_to?(:to_sym)
             case noun.to_sym
             # Subject person pronouns.
-            when :I, :i, :you, :he, :she, :it, :we, :they, :who
+            when :I, :i, :you, :he, :she, :ze, :it, :we, :they, :who
                 true
             # Possessive pronouns.
-            when :mine, :yours, :his, :hers, :its, :ours, :theirs
+            when :mine, :yours, :his, :hers, :zirs, :its, :ours, :theirs
                 true
             # Object person pronouns.
-            when :me, :you, :him, :her, :it, :us, :them, :whom
+            when :me, :you, :him, :her, :zir, :it, :us, :them, :whom
                 true
             # Existentials.
             when :someone, :somebody, :one, :some
@@ -743,20 +779,30 @@ That is the person whose car I saw.
             string[-1] == 's' || string.match(' and ')
         end
 
-        def self.pluralize(string)
+        def self.pluralize(noun)
             # Make a simple basic attempt.
-            string.gsub(/s?$/, 's')
+            noun.to_s.gsub(/s?$/, 's')
         end
     end
 
+    # http://en.wikipedia.org/wiki/Pro-form (has table of correlatives)
+    # TODO: We'll want to stand in pronouns for certain words (based
+    # on previous usage) to avoid repetition. Maybe. Not even DF does this.
+    # http://en.wikipedia.org/wiki/Indefinite_pronoun (has table)
+    # http://en.wikipedia.org/wiki/Gender-specific_and_gender-neutral_pronouns#Summary (has table)
+    class Pronoun < Noun; end
+
+    class PossessivePronoun < Pronoun; end
+
     class Determiner < PTLeaf
         class << self
-            def new_for_noun(noun, first_word, definite)
+            def new_for_noun(noun, first_word, unique)
                 if Noun.needs_article?(noun[:monicker])
-                    if noun[:possessor_info] && definite.nil?
-                        Possessive.new(noun[:possessor_info])
+                    if noun[:possessor_info] && unique.nil?
+                        PossessivePronoun.new(noun[:possessor_info])
                     else
-                        Article.new(noun[:monicker], first_word, definite)
+                        # FIXME - determine uniqueness using other adjectives
+                        Article.new(noun[:monicker], first_word, unique)
                     end
                 else
                     nil
@@ -765,52 +811,43 @@ That is the person whose car I saw.
         end
     end
 
-    class Possessive < Determiner
+    class PossessiveDeterminer < Determiner
+        # Possessive picked based on a) person and b) gender.
+        PERSONAL =
+        {
+            :first         => :my,
+            :first_plural  => :our,
+            :second        => :your,
+            :second_plural => :your,
+            :third_plural  => :their
+        }
+        THIRD_PERSON_GENDER =
+        {
+            :male       => :his,
+            :female     => :her,
+            :neutral    => :zir,
+            :inanimate  => :its
+        }
         def initialize(possessor_info)
-            # Possessive picked based on a) person and b) gender.
-            super(
-            case possessor_info[:person]
-            # Mirroring State's :person field here.
-            when :first
-                :my
-            when :second, :second_plural
-                :your
-            when :third
-                case possessor_info[:gender]
-                when :male
-                    :his
-                when :female
-                    :her
-                when :neutral
-                    :zir
-                when :inanimate
-                    :its
-                end
-            when :first_plural
-                :our
-            when :third_plural
-                :their
+            if possessor_info[:person] == :third
+                possessive = THIRD_PERSON_GENDER[possessor_info[:gender]]
+            else
+                possessive = PERSONAL[possessor_info[:person]]
             end
-            )
+            super(possessive)
         end
 
         # N.B. There's overlap between certain pronouns and certain possessive determiners.
         def self.possessive?(det)
-            case det.to_sym
-            when :my, :your, :his, :her, :its, :our, :their
-                true
-            end
+            (PERSONAL.values + THIRD_PERSON_GENDER.values).include?(det.to_sym)
         end
     end
 
-    class PossessivePronoun < Noun
-    end
-
     class Article < Determiner
-        def initialize(noun, first_word = nil, definite = nil)
+        def initialize(noun, first_word = nil, unique = nil)
             if Article.article?(noun)
                 super(noun)
-            elsif definite || Noun.definite?(noun)
+            elsif unique || Noun.definite?(noun)
                 super(:the)
             else
                 # TODO - 'some' for plural nouns

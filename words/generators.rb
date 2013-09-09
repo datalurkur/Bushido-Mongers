@@ -7,6 +7,7 @@ module Words
         if args[:command]
             generate_command(args)
         elsif args[:thing]
+            Log.debug(args, 7)
             generate_knowledge(args)
         end
     end
@@ -52,7 +53,7 @@ module Words
     end
 
     # Basic, stupid clause-making from the knowledge quanta triad, to be modified as appropriately for separate knowledge bits.
-    def self.quanta2clause(old_args)
+    def self.describe_quanta(old_args)
         args = old_args.dup
         args[:subject] = args[:thing]
         args[:verb]    = args[:connector]
@@ -69,10 +70,16 @@ module Words
                 args[:subject]    = (rand(2) == 0) ? :i : :you
                 args[:target]     = args[:thing]
                 args[:material]   = recipe[:components]
+                return create_independent_clause(args)
+            elsif args[:connector] == :have
+                args[:target] = Descriptor.set_unique(args[:target])
+                args[:target][:possessor_info] = possessor_info(args[:subject])
+                args[:target][:monicker] = (args[:target][:monicker].to_s + ' ' + args[:value].to_s).to_sym if args[:value]
+                return create_independent_clause(args)
             end
         end
 
-        args
+        return create_independent_clause(args)
     end
 
     def self.generate_knowledge(args)
@@ -80,12 +87,12 @@ module Words
         # I know that <is_a>.
         # I know how <make>.
         if know_statement = (rand(2) == 0)
-            args[:target]  = create_dependent_clause(quanta2clause(args))
+            args[:target]  = describe_quanta(args)
             args[:subject] = :i
             args[:verb]    = :know
             gen_sentence(args)
         else
-            gen_sentence(quanta2clause(args))
+            describe_quanta(args).sentence
         end
     end
 
@@ -107,7 +114,7 @@ module Words
 
     def self.create_clause(clause_class, args)
         to_print = args.dup
-        to_print.delete(:agent)
+        to_print.map { |k,v| v.is_a?(Hash) ? v[:monicker] : v }
         Log.debug(to_print, 7)
 
         args[:state] ||= State.new
@@ -117,6 +124,16 @@ module Words
         # active is the default; otherwise, swap the subject/D.O.
         if args[:state].voice == :passive
             subject, args[:target] = args[:target], subject
+        end
+
+        if subject.is_a?(Hash)
+            if args[:speaker] && subject[:uid] == args[:speaker][:uid]
+                # FIXME: should change based on subjective/objective noun case
+                subject = :i
+            elsif args[:observer] && subject[:uid] == args[:observer][:uid]
+                # FIXME: should change based on subjective/objective noun case
+                subject = :you
+            end
         end
 
         # Subject is i in first person
@@ -170,9 +187,9 @@ module Words
 
         subject   = NounPhrase.new(subject, args)
         predicate = VerbPhrase.new(verb, args)
-        sentence = clause_class.new(subject, predicate)
-        sentence.finalize(args) if sentence.respond_to?(:finalize)
-        sentence
+        clause = clause_class.new(subject, predicate)
+        clause.finalize(args) if clause.respond_to?(:finalize)
+        clause
     end
 
     def self.describe_attack(args = {})
@@ -211,7 +228,7 @@ module Words
     public
 
     def self.describe_body(body)
-        body[:definite] = true
+        body[:unique] = true
         body[:possessor_info] = possessor_info(body)
 
         sentences = []
@@ -221,26 +238,13 @@ module Words
             sentences << gen_sentence(:subject => body, :verb => :have, :target => "#{body[:type]} body")
             sentences << gen_sentence(:subject => body,
                                       :verb    => :miss,
-                                      :target  => plural_hash_to_list(body[:missing_parts]),
+                                      :target  => body[:missing_parts],
                                       :state   => State.new(:progressive))
         end
 
         # TODO - Add more information about abilities, features, etc.
 
         sentences.join(" ")
-    end
-
-    # expects list entries in the form {:type => Symbol, :count => Numeric}
-    def self.plural_hash_to_list(list)
-        list.map do |i|
-            if i[:count] > 1
-                Noun.pluralize(i[:type])
-            elsif i[:count] == 1
-                i[:type]
-            else
-                nil
-            end
-        end.compact
     end
 
     def self.describe_stats(args)
@@ -292,7 +296,7 @@ module Words
                 :location  => composition
             )
         else
-            composition[:definite] = true
+            composition[:unique] = true
             gen_sentence(
                 :subject  => composition,
                 :verb     => composition_verbs[comp_type],
@@ -462,7 +466,9 @@ module Words
     end
 
     def self.describe_room(args = {})
+        Log.debug(args)
         sentences = [gen_sentence(args)]
+        Log.debug(args)
 
         room = args[:target] || args[:destination]
         args.delete(:target)
@@ -492,7 +498,7 @@ module Words
         noun    = {
                     :monicker => args[:type] || Noun.rand,
                     :adjectives => args[:keywords] || Adjective.rand,
-                    :definite => true,
+                    :unique => true,
                   }
         name    = NounPhrase.new(noun)
 
@@ -503,7 +509,7 @@ module Words
         noun    = {
                     :monicker => args[:type] || Noun.rand,
                     :adjectives => args[:keywords] || Adjective.rand,
-                    :definite => true,
+                    :unique => true,
                   }
         name    = NounPhrase.new(noun)
 

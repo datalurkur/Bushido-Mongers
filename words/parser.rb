@@ -3,6 +3,15 @@ require './util/timer'
 
 =begin
 
+Read in from the dictionary:
+* Lists of basic word forms.
+* Lists of associated words (e.g. speak and say, or dog and dogs).
+* Lists of prepositions for given prepositional 'adverb' phrases.
+* Allomorphic conjugations.
+* Allomorphic exceptions to common rules (e.g. where dog/dogs is the regular case, ox/oxen is an irregular type)
+
+http://en.wikipedia.org/wiki/Allomorph
+
 NOUNS, VERBS, NAMES, ADJECTIVES, ADVERBS
 ===================
 File format: nouns_<keyword>.txt
