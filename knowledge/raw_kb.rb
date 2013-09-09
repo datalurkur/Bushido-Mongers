@@ -3,10 +3,11 @@ require './knowledge/quanta'
 require './raws/db'
 
 class ObjectKB < KB
+    attr_reader :use_identities
     def initialize(db, use_identities = false)
     	@raws = db
         @groups_read = {}
-        @use_identities = true
+        @use_identities = use_identities
     end
 
     # Will add knowledge quanta, based on identities.
@@ -38,12 +39,11 @@ class ObjectKB < KB
 
     # Lazily evaluated per-type.
     def all_quanta_for_type(raw_type)
+        _init_indices
+        read_identities_for_type(raw_type) if @use_identities
+
         known_bits = []
-
-        known_bits += read_identities_for_type(raw_type) if @use_identities
-
         # Check all parent types. Could use 'types known by kb' here for more dynamism.
-
         @raws.ancestry_of(raw_type).each do |parent|
             known_bits += @by_thing[parent] || []
         end
@@ -81,20 +81,17 @@ class ObjectKB < KB
         known_bits
     end
 
-    #def add_identities(object); end
+    # def add_identities(object); end
 
     def all_quanta_for(object)
-        if @use_identities
-            if object.is_a?(BushidoObject)
-                all_quanta_for_object(object)
-            elsif @raws.has_type?(object)
-                all_quanta_for_type(object)
-            elsif Symbol === object
-                Log.warning("Quanta for bareword Symbol #{object.inspect} not supported!")
-                read_identities_for_object(object)
-                #@by_thing[object] || []
-                # add_identities(object)
-            end
+        if object.is_a?(BushidoObject)
+            all_quanta_for_object(object)
+        elsif @raws.has_type?(object)
+            all_quanta_for_type(object)
+        elsif Symbol === object
+            Log.warning("Quanta for bareword Symbol #{object.inspect} not supported!")
+            read_identities_for_object(object) if @use_identities
+            # add_identities(object)
         end
     end
 end
