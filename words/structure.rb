@@ -90,15 +90,96 @@ module Words
 
     class PTLeaf    < PTNode; end
     class ParseTree < PTInternalNode; end
-    class IndependentClause < ParseTree
+
+    class Clause < ParseTree
+        def initialize(args)
+            to_print = args.dup
+            to_print.map { |k,v| v.is_a?(Hash) ? v[:monicker] : v }
+            Log.debug(to_print, 7)
+
+            args[:state] ||= State.new
+
+            subject = args[:subject] || args[:agent]
+
+            # active is the default; otherwise, swap the subject/D.O.
+            if args[:state].voice == :passive
+                subject, args[:target] = args[:target], subject
+            end
+
+            if subject.is_a?(Hash)
+                if args[:speaker] && subject[:uid] == args[:speaker][:uid]
+                    # FIXME: should change based on subjective/objective noun case
+                    subject = :i
+                elsif args[:observer] && subject[:uid] == args[:observer][:uid]
+                    # FIXME: should change based on subjective/objective noun case
+                    subject = :you
+                end
+            end
+
+            # Subject is i in first person
+            if !subject && args[:state].person == :first
+                subject = :i
+            end
+
+            # First person if subject is :i
+            if subject == :i || (Hash === subject && subject[:monicker] == :i)
+                args[:state].person = :first
+            end
+
+            # Subject is you in second person
+            if !subject && args[:state].person == :second
+                subject = :you
+            end
+
+            # Second person if subject is you
+            if subject == :you || (Hash === subject && subject[:monicker] == :you)
+                args[:state].person = :second
+            end
+
+            # If subject is plural and person isn't, adjust the person
+            if Array === subject && subject.size > 1
+                args[:state].plural_person!
+            end
+
+            verb = args[:verb] || args[:action] || args[:command]
+
+            # Failing that, try to identify the verb from the :event_type key (:game_event message)
+            if verb.nil? && args[:event_type]
+                event_mapping = {
+                    :unit_killed      => :kill,
+                    :object_destroyed => :destroy,
+                    :unit_speaks      => :speak,
+                    :unit_whispers    => :whisper
+                }
+                verb = event_mapping[args[:event_type]]
+                Log.debug("No verb for event_type #{args[:event_type].inspect}!") unless verb
+            end
+
+            raise unless verb
+
+            # Use an associated verb, if any exist.
+            unless [:say].include?(verb)
+                associated_verbs = Words.db.get_related_words(verb.to_sym)
+                if associated_verbs && associated_verbs.size > 1
+                    verb = args[:verb] = associated_verbs.rand
+                end
+            end
+
+            subject   = NounPhrase.new(subject, args)
+            predicate = VerbPhrase.new(verb, args)
+            @children = [subject, predicate]
+        end
+    end
+
+    class IndependentClause < Clause
         def sentence; self.to_s.sentence; end
     end
 
     # http://en.wikipedia.org/wiki/Subordinate_clause
-    class DependentClause < ParseTree
-        def finalize(args)
+    class DependentClause < Clause
+        def initialize(args)
+            super(args)
             @children.insert(0, Subordinator.of_verb?(args[:verb]))
-            self
         end
     end
 
@@ -725,7 +806,9 @@ That is the person whose car I saw.
         end
 
         def self.needs_article?(noun)
-            !Noun.proper?(noun) && !Noun.pronoun?(noun) && ![:luck].include?(gen_noun_text(noun))
+            !Noun.proper?(noun) &&
+            !Noun.pronoun?(noun) &&
+            ![:luck].include?(gen_noun_text(noun))
         end
 
         def self.proper?(noun)
