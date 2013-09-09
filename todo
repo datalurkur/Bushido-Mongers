@@ -1,0 +1,99 @@
+================
+=GAME DIRECTION=
+================
+
+--------
+-Quests-
+--------
+Quests should be created by NPCs based on their personal goals and knowledge
+
+Examples:
+  -Kenji is a baker, and is annoyed by a rat infestation => Quest to kill rats
+  -Kenji is a member of the Korosu clan, and recognizes that the death of Kujo, the leader of the Baifu clan, would strengthen his clan's position => Quest to assassinate Kujo
+  -Kenji is a blacksmith, and is running low on iron => Quest to fetch iron
+
+-----------
+-NPC Goals-
+-----------
+The driving force behind NPC actions and quests will be their own personal goals
+
+--------------------
+-Chemical Reactions-
+--------------------
+A possibility to better improve the game realism and allow for complex interactions
+-Temperature reactions (state changes)
+-Acidity levels
+
+------------------------
+-Compositional Layering-
+------------------------
+Complex combat constructions such as armor require a layer ordering system, which should also be present *within* compositions (skin -> fat -> muscle -> bone).  Compositions should be improved to allow this sort of ordering.
+
+Potential Problems:
+Partial layers - a backpack, for example, only protects a part of the torso
+
+--------
+-Wounds-
+--------
+We'll want to model things like bleeding, infections, broken bones, and vital organs.
+
+----------------
+-Status Effects-
+----------------
+Despite wanting to make the game as real as possible, we're going to have to impose a system of status effects associated with various wounds / reactions / events.
+
+Examples:
+-Kenji breaks his leg, and now moves slower
+-An arrow pierces Kenji's lung, making it difficult to breathe
+-Acid burns Kenji's eyes, making him blind (maybe this is a wound?)
+
+------
+-NOTE-
+------
+Wounds / Status Effects / Chemical Reactions all have potential to tie together into a single system.  This needs to be discussed
+
+---------
+-Portals-
+---------
+In some circumstances, we'll want to enable fast travel from place to place, so we should accound for the possibility of using other means of transportation besides "go north / south / east / west".  We might include things like "up/down" in the event of multi-layered maps, or just things like "go through portal" to move magically across the map from one place to another.
+
+Discuss doors, and how they can affect movement.
+
+Discuss how this factors into worldgen.
+
+----------------
+-Better Recipes-
+----------------
+Recipes right now are a bit hacked together, and the logic for parsing text into recipe instantiation is atrocious.  Fix it.
+
+------------------------
+-World Saving / Loading-
+------------------------
+While the foundational work for this is done, we have yet to implement full world saving and loading.
+
+------------------------
+-Client Command History-
+------------------------
+Allow clients to access a command history in some sensible way.  Arrow keys don't work for Ruby scripts, so we'll have to find a different way / create a better client.
+
+--------------------------------------
+-NPC Roaming Behavior / Zone Grouping-
+--------------------------------------
+We need a functional way to group zones into areas of arbitrary granularity.  For example, if a clan is occupying a castle, we need a functional way to determine what zones are "in the castle" and what zones aren't.  This allows more complex AI behavior such as "randomly patrol the castle walls" or "engage anyone within the castle who is not a clan member."
+
+--------------------
+-Character Creation-
+--------------------
+Allow more robust character creation vectors.
+
+Examples:
+-Allow users to determine various attributes about themselves (are they strong, fast, smart?)
+-Allow users a modicum of control over starting equipment
+-Allow scaling server-side to determine whether new characters are crazy awesome or peons
+
+-------------
+-Pathfinding-
+-------------
+Need to implement fast pathfinding for NPC lookups / chases / etc.  There's also something else to be discussed here about how far away NPCs can path, based on knowledge, intelligence, whether they have a map, etc.  For example, an NPC should have a very good chance of chasing you down if you just moved 2 zones away, but will probably have more difficulty if you dash away 10 zones.
+
+We should probably also use this as an aside to talk about how many actions a character can take in rapid succession - no need to allow characters to do 1000 things in one turn if they wait long enough.
