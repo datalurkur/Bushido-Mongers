@@ -114,7 +114,7 @@ class MessageBase
         @args
     end
 
-    def alter_params(&block)
+    def alter_params!(&block)
         return unless block_given?
         @args = block.call(@args)
     end

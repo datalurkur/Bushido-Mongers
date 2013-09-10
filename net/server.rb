@@ -118,7 +118,7 @@ class Server
                     rescue EOFError => e
                         raise(e)
                     rescue Exception => e
-                        Log.error(["Processing error - #{e.message}", e.backtrace])
+                        Log.error(["Processing error", e.message, e.backtrace])
                     end
                 end
             rescue Errno::ECONNRESET,EOFError,IOError

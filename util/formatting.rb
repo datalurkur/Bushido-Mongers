@@ -1,5 +1,11 @@
 require 'uri'
 
+class Proc
+  def to_formatted_string
+    "<Proc: #{object_id}>"
+  end
+end
+
 class Symbol
     def title
         self.to_s.gsub(/_/, ' ').gsub(/(^| )(.)/) { "#{$1}#{$2.upcase}" }

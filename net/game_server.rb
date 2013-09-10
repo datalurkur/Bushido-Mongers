@@ -10,8 +10,8 @@ require './util/repro'
 class GameServer < Server
     include WebRenderer
 
-    def initialize(config_file, seed, repro_file=nil)
-        srand(seed)
+    def initialize(config_file, seed=nil, repro_file=nil)
+        srand(seed || Time.now.to_i)
 
         @repro_file = repro_file
         @repro      = Repro.new(:seed => seed, :start_time => Time.now) if repro_file
