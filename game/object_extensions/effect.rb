@@ -6,7 +6,24 @@ module EffectSource
         def at_message(instance, message)
             instance.apply_effect_sources if message.type == :tick
         end
+
+        def pack(instance)
+            {
+                :effect_sources  => instance.effect_sources,
+                :applied_windups => instance.applied_windups
+            }
+        end
+
+        def unpack(core, instance, raw_data)
+            [:effect_sources, :applied_windups].each do |key|
+                raise(MissingProperty, "Composition data corrupted") unless raw_data[key]
+            end
+            instance.effect_sources  = raw_data[:effect_sources]
+            instance.applied_windups = raw_data[:applied_windups]
+        end
     end
+
+    attr_writer :effect_sources, :applied_windups
 
     def add_effect_source(effect)
         if effect_sources.include?(effect)
@@ -51,7 +68,7 @@ module EffectSource
                         Log.warning("#{monicker} has no #{target_type} parts")
                         return
                     end
-                    targets = container_contents(target_type)
+                    targets = get_contents(target_type)
                 elsif uses?(Atomic)
                     unless target_type == :incidental
                         Log.warning("Composite effects can only apply to incidentals on an atomic object")
@@ -103,7 +120,17 @@ module EffectTarget
         def at_message(instance, message)
             instance.tick_effects if message.type == :tick
         end
+
+        def pack(instance)
+            {:applied_effects => instance.applied_effects}
+        end
+
+        def unpack(core, instance, raw_data)
+            instance.applied_effects = raw_data[:applied_effects]
+        end
     end
+
+    attr_writer :applied_effects
 
     def apply_effect(effect)
         Log.debug("Applying #{effect} to #{monicker}", 4)

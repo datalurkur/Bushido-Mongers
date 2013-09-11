@@ -36,17 +36,23 @@ class FakeCore < DefaultCore
 end
 
 class FakeRoom
+    def initialize(core=nil, name="FakeRoom", params={})
+        @core = core
+    end
     def name; "Fake Room"; end
-    def contents; @objects; end
+    def get_contents(t);
+        raise(ArgumentError, "Invalid room content type #{t}.") unless t == :internal
+        @objects.collect { |o_id| @core.lookup(o_id) }
+    end
     def add_object(o,t=nil)
         @objects ||= []
-        @objects << o
+        @objects << o.uid
     end
     def remove_object(o,t=nil)
         @objects ||= []
-        @objects.delete(o)
+        @objects.delete(o.uid)
     end
-    def component_destroyed(o,t,d); end
+    def component_destroyed(o,t,d); remove_object(o,t); end
     def zone_info(); {}; end
     def monicker() self.name; end
 end

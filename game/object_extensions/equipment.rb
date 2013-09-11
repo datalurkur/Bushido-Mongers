@@ -74,7 +74,7 @@ module Equipment
 
     def all_equipment(position)
         all_body_parts.select { |bp| bp.composed_of?(position) }.map do |bp|
-            bp.container_contents(position)
+            bp.get_contents(position)
         end.flatten
     end
 

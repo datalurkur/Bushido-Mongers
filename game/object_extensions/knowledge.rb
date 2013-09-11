@@ -40,6 +40,7 @@ module Knowledge
         end
 
         def unpack(core, instance, raw_data)
+            raise(MissingProperty, "Composition data corrupted") unless raw_data[:knowledge]
             instance.unpack_knowledge(raw_data[:knowledge])
         end
 

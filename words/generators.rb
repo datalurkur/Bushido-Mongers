@@ -382,7 +382,6 @@ module Words
     def self.describe_room(args = {})
         Log.debug(args)
         sentences = [gen_sentence(args)]
-        Log.debug(args)
 
         room = args[:target] || args[:destination]
         args.delete(:target)
@@ -395,6 +394,7 @@ module Words
         # FIXME - Use available senses.
         args.merge!(:verb => :see)
 
+        # FIXME - In the future, these will be object IDs, and need to be looked up from a core for more information
         objects = room[:objects]
         if objects && !objects.empty?
             sentences << gen_sentence(args.merge(:target => objects))

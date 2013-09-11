@@ -8,6 +8,7 @@ module Constructed
             quality    = params[:quality]
             creator    = nil
             randomized = false
+
             if params[:randomize]
                 unless components
                     randomized = true
@@ -41,13 +42,13 @@ module Constructed
         end
 
         def unpack(core, instance, raw_data)
+            raise(MissingProperty, "Constructed data corrupted") unless raw_data[:creator]
             instance.set_creator(raw_data[:creator])
         end
     end
 
-    def get_creator
-        @creator
-    end
+    def get_creator; @core.lookup(@creator); end
+    def get_creator_id; @creator; end
 
     def set_creator(value)
         @creator = value
@@ -57,8 +58,8 @@ module Constructed
         p = params.reject { |k,v| k == :components || k == :quality || k == :position }
         # Choose a random recipe
         recipe = class_info[:recipes].rand
-        recipe[:components].collect do |component|
-            @core.create(component, p)
+        recipe[:components].collect do |component_type|
+            @core.create(component_type, p)
         end
     end
 end

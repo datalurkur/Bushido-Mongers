@@ -31,21 +31,24 @@ class Room < ZoneLeaf
 
     def monicker; @name; end
 
-    def contents; @objects; end
+    def get_contents(type)
+        raise(ArgumentError, "Invalid room content type #{type}.") unless type == :internal
+        @objects.collect { |obj_id| @core.lookup(obj_id) }
+    end
 
     def add_object(object, type)
         raise(UnexpectedBehaviorError, "Rooms cannot be comprised of #{type.inspect} objects") unless type == :internal
         Log.debug("Adding #{object.monicker} into #{@name}", 6)
-        @objects << object
+        @objects << object.uid
     end
 
     def remove_object(object, type)
         raise(UnexpectedBehaviorError, "Rooms cannot be comprised of #{type.inspect} objects") unless type == :internal
-        unless @objects.include?(object)
+        unless @objects.include?(object.uid)
             Log.error("#{object.monicker} not found in #{@name}") 
         end
         Log.debug("Removing #{object.monicker} from #{@name}", 6)
-        @objects.delete(object)
+        @objects.delete(object.uid)
     end
     def component_destroyed(object, type, destroyer); remove_object(object, type); end
 

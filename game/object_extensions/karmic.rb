@@ -73,8 +73,7 @@ module Karmic
 
     def kills; @kills ||= []; end
     def add_kill(target)
-        # TODO - Consider adding a UID here
-        kills << target.monicker
+        kills << target.uid
     end
     def set_kills(value); @kills = value; end
 

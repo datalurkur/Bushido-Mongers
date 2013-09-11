@@ -23,7 +23,7 @@ flesh = core.create(:flesh, {:position => stomach})
 
 # ORB OF DEATH TEST
 # =================
-fake_room = FakeRoom.new
+fake_room = FakeRoom.new(core)
 
 human     = core.create_npc(:human, {:position => fake_room})
 orb       = core.create(:orb_of_death)

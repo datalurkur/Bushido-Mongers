@@ -70,10 +70,10 @@ observer = $core.create_npc(:human, :name => "Kenji Skrimshank", :position => Fa
 agent = Descriptor.describe(observer, observer)
 Log.debug(Words.describe_body(agent))
 # Test missing parts.
-kenji_leg = observer.container_contents(:external).find { |bp| bp.get_type == :leg }
+kenji_leg = observer.get_contents(:external).find { |bp| bp.get_type == :leg }
 observer.component_destroyed(kenji_leg, :external, observer)
 Log.debug(Words.describe_body(Descriptor.describe(observer, observer)))
-kenji_leg = observer.container_contents(:external).find { |bp| bp.get_type == :leg }
+kenji_leg = observer.get_contents(:external).find { |bp| bp.get_type == :leg }
 observer.component_destroyed(kenji_leg, :external, observer)
 Log.debug(Words.describe_body(Descriptor.describe(observer, observer)))
 

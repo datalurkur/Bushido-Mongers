@@ -44,7 +44,7 @@ class Descriptor
             if object.uses?(Composition)
                 d[:container_contents] = {}
                 object.container_classes.each do |prop|
-                    contents = object.container_contents(prop)
+                    contents = object.get_contents(prop)
                     next if prop == :internal && !object.properties[:open]
                     if contents && !contents.empty?
                         d[:container_contents][prop] = contents.collect do |o|
@@ -105,7 +105,7 @@ class Descriptor
                 :is_type    => [:room, room.zone_type],
                 :monicker   => room.zone_type,   # friendly_name.to_sym # TODO - change when name isn't just <keywords> <zone>
                 :adjectives => room.keywords,
-                :objects    => observer.perceivable_objects_of(room.contents - [observer]).collect { |o| BushidoObjectDescriptor.describe(o, observer) },
+                :objects    => observer.perceivable_objects_of(room.get_contents(:internal) - [observer]).collect { |o| BushidoObjectDescriptor.describe(o, observer) },
                 :exits      => room.connected_directions
             }
         end

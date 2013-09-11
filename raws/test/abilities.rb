@@ -11,7 +11,7 @@ aspect_list = [:strength, :agility, :intrinsic_fighting, :stealth]
 aspects = {}
 
 aspect_list.each do |aspect|
-    aspects[aspect] = core.create(aspect)
+    aspects[aspect] = core.create(aspect).uid
 end
 
 [
@@ -21,6 +21,6 @@ end
     [:intrinsic_fighting,       :trivial]
 ].each do |aspect, difficulty|
     Log.debug("Attempting to #{aspect} with difficulty #{difficulty}")
-    result = aspects[aspect].make_check(aspects)
+    result = core.lookup(aspects[aspect]).make_check(aspects)
     Log.debug("Result: #{result.inspect}")
 end

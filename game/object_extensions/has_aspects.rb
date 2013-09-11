@@ -5,26 +5,16 @@ module HasAspects
         def listens_for(i); [:tick]; end
 
         def pack(instance)
-            raw_data = {:attributes => {}, :skills => {}}
-            instance.attributes.each do |key, value|
-                raw_data[:attributes][key] = SafeBushidoObject.pack(value)
-            end
-            instance.skills.each do |key, value|
-                raw_data[:skills][key] = SafeBushidoObject.pack(value)
-            end
-            raw_data
+            {
+                :attributes => instance.attributes,
+                :skills     => instance.skills
+            }
         end
 
         def unpack(core, instance, raw_data)
             raise(MissingProperty, "HasAspects data corrupted") unless raw_data[:skills] && raw_data[:attributes]
-            raw_data[:attributes].each_pair do |attribute, raw_attribute_data|
-                actual = SafeBushidoObject.unpack(core, raw_attribute_data)
-                instance.attributes[attribute] = actual
-            end
-            raw_data[:skills].each_pair do |skill, raw_skill_data|
-                actual = SafeBushidoObject.unpack(core, raw_skill_data)
-                instance.skills[skill] = actual
-            end
+            instance.attributes = raw_data[:attributes]
+            instance.skills     = raw_data[:skills]
         end
 
         def at_creation(instance, params)
@@ -33,8 +23,7 @@ module HasAspects
 
         def at_message(instance, message)
             if message.type == :tick
-                instance.attributes.each { |k,a| a.increment_tick }
-                instance.skills.each     { |k,s| s.increment_tick }
+                instance.tick_aspects
             end
         end
     end
@@ -58,7 +47,9 @@ module HasAspects
         # Add the actual attributes
         Log.debug("Adding #{properties[:attributes].size} attributes for #{monicker}", 8)
         properties[:attributes].each_with_index do |name, i|
-            attributes[name] = @core.create(name, {:intrinsic_bonus => variances[i]})
+            attr = @core.create(name, {:intrinsic_bonus => variances[i]})
+            Log.debug("Setting attribute #{name} to #{attr.uid} (#{attr.inspect})", 8)
+            attributes[name] = attr.uid
         end
     end
 
@@ -86,7 +77,8 @@ module HasAspects
         # Add the actual skills
         properties[:skills].each_with_index do |name, i|
             # TODO - mod bonuses based on attributes
-            skills[name] = @core.create(name, :intrinsic_bonus => variances[i])
+            skill = @core.create(name, :intrinsic_bonus => variances[i])
+            skills[name] = skill.uid
         end
     end
 
@@ -95,12 +87,15 @@ module HasAspects
     # =================
     def get_aspect(aspect)
         if attributes.has_key?(aspect)
-            attributes[aspect]
+            @core.lookup(attributes[aspect])
         elsif skills.has_key?(aspect)
-            skills[aspect]
+            @core.lookup(skills[aspect])
         elsif @core.db.is_type?(aspect, :skill)
-            skills[aspect] = @core.create(aspect)
+            skill = @core.create(aspect)
+            skills[aspect] = skill.uid
+            skill
         else
+            raise(UnknownType, "#{aspect} is not a defined skill or aspect")
             nil
         end
     end
@@ -149,6 +144,11 @@ module HasAspects
             aspect.practice(margin) if aspect.uses?(Skill)
             return [margin > 0, [:difficulty, margin]]
         end
+    end
+
+    def tick_aspects
+        attributes.each { |k,a_id| @core.lookup(a_id).increment_tick }
+        skills.each     { |k,s_id| @core.lookup(s_id).increment_tick }
     end
 
     # ================

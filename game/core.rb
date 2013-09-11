@@ -12,10 +12,70 @@ class GameCore
     def initialize
         Message.setup(self)
 
-        @usage_mutex = Mutex.new
+        @usage_mutex     = Mutex.new
+
+        @object_manifest      = {}
+        @uid_count            = 0
+        @awaiting_destruction = []
+
+        @ticking              = false
     end
 
-    # TODO - Write save / load methods
+    def pack
+        hash = {}
+        @usage_mutex.synchronize do
+            Log.info("Saving game core")
+
+            hash[:tick_rate]       = @tick_rate
+
+            hash[:db]              = ObjectDB.pack(@db)
+            hash[:kb]              = ObjectKB.pack(@kb)
+            hash[:words_db]        = WordParser.pack(@words_db)
+
+            hash[:object_manifest] = {}
+            @object_manifest.each do |k,v|
+              hash[:object_manifest][k] = BushidoObject.pack(k)
+            end
+
+            hash[:world]           = pack_world
+
+            hash[:managers]        = pack_managers
+        end
+        hash
+    end
+
+    def unpack(hash)
+        @usage_mutex.synchronize do
+            Log.info("Loading game core")
+
+            # Unpack tick rate
+            # -------------------------------
+            @tick_rate = hash[:tick_rate]
+
+            # Unpack raws
+            # -------------------------------
+            @db = ObjectDB.unpack(hash[:db])
+            @kb = ObjectKB.unpack(hash[:kb])
+            @words_db = WordParser.unpack(hash[:words_db])
+
+            # Unpack objects
+            # -------------------------------
+            @uid_count = hash[:object_manifest].keys.max
+            hash[:object_manifest].each do |k,v|
+                @object_manifest[k] = BushidoObject.unpack(self, v)
+            end
+
+            # Unpack world
+            # -------------------------------
+            unpack_world(hash[:world])
+
+            # Unpack the world object managers
+            # -------------------------------
+            unpack_managers(hash[:managers])
+
+            @setup = true
+        end
+    end
 
     # PUBLIC (THREADSAFE) METHODS
     def setup(args)
@@ -25,7 +85,6 @@ class GameCore
             # Setup various game variables
             # ----------------------------
             @tick_rate = args[:tick_rate] || (30)
-            @ticking   = false
 
             # Read the raws
             # -------------
@@ -34,11 +93,6 @@ class GameCore
             @kb       = ObjectKB.new(@db, true)
             @words_db = WordParser.load
             WordParser.read_raws(@words_db, @db)
-
-            # Prepare for object creation
-            # ---------------------------
-            @uid_count            = 0
-            @awaiting_destruction = []
 
             # Setup the physical world
             # ------------------------
@@ -81,7 +135,15 @@ class GameCore
     # CREATION AND DESTRUCTION
     # ========================
     def create(type, hash = {})
-        @db.create(self, type, next_uid, hash)
+        obj_uid = next_uid
+        obj = @db.create(self, type, obj_uid, hash)
+        @object_manifest[obj_uid] = obj
+        obj
+    end
+
+    def lookup(uid)
+        raise("Unknown UID #{uid}") unless @object_manifest.has_key?(uid)
+        @object_manifest[uid]
     end
 
     def flag_for_destruction(object, destroyer)
@@ -99,7 +161,10 @@ class GameCore
             until to_destroy.empty?
                 next_to_destroy, destroyer = to_destroy.shift
                 next if destroyed.include?(next_to_destroy)
+
                 next_to_destroy.destroy(destroyer)
+                @object_manifest.delete(next_to_destroy.uid)
+
                 destroyed << next_to_destroy
             end
         end
@@ -217,6 +282,18 @@ class GameCore
     end
     def setup_managers(args)
         raise(NotImplementedError, "Core must be subclassed with setup_managers implemented")
+    end
+    def pack_world
+        raise(NotImplementedError, "Core must be subclassed with pack_world implemented")
+    end
+    def pack_managers
+        raise(NotImplementedError, "Core must be subclassed with pack_managers implemented")
+    end
+    def unpack_world(hash)
+        raise(NotImplementedError, "Core must be subclassed with unpack_world implemented")
+    end
+    def unpack_managers(hash)
+        raise(NotImplementedError, "Core must be subclassed with unpack_managers implemented")
     end
     def teardown_world
         raise(NotImplementedError, "Core must be subclassed with teardown_world implemented")

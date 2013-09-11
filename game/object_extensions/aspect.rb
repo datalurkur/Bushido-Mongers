@@ -55,7 +55,7 @@ module Aspect
                 Log.debug("#{monicker} does not have a required attribute, #{associated_attribute}")
                 0
             else
-                attributes[associated_attribute].make_check(attributes)
+                @core.lookup(attributes[associated_attribute]).make_check(attributes)
             end
             attribute_scaling = class_info[:attribute_scaling]
             (attribute_value * attribute_scaling) + (base_intrinsic * (1.0 - attribute_scaling))

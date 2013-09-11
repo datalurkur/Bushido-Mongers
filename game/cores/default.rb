@@ -91,6 +91,14 @@ class DefaultCore < GameCore
         @world.populate
     end
 
+    def pack_world
+        WorldFactory.pack(@world)
+    end
+
+    def unpack_world(hash)
+        @world = WorldFactory.unpack(hash)
+    end
+
     def teardown_world
         @world = nil
     end
@@ -102,6 +110,16 @@ class DefaultCore < GameCore
         @population_manager.setup
 
         seed_population
+    end
+
+    def pack_managers
+        hash = {}
+        hash[:population] = PopulationManager.pack(@population_manager)
+        hash
+    end
+
+    def unpack_managers(hash)
+        @population_manager = PopulationManager.unpack(hash[:population])
     end
 
     def teardown_managers

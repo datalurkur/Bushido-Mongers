@@ -19,7 +19,7 @@ module Perception
         case location
         when :position
             # A player tied to a long pole can still grab apples
-            objects    = perceivable_objects_of(self.absolute_position.contents)
+            objects    = perceivable_objects_of(self.absolute_position.get_contents(:internal))
             containers = objects.select { |o| o.is_type?(:container) && o.open? }
             # perceivable objects in room + contents of perceivable open containers in room
             objects.select { |o| o.matches(filters) } +
@@ -34,7 +34,7 @@ module Perception
             # Search within the perceiver's open backpacks, sacks, etc.
             matches = []
             containers_in_inventory.each { |c| c.open? }.each do |cont|
-                submatches = cont.container_contents(:internal).select do |object|
+                submatches = cont.select_objects(:internal, false) do |object|
                     object.matches(filters)
                 end
                 matches.concat(submatches)
