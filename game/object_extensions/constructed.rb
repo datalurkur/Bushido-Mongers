@@ -38,7 +38,7 @@ module Constructed
         end
 
         def pack(instance)
-            {:creator => instance.get_creator}
+            {:creator => instance.get_creator_id}
         end
 
         def unpack(core, instance, raw_data)
