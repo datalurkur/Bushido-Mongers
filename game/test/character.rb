@@ -11,9 +11,11 @@ def recreate_test_character(username, character_name, raw_group, clean=true)
 
     Log.debug("Creating test character using fake state")
     fake_core = FakeCore.new
+    fake_room = fake_core.create(FakeRoom)
     character_archetype = :human
     fake_lobby = nil
-    character = fake_core.create_character(fake_lobby, "fake_username", {:position => FakeRoom.new, :archetype => character_archetype, :name => character_name})
+    #fake_room = FakeRoom.new(fake_core, 0)
+    character = fake_core.create_character(fake_lobby, "fake_username", {:position => fake_room, :archetype => character_archetype, :name => character_name})
     CharacterLoader.save(username, character)
     character
 end
@@ -21,6 +23,7 @@ end
 def reload_test_character(username, character_name, raw_group)
     Log.debug("Reloading test character")
     fake_core = FakeCore.new
+    fake_core.create(FakeRoom, "Fake Room")
     character = CharacterLoader.attempt_to_load(fake_core, username, character_name)
 end
 

@@ -13,8 +13,7 @@ module HasAspects
 
         def unpack(core, instance, raw_data)
             raise(MissingProperty, "HasAspects data corrupted") unless raw_data[:skills] && raw_data[:attributes]
-            instance.attributes = raw_data[:attributes]
-            instance.skills     = raw_data[:skills]
+            instance.set_predefined(raw_data[:attributes], raw_data[:skills])
         end
 
         def at_creation(instance, params)
@@ -31,6 +30,10 @@ module HasAspects
     # =============================
     # ATTRIBUTE SETUP AND ACCESSORS
     # =============================
+    def set_predefined(attributes, skills)
+        @attributes = attributes
+        @skills     = skills
+    end
     def attributes; @attributes ||= {}; end
     def setup_attribute_set
         # Compute a set of variances

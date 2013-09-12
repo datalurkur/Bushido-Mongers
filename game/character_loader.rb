@@ -49,7 +49,7 @@ module CharacterLoader
 
         def save(username, character)
             filename = to_filename(character.name)
-            character_data = SafeBushidoObject.pack(character)
+            character_data = BushidoObject.pack(character)
             full_filename = File.join(get_user_directory(username), filename)
             f = File.open(full_filename, 'w')
             f.write(Marshal.dump(character_data))
@@ -67,7 +67,7 @@ module CharacterLoader
                 history.each do |cdata|
                     begin
                         character_data = load_file(username, cdata[:filename])
-                        character      = SafeBushidoObject.unpack(core, character_data)
+                        character      = BushidoObject.unpack(core, character_data)
                         break
                     rescue Exception => e
                         # This one failed to load, try the next one

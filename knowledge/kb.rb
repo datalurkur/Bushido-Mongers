@@ -82,6 +82,25 @@ class KB
         _add(q)
     end
 
+    def pack
+        _init_indices
+        {
+            :by_thing     => @by_thing,
+            :by_connector => @by_connector,
+            :by_prop      => @by_prop
+        }
+    end
+
+    def unpack(hash)
+        [:by_thing, :by_connector, :by_prop].each do |key|
+            raise(MissingProperty, "ObjectKB data corrupted") unless hash[key]
+        end
+        @by_thing     = hash[:by_thing]
+        @by_connector = hash[:by_connector]
+        @by_prop      = hash[:by_prop]
+        @initialized  = true
+    end
+
     private
     def _init_indices
         if !@initialized

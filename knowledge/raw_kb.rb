@@ -3,11 +3,34 @@ require './knowledge/quanta'
 require './raws/db'
 
 class ObjectKB < KB
+    class << self
+        def pack(instance)
+            instance.pack.merge(:use_identities => instance.use_identities)
+        end
+
+        def unpack(db, hash)
+            raise(MissingProperty, "ObjectKB data corrupted") unless hash[:use_identities]
+            kb = ObjectKB.new(db, hash[:use_identities])
+            kb.unpack(hash)
+            kb
+        end
+    end
+
     attr_reader :use_identities
     def initialize(db, use_identities = false)
-    	@raws = db
+        @raws = db
         @groups_read = {}
         @use_identities = use_identities
+    end
+
+    def pack
+        super().merge(:groups_read => @groups_read)
+    end
+
+    def unpack(hash)
+        super(hash)
+        raise(MissingProperty, "ObjectKB data corrupted") unless hash[:groups_read]
+        @groups_read = hash[:groups_read]
     end
 
     # Will add knowledge quanta, based on identities.

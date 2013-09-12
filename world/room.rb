@@ -20,13 +20,13 @@ end
 class Room < ZoneLeaf
     include ZoneWithKeywords
 
-    def initialize(core, name, params={})
+    def initialize(core, uid, params={})
         @core    = core
         @params  = params
 
         @objects = []
 
-        super(name)
+        super(params[:name], uid)
     end
 
     def monicker; @name; end
@@ -71,11 +71,12 @@ end
 class Area < ZoneContainer
     include ZoneWithKeywords
 
-    def initialize(core, name, size, depth, params={})
+    def initialize(core, uid, params={})
         Log.debug("Creating #{name} room with #{params.inspect}")
         @core   = core
         @params = params
-        super(name, size, depth)
+
+        super(params[:name], uid, params[:size], params[:depth])
     end
 
     # Decides whether an Area populates its sub-Areas / Leaves directly, or defers to them to do so

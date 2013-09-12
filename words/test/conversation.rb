@@ -82,8 +82,8 @@ require './game/object_extensions'
 
 core = FakeCore.new
 
-speaker  = core.create_npc(:human, :name => "Kenji Skrimshank", :position => FakeRoom.new)
-receiver = core.create_npc(:human, :name => "Bob",              :position => FakeRoom.new)
+speaker  = core.create_npc(:human, :name => "Kenji Skrimshank", :position => core.create(FakeRoom))
+receiver = core.create_npc(:human, :name => "Bob",              :position => core.create(FakeRoom))
 
 receiver.add_knowledge(:katana, :make, :recipe)
 

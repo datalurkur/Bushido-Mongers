@@ -15,6 +15,15 @@ module Position
                 Log.warning(["Destroying object with no position - #{instance.monicker}", caller])
             end
         end
+
+        def pack(instance)
+            {:position_uid => instance.position_uid}
+        end
+
+        def unpack(core, instance, hash)
+            raise(MissingProperty, "Position data corrupted") unless hash[:position_uid]
+            instance.set_position(core.lookup(hash[:position_uid]), :internal)
+        end
     end
 
     def dispatch_destruction_message(destroyer)
@@ -28,7 +37,12 @@ module Position
     end
 
     def has_position?
-        !!@position
+        !!@position_uid
+    end
+
+    def position_uid
+        safe_position
+        @position_uid
     end
 
     def absolute_position
@@ -61,7 +75,7 @@ module Position
 
     def relative_position
         safe_position
-        @position
+        @core.lookup(@position_uid)
     end
 
     def relative_position_type
@@ -70,19 +84,23 @@ module Position
     end
 
     def set_position(new_position, position_type, locomotes=false)
+        # Debugging for a random failure seen during development
+        raise(UnexpectedBehaviorError, "Position has no UID") unless new_position.uid
+
         message_type = locomotes ? :unit_moves : :unit_moved
-        locations    = [@position, new_position].compact
+        old_position = @position_uid ? @core.lookup(@position_uid) : nil
+        locations    = [old_position, new_position].compact
         Message.dispatch_positional(@core, locations, message_type, {
             :agent       => self,
             :action      => :move,
-            :origin      => @position,
+            :origin      => old_position,
             :destination => new_position
         })
-        Message.change_listener_position(@core, self, new_position, @position)
-        @position.remove_object(self, @position_type) if @position
-        @position      = new_position
+        Message.change_listener_position(@core, self, new_position, old_position)
+        old_position.remove_object(self, @position_type) if old_position
+        @position_uid = new_position.uid
         @position_type = position_type
-        @position.add_object(self, @position_type)
+        new_position.add_object(self, @position_type)
     end
 
     def safe_position

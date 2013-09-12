@@ -10,21 +10,21 @@ def test_world
     #     |
     # a---b
 
-    a = Room.new($c, "a")
+    a = $c.create(Room, {:name => "a"})
     a.connect_to(:east)
 
-    b = Room.new($c, "b")
+    b = $c.create(Room, {:name => "b"})
     b.connect_to(:west)
     b.connect_to(:north)
 
-    c = Room.new($c, "c")
+    c = $c.create(Room, {:name => "c"})
     c.connect_to(:south)
     c.connect_to(:west)
 
-    d = Room.new($c, "d")
+    d = $c.create(Room, {:name => "d"})
     d.connect_to(:east)
 
-    world = World.new($c, "Test World", 2, 2)
+    world = $c.create(World, {:name => "Test World", :size => 2, :depth => 2})
     world.set_zone(0,0,a)
     world.set_zone(1,0,b)
     world.set_zone(1,1,c)
@@ -36,39 +36,39 @@ def test_world
 end
 
 def test_world_2
-    c11_01 = Room.new($c, "c11_01")
+    c11_01 = $c.create(Room, {:name => "c11_01"})
     c11_01.connect_to(:north)
 
-    c11 = Area.new($c, "c11", 2, 2)
+    c11 = $c.create(Area, {:name => "c11", :size => 2, :depth => 2})
     c11.set_zone(0,1,c11_01)
 
-    b00 = Room.new($c, "b00")
+    b00 = $c.create(Room, {:name => "b00"})
     b00.connect_to(:west)
 
-    b10 = Room.new($c, "b10")
+    b10 = $c.create(Room, {:name => "b10"})
     b10.connect_to(:south)
 
-    b01 = Room.new($c, "b01")
+    b01 = $c.create(Room, {:name => "b01"})
 
-    d11 = Room.new($c, "d11")
+    d11 = $c.create(Room, {:name => "d11"})
     d11.connect_to(:north)
 
-    a = Room.new($c, "a")
+    a = $c.create(Room, {:name => "a"})
     a.connect_to(:east)
     a.connect_to(:south)
 
-    b = Area.new($c, "b", 2, 2)
+    b = $c.create(Area, {:name => "b", :depth => 2, :size => 2})
     b.set_zone(0,0,b00)
     b.set_zone(1,0,b10)
     b.set_zone(0,1,b01)
 
-    c = Area.new($c, "c", 2, 3)
+    c = $c.create(Area, {:name => "c", :depth => 3, :size => 2})
     c.set_zone(1,1,c11)
 
-    d = Area.new($c, "d", 2, 2)
+    d = $c.create(Area, {:name => "d", :depth => 2, :size => 2})
     d.set_zone(1,1,d11)
 
-    world = World.new($c, "world", 2, 4)
+    world = $c.create(World, {:name => "world", :size => 2, :depth => 4})
     world.set_zone(0,1,a)
     world.set_zone(1,1,b)
     world.set_zone(0,0,c)

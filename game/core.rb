@@ -14,9 +14,12 @@ class GameCore
 
         @usage_mutex     = Mutex.new
 
-        @object_manifest      = {}
         @uid_count            = 0
         @awaiting_destruction = []
+        @object_manifest      = {}
+        object_manifest_types.each do |klass|
+            @object_manifest[klass] = {}
+        end
 
         @ticking              = false
     end
@@ -33,11 +36,14 @@ class GameCore
             hash[:words_db]        = WordParser.pack(@words_db)
 
             hash[:object_manifest] = {}
-            @object_manifest.each do |k,v|
-              hash[:object_manifest][k] = BushidoObject.pack(k)
+            @object_manifest.keys.each do |klass|
+                hash[:object_manifest][klass] = {}
+                @object_manifest[klass].each do |uid, obj|
+                    hash[:object_manifest][klass][uid] = klass.pack(obj)
+                end
             end
 
-            hash[:world]           = pack_world
+            hash[:world_uid]       = @world.uid
 
             hash[:managers]        = pack_managers
         end
@@ -61,13 +67,19 @@ class GameCore
             # Unpack objects
             # -------------------------------
             @uid_count = hash[:object_manifest].keys.max
-            hash[:object_manifest].each do |k,v|
-                @object_manifest[k] = BushidoObject.unpack(self, v)
+            hash[:object_manifest].keys.each do |klass|
+                @object_manifest[klass] = {}
+                hash[:object_manifest][klass].each do |uid,hash|
+                    @object_manifest[klass][uid] = klass.unpack(self, hash)
+                end
             end
 
             # Unpack world
             # -------------------------------
-            unpack_world(hash[:world])
+            unless @object_manifest.has_key?(World) && @object_manifest[World].keys.size == 1 && @object_manifest[World].values.first.uid == hash[:world_uid]
+                raise(MissingProperty, "World data corrupt")
+            end
+            @world = @object_manifest[World].values.first
 
             # Unpack the world object managers
             # -------------------------------
@@ -128,22 +140,54 @@ class GameCore
         ret
     end
 
+    private
     def next_uid
         @uid_count += 1
     end
 
+    public
     # CREATION AND DESTRUCTION
     # ========================
+    def class_manifest_types
+        unless @class_manifest_types
+            @class_manifest_types = [Area, Room, World]
+            if Object.const_defined?("FakeRoom")
+                @class_manifest_types << FakeRoom
+            end
+        end
+        @class_manifest_types
+    end
+    def object_manifest_types
+        unless @object_manifest_types
+            @object_manifest_types = class_manifest_types.concat([BushidoObject])
+        end
+        @object_manifest_types
+    end
+
     def create(type, hash = {})
         obj_uid = next_uid
-        obj = @db.create(self, type, obj_uid, hash)
-        @object_manifest[obj_uid] = obj
+        klass = nil
+        obj   = nil
+        if class_manifest_types.include?(type)
+            obj   = type.new(self, obj_uid, hash)
+            klass = type
+        else
+            obj   = @db.create(self, type, obj_uid, hash)
+            klass = obj.class
+        end
+        Log.debug("Creating #{type.inspect} (#{klass} | #{obj_uid})", 9)
+        @object_manifest[klass] ||= {}
+        @object_manifest[klass][obj_uid] = obj
         obj
     end
 
     def lookup(uid)
-        raise("Unknown UID #{uid}") unless @object_manifest.has_key?(uid)
-        @object_manifest[uid]
+        Log.debug("Looking up #{uid}", 9)
+        object_manifest_types.each do |klass|
+            return @object_manifest[klass][uid] if @object_manifest[klass].has_key?(uid)
+            Log.debug("Not found in #{klass}", 9)
+        end
+        raise("Unknown UID #{uid}")
     end
 
     def flag_for_destruction(object, destroyer)
@@ -163,7 +207,7 @@ class GameCore
                 next if destroyed.include?(next_to_destroy)
 
                 next_to_destroy.destroy(destroyer)
-                @object_manifest.delete(next_to_destroy.uid)
+                @object_manifest[BushidoObject].delete(next_to_destroy.uid)
 
                 destroyed << next_to_destroy
             end
@@ -283,14 +327,8 @@ class GameCore
     def setup_managers(args)
         raise(NotImplementedError, "Core must be subclassed with setup_managers implemented")
     end
-    def pack_world
-        raise(NotImplementedError, "Core must be subclassed with pack_world implemented")
-    end
     def pack_managers
         raise(NotImplementedError, "Core must be subclassed with pack_managers implemented")
-    end
-    def unpack_world(hash)
-        raise(NotImplementedError, "Core must be subclassed with unpack_world implemented")
     end
     def unpack_managers(hash)
         raise(NotImplementedError, "Core must be subclassed with unpack_managers implemented")

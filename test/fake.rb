@@ -36,10 +36,12 @@ class FakeCore < DefaultCore
 end
 
 class FakeRoom
-    def initialize(core=nil, name="FakeRoom", params={})
+    attr_reader :uid, :name
+    def initialize(core=nil, uid=nil, name="FakeRoom", params={})
         @core = core
+        @uid  = uid
+        @name = name
     end
-    def name; "Fake Room"; end
     def get_contents(t);
         raise(ArgumentError, "Invalid room content type #{t}.") unless t == :internal
         @objects.collect { |o_id| @core.lookup(o_id) }

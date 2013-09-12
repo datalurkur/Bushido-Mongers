@@ -66,7 +66,7 @@ require './raws/db'
 require './test/fake'
 require './game/descriptors'
 
-observer = $core.create_npc(:human, :name => "Kenji Skrimshank", :position => FakeRoom.new)
+observer = $core.create_npc(:human, :name => "Kenji Skrimshank", :position => $core.create(FakeRoom))
 agent = Descriptor.describe(observer, observer)
 Log.debug(Words.describe_body(agent))
 # Test missing parts.
@@ -77,7 +77,7 @@ kenji_leg = observer.get_contents(:external).find { |bp| bp.get_type == :leg }
 observer.component_destroyed(kenji_leg, :external, observer)
 Log.debug(Words.describe_body(Descriptor.describe(observer, observer)))
 
-target = $core.create(:goat, {:position => FakeRoom.new, :name => "Billy Goat Balrog"})
+target = $core.create(:goat, {:position => $core.create(FakeRoom), :name => "Billy Goat Balrog"})
 target = Descriptor.describe(target, observer)
 Log.debug(Words.describe_body(target))
 

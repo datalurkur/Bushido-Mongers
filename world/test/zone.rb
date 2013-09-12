@@ -28,50 +28,50 @@ root
 
 =end
 
-c11_01 = ZoneLeaf.new("c11_01")
+c11_01 = ZoneLeaf.new("c11_01", 0)
 c11_01.connect_to(:north)
 
-c11_11 = ZoneLeaf.new("c11_11")
+c11_11 = ZoneLeaf.new("c11_11", 1)
 c11_11.connect_to(:east)
 
-c11 = ZoneContainer.new("c11", 2, 2)
+c11 = ZoneContainer.new("c11", 2, 2, 2)
 c11.set_zone(0,1,c11_01)
 c11.set_zone(1,1,c11_11)
 
-b00 = ZoneLeaf.new("b00")
+b00 = ZoneLeaf.new("b00", 3)
 b00.connect_to(:west)
 
-b10 = ZoneLeaf.new("b10")
+b10 = ZoneLeaf.new("b10", 4)
 b10.connect_to(:south)
 
-b01 = ZoneLeaf.new("b01")
+b01 = ZoneLeaf.new("b01", 5)
 
-d01_01 = ZoneLeaf.new("d01_01")
+d01_01 = ZoneLeaf.new("d01_01", 6)
 d01_01.connect_to(:west)
 
-d01 = ZoneContainer.new("d01", 2, 2)
+d01 = ZoneContainer.new("d01", 7, 2, 2)
 d01.set_zone(0,1,d01_01)
 
-d11 = ZoneLeaf.new("d11")
+d11 = ZoneLeaf.new("d11", 8)
 d11.connect_to(:north)
 
-a = ZoneLeaf.new("a")
+a = ZoneLeaf.new("a", 9)
 a.connect_to(:east)
 a.connect_to(:south)
 
-b = ZoneContainer.new("b", 2, 2)
+b = ZoneContainer.new("b", 10, 2, 2)
 b.set_zone(0,0,b00)
 b.set_zone(1,0,b10)
 b.set_zone(0,1,b01)
 
-c = ZoneContainer.new("c", 2, 3)
+c = ZoneContainer.new("c", 11, 2, 3)
 c.set_zone(1,1,c11)
 
-d = ZoneContainer.new("d", 2, 2)
+d = ZoneContainer.new("d", 12, 2, 2)
 d.set_zone(1,1,d11)
 d.set_zone(0,1,d01)
 
-root = ZoneContainer.new("root", 2, 4)
+root = ZoneContainer.new("root", 13, 2, 4)
 root.set_zone(0,1,a)
 root.set_zone(1,1,b)
 root.set_zone(0,0,c)

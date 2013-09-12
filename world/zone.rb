@@ -60,12 +60,19 @@ class Zone
             when :west;  :east
             end
         end
+
+        def pack(instance)
+        end
+
+        def unpack(core, hash)
+        end
     end
 
     attr_accessor :name
-    attr_reader :offset
-    def initialize(name)
+    attr_reader :offset, :uid
+    def initialize(name, uid)
         @name = name
+        @uid  = uid
     end
 
     def monicker; @name; end
@@ -126,8 +133,8 @@ end
 
 class ZoneContainer < Zone
     attr_reader :size
-    def initialize(name, size, depth)
-        super(name)
+    def initialize(name, uid, size, depth)
+        super(name, uid)
 
         @size   = size
         @depth  = depth
@@ -297,8 +304,8 @@ class ZoneContainer < Zone
 end
 
 class ZoneLeaf < Zone
-    def initialize(name)
-        super(name)
+    def initialize(name, uid)
+        super(name, uid)
 
         @connections = {}
         @resolved    = false

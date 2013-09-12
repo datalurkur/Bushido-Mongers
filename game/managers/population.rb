@@ -17,7 +17,7 @@ class PopulationManager < Manager
         end
     end
 
-    def listens_for; [:unit_animated,:unit_moves,:unit_moved,:unit_killed,:unit_renamed]; end
+    def listens_for; [:tick,:unit_animated,:unit_moves,:unit_moved,:unit_killed,:unit_renamed]; end
 
     def setup
         @named          = {}

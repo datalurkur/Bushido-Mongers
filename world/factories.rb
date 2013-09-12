@@ -14,7 +14,7 @@ class << self
 
         world_name = Words.gen_area_name(params)
 
-        world = World.new(core, world_name, size, depth, params)
+        world = core.create(World, params.merge(:name => world_name, :size => size, :depth => depth))
         populate_area(core, world, config)
         world.finalize
         world
@@ -42,10 +42,10 @@ class << self
 
         area = if (depth < 1) || (rand() < config[:area_size_tendency])
             Log.debug("Generating room #{name}", 5)
-            Room.new(core, name, params)
+            core.create(Room, params.merge(:name => name))
         else
             Log.debug("Generating area #{name} of size #{size} and depth #{depth}", 5)
-            Area.new(core, name, size, depth, params)
+            core.create(Area, params.merge(:name => name, :size => size, :depth => depth))
         end
 
         # Populate the empty zone.
@@ -155,12 +155,12 @@ class << self
             Log.debug(zone_types)
         end
 
-        world = World.new(core, "Fantasmagoria", zone_types.size, 1, Zone.get_params(core, :depth => 1))
+        world = core.create(World, Zone.get_params(core, :depth => 1).merge(:name => "Fantasmagoria", :size => zone_types.size, :depth => 1))
 
         zones = []
         zone_types.each_with_index do |zone_type, i|
             params = Zone.get_params(core, :type => zone_type)
-            r = Room.new(core, "Fantasm of #{zone_type}", params)
+            r = core.create(Room, params.merge(:name => "Fantasm of #{zone_type}"))
             r.connect_to(:east)
             r.connect_to(:west)
 

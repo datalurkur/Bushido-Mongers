@@ -5,6 +5,15 @@ require './util/exceptions'
 
 class ObjectDB
     class << self
+        def pack(instance)
+            {:db => instance.db, :group_hash => instance.hash}
+        end
+
+        def unpack(hash)
+            raise(MissingProperty, "ObjectDB data corrupted") unless hash[:db] && hash[:group_hash]
+            ObjectDB.new(hash[:db], hash[:group_hash])
+        end
+
         def get(group)
             @object_groups ||= {}
             unless @object_groups[group]
@@ -30,6 +39,16 @@ class ObjectDB
                 end
             end
         end
+    end
+
+    metered :find_subtypes, :create, :types_of
+
+    attr_reader :hash, :db
+
+    def initialize(db, group_hash)
+        raise(ArgumentError, "Incorrect database format") unless Hash === db
+        @db   = db
+        @hash = group_hash
     end
 
     def [](type)
@@ -70,23 +89,6 @@ class ObjectDB
         end
     end
 
-    private
-    def set_info(type, datapoint, value)
-        type_hash = raw_info_for(type)
-        type_hash[:class_values][datapoint] = value
-    end
-
-    # Will not destroy pre-existing data.
-    def modify_info(type, datapoint, init_value = nil)
-        type_hash = raw_info_for(type)
-
-        if type_hash[:class_values][datapoint].nil?
-            type_hash[:class_values][datapoint] = init_value
-        end
-        type_hash[:class_values][datapoint]
-    end
-
-    public
     def static_types_of(types);       search_types(types, false, true ); end
     def instantiable_types_of(types); search_types(types, true,  false); end
     def types_of(types);              search_types(types, false, false); end
@@ -134,9 +136,7 @@ class ObjectDB
             end
         end
 
-        # When no longer in debug mode, go back to using BushidoObject
-        #BushidoObject.create(core, type, params)
-        SafeBushidoObject.create(core, type, uid, params)
+        BushidoObject.create(core, type, uid, params)
     end
 
     def get_binding
@@ -186,16 +186,20 @@ class ObjectDB
         end
     end
 
-    metered :find_subtypes, :create, :types_of
-
-    attr_reader :hash
-
     private
-    # We don't want users calling this, since the static class methods do the actual database population
-    def initialize(db, hash)
-        raise(ArgumentError, "Incorrect database format") unless Hash === db
-        @db   = db
-        @hash = hash
+    def set_info(type, datapoint, value)
+        type_hash = raw_info_for(type)
+        type_hash[:class_values][datapoint] = value
+    end
+
+    # Will not destroy pre-existing data.
+    def modify_info(type, datapoint, init_value = nil)
+        type_hash = raw_info_for(type)
+
+        if type_hash[:class_values][datapoint].nil?
+            type_hash[:class_values][datapoint] = init_value
+        end
+        type_hash[:class_values][datapoint]
     end
 
     def duplicate_object(original_type, new_type, new_params={})

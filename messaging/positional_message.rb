@@ -1,4 +1,4 @@
-require './messaging/message'
+require './messaging/message_base'
 
 class PositionalMessage < MessageBase
     class << self

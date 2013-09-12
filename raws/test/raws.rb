@@ -23,7 +23,7 @@ Log.debug(["Number of types of objects:", $core.db.instantiable_types_of(:object
 # Basic item creation tests
 test_item_type = :head_armor
 Log.debug("Creating a #{test_item_type}")
-test_item_args = {:creator => $core.create(:iron), :relative_size => :medium, :quality => :fine, :components => [$core.create(:iron)], :position => FakeRoom.new}
+test_item_args = {:creator => $core.create(:iron), :relative_size => :medium, :quality => :fine, :components => [$core.create(:iron)], :position => $core.create(FakeRoom)}
 test_item = $core.create(test_item_type, test_item_args)
 Log.debug("Test item is a metal? #{test_item.is_type?(:metal)}")
 Log.debug("Test item is a constructable? #{test_item.is_type?(:constructed)}")
@@ -34,7 +34,7 @@ Log.debug(["Types of NPCs:", $core.db.instantiable_types_of(:archetype)])
 
 def test_npc(db, test_npc_type, name)
 #    Log.debug(["Creating a #{test_npc_type} with raw info", db.raw_info_for(test_npc_type)])
-    $core.create(test_npc_type, :position => FakeRoom.new, :name => name)
+    $core.create(test_npc_type, :position => $core.create(FakeRoom), :name => name)
 end
 
 def test_test_npc(db, test_npc_type, name)

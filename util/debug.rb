@@ -14,7 +14,7 @@ class Debug
       end
     when Symbol,Fixnum,TrueClass,FalseClass,NilClass,Proc,String
       types << object.class
-    when SafeBushidoObject,BushidoObject
+    when BushidoObject
       types << BushidoObject
     else
       raise "Unhandled type in deep search: #{object.class.inspect}"

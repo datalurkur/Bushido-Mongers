@@ -23,7 +23,7 @@ module Perception
             containers = objects.select { |o| o.is_type?(:container) && o.open? }
             # perceivable objects in room + contents of perceivable open containers in room
             objects.select { |o| o.matches(filters) } +
-            containers.map { |c| c.container_contents(:internal).select { |o| o.matches(filters) } }.flatten
+            containers.map { |c| c.select_objects(:internal, false) { |o| o.matches(filters) } }.flatten
         when :grasped, :worn
             return [] unless uses?(Composition) && uses?(Equipment)
             all_equipment(location).select do |object|

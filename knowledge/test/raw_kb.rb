@@ -3,8 +3,12 @@ require './knowledge/raw_kb'
 
 Log.setup("Main", "raw_kb_test")
 
-db   = ObjectDB.get("default")
-kb   = ObjectKB.new(db, true)
+db     = ObjectDB.get("default")
+okb    = ObjectKB.new(db, true)
+
+packed = ObjectKB.pack(okb)
+Log.debug(packed)
+kb     = ObjectKB.unpack(db, packed)
 
 core = FakeCore.new
 
@@ -14,7 +18,7 @@ katana_quanta = kb.all_quanta_for_type(:katana)
 human_quanta = kb.all_quanta_for_type(:human)
 Log.debug(human_quanta)
 
-params = {:position => FakeRoom.new}
+params = {:position => core.create(FakeRoom)}
 
 smith = core.create_npc(:human, params)
 smith.add_knowledge(:melee_weapon, :make, :recipe)
