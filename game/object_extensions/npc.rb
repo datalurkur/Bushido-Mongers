@@ -7,11 +7,11 @@ module NpcBehavior
         def listens_for(i); [:tick]; end
 
         def pack(instance)
-            {:behavior => @behavior_type}
+            {:behavior => instance.behavior_type}
         end
 
         def unpack(core, instance, raw_data)
-            raise(MissingProperty, "NpcBehavior data corrupted") unless raw_data[:behavior]
+            raise(MissingProperty, "NpcBehavior data corrupted (behavior)") unless raw_data.has_key?(:behavior)
             instance.set_behavior(raw_data[:behavior])
         end
 
@@ -23,7 +23,7 @@ module NpcBehavior
         end
     end
 
-    attr_accessor :behavior
+    attr_reader :behavior_type, :behavior
 
     def set_behavior(behavior)
         @behavior_type = behavior

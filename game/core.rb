@@ -5,8 +5,13 @@ require './game/character_loader'
 require './raws/db'
 require './knowledge/raw_kb'
 require './util/exceptions'
+require './util/packer'
 
 class GameCore
+    include Packer
+
+    def self.packable; [:tick_rate]; end
+
     attr_reader :world, :db, :kb
 
     def initialize
@@ -24,19 +29,17 @@ class GameCore
         @ticking              = false
     end
 
-    def pack
-        hash = {}
+    def pack_custom(hash)
         @usage_mutex.synchronize do
             Log.info("Saving game core")
 
-            hash[:tick_rate]       = @tick_rate
-
             hash[:db]              = ObjectDB.pack(@db)
             hash[:kb]              = ObjectKB.pack(@kb)
-            hash[:words_db]        = WordParser.pack(@words_db)
+            hash[:words_db]        = WordDB.pack(@words_db)
 
             hash[:object_manifest] = {}
             @object_manifest.keys.each do |klass|
+                Log.debug("Packing #{klass} manifest")
                 hash[:object_manifest][klass] = {}
                 @object_manifest[klass].each do |uid, obj|
                     hash[:object_manifest][klass][uid] = klass.pack(obj)
@@ -50,36 +53,44 @@ class GameCore
         hash
     end
 
-    def unpack(hash)
+    def unpack_custom(hash)
         @usage_mutex.synchronize do
             Log.info("Loading game core")
-
-            # Unpack tick rate
-            # -------------------------------
-            @tick_rate = hash[:tick_rate]
 
             # Unpack raws
             # -------------------------------
             @db = ObjectDB.unpack(hash[:db])
-            @kb = ObjectKB.unpack(hash[:kb])
-            @words_db = WordParser.unpack(hash[:words_db])
+            @kb = ObjectKB.unpack(@db, hash[:kb])
+            @words_db = WordDB.unpack(hash[:words_db])
 
             # Unpack objects
             # -------------------------------
-            @uid_count = hash[:object_manifest].keys.max
-            hash[:object_manifest].keys.each do |klass|
-                @object_manifest[klass] = {}
-                hash[:object_manifest][klass].each do |uid,hash|
-                    @object_manifest[klass][uid] = klass.unpack(self, hash)
+            @uid_count = 0
+            uid_max = 0
+            Log.debug("Unpacking #{object_manifest_types.size} object manifest types from #{hash[:object_manifest].keys.inspect}")
+            object_manifest_types.each do |klass|
+                manifest = hash[:object_manifest][klass]
+                Log.debug("Unpacking #{manifest.keys.size} #{klass} types")
+                hash[:object_manifest][klass].each do |uid,obj_hash|
+                    @uid_count += 1
+                    uid_max = [uid_max, uid].max
+                    @object_manifest[klass][uid] = klass.unpack(self, obj_hash)
+                    Log.debug("Unpacked #{uid}")
                 end
             end
+            raise(UnexpectedBehaviorError, "UID counts do not match (too few or too many UIDs loaded)") if @uid_count != uid_max
+            Log.debug("Found #{@uid_count} uids")
 
             # Unpack world
             # -------------------------------
-            unless @object_manifest.has_key?(World) && @object_manifest[World].keys.size == 1 && @object_manifest[World].values.first.uid == hash[:world_uid]
+            if @object_manifest.has_key?(World)
+                worlds = @object_manifest[World].keys
+                raise(UnexpectedBehaviorError, "#{worlds.size == 0 ? "No" : "Multiple"} world objects present") if worlds.size != 1
+                raise(UnexpectedBehaviorError, "World UID is inconsistent") if worlds.first != hash[:world_uid]
+                @world = hash[:world_uid]
+            else
                 raise(MissingProperty, "World data corrupt")
             end
-            @world = @object_manifest[World].values.first
 
             # Unpack the world object managers
             # -------------------------------
@@ -90,7 +101,7 @@ class GameCore
     end
 
     # PUBLIC (THREADSAFE) METHODS
-    def setup(args)
+    def setup(args={})
         @usage_mutex.synchronize do
             Log.info("Setting up game core")
 

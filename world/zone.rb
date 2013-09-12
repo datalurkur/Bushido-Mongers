@@ -6,6 +6,15 @@ require './words/words'
 class Zone
     # Create zones given a parent (nil for the root zone) and depth information.
     class << self
+        def direction_opposite(direction)
+            case direction
+            when :north; :south
+            when :south; :north
+            when :east;  :west
+            when :west;  :east
+            end
+        end
+
         # Returns args used to populate gen_area_name, Area.new and Room.new.
         def get_params(core, args = {})
             args[:depth] ||= 0
@@ -50,41 +59,41 @@ class Zone
         end
     end
 
-    public
-    class << self
-        def direction_opposite(direction)
-            case direction
-            when :north; :south
-            when :south; :north
-            when :east;  :west
-            when :west;  :east
-            end
-        end
-
-        def pack(instance)
-        end
-
-        def unpack(core, hash)
-        end
-    end
-
     attr_accessor :name
     attr_reader :offset, :uid
-    def initialize(name, uid)
-        @name = name
+    def initialize(core, uid, name)
+        @core = core
         @uid  = uid
+        @name = name
+    end
+
+    def pack
+        {
+            :name   => @name,
+            :uid    => @uid,
+            :parent => @parent,
+            :offset => @offset
+        }
+    end
+
+    def unpack(hash)
+        [:parent, :offset].each do |key|
+            raise(MissingProperty, "Zone data corrupt (#{key})") unless hash.has_key?(key)
+        end
+        @parent = hash[:parent]
+        @offset = hash[:offset]
     end
 
     def monicker; @name; end
 
     def set_parent(parent, offset)
-        @parent = parent
+        @parent = parent.uid
         @offset = offset
     end
 
     def get_full_coordinates
         if @parent
-            @parent.get_full_coordinates + [@offset]
+            @core.lookup(@parent).get_full_coordinates + [@offset]
         else
             []
         end
@@ -120,7 +129,7 @@ class Zone
 
         if adjacent_coords.x < 0 || adjacent_coords.x >= @size || adjacent_coords.y < 0 || adjacent_coords.y >= @size
             raise(UnexpectedBehaviorError, "Reached the edge of the world looking for leaves in #{@name}.") if @parent.nil?
-            @parent.find_neighbor_leaves_upwards(dir, upwards_history + [@offset])
+            @core.lookup(@parent).find_neighbor_leaves_upwards(dir, upwards_history + [@offset])
         else
             if has_zone?(*adjacent_coords)
                 zone_at(*adjacent_coords).find_neighbor_leaves_downwards(dir, upwards_history[0...-1])
@@ -133,8 +142,8 @@ end
 
 class ZoneContainer < Zone
     attr_reader :size
-    def initialize(name, uid, size, depth)
-        super(name, uid)
+    def initialize(core, uid, name, size, depth)
+        super(core, uid, name)
 
         @size   = size
         @depth  = depth
@@ -143,13 +152,32 @@ class ZoneContainer < Zone
         @zonemap     = {}
     end
 
+    def pack
+        super.merge(
+            :size    => @size,
+            :depth   => @depth,
+            :zones   => @zones,
+            :zonemap => @zonemap
+        )
+    end
+
+    def unpack(hash)
+        super(hash)
+        [:zones, :zonemap].each do |key|
+            raise(MissingProperty, "ZoneContainer data corrupted (#{key})") unless hash.has_key?(key)
+        end
+        @zones   = hash[:zones]
+        @zonemap = hash[:zonemap]
+    end
+
     def leaves
         @zones.collect do |row|
-            row.collect do |zone|
-                if ZoneContainer === zone
-                    zone.leaves
+            row.collect do |zone_uid|
+                if zone_uid
+                    zone = @core.lookup(zone_uid)
+                    ZoneContainer === zone ? zone.leaves : zone
                 else
-                    zone
+                    nil
                 end
             end
         end.flatten.compact
@@ -172,7 +200,7 @@ class ZoneContainer < Zone
         end
 
         if this_edge && @parent
-            @parent.abuts_edge?(dir, coords[0...-1])
+            @core.lookup(@parent).abuts_edge?(dir, coords[0...-1])
         elsif this_edge
             true
         else
@@ -197,7 +225,7 @@ class ZoneContainer < Zone
 
     def zone_at(x, y)
         raise(ArgumentError, "No zone at #{[x,y].inspect} in #{@name}.") if @zones[x][y].nil?
-        @zones[x][y]
+        @core.lookup(@zones[x][y])
     end
 
     def set_zone(x, y, zone)
@@ -206,8 +234,8 @@ class ZoneContainer < Zone
             Log.error("Ambiguous zone name, '#{zone.name}', found.")
             zone.name += "_"
         end
-        @zones[x][y]        = zone
-        @zonemap[zone.name] = zone
+        @zones[x][y]        = zone.uid
+        @zonemap[zone.name] = zone.uid
         zone.set_parent(self, [x,y])
     end
 
@@ -218,7 +246,7 @@ class ZoneContainer < Zone
 
     def zone_named(zone_name)
         raise(ArgumentError, "No zone #{zone_name} found in #{@name}.") unless @zonemap.has_key?(zone_name)
-        @zonemap[zone_name]
+        @core.lookup(@zonemap[zone_name])
     end
 
     def find_zone_named(zone_name)
@@ -227,10 +255,11 @@ class ZoneContainer < Zone
             return self
         elsif @zonemap.has_key?(zone_name)
             Log.info("Found via zonemap")
-            return @zonemap[zone_name]
+            return @core.lookup(@zonemap[zone_name])
         else
             @zones.each do |row|
-                row.each do |subzone|
+                row.each do |subzone_uid|
+                    subzone = @core.lookup(subzone_uid)
                     if ZoneContainer === subzone
                         result = subzone.find_zone_named(zone_name)
                         return result if result
@@ -304,15 +333,29 @@ class ZoneContainer < Zone
 end
 
 class ZoneLeaf < Zone
-    def initialize(name, uid)
-        super(name, uid)
+    def initialize(core, uid, name)
+        super(core, uid, name)
 
         @connections = {}
         @resolved    = false
     end
 
+    def pack
+        super().merge(
+            :connections => @connections,
+            :resolved    => @resolved
+        )
+    end
+
+    def unpack(hash)
+        super(hash)
+        raise(MissingProperty, "ZoneLeaf data corrupted") unless hash[:connections] && hash[:resolved]
+        @connections = hash[:connections]
+        @resolved    = hash[:resolved]
+    end
+
     def depth
-        @parent.depth - 1
+        @core.lookup(@parent).depth - 1
     end
 
     def find_neighbor_leaves_downwards(dir, upwards_history)
@@ -321,7 +364,7 @@ class ZoneLeaf < Zone
     end
 
     def abuts_edge?(dir)
-        @parent.abuts_edge?(dir, get_full_coordinates)
+        @core.lookup(@parent).abuts_edge?(dir, get_full_coordinates)
     end
 
     def connect_to(direction)
@@ -341,7 +384,7 @@ class ZoneLeaf < Zone
     end
 
     def connectable_leaves(direction)
-        @parent.find_neighbor_leaves_upwards(direction, [@offset])
+        @core.lookup(@parent).find_neighbor_leaves_upwards(direction, [@offset])
     end
 
     def connected_leaf(direction)
@@ -370,7 +413,7 @@ class ZoneLeaf < Zone
         raise(StateError, "Connections are already resolved!") if @resolved
         @connections.each do |direction,value|
             if TrueClass === value
-                @connections[direction] = connected_leaf(direction)
+                @connections[direction] = connected_leaf(direction).uid
             elsif FalseClass === value
                 @connections[direction] = nil
             else
@@ -383,6 +426,6 @@ class ZoneLeaf < Zone
     def get_adjacent(direction)
         raise(StateError, "Connections not resolved!") unless @resolved
         raise(ArgumentError, "No connection to the #{direction} for #{name}") unless @connections[direction]
-        @connections[direction]
+        @core.lookup(@connections[direction])
     end
 end

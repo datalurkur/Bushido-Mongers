@@ -16,14 +16,20 @@ module Position
             end
         end
 
-        def pack(instance)
-            {:position_uid => instance.position_uid}
-        end
+        def pack(instance);               instance.pack;               end
+        def unpack(core, instance, hash); instance.unpack(core, hash); end
+    end
 
-        def unpack(core, instance, hash)
-            raise(MissingProperty, "Position data corrupted") unless hash[:position_uid]
-            instance.set_position(core.lookup(hash[:position_uid]), :internal)
+    def pack
+        {:position_uid => @position_uid, :position_type => @position_type}
+    end
+
+    def unpack(core, hash)
+        [:position_uid, :position_type].each do |key|
+            raise(MissingProperty, "Position data corrupted (#{key})") unless hash.has_key?(key)
         end
+        @position_uid  = hash[:position_uid]
+        @position_type = hash[:position_type]
     end
 
     def dispatch_destruction_message(destroyer)
@@ -38,11 +44,6 @@ module Position
 
     def has_position?
         !!@position_uid
-    end
-
-    def position_uid
-        safe_position
-        @position_uid
     end
 
     def absolute_position

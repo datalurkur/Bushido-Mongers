@@ -73,9 +73,7 @@ tests = [
 ]
 
 require './raws/db'
-require './messaging/positional_message'
-Message = DebugPositionalMessage
-require './messaging/message_defs'
+require './messaging/message'
 require './test/fake'
 require './game/descriptors'
 require './game/object_extensions'

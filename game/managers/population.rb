@@ -1,4 +1,5 @@
 require './game/managers/manager'
+require './util/packer'
 
 # TODO
 #   - Listen for ticks and automatically spawn new population members
@@ -7,14 +8,10 @@ require './game/managers/manager'
 #   - Make the population manager save-/load-friendly
 
 class PopulationManager < Manager
-    class << self
-        def pack(instance)
-            raise(NotImplementedError)
-        end
-
-        def unpack(hash)
-            raise(NotImplementedError)
-        end
+    include Packer
+    def self.packable; [:named, :groups, :disabled_spawns]; end
+    def self.unpack(core, hash)
+        self.new(core).unpack(hash)
     end
 
     def listens_for; [:tick,:unit_animated,:unit_moves,:unit_moved,:unit_killed,:unit_renamed]; end
@@ -72,34 +69,37 @@ class PopulationManager < Manager
         end
     end
 
-    def [](type)
-        raise(ArgumentError, "Unknown population #{type.inspect}") unless @groups.has_key?(type)
-        @groups[type]
-    end
-
     def each(&block)
         @groups.each do |type|
             yield(type)
         end
     end
 
+    def spawns_for(type)
+        @groups[type][:spawns]
+    end
+
     def locate(type_or_name)
         if @groups[type_or_name]
-            return @groups[type_or_name][:populations]
+            h = {}
+            @groups[type_or_name][:populations].each do |loc_uid, num|
+                h[@core.lookup(loc_uid)] = num
+            end
+            return h
         else
             name = hash_name(type_or_name)
             if @named[name]
-                return {@named[name] => 1}
+                return {@core.lookup(@named[name]) => 1}
             else
                 return {}
             end
         end
     end
     def enable_spawn(location)
-        @disabled_spawns.delete(location)
+        @disabled_spawns.delete(location.uid)
     end
     def disable_spawn(location)
-        (@disabled_spawns << location) unless @disabled_spawns.include?(location)
+        (@disabled_spawns << location.uid) unless @disabled_spawns.include?(location.uid)
     end
 
 
@@ -123,22 +123,24 @@ class PopulationManager < Manager
     def unit_moves(unit, src, dst)
         type = unit.get_type
         if src
-            unless @groups[type][:populations][src]
+            src_uid = src.uid
+            unless @groups[type][:populations][src_uid]
                 raise(NoMatchError, "No population of #{type} found at #{src}")
             end
-            @groups[type][:populations][src] -= 1
-            @groups[type][:populations].delete(src) if @groups[type][:populations][src] == 0
+            @groups[type][:populations][src_uid] -= 1
+            @groups[type][:populations].delete(src_uid) if @groups[type][:populations][src_uid] == 0
         end
 
         if dst
-            @groups[type][:populations][dst] ||= 0
-            @groups[type][:populations][dst] += 1
+            dst_uid = dst.uid
+            @groups[type][:populations][dst_uid] ||= 0
+            @groups[type][:populations][dst_uid] += 1
         end
 
         if unit.uses?(Karmic) && unit.name
             unit_name = hash_name(unit.name)
             if dst
-                @named[unit_name] = dst
+                @named[unit_name] = dst.uid
             else
                 @named.delete(unit_name)
             end

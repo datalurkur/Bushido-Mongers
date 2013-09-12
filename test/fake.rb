@@ -35,28 +35,12 @@ class FakeCore < DefaultCore
     end
 end
 
-class FakeRoom
-    attr_reader :uid, :name
-    def initialize(core=nil, uid=nil, name="FakeRoom", params={})
-        @core = core
-        @uid  = uid
-        @name = name
+require './world/room'
+class FakeRoom < Room
+    def initialize(core, uid, params)
+        params[:name] ||= "FakeRoom"
+        super(core, uid, params)
     end
-    def get_contents(t);
-        raise(ArgumentError, "Invalid room content type #{t}.") unless t == :internal
-        @objects.collect { |o_id| @core.lookup(o_id) }
-    end
-    def add_object(o,t=nil)
-        @objects ||= []
-        @objects << o.uid
-    end
-    def remove_object(o,t=nil)
-        @objects ||= []
-        @objects.delete(o.uid)
-    end
-    def component_destroyed(o,t,d); remove_object(o,t); end
-    def zone_info(); {}; end
-    def monicker() self.name; end
 end
 
 unless Object.const_defined?("Message")

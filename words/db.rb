@@ -1,7 +1,14 @@
 require 'set'
 require './util/log'
+require './util/packer'
 
 class WordDB
+    include Packer
+
+    def self.packable
+        [:groups, :associations, :conjugations, :verb_case_maps, :verb_default_case, :lexemes, :lemmas, :derivations]
+    end
+
     def initialize
         @groups       = []
         @associations = []

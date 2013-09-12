@@ -12,7 +12,7 @@ module Composition
 
         def unpack(core, instance, raw_data)
             [:size, :containers].each do |key|
-                raise(MissingProperty, "Composition data corrupted") unless raw_data[key]
+                raise(MissingProperty, "Composition data corrupted (#{key})") unless raw_data.has_key?(key)
             end
             instance.unpack_container_contents(raw_data[:containers])
             instance.size = raw_data[:size]

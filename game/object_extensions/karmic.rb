@@ -63,7 +63,6 @@ module Karmic
 
     def name; @name; end
     def set_name(name)
-        raise(ArgumentError, "No name given when setting name") unless name
         Message.dispatch(@core, :unit_renamed, {:agent => self, :old_name => @name, :name => name})
         @name = name
     end

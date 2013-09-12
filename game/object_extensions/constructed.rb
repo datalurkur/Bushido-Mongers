@@ -42,7 +42,7 @@ module Constructed
         end
 
         def unpack(core, instance, raw_data)
-            raise(MissingProperty, "Constructed data corrupted") unless raw_data[:creator]
+            raise(MissingProperty, "Constructed data corrupted") unless raw_data.has_key?(:creator)
             instance.set_creator(raw_data[:creator])
         end
     end

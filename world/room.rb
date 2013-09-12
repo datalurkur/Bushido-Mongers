@@ -20,13 +20,30 @@ end
 class Room < ZoneLeaf
     include ZoneWithKeywords
 
+    def self.pack(instance); instance.pack; end
+    def self.unpack(core, hash)
+        raise(MissingProperty, "Room data corrupted") unless hash[:uid] && hash[:params]
+        Room.new(core, hash[:uid], hash[:params]).unpack(hash)
+    end
+
     def initialize(core, uid, params={})
-        @core    = core
         @params  = params
-
         @objects = []
+        raise(MissingProperty, "Room must have a name") unless params[:name]
+        super(core, uid, params[:name])
+    end
 
-        super(params[:name], uid)
+    def pack
+        super().merge(
+            :objects => @objects,
+            :params  => @params
+        )
+    end
+
+    def unpack(hash)
+        super(hash)
+        raise(MissingProperty, "Room data corrupted") unless hash[:objects]
+        @objects = hash[:objects]
     end
 
     def monicker; @name; end
@@ -71,12 +88,23 @@ end
 class Area < ZoneContainer
     include ZoneWithKeywords
 
-    def initialize(core, uid, params={})
-        Log.debug("Creating #{name} room with #{params.inspect}")
-        @core   = core
-        @params = params
+    def self.pack(instance); instance.pack; end
+    def self.unpack(core, hash)
+        raise(MissingProperty, "Area data corrupted") unless hash[:uid] && hash[:params]
+        Area.new(core, hash[:uid], hash[:params]).unpack(hash)
+    end
 
-        super(params[:name], uid, params[:size], params[:depth])
+    def initialize(core, uid, params={})
+        Log.debug("Creating #{params[:name]} room with #{params.inspect}")
+        @params = params
+        [:name, :size, :depth].each do |key|
+            raise(MissingProperty, "Area must have a #{key}") unless params[key]
+        end
+        super(core, uid, params[:name], params[:size], params[:depth])
+    end
+
+    def pack
+        super().merge(:params => @params)
     end
 
     # Decides whether an Area populates its sub-Areas / Leaves directly, or defers to them to do so

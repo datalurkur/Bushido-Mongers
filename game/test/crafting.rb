@@ -4,7 +4,7 @@ Log.setup("Main", "abilities")
 
 core = FakeCore.new
 
-test_room = core.create(Room, "Test Room")
+test_room = core.create(FakeRoom)
 
 test_objects = [:sword_blade, :long_handle]
 test_components = []

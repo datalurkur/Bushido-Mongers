@@ -1,7 +1,4 @@
-require './messaging/positional_message'
-Message = PositionalMessage
-require './messaging/message_defs'
-
+require './messaging/message'
 require './test/fake'
 
 Log.setup("Main", "effects")

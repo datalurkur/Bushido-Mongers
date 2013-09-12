@@ -30,7 +30,7 @@ class DefaultCore < GameCore
         Log.debug("Creating #{type} agent", 6)
 
         unless hash[:position]
-            spawn_location_types = @population_manager[type][:spawns]
+            spawn_location_types = @population_manager.spawns_for(type)
             hash[:position]      = @world.get_random_location(spawn_location_types)
             hash[:position]    ||= @world.get_random_location
         end
@@ -119,7 +119,7 @@ class DefaultCore < GameCore
     end
 
     def unpack_managers(hash)
-        @population_manager = PopulationManager.unpack(hash[:population])
+        @population_manager = PopulationManager.unpack(self, hash[:population])
     end
 
     def teardown_managers

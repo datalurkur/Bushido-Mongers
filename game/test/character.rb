@@ -23,7 +23,7 @@ end
 def reload_test_character(username, character_name, raw_group)
     Log.debug("Reloading test character")
     fake_core = FakeCore.new
-    fake_core.create(FakeRoom, "Fake Room")
+    fake_core.create(FakeRoom)
     character = CharacterLoader.attempt_to_load(fake_core, username, character_name)
 end
 
