@@ -60,6 +60,9 @@ $client.stack.specify_response_for(:choose_from_list, :field => :lobby_menu) do 
         stack.put_response(:create_character)
     end
 end
+$client.stack.specify_response_for(:generation_pending) do |stack, message|
+    stack.set_state(:wait_for_gen)
+end
 $client.stack.specify_response_for(:generation_success) do |stack, message|
     stack.set_state(:start_game)
 end

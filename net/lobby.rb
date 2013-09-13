@@ -1,10 +1,14 @@
 require './game/cores/default'
 require './game/descriptors'
+require './game/core_loader'
 require './http/http_server'
+require './net/manifests'
 
 # Lobbies group players together with a Game and facilitate communications between the game and the client sockets
 class Lobby
-    attr_reader :name
+    include GameCoreLoader
+
+    attr_reader :name, :game_state, :game_core
 
     def initialize(name, password_hash, creator, &block)
         # Credentials
@@ -14,10 +18,11 @@ class Lobby
         # Game administration / socket maintenance / broadcast list
         @users          = {}
         @users[creator] = {:admin => true}
+        @game_creator   = creator
         @default_admin  = creator
 
         # Local state, basically
-        @game_state     = :genesis
+        @game_state     = :no_core
 
         # Game objects
         @game_core      = nil
@@ -28,20 +33,18 @@ class Lobby
         @send_callback = block
     end
 
-    def user_list
-        @users.keys.select { |user| is_playing?(user) }
-    end
+    def is_admin?(username);   @users[username][:admin];                                 end
+    def is_playing?(username); @game_core && @game_core.has_active_character?(username); end
+    def user_list;             @users.keys.select { |user| is_playing?(user) };          end
 
-    def game_state
-        @game_state
-    end
-
-    def is_admin?(username)
-        @users[username][:admin]
-    end
-
-    def is_playing?(username)
-        @game_core && @game_core.has_active_character?(username)
+    def check_permissions(command, username)
+        # Later on this will be more interesting, but now just allows admins to do interesting stuff
+        case command
+        when :generate_world,:save_world,:load_world,:start_game
+            return is_admin?(username)
+        else
+            return true
+        end
     end
 
     def send_to_user(username, message)
@@ -84,10 +87,6 @@ class Lobby
         hash == @password_hash
     end
 
-    def get_game_core
-        @game_core
-    end
-
     def add_user(username)
         if @users[username]
             Log.debug("#{username} is already active in the lobby")
@@ -127,7 +126,7 @@ class Lobby
     end
 
     def set_user_character(username, character_name)
-        if @game_state == :genesis
+        if @game_state == :no_core
             send_to_user(username, Message.new(:character_not_ready, {:reason => "Game has not been generated"}))
             return
         end
@@ -154,45 +153,38 @@ class Lobby
         end
     end
 
-    def generate_game(username)
-        unless is_admin?(username)
-            send_to_user(username, Message.new(:generation_fail, {:reason => :access_denied}))
-            return false
-        end
-
-        if @game_state == :genesis
-            @game_state = :generating
-
-            # Create the new game core
-            @game_core = DefaultCore.new
-            @game_core.setup(@game_args)
-            # Start listening for messages from this core
-            Message.register_listener(@game_core, :core, self)
-            Message.register_listener(@game_core, :tick, self)
-
-            @game_state = :ready
-            Log.info("Game created")
-            broadcast(Message.new(:generation_success))
-            true
-        elsif @game_state == :generating
-            send_to_user(username, Message.new(:generation_fail, {:reason => :generation_in_progress}))
-            false
+    def get_core_state
+        if @game_state == :no_core
+            return nil
+        elsif @game_state == :pending
+            return :core_pending
         elsif @game_state == :playing || @game_state == :ready
-            send_to_user(username, Message.new(:generation_fail, {:reason => :already_generated}))
-            false
+            return :core_exists
         else
-            Log.error("Unknown game state")
-            send_to_user(username, Message.new(:generation_fail, {:reason => :unknown}))
-            false
+            return :unknown
         end
     end
 
-    def start_game(username)
-        unless is_admin?(username)
-            send_to_user(username, Message.new(:start_fail, {:reason => :access_denied}))
-            return false
-        end
+    def set_core(core)
+        @game_state = :pending
+        @game_core  = core
+        Message.register_listener(@game_core, :core, self)
+        Message.register_listener(@game_core, :tick, self)
+    end
 
+    def save_world(username)
+        send_to_user(username, Message.new(:save_pending))
+        extra_info = {
+            :name       => @name,
+            :creator    => @game_creator,
+            :created_on => @game_core.created_on,
+            :saved_on   => Time.now
+        }
+        save_core(@game_core, extra_info)
+        broadcast(Message.new(:save_success))
+    end
+
+    def start_game(username)
         if @game_state == :ready
             @game_state = :playing
 
@@ -209,10 +201,10 @@ class Lobby
         elsif @game_state == :playing
             send_to_user(username, Message.new(:start_fail, {:reason => :already_started}))
             false
-        elsif @game_state == :genesis
+        elsif @game_state == :no_core
             send_to_user(username, Message.new(:start_fail, {:reason => :world_not_generated}))
             false
-        elsif @game_state == :generating
+        elsif @game_state == :pending
             send_to_user(username, Message.new(:start_fail, {:reason => :world_generation_in_progress}))
             false
         end
@@ -221,6 +213,10 @@ class Lobby
     def perform_command(username, params)
         begin
             data = case params[:command]
+            when :save
+                raise(InvalidCommandError, "Permission denied") unless is_admin?(username)
+                save_world(username)
+                nil
             when :spawn,:summon
                 raise(InvalidCommandError, "Permission denied") unless is_admin?(username)
                 raise(InvalidCommandError, "#{params[:command].title} what?") unless params[:target]
@@ -246,7 +242,7 @@ class Lobby
             else
                 raise(ArgumentError, "Unrecognized command '#{params[:command]}'")
             end
-            send_to_user(username, Message.new(:command_reply, :text => data))
+            send_to_user(username, Message.new(:command_reply, :text => data)) if data
         rescue Exception => e
             Log.debug(["Failed to perform user command", e.message, e.backtrace])
             send_to_user(username, Message.new(:command_reply, :text => e.message))
@@ -342,13 +338,48 @@ class Lobby
     end
 
     def process_lobby_message(message, username)
+        unless check_permissions(message, username)
+            send_to_user(username, Message.new(:access_denied))
+        end
+
         case message.type
+        when :get_saved_worlds
+            raw_infos = get_saved_cores_info
+            info_to_client = {}
+            raw_infos.each { |uid, info| info_to_client[uid] = SaveGameInfo.new(info) }
+            send_to_user(username, Message.new(:saved_worlds_info, {:info_hash => info_to_client}))
+        when :load_world
+            core_state = get_core_state
+            if core_state
+                send_to_user(username, Message.new(:load_failed, {:reason => core_state}))
+            else
+                @game_state      = :pending
+                send_to_user(username, Message.new(:load_pending))
+                core, extra_info = load_core(message.uid)
+                set_core(core)
+                @game_creator    = extra_info[:creator]
+                @game_state      = :ready
+                broadcast(Message.new(:load_success))
+            end
+        when :save_world
+            save_world(username)
         when :get_game_params
             # Eventually there will actually *be* game params, at which point we'll want to send them here
             Log.warning("PARTIALLY IMPLEMENTED")
-            send_to_user(username, Message.new(:game_params, {:params=>{}}))
+            send_to_user(username, Message.new(:game_params, {:params=>@game_args}))
         when :generate_game
-            generate_game(username)
+            core_state = get_core_state
+            if core_state
+                send_to_user(username, Message.new(:generation_fail, {:reason => core_state}))
+            else
+                @game_state = :pending
+                send_to_user(username, Message.new(:generation_pending))
+                core = DefaultCore.new
+                core.setup(@game_args)
+                set_core(core)
+                @game_state = :ready
+                broadcast(Message.new(:generation_success))
+            end
         when :set_character_opt
             @users[username][:character_options] ||= {}
             @users[username][:character_options][message.property] = message.value
@@ -397,7 +428,7 @@ class Lobby
                 send_to_user(username, Message.new(:character_not_ready, {:reason => e.message}))
             end
         when :list_characters
-            if @game_state == :genesis
+            if @game_state == :no_core
                 send_to_user(username, Message.new(:no_characters, {:reason => "Game not yet generated"}))
             else
                 characters = get_user_characters(username)

@@ -147,6 +147,8 @@ class State
             end
             choices = if params[:choices_from]
                 previous_result[params[:choices_from]]
+            elsif params[:choices_from_state]
+                @client.get(params[:choices_from_state])
             else
                 params[:choices]
             end

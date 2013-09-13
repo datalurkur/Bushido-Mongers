@@ -9,7 +9,7 @@ class ObjectKB < KB
         end
 
         def unpack(db, hash)
-            raise(MissingProperty, "ObjectKB data corrupted") unless hash[:use_identities]
+            raise(MissingProperty, "ObjectKB data corrupted") unless hash.has_key?(:use_identities)
             kb = ObjectKB.new(db, hash[:use_identities])
             kb.unpack(hash)
             kb

@@ -10,14 +10,15 @@ require './util/packer'
 class GameCore
     include Packer
 
-    def self.packable; [:tick_rate]; end
+    def self.packable; [:tick_rate, :created_on, :tick_count]; end
 
-    attr_reader :world, :db, :kb
+    attr_reader :world, :db, :kb, :tick_count, :created_on
 
     def initialize
         Message.setup(self)
 
         @usage_mutex     = Mutex.new
+        @created_on      = Time.now
 
         @uid_count            = 0
         @awaiting_destruction = []
@@ -26,12 +27,14 @@ class GameCore
             @object_manifest[klass] = {}
         end
 
+        @tick_count           = 0
         @ticking              = false
     end
 
     def pack_custom(hash)
         @usage_mutex.synchronize do
             Log.info("Saving game core")
+            @saved_on              = Time.now
 
             hash[:db]              = ObjectDB.pack(@db)
             hash[:kb]              = ObjectKB.pack(@kb)
@@ -42,6 +45,7 @@ class GameCore
                 Log.debug("Packing #{klass} manifest")
                 hash[:object_manifest][klass] = {}
                 @object_manifest[klass].each do |uid, obj|
+                    Log.debug("Packing #{uid}", 8)
                     hash[:object_manifest][klass][uid] = klass.pack(obj)
                 end
             end
@@ -59,8 +63,8 @@ class GameCore
 
             # Unpack raws
             # -------------------------------
-            @db = ObjectDB.unpack(hash[:db])
-            @kb = ObjectKB.unpack(@db, hash[:kb])
+            @db       = ObjectDB.unpack(hash[:db])
+            @kb       = ObjectKB.unpack(@db, hash[:kb])
             @words_db = WordDB.unpack(hash[:words_db])
 
             # Unpack objects
@@ -75,19 +79,19 @@ class GameCore
                     @uid_count += 1
                     uid_max = [uid_max, uid].max
                     @object_manifest[klass][uid] = klass.unpack(self, obj_hash)
-                    Log.debug("Unpacked #{uid}")
+                    Log.debug("Unpacked #{uid}", 8)
                 end
             end
             raise(UnexpectedBehaviorError, "UID counts do not match (too few or too many UIDs loaded)") if @uid_count != uid_max
             Log.debug("Found #{@uid_count} uids")
 
-            # Unpack world
+            # Identify world
             # -------------------------------
             if @object_manifest.has_key?(World)
-                worlds = @object_manifest[World].keys
+                worlds = @object_manifest[World].values
                 raise(UnexpectedBehaviorError, "#{worlds.size == 0 ? "No" : "Multiple"} world objects present") if worlds.size != 1
-                raise(UnexpectedBehaviorError, "World UID is inconsistent") if worlds.first != hash[:world_uid]
-                @world = hash[:world_uid]
+                raise(UnexpectedBehaviorError, "World UID is inconsistent") if worlds.first.uid != hash[:world_uid]
+                @world = worlds.first
             else
                 raise(MissingProperty, "World data corrupt")
             end
@@ -352,6 +356,7 @@ class GameCore
     end
 
     def dispatch_ticks
+        @tick_count += 1
         Message.dispatch(self, :tick)
     end
 

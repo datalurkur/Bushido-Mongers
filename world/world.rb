@@ -4,6 +4,16 @@ require './world/room'
 require './graphics/png'
 
 class World < Area
+=begin
+    def self.pack(instance); instance.pack; end
+    def self.unpack(core, hash)
+        raise(MissingProperty, "World data corrupted") unless hash[:uid] && hash[:params]
+        obj = World.new(core, hash[:uid], hash[:params])
+        obj.unpack(hash)
+        obj
+    end
+=end
+
     def finalize
         # Cache room adjacency to avoid lookups
         leaves.each do |leaf|

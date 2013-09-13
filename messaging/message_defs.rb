@@ -28,11 +28,26 @@ Message.define(:send_whisper,        :chat, [:recipient,:chat_text])
 Message.define(:receive_chat,        :chat, [:sender,:chat_text,:is_whisper])
 
 # Lobby phase
+Message.define(:access_denied,       :lobby)                                                # S->C
+
+# Game / World loading / saving
+Message.define(:get_saved_worlds,    :lobby)                                                # C->S
+Message.define(:saved_worlds_info,   :lobby, [:info_hash])                                  # S->C
+Message.define(:load_world,          :lobby, [:uid])                                        # C->S
+Message.define(:load_pending,        :lobby, [],        "World loading in progress")        # S->C
+Message.define(:load_success,        :lobby, [],        "World loaded")                     # S->C
+Message.define(:load_fail,           :lobby, [:reason], "World failed to load")             # S->C
+Message.define(:save_world,          :lobby)                                                # C->S
+Message.define(:save_pending,        :lobby, [],        "World saving in progress")         # S->C
+Message.define(:save_success,        :lobby, [],        "World saved")                      # S->C
+Message.define(:save_fail,           :lobby, [:reason], "World failed to save")             # S->C
+
 # Game / World generation
 Message.define(:get_game_params,     :lobby)                                                # C->S
 # TODO - Add protocol for setting game parameters
 Message.define(:game_params,         :lobby, [:params])                                     # S->C
 Message.define(:generate_game,       :lobby)                                                # C->S
+Message.define(:generation_pending,  :lobby, [],        "World generation in progress")     # S->C
 Message.define(:generation_success,  :lobby, [],        "World generated")                  # S->C
 Message.define(:generation_fail,     :lobby, [:reason], "World failed to generate")         # S->C
 

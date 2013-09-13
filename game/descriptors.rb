@@ -12,6 +12,8 @@ class Descriptor
         when Room;          RoomDescriptor.describe(object, observer)
         when Array;         object.compact.collect { |o| Descriptor.describe(o, observer) }
         when Symbol,String,Fixnum,Float,TrueClass,FalseClass,NilClass; object
+        when Time;          object.to_s
+        when Manifest;      object      # Manifests are designed to be sent across the wire and need no special encoding
         when Hash
             h = {}
             object.each do |k,v|

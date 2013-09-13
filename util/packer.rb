@@ -5,23 +5,26 @@ module Packer
 
     def pack
         hash = {}
-        self.class.packable.each do |key|
-            hash[key] = self.instance_variable_get("@#{key}")
-        end
         if self.respond_to?(:pack_custom)
             hash = self.pack_custom(hash)
+        end
+        self.class.packable.each do |key|
+            if hash.has_key?(key)
+                Log.warning("Possibly overwriting key #{key.inspect}")
+            end
+            hash[key] = self.instance_variable_get("@#{key}")
         end
         hash
     end
 
     def unpack(*args)
+        if self.respond_to?(:unpack_custom)
+            self.unpack_custom(*args)
+        end
         hash = args.last
         self.class.packable.each do |key|
             raise(MissingProperty, "#{self.class} data corrupt") unless hash.has_key?(key)
             self.instance_variable_set("@#{key}", hash[key])
-        end
-        if self.respond_to?(:unpack_custom)
-            self.unpack_custom(*args)
         end
         self
     end

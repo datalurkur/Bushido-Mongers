@@ -23,7 +23,9 @@ class Room < ZoneLeaf
     def self.pack(instance); instance.pack; end
     def self.unpack(core, hash)
         raise(MissingProperty, "Room data corrupted") unless hash[:uid] && hash[:params]
-        Room.new(core, hash[:uid], hash[:params]).unpack(hash)
+        obj = self.new(core, hash[:uid], hash[:params])
+        obj.unpack(hash)
+        obj
     end
 
     def initialize(core, uid, params={})
@@ -91,7 +93,9 @@ class Area < ZoneContainer
     def self.pack(instance); instance.pack; end
     def self.unpack(core, hash)
         raise(MissingProperty, "Area data corrupted") unless hash[:uid] && hash[:params]
-        Area.new(core, hash[:uid], hash[:params]).unpack(hash)
+        obj = self.new(core, hash[:uid], hash[:params])
+        obj.unpack(hash)
+        obj
     end
 
     def initialize(core, uid, params={})

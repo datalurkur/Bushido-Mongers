@@ -21,7 +21,7 @@ class PlayingState < State
         when :act_clarify
             pass_to_client(message)
             begin_exchange(@clarification) if(message.missing_params.size <= 1)
-        when :act_fail
+        when :act_fail, :save_pending, :save_fail, :save_success
             pass_to_client(message)
         when :act_success
             @client.send_to_client(Message.new(:properties, {:field => :action_results, :properties => message.description}))

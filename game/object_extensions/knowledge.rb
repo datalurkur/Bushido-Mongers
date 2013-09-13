@@ -36,11 +36,11 @@ require './knowledge/kb'
 module Knowledge
     class << self
         def pack(instance)
-            {:knowledge => instance.knowledge}
+            {:knowledge => instance.pack_knowledge}
         end
 
         def unpack(core, instance, raw_data)
-            raise(MissingProperty, "Composition data corrupted") unless raw_data[:knowledge]
+            raise(MissingProperty, "Knowledge data corrupted") unless raw_data[:knowledge]
             instance.unpack_knowledge(raw_data[:knowledge])
         end
 
@@ -51,16 +51,15 @@ module Knowledge
         def categories; [:location, :details, :info]; end
     end
 
-    def knowledge() @knowledge; end
+    attr_accessor :knowledge
 
     def add_basic_knowledge(params)
         @knowledge = ObjectKB.new(@core.db)
         # TODO: Fill out knowledge based on :know identities.
     end
 
-    def unpack_knowledge(knowledge)
-        @knowledge = knowledge
-    end
+    def pack_knowledge;              ObjectKB.pack(@knowledge);                         end
+    def unpack_knowledge(knowledge); @knowledge = ObjectKB.unpack(@core.db, knowledge); end
 
     def add_knowledge(thing, connector, property)
         @knowledge.add_knowledge(:thing => thing, :connector => connector, :property => property)

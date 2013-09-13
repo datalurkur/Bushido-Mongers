@@ -1,9 +1,9 @@
 require 'uri'
 
 class Proc
-  def to_formatted_string
-    "<Proc: #{object_id}>"
-  end
+    def to_formatted_string(prefix="", nest_prefix=true)
+        (nest_prefix ? prefix : "") + "<Proc: #{object_id}>"
+    end
 end
 
 class Symbol
