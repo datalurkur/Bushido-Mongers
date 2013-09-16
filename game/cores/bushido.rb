@@ -10,16 +10,13 @@ class BushidoCore < GameCore
         create_agent(type, false, hash)
     end
 
-    def create_character(lobby, username, details)
+    def create_character(username, details)
         agent_params = details.reject { |k,v| [:archetype].include?(k) }
 
         ret = nil
         @usage_mutex.synchronize do
-            character = create_agent(details[:archetype], true, agent_params)
-            characters[username] = character
-            Log.info("Character #{character.monicker} created for #{username}")
-            character.set_user_callback(lobby, username)
-
+            character = create_agent(details[:archetype], true, agent_params.merge(:username => username))
+            set_active_character(username, character.uid)
             ret = character
         end
         return ret

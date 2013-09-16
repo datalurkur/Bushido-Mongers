@@ -1,3 +1,4 @@
+require './util/debug'
 require './game/cores/default'
 
 module GameCoreLoader
@@ -5,10 +6,13 @@ module GameCoreLoader
         uid      = get_core_uid(core, extra_info)
         savename = get_saved_name(uid)
 
-        packed_core_data  = Marshal.dump(DefaultCore.pack(core))
+        temp_map    = core.extract_characters_temporarily
+        packed_core = DefaultCore.pack(core)
+        packed_core_data  = Marshal.dump(packed_core)
         packed_extra_info = Marshal.dump(extra_info)
-
         save_datum(savename, [packed_extra_info, packed_core_data])
+        core.reinject_characters(temp_map)
+
         uid
     end
 
@@ -18,19 +22,15 @@ module GameCoreLoader
         core         = nil
         packed_datum = File.read(File.join(SAVEDIR, savename))
 
-        begin
-            extra_info_size, = packed_datum.unpack("N")
-            extra_info_dump  = packed_datum[4, extra_info_size]
-            packed_datum     = packed_datum[4+extra_info_size..-1]
-            extra_info       = Marshal.load(extra_info_dump)
+        extra_info_size, = packed_datum.unpack("N")
+        extra_info_dump  = packed_datum[4, extra_info_size]
+        packed_datum     = packed_datum[4+extra_info_size..-1]
+        extra_info       = Marshal.load(extra_info_dump)
 
-            packed_core_size, = packed_datum.unpack("N")
-            packed_core_dump  = packed_datum[4, packed_core_size]
-            packed_core       = Marshal.load(packed_core_dump)
-            core              = DefaultCore.unpack(packed_core)
-        rescue Exception => e
-            Log.error(["Failed to load core #{uid} - #{e.message}", e.backtrace])
-        end
+        packed_core_size, = packed_datum.unpack("N")
+        packed_core_dump  = packed_datum[4, packed_core_size]
+        packed_core       = Marshal.load(packed_core_dump)
+        core              = DefaultCore.unpack(packed_core)
 
         return [core, extra_info]
     end
@@ -55,7 +55,7 @@ module GameCoreLoader
     end
 
 private
-    SAVEDIR = "./saved"
+    SAVEDIR = "./data/cores"
 
     def prepare_save_dir
         Dir.mkdir(SAVEDIR) unless File.exists?(SAVEDIR)

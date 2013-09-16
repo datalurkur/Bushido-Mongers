@@ -22,3 +22,7 @@ end
 class SaveGameInfo < Manifest
     def self.required_args; [:name, :created_on, :saved_on]; end
 end
+
+class CharacterInfo < Manifest
+    def self.required_args; [:name, :created_on, :saved_on]; end
+end

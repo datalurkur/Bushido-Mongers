@@ -61,8 +61,8 @@ Message.define(:opt_set_ok,          :lobby, [],        "Option set")           
 Message.define(:opt_set_failed,      :lobby, [:reason], "Option not set")                   # S->C
 Message.define(:list_characters,     :lobby)                                                # C->S
 Message.define(:no_characters,       :lobby, [:reason], "No characters available")          # S->C
-Message.define(:character_list,      :lobby, [:characters])                                 # S->C
-Message.define(:select_character,    :lobby, [:character_name])                             # C->S
+Message.define(:character_list,      :lobby, [:info_hash])                                  # S->C
+Message.define(:select_character,    :lobby, [:character_uid])                              # C->S
 Message.define(:character_ready,     :lobby, [],        "Character ready")                  # S->C
 Message.define(:character_not_ready, :lobby, [:reason], "Character not ready")              # S->C
 Message.define(:begin_playing,       :lobby, [],        "Begin playing")                    # S->C

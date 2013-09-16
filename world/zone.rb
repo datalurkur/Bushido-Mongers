@@ -62,9 +62,10 @@ class Zone
     attr_accessor :name
     attr_reader :offset, :uid
     def initialize(core, uid, name)
-        @core = core
-        @uid  = uid
-        @name = name
+        @core   = core
+        @uid    = uid
+        @name   = name
+        @parent = nil
     end
 
     def pack

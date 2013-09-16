@@ -5,11 +5,17 @@ require './state/states/create_character_state'
 
 class LobbyState < State
     def setup_exchanges
-        @select_character_exchange = define_exchange_chain([
-            [:server_query,     {:query_method => :list_characters}],
-            [:choose_from_list, {:field => :character, :choices_from => :characters}],
-        ]) do |choice|
-            @client.send_to_server(Message.new(:select_character, {:character_name => choice}))
+        @character_select_exchange = define_exchange(:choose_from_list, {:field => :character_to_load, :choices_from_state => :character_list}) do |choice|
+            uid_lookup = @client.get(:uid_lookup)
+            @client.unset(:uid_lookup)
+            @client.unset(:character_list)
+
+            if uid_lookup.has_key?(choice)
+                @client.send_to_server(Message.new(:select_character, {:character_uid => uid_lookup[choice]}))
+            else
+                @client.send_to_client(Message.new(:character_not_ready, {:reason => :invalid_choice}))
+                begin_exchange(@lobby_menu_exchange)
+            end
         end
 
         @world_load_exchange = define_exchange(:choose_from_list, {:field => :world_to_load, :choices_from_state => :world_list}) do |choice|
@@ -36,7 +42,7 @@ class LobbyState < State
             when :create_character
                 CreateCharacterState.new(@client, :push)
             when :select_character
-                begin_exchange(@select_character_exchange)
+                @client.send_to_server(Message.new(:list_characters))
             when :start_game
                 @client.send_to_server(Message.new(:start_game))
             when :leave_lobby
@@ -58,8 +64,19 @@ class LobbyState < State
 
     def from_server(message)
         case message.type
+        when :character_list
+            uid_lookup     = {}
+            character_list = []
+            message.info_hash.each do |uid, character_info|
+                character_monicker = "#{character_info.name} - Created #{character_info.created_on} / Last saved #{character_info.saved_on}"
+                uid_lookup[character_monicker] = uid
+                character_list << character_monicker
+            end
+            @client.set(:uid_lookup, uid_lookup)
+            @client.set(:character_list, character_list)
+            begin_exchange(@character_select_exchange)
         when :saved_worlds_info
-            uid_lookup  = {}
+            uid_lookup = {}
             world_list = []
             message.info_hash.each do |uid, world_info|
                 world_monicker = "#{world_info.name} - Created #{world_info.created_on} / Last saved #{world_info.saved_on}"

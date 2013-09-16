@@ -380,7 +380,7 @@ module Words
     end
 
     def self.describe_room(args = {})
-        Log.debug(args)
+        Log.debug(args, 9)
         sentences = [gen_sentence(args)]
 
         room = args[:target] || args[:destination]

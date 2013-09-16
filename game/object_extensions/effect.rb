@@ -89,10 +89,11 @@ module EffectSource
             applied_windups[effect] ||= {}
             windups = applied_windups[effect]
             targets.each do |target|
-                windups[target] ||= 0 
-                windups[target]  += 1
-                wound_up << target
-                Log.debug("Winding up #{target.monicker} (#{windup - windups[target] + 1} ticks to application)", 5)
+                target_uid = target.uid
+                windups[target_uid] ||= 0
+                windups[target_uid]  += 1
+                wound_up << target_uid
+                Log.debug("Winding up #{target.monicker} (#{windup - windups[target_uid] + 1} ticks to application)", 5)
             end
 
             # Remove windups for any objects that have left the effect's influence before the effect triggered
@@ -102,10 +103,10 @@ module EffectSource
 
             # Trigger effects
             triggered = []
-            windups.each do |target,value|
+            windups.each do |target_uid,value|
                 if value > windup
-                    target.apply_effect(effect)
-                    triggered << target
+                    @core.lookup(target_uid).apply_effect(effect)
+                    triggered << target_uid
                 end
             end
 

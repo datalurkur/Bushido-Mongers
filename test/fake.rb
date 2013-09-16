@@ -1,5 +1,14 @@
 require './game/cores/default'
 require './knowledge/raw_kb'
+require './game/core_loader'
+
+class FakeLobby
+    include GameCoreLoader
+
+    def send_to_user(username, message)
+        # --
+    end
+end
 
 class FakeCore < DefaultCore
     # No need to call setup separately for FakeCore.

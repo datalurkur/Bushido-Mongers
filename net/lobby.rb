@@ -33,9 +33,9 @@ class Lobby
         @send_callback = block
     end
 
-    def is_admin?(username);   @users[username][:admin];                                 end
-    def is_playing?(username); @game_core && @game_core.has_active_character?(username); end
-    def user_list;             @users.keys.select { |user| is_playing?(user) };          end
+    def is_admin?(username);   @users[username][:admin];                            end
+    def is_playing?(username); @game_core && @game_core.active_character(username); end
+    def user_list;             @users.keys.select { |user| is_playing?(user) };     end
 
     def check_permissions(command, username)
         # Later on this will be more interesting, but now just allows admins to do interesting stuff
@@ -112,44 +112,30 @@ class Lobby
         end
 
         if is_playing?(username)
-            @game_core.remove_character(username)
+            @game_core.extract_character(username)
         end
         @users.delete(username)
         Log.info("#{username} was removed from #{name}")
         broadcast(Message.new(:user_leaves, {:result => username}))
     end
 
-    def get_user_characters(username)
-        character_list = @game_core.get_user_characters(username)
-        # TODO - Eventually, we'll want to do some kind of filtering on what sorts of characters are acceptable for this lobby (maximum level, etc)
-        character_list
-    end
+    def get_user_characters(username); @game_core.get_characters_for(username); end
 
-    def set_user_character(username, character_name)
+    def set_user_character(username, character_uid)
         if @game_state == :no_core
             send_to_user(username, Message.new(:character_not_ready, {:reason => "Game has not been generated"}))
             return
         end
 
-        if @game_state == :playing && is_playing?(username)
+        if is_playing?(username)
             send_to_user(username, Message.new(:character_not_ready, {:reason => "Character already loaded"}))
             return
         end
 
-        character, failures = @game_core.load_character(self, username, character_name)
-        if character
-            send_to_user(username, Message.new(:character_ready))
-            if @game_state == :playing
-                send_to_user(username, Message.new(:begin_playing))
-            end
-        else
-            failure = if failures.empty?
-                "Character not found"
-            else
-                "Character failed to load"
-            end
-            # FIXME - Inform users when some of their more recent character saves fail to load
-            send_to_user(username, Message.new(:character_not_ready, {:reason=>failure}))
+        @game_core.inject_character(username, character_uid)
+        send_to_user(username, Message.new(:character_ready))
+        if @game_state == :playing
+            send_to_user(username, Message.new(:begin_playing))
         end
     end
 
@@ -170,6 +156,7 @@ class Lobby
         @game_core  = core
         Message.register_listener(@game_core, :core, self)
         Message.register_listener(@game_core, :tick, self)
+        @game_core.set_lobby(self)
     end
 
     def save_world(username)
@@ -192,7 +179,7 @@ class Lobby
             broadcast(Message.new(:start_success))
 
             @users.keys.each do |username|
-                if @game_core.has_active_character?(username)
+                if @game_core.active_character(username)
                     send_to_user(username, Message.new(:begin_playing))
                 end
             end
@@ -220,6 +207,7 @@ class Lobby
             when :spawn,:summon
                 raise(InvalidCommandError, "Permission denied") unless is_admin?(username)
                 raise(InvalidCommandError, "#{params[:command].title} what?") unless params[:target]
+                raise(InvalidCommandError, "No character active - where to spawn?") unless @game_core.active_character(username)
                 creator  = @game_core.get_character(username)
                 position = creator.absolute_position
                 if params[:command] == :spawn
@@ -232,8 +220,8 @@ class Lobby
                 params[:target] ||= @game_core.db.static_types_of(:command)
                 Words.describe_help(params)
             when :stats
+                raise(StateError, "User #{username} has no character") unless @game_core.active_character(username)
                 character = @game_core.get_character(username)
-                raise(StateError, "User #{username} has no character") unless character
                 raise(InvalidCommandError, "Character #{character.monicker} has no stats") unless character.uses?(HasAspects)
                 params[:agent] = character
                 # FIXME - Allow users to request a specific subset of stats
@@ -255,6 +243,7 @@ class Lobby
         begin
             Log.debug("Performing command #{command}", 8)
             @game_core.protect do
+                raise(InvalidCommandError, "No character active!") unless @game_core.active_character(username)
                 character = @game_core.get_character(username)
                 params = Commands.stage(@game_core, command, params.merge(:agent => character))
             end
@@ -296,13 +285,12 @@ class Lobby
         when :unit_killed,:object_destroyed
             @users.keys.each do |username|
                 # Core messages already protected (issued by a protected method)
+                next unless @game_core.active_character(username)
                 character = @game_core.get_character(username)
-                next if character.nil?
                 next unless message.location == character.absolute_position
 
                 if message.target == character
                     Log.info("Character #{character.monicker} dies!")
-                    @game_core.remove_character(username, true)
                     broadcast(Message.new(:user_dies, {:result => username}))
                 end
             end
@@ -415,9 +403,8 @@ class Lobby
             # The server isn't involved in the character creation dialog at all, only the committing of that data
             begin
                 raise "You must create a game before creating a character" unless @game_core
-                # TODO - Add a check for a character with the same name
                 Log.info("Creating character for #{username}")
-                @game_core.create_character(self, username, @users[username][:character_options])
+                @game_core.create_character(username, @users[username][:character_options])
                 Log.info("Character created")
                 send_to_user(username, Message.new(:character_ready))
                 if @game_state == :playing
@@ -431,15 +418,15 @@ class Lobby
             if @game_state == :no_core
                 send_to_user(username, Message.new(:no_characters, {:reason => "Game not yet generated"}))
             else
-                characters = get_user_characters(username)
-                if characters.empty?
+                info_hash = @game_core.get_characters_for(username)
+                if info_hash.empty?
                     send_to_user(username, Message.new(:no_characters, {:reason => "None found"}))
                 else
-                    send_to_user(username, Message.new(:character_list, {:characters => characters}))
+                    send_to_user(username, Message.new(:character_list, {:info_hash => info_hash}))
                 end
             end
         when :select_character
-            set_user_character(username, message.character_name)
+            set_user_character(username, message.character_uid)
         when :start_game
             start_game(username)
         when :toggle_pause

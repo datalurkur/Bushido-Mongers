@@ -43,6 +43,7 @@ class MessageBase
         end
 
         def register_listener(core, message_type, listener)
+            raise(UnexpectedBehaviorError, "Core must be present") unless core
             @listener_state_dirty[-1] = true unless @listener_state_dirty.empty?
             Log.debug("#{listener.class} starts listening for #{message_type} messages", 6)
             @listeners[core][message_type] << listener
@@ -50,6 +51,7 @@ class MessageBase
         end
 
         def unregister_listener(core, message_type, listener)
+            raise(UnexpectedBehaviorError, "Core must be present") unless core
             @listener_state_dirty[-1] = true unless @listener_state_dirty.empty?
             Log.debug("#{listener.class} stops listening for #{message_type} messages", 6)
             @listeners[core][message_type].delete(listener)

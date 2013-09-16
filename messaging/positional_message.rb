@@ -13,23 +13,36 @@ class PositionalMessage < MessageBase
             BushidoObject === listener ? "#{listener.monicker} (#{listener.uid})" : listener.class
         end
 
+        def set_listener_position_uid(core, listener, p_uid)
+            @positions[core][p_uid] ||= []
+            @positions[core][p_uid] << listener unless @positions[core][p_uid].include?(listener)
+        end
         def set_listener_position(core, listener, position)
-            @positions[core][position] ||= []
-            @positions[core][position] << listener unless @positions[core][position].include?(listener)
+            p_uid = position ? position.uid : nil
+            set_listener_position_uid(core, listener, p_uid)
         end
 
-        def clear_listener_position(core, listener, position)
-            if @positions[core][position]
-                @positions[core][position].delete(listener)
-                @positions[core].delete(position) if position && @positions[core][position].empty?
+        def clear_listener_position_uid(core, listener, p_uid)
+            if @positions[core][p_uid]
+                @positions[core][p_uid].delete(listener)
+                @positions[core].delete(p_uid) if p_uid && @positions[core][p_uid].empty?
             end
         end
+        def clear_listener_position(core, listener, position)
+            p_uid = position ? position.uid : nil
+            clear_listener_position_uid(core, listener, p_uid)
+        end
 
-        def change_listener_position(core, listener, position, previous_position)
-            @positions[core][position] ||= []
-            @positions[core][position] << listener unless @positions[core][position].include?(listener)
-            @positions[core][previous_position].delete(listener)
-            @positions[core].delete(previous_position) if previous_position && @positions[core][previous_position].empty?
+        def change_listener_position_uid(core, listener, c_uid, p_uid)
+            @positions[core][c_uid] ||= []
+            @positions[core][c_uid] << listener unless @positions[core][c_uid].include?(listener)
+            @positions[core][p_uid].delete(listener)
+            @positions[core].delete(p_uid) if p_uid && @positions[core][p_uid].empty?
+        end
+        def change_listener_position(core, listener, current_position, previous_position)
+            c_uid = current_position  ? current_position.uid  : nil
+            p_uid = previous_position ? previous_position.uid : nil
+            change_listener_position_uid(core, listener, c_uid, p_uid)
         end
 
         def register_listener(core, message_type, listener)
@@ -65,7 +78,8 @@ class PositionalMessage < MessageBase
 
         def get_listeners_at(core, locations, klass, type)
             locations_array = locations.inject(@positions[core][nil]) do |s,i|
-                listeners_here = @positions[core][i]
+                i_uid = i ? i.uid : nil
+                listeners_here = @positions[core][i_uid]
                 if listeners_here.nil?
                     s
                 else
@@ -90,7 +104,8 @@ class DebugPositionalMessage < PositionalMessage
 
             if old_filtered.size != new_listener_list.size ||
               (old_filtered & new_listener_list).size != old_filtered.size
-                Log.error("Positional messaging is broken!")
+                Log.error(["Positional messaging is broken!", caller])
+                Log.error(["Attempting to dispatch #{type} message to locations:", locations])
                 Log.error(["Expected listeners:", old_filtered.size])
                 old_output = old_filtered.collect do |i|
                     listener_name(i)

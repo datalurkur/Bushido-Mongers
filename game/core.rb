@@ -1,7 +1,6 @@
 require './world/factories'
 require './game/tables'
 require './game/object_extensions'
-require './game/character_loader'
 require './raws/db'
 require './knowledge/raw_kb'
 require './util/exceptions'
@@ -10,7 +9,7 @@ require './util/packer'
 class GameCore
     include Packer
 
-    def self.packable; [:tick_rate, :created_on, :tick_count]; end
+    def self.packable; [:tick_rate, :created_on, :tick_count, :characters, :active_characters, :inactive_objects]; end
 
     attr_reader :world, :db, :kb, :tick_count, :created_on
 
@@ -26,14 +25,34 @@ class GameCore
         object_manifest_types.each do |klass|
             @object_manifest[klass] = {}
         end
+        @inactive_objects     = {}
+        @characters           = {}
 
         @tick_count           = 0
         @ticking              = false
     end
 
-    def pack_custom(hash)
+    # Callback set up for characters to send messages to their respective clients via the lobby
+    def set_lobby(value); @lobby = value; end
+    def clear_lobby;      @lobby = nil;   end
+    def send_to_user(username, message)
+        raise(UnexpectedBehaviorError, "Lobby not set") unless @lobby
+        @lobby.send_to_user(username, message)
+    end
+
+    def protect(&block)
         @usage_mutex.synchronize do
+            yield
+        end
+    end
+
+    def pack_custom(hash)
+        protect do
             Log.info("Saving game core")
+
+            active_characters = @active_characters.values.compact
+            Log.warning("Danger: active characters were found during core packing : #{active_characters.inspect}") unless active_characters.empty?
+
             @saved_on              = Time.now
 
             hash[:db]              = ObjectDB.pack(@db)
@@ -53,12 +72,13 @@ class GameCore
             hash[:world_uid]       = @world.uid
 
             hash[:managers]        = pack_managers
+            Log.info("Done")
         end
         hash
     end
 
     def unpack_custom(hash)
-        @usage_mutex.synchronize do
+        protect do
             Log.info("Loading game core")
 
             # Unpack raws
@@ -69,20 +89,48 @@ class GameCore
 
             # Unpack objects
             # -------------------------------
-            @uid_count = 0
-            uid_max = 0
+            uid_max             = 0
+            uids_present        = []
             Log.debug("Unpacking #{object_manifest_types.size} object manifest types from #{hash[:object_manifest].keys.inspect}")
             object_manifest_types.each do |klass|
                 manifest = hash[:object_manifest][klass]
                 Log.debug("Unpacking #{manifest.keys.size} #{klass} types")
                 hash[:object_manifest][klass].each do |uid,obj_hash|
-                    @uid_count += 1
                     uid_max = [uid_max, uid].max
+                    uids_present << uid
+
                     @object_manifest[klass][uid] = klass.unpack(self, obj_hash)
                     Log.debug("Unpacked #{uid}", 8)
                 end
             end
-            raise(UnexpectedBehaviorError, "UID counts do not match (too few or too many UIDs loaded)") if @uid_count != uid_max
+            missing_uids = (1..uid_max).to_a - uids_present
+
+            @characters.each do |username, character_hash|
+                Log.debug("Checking for active character for #{username} (#{character_hash.size} total)")
+                active_uid = active_character(username)
+                Log.warning("Danger: active character #{active_uid} found during world unpacking") if active_uid
+                if missing_uids.include?(active_uid)
+                    Log.error("Weirdness - an active character's UID is marked as missing")
+                end
+                character_hash.keys.each do |uid|
+                    next if active_uid == uid
+                    unless missing_uids.include?(uid)
+                        Log.error("Weirdness - an inactive character's UID was loaded")
+                    end
+                    missing_uids.delete(uid)
+                end
+            end
+            missing_inactive = 0
+            @inactive_objects.each do |uid, obj_info|
+                if missing_uids.include?(uid)
+                    missing_inactive += 1
+                    missing_uids.delete(uid)
+                end
+            end
+            Log.debug("#{missing_inactive} missing UIDs resolved within #{@inactive_objects.size} inactive objects")
+            raise(UnexpectedBehaviorError, "Missing UIDs: #{missing_uids.inspect}") unless missing_uids.empty?
+
+            @uid_count = uid_max
             Log.debug("Found #{@uid_count} uids")
 
             # Identify world
@@ -106,7 +154,7 @@ class GameCore
 
     # PUBLIC (THREADSAFE) METHODS
     def setup(args={})
-        @usage_mutex.synchronize do
+        protect do
             Log.info("Setting up game core")
 
             # Setup various game variables
@@ -134,7 +182,7 @@ class GameCore
     end
 
     def teardown
-        @usage_mutex.synchronize do
+        protect do
             teardown_managers
 
             teardown_world
@@ -149,7 +197,7 @@ class GameCore
 
     def setup?
         ret = nil
-        @usage_mutex.synchronize do
+        protect do
             ret = @setup
         end
         ret
@@ -197,12 +245,14 @@ class GameCore
     end
 
     def lookup(uid)
+        raise(UnexpectedBehaviorError, "Lookup attempted for nil UID") unless uid
         Log.debug("Looking up #{uid}", 9)
         object_manifest_types.each do |klass|
             return @object_manifest[klass][uid] if @object_manifest[klass].has_key?(uid)
             Log.debug("Not found in #{klass}", 9)
         end
-        raise("Unknown UID #{uid}")
+        return @inactive_objects[uid] if @inactive_objects.has_key?(uid)
+        raise(UnexpectedBehaviorError, "Unknown UID #{uid.inspect}")
     end
 
     def flag_for_destruction(object, destroyer)
@@ -223,7 +273,7 @@ class GameCore
 
                 next_to_destroy.destroy(destroyer)
                 @object_manifest[BushidoObject].delete(next_to_destroy.uid)
-
+                @inactive_objects[next_to_destroy.uid] = BushidoObject.pack(next_to_destroy)
                 destroyed << next_to_destroy
             end
         end
@@ -233,7 +283,7 @@ class GameCore
     # ================
     def start_ticking
         already_ticking = false
-        @usage_mutex.synchronize do
+        protect do
             already_ticking = @ticking
             @ticking = true
         end
@@ -245,11 +295,9 @@ class GameCore
             begin
                 keep_ticking = true
                 while keep_ticking
+                    protect { dispatch_ticks }
                     sleep(@tick_rate)
-                    @usage_mutex.synchronize do
-                        dispatch_ticks
-                        keep_ticking = @ticking
-                    end
+                    protect { keep_ticking = @ticking }
                 end
             rescue Exception => e
                 Log.debug(["Terminating abnormally", e.message, e.backtrace])
@@ -259,78 +307,75 @@ class GameCore
     end
 
     def stop_ticking
-        @usage_mutex.synchronize do
-            @ticking = false
-        end
-    end
-
-    def protect(&block)
-        @usage_mutex.synchronize do
-            yield
-        end
+        protect { @ticking = false }
     end
 
     # CHARACTER MAINTENANCE
     # =====================
-    def load_character(lobby, username, character_name)
-        ret = nil
-        @usage_mutex.synchronize do
-            cached_positions[username]
-
-            character, failures = CharacterLoader.attempt_to_load(self, username, character_name)
-            if character
-                starting_location = cached_positions[username]
-                unless starting_location
-# TODO - Find a better way to determine random starting locations for players
-=begin
-                    spawn_location_types = @population_manager[character.get_type][:spawns]
-                    starting_location    = @world.get_random_location(spawn_location_types)
-=end
-                    starting_location  ||= @world.get_random_location
-                end
-                character.set_initial_position(starting_location)
-                character.set_user_callback(lobby, username)
-
-                characters[username] = character
-                Log.info("Character #{character.monicker} loaded for #{username}")
-            end
-
-            ret = [character, failures]
+    def get_characters_for(username)
+        info_hash = {}
+        characters(username).each do |uid, info|
+            character_info = @inactive_objects[uid].merge(info)
+            info_hash[uid] = CharacterInfo.new(character_info)
         end
-        return ret
+        info_hash
     end
-    def get_user_characters(username)
-        CharacterLoader.get_characters_for(username)
-    end
-    def has_active_character?(username)
-        characters.has_key?(username)
-    end
+
     def get_character(username)
-        characters[username]
+        character_uid = safe_character(username)
+        lookup(character_uid)
     end
-    def get_character_user(character)
-        ret = nil
-        characters.each do |k,v|
-            if v == character
-                ret = k
-                break
-            end
-        end
-        return ret
-    end
-    def remove_character(username, character_dies=false)
-        character = characters[username]
 
-        if character_dies
-            cached_positions[username] = nil
-            # TODO - We should determine what happens when a character is killed - can he reload his last save, or must he start a new character?
-        else
-            # Cache the character's position within the game server so that it can be placed back where it exited when logging back in
-            cached_positions[username] = character.absolute_position
-            CharacterLoader.save(username, character)
-            character.destroy(nil, true)
+    def extract_characters_temporarily
+        temp_map = Marshal.load(Marshal.dump(active_characters))
+        Log.debug("Temporarily extracting characters (likely for a game save)")
+        active_characters.each do |username, uid|
+            extract_character(username) if uid
         end
-        characters.delete(username)
+        temp_map
+    end
+    def extract_character(username)
+        Log.debug("Extracting #{username.inspect}'s character")
+        character_uid = safe_character(username)
+        character     = lookup(character_uid)
+
+        packed_character                    = BushidoObject.pack(character)
+        characters(username)[character_uid] = {
+            :name             => character.name,
+            :created_on       => character.created_on,
+            :saved_on         => Time.now
+        }
+        @inactive_objects[character_uid] = packed_character
+        @object_manifest[BushidoObject].delete(character.uid)
+
+        set_active_character(username, nil)
+        character.extract
+        character_uid
+    end
+
+    def reinject_characters(temp_map)
+        Log.debug("Reinjecting characters")
+        temp_map.each do |username, uid|
+            inject_character(username, uid)
+        end
+    end
+    def inject_character(username, uid)
+        Log.debug("Injecting #{username.inspect} as #{uid.inspect}")
+        active_uid = active_character(username)
+        raise(UnexpectedBehaviorError, "#{username} already has an active character (#{active_uid.inspect})") if active_uid
+        raise(UnexpectedBehaviorError, "#{username} has no character with UID #{uid}") unless characters(username).has_key?(uid)
+
+        info = @inactive_objects[uid]
+        character = BushidoObject.unpack(self, info)
+        @inactive_objects.delete(uid)
+        @object_manifest[BushidoObject][uid] = character
+
+        character.inject
+        set_active_character(username, character.uid)
+    end
+
+    def active_character(username)
+        active_characters[username]
     end
 
     # PRIVATE (NOT THREADSAFE) METHODS
@@ -360,6 +405,21 @@ class GameCore
         Message.dispatch(self, :tick)
     end
 
-    def characters;       @characters       ||= {}; end
-    def cached_positions; @cached_positions ||= {}; end
+    def characters(username)
+        @characters[username] ||= {}
+    end
+
+    def safe_character(username)
+        character_uid = active_character(username)
+        unless character_uid
+            raise(UnexpectedBehaviorError, "#{username} has no active character")
+        end
+        character_uid
+    end
+
+    def active_characters; @active_characters ||= {}; end
+    def set_active_character(username, value)
+        active_characters[username] = value
+        Log.debug(["Active character of #{username.inspect} set to #{value.inspect}", @active_characters])
+    end
 end

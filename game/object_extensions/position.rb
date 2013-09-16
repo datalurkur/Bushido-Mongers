@@ -16,20 +16,29 @@ module Position
             end
         end
 
-        def pack(instance);               instance.pack;               end
-        def unpack(core, instance, hash); instance.unpack(core, hash); end
+        def pack(instance);               instance.pack_position_information;               end
+        def unpack(core, instance, hash); instance.unpack_position_information(core, hash); end
+
+        def extract(core, instance)
+            instance.update_position_trackers([instance.relative_position, instance.relative_position_type], [nil, nil], false)
+        end
+
+        def inject(core, instance)
+            instance.update_position_trackers([nil, nil], [instance.relative_position, instance.relative_position_type], false)
+        end
     end
 
-    def pack
+    def pack_position_information
         {:position_uid => @position_uid, :position_type => @position_type}
     end
 
-    def unpack(core, hash)
+    def unpack_position_information(core, hash)
         [:position_uid, :position_type].each do |key|
             raise(MissingProperty, "Position data corrupted (#{key})") unless hash.has_key?(key)
         end
         @position_uid  = hash[:position_uid]
         @position_type = hash[:position_type]
+        Message.set_listener_position_uid(@core, self, @position_uid)
     end
 
     def dispatch_destruction_message(destroyer)
@@ -88,20 +97,36 @@ module Position
         # Debugging for a random failure seen during development
         raise(UnexpectedBehaviorError, "Position has no UID") unless new_position.uid
 
+        old_position      = @position_uid ? @core.lookup(@position_uid) : nil
+        old_position_type = @position_type
+
+        @position_uid = new_position.uid
+        @position_type = position_type
+
+        update_position_trackers([old_position, old_position_type], [new_position, position_type], locomotes=false)
+    end
+
+    def set_initial_position(new_position, position_type = :interal)
+        @position_uid  = new_position.uid
+        @position_type = position_type
+        update_position_trackers([nil, nil], [new_position, position_type])
+    end
+
+    def update_position_trackers(old_position, new_position, locomotes=false)
+        o_p, o_t = old_position
+        n_p, n_t = new_position
+        o_p.remove_object(self, o_t) if o_p
+        n_p.add_object(self, n_t) if n_p
+
+        locations    = [o_p, n_p].compact
         message_type = locomotes ? :unit_moves : :unit_moved
-        old_position = @position_uid ? @core.lookup(@position_uid) : nil
-        locations    = [old_position, new_position].compact
         Message.dispatch_positional(@core, locations, message_type, {
             :agent       => self,
             :action      => :move,
-            :origin      => old_position,
-            :destination => new_position
+            :origin      => o_p,
+            :destination => n_p
         })
-        Message.change_listener_position(@core, self, new_position, old_position)
-        old_position.remove_object(self, @position_type) if old_position
-        @position_uid = new_position.uid
-        @position_type = position_type
-        new_position.add_object(self, @position_type)
+        Message.change_listener_position(@core, self, n_p, o_p)
     end
 
     def safe_position

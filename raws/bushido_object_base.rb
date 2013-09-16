@@ -93,6 +93,24 @@ class BushidoObjectBase
 
     def get_type; @type; end
 
+    def extract
+        @listens_for.keys.each do |message_type|
+            Message.unregister_listener(@core, message_type, self)
+        end
+        @extensions.each do |mod|
+            mod.extract(@core, self) if mod.respond_to?(:extract)
+        end
+    end
+
+    def inject
+        @extensions.each do |mod|
+            mod.inject(@core, self) if mod.respond_to?(:inject)
+        end
+        @listens_for.keys.each do |message_type|
+            Message.register_listener(@core, message_type, self)
+        end
+    end
+
     def destroy(destroyer, vaporize=false)
         stop_listening
 
@@ -216,22 +234,28 @@ class BushidoObjectBase
 end
 
 class SafeBushidoObject < BushidoObjectBase
-    attr_reader :destroyed
+    attr_reader :destroyed, :tagged
 
     def initialize(*args)
         super(*args)
-        @properties[:destroyed] = false
+        @destroyed = false
+        @tagged = false
+    end
+
+    def tag
+        Log.debug(["#{@type} (#{@uid} / #{object_id}) tagged at", caller])
+        @tagged = true
     end
 
     def check_destroyed
-        Log.warning(["Destroyed object #{@type} being used!", caller]) if @properties[:destroyed]
+        Log.warning(["Destroyed (#{@destroyed}) / tagged (#{@tagged}) object #{@type} (#{@uid} / #{object_id}) being used!", caller]) if @destroyed || @tagged
     end
 
     def destroy(*args)
         Log.info("Destroying #{@type} (#{object_id})", 8)
         check_destroyed
         super(*args)
-        @properties[:destroyed] = true
+        @destroyed = true
     end
 
     def monicker

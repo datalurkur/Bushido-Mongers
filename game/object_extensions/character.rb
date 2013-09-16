@@ -2,6 +2,26 @@ require './util/log'
 
 module Character
     class << self
+        def at_creation(instance, params)
+            instance.set_creation_date
+            instance.set_username(params[:username])
+        end
+
+        def pack(instance)
+            {
+                :created_on => instance.created_on,
+                :username   => instance.username
+            }
+        end
+
+        def unpack(core, instance, raw_data)
+            [:created_on, :username].each do |key|
+                raise(MissingProperty, "Character data corrupted (#{key})") unless raw_data.has_key?(key)
+            end
+            instance.set_creation_date(raw_data[:created_on])
+            instance.set_username(raw_data[:username])
+        end
+
         def listens_for(i); [:core]; end
 
         def at_message(instance, message)
@@ -41,6 +61,11 @@ module Character
         end
     end
 
+    attr_reader :created_on, :username
+
+    def set_creation_date(value=nil); @created_on = value || Time.now; end
+    def set_username(value); @username = value; end
+
     def witnesses?(locations=[], scope=:immediate)
         # FIXME - This needs to be generalized to all perceivers, not special for characters
         # TODO - Use scope to determine if events in adjacent zones can be heard / seen
@@ -48,15 +73,9 @@ module Character
         return locations.include?(absolute_position)
     end
 
-    def set_user_callback(lobby, username)
-        Log.debug("Setting user callback for #{monicker}")
-        @lobby    = lobby
-        @username = username
-    end
-
     def inform_user(message)
-        raise(StateError, "User callback not set for #{monicker}") unless @lobby
+        raise(StateError, "User callback not set for #{monicker}") unless @username
         event_properties = message.params.merge(:event_type => message.type)
-        @lobby.send_to_user(@username, Message.new(:game_event, {:description => event_properties}))
+        @core.send_to_user(@username, Message.new(:game_event, {:description => event_properties}))
     end
 end

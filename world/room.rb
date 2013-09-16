@@ -64,7 +64,7 @@ class Room < ZoneLeaf
     def remove_object(object, type)
         raise(UnexpectedBehaviorError, "Rooms cannot be comprised of #{type.inspect} objects") unless type == :internal
         unless @objects.include?(object.uid)
-            Log.error("#{object.monicker} not found in #{@name}") 
+            Log.error(["#{object.monicker} not found in #{@name}", caller])
         end
         Log.debug("Removing #{object.monicker} from #{@name}", 6)
         @objects.delete(object.uid)
@@ -99,7 +99,7 @@ class Area < ZoneContainer
     end
 
     def initialize(core, uid, params={})
-        Log.debug("Creating #{params[:name]} room with #{params.inspect}")
+        Log.debug("Initializing #{params[:name]}")
         @params = params
         [:name, :size, :depth].each do |key|
             raise(MissingProperty, "Area must have a #{key}") unless params[key]
