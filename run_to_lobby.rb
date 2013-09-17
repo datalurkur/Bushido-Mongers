@@ -13,7 +13,7 @@ $client_config = {
     :character_name  => "test_character"
 }
 
-Log.setup("Main", "local")
+Log.setup("Main", "lobby")
 
 $server = GameServer.new("test", Time.now.to_i, "latest.repro")
 $client = StackClient.new($client_config)

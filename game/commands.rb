@@ -99,7 +99,7 @@ module Commands
             end
 
             target = params[:target]
-            if !target.nil? && (params[:agent].monicker.match(target.to_s) || (Words.db.get_related_words(:self)+[:self]).include?(target))
+            if !target.nil? && (params[:agent].monicker.match(target.to_s) || (core.words_db.get_related_words(:self)+[:self]).include?(target))
                 # Examine the agent.
                 params[:target] = params[:agent]
             elsif target

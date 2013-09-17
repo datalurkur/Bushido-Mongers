@@ -16,5 +16,5 @@ character_details = {
     :morphism  => :male
 }
 
-character = core.create_character(fakelobby, "test_user", character_details)
+character = core.create_character("test_user", character_details)
 fakelobby.save_core(core, {})

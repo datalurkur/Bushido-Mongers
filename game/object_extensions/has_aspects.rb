@@ -105,14 +105,14 @@ module HasAspects
 
     def make_attempt(aspect_name, difficulty)
         (difficulty = Difficulty.value_of(difficulty)) if (Symbol === difficulty)
-        Log.debug("#{monicker} making an attempt to use #{aspect_name} with difficulty #{difficulty}")
+        Log.debug("#{monicker} making an attempt to use #{aspect_name} with difficulty #{difficulty}", 6)
 
         aspect = get_aspect(aspect_name)
         raise(MissingProperty, "#{self.monicker} has no aspect #{aspect_name}") if aspect.nil?
 
         result = aspect.make_check(attributes)
         margin = result - difficulty
-        Log.debug("Resulting check and margin of success: #{result} / #{margin}")
+        Log.debug("Resulting check and margin of success: #{result} / #{margin}", 7)
 
         aspect.improve(margin)
         aspect.practice(margin) if aspect.uses?(Skill)
@@ -121,7 +121,7 @@ module HasAspects
     end
 
     def make_opposed_attempt(aspect_name, target)
-        Log.debug("#{monicker} uses #{aspect_name} against #{target.monicker}")
+        Log.debug("#{monicker} uses #{aspect_name} against #{target.monicker}", 6)
 
         aspect = get_aspect(aspect_name)
         raise(MissingProperty, "#{self.monicker} has no aspect #{aspect_name}") if aspect.nil?

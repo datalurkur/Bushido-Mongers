@@ -11,7 +11,7 @@ class GameCore
 
     def self.packable; [:tick_rate, :created_on, :tick_count, :characters, :active_characters, :inactive_objects]; end
 
-    attr_reader :world, :db, :kb, :tick_count, :created_on
+    attr_reader :world, :db, :kb, :words_db, :tick_count, :created_on
 
     def initialize
         Message.setup(self)
@@ -27,6 +27,7 @@ class GameCore
         end
         @inactive_objects     = {}
         @characters           = {}
+        @active_characters    = {}
 
         @tick_count           = 0
         @ticking              = false
@@ -38,21 +39,32 @@ class GameCore
 
     def send_with_dialect(username, message_type, properties)
         raise(UnexpectedBehaviorError, "Lobby not set") unless @lobby
+
+        character = get_character(username)
+        sanitized_properties = Descriptor.describe(properties.merge(:observer => character, :speaker => :game), character)
+
         dialect = @lobby.get_user_dialect(username)
         details = case dialect
         when :text
-            Descriptor.create_report(message_type, @words_db, properties)
+            Descriptor.create_report(message_type, @words_db, sanitized_properties)
         when :metadata
-            properties
+            sanitized_properties
         else
             Log.error("Unknown dialect, #{dialect}, falling back to metadata")
-            properties
+            sanitized_properties
         end
+
         @lobby.send_to_user(username, Message.new(message_type, {:details => details}))
     end
 
     def send_to_user(username, message)
         raise(UnexpectedBehaviorError, "Lobby not set") unless @lobby
+
+        character = get_character(username)
+        message.alter_params! do |params|
+            Descriptor.describe(params.merge(:observer => character, :speaker => :game), character)
+        end
+
         @lobby.send_to_user(username, message)
     end
 
@@ -66,8 +78,8 @@ class GameCore
         protect do
             Log.info("Saving game core")
 
-            active_characters = @active_characters.values.compact
-            Log.warning("Danger: active characters were found during core packing : #{active_characters.inspect}") unless active_characters.empty?
+            currently_active = @active_characters.values.compact
+            Log.warning("Danger: active characters were found during core packing : #{currently_active.inspect}") unless currently_active.empty?
 
             @saved_on              = Time.now
 
@@ -276,13 +288,13 @@ class GameCore
     end
 
     def destroy_flagged
-        Log.debug("Destroying flagged objects")
+        Log.debug("Destroying flagged objects", 6)
         destroyed = []
 
         until @awaiting_destruction.empty?
             to_destroy = @awaiting_destruction.dup
             @awaiting_destruction = []
-            Log.debug("#{to_destroy.size} objects flagged for destruction")
+            Log.debug("#{to_destroy.size} objects flagged for destruction", 6)
             until to_destroy.empty?
                 next_to_destroy, destroyer = to_destroy.shift
                 next if destroyed.include?(next_to_destroy)
@@ -343,9 +355,9 @@ class GameCore
     end
 
     def extract_characters_temporarily
-        temp_map = Marshal.load(Marshal.dump(active_characters))
+        temp_map = Marshal.load(Marshal.dump(@active_characters))
         Log.debug("Temporarily extracting characters (likely for a game save)")
-        active_characters.each do |username, uid|
+        @active_characters.each do |username, uid|
             extract_character(username) if uid
         end
         temp_map
@@ -391,7 +403,7 @@ class GameCore
     end
 
     def active_character(username)
-        active_characters[username]
+        @active_characters[username]
     end
 
     # PRIVATE (NOT THREADSAFE) METHODS
@@ -433,9 +445,8 @@ class GameCore
         character_uid
     end
 
-    def active_characters; @active_characters ||= {}; end
     def set_active_character(username, value)
-        active_characters[username] = value
+        @active_characters[username] = value
         Log.debug(["Active character of #{username.inspect} set to #{value.inspect}", @active_characters])
     end
 end

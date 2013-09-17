@@ -53,13 +53,6 @@ class Lobby
     def get_user_dialect(username); @dialects[username]; end
 
     def send_to_user(username, message)
-        character = is_playing?(username) ? @game_core.get_character(username) : nil
-        message.alter_params! do |params|
-            params[:observer] = character
-            params[:speaker]  = :game
-            Descriptor.describe(params, character)
-        end
-
         if !@send_callback.call(username, message)
             Log.debug("No socket for user #{username}, client likely disconnected")
             # No socket for user, start the countdown until they're booted from the game
@@ -225,7 +218,7 @@ class Lobby
                 "#{params[:command].title}ing a #{params[:target]}"
             when :help
                 params[:target] ||= @game_core.db.static_types_of(:command)
-                Words.describe_help(params)
+                @game_core.words_db.describe_help(params)
             when :stats
                 raise(StateError, "User #{username} has no character") unless @game_core.active_character(username)
                 character = @game_core.get_character(username)
@@ -233,7 +226,7 @@ class Lobby
                 params[:agent] = character
                 # FIXME - Allow users to request a specific subset of stats
                 params[:target] = [character.attributes.values, character.attributes.values]
-                Words.describe_stats(params)
+                @game_core.words_db.describe_stats(params)
             else
                 raise(ArgumentError, "Unrecognized command '#{params[:command]}'")
             end
@@ -314,16 +307,16 @@ class Lobby
             # Just assume an affirmative response with no clarification and proceed
             last_command = @users[username][:last_action_params][:command]
             reconstructed_phrase = "#{last_command} #{message.missing_param}"
-            reconstructed_params = Words.decompose_command(reconstructed_phrase)
+            reconstructed_params = @game_core.words_db.decompose_command(reconstructed_phrase)
 
             new_params = @users[username][:last_action_params].merge(reconstructed_params)
             perform_action(username, new_params, false)
         when :command
-            params = Words.decompose_command(message.text)
+            params = @game_core.words_db.decompose_command(message.text)
             perform_command(username, params)
         when :act
             Log.debug("Parsing action message", 8)
-            params = Words.decompose_command(message.command)
+            params = @game_core.words_db.decompose_command(message.command)
 
             @users[username][:last_action_params] = params.dup
             perform_action(username, params)

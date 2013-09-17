@@ -8,11 +8,11 @@ require './test/fake'
 
 $core = FakeCore.new
 
-Log.debug(Words.gen_area_name({:type => :mountain, :keywords => [:beautiful]}))
-Log.debug(Words.gen_area_name({:type => :sewer,    :keywords => [:dank]}))
+Log.debug($core.words_db.gen_area_name({:type => :mountain, :keywords => [:beautiful]}))
+Log.debug($core.words_db.gen_area_name({:type => :sewer,    :keywords => [:dank]}))
 
 Log.debug(
-    Words.describe_room(
+    $core.words_db.describe_room(
         :command => :inspect,
         :agent  => :you,
         :target =>
@@ -27,8 +27,8 @@ Log.debug(
 )
 
 def john_and_mary(state)
-    Log.debug(Words.gen_sentence(:agent => :John, :command => :move, :destination => :west, :state=>state))
-    Log.debug(Words.gen_sentence(:agent => :John, :action  => :see,  :target      => :Mary, :state=>state))
+    Log.debug($core.words_db.gen_sentence(:agent => :John, :command => :move, :destination => :west, :state=>state))
+    Log.debug($core.words_db.gen_sentence(:agent => :John, :action  => :see,  :target      => :Mary, :state=>state))
 end
 
 s = Words::State.new
@@ -39,11 +39,11 @@ john_and_mary(s)
 s.tense = :past
 john_and_mary(s)
 
-Log.debug(Words.gen_copula)
-Log.debug(Words.gen_copula(:complement => :sunny))
+Log.debug($core.words_db.gen_copula)
+Log.debug($core.words_db.gen_copula(:complement => :sunny))
 
 Log.debug(
-    Words.gen_sentence(
+    $core.words_db.gen_sentence(
         :subject => [:Billy_Bob, :beaver],
         :verb    => :walk,
         :destination => :bar
@@ -51,7 +51,7 @@ Log.debug(
 )
 
 Log.debug(
-    Words.gen_sentence(
+    $core.words_db.gen_sentence(
         :receiver => :human,
         :statement => "Man is a miserable little pile of secrets.",
         :response_needed => nil,
@@ -68,37 +68,37 @@ require './game/descriptors'
 
 observer = $core.create_npc(:human, :name => "Kenji Skrimshank", :position => $core.create(FakeRoom))
 agent = Descriptor.describe(observer, observer)
-Log.debug(Words.describe_body(agent))
+Log.debug($core.words_db.describe_body(agent))
 # Test missing parts.
 kenji_leg = observer.get_contents(:external).find { |bp| bp.get_type == :leg }
 observer.component_destroyed(kenji_leg, :external, observer)
-Log.debug(Words.describe_body(Descriptor.describe(observer, observer)))
+Log.debug($core.words_db.describe_body(Descriptor.describe(observer, observer)))
 kenji_leg = observer.get_contents(:external).find { |bp| bp.get_type == :leg }
 observer.component_destroyed(kenji_leg, :external, observer)
-Log.debug(Words.describe_body(Descriptor.describe(observer, observer)))
+Log.debug($core.words_db.describe_body(Descriptor.describe(observer, observer)))
 
 target = $core.create(:goat, {:position => $core.create(FakeRoom), :name => "Billy Goat Balrog"})
 target = Descriptor.describe(target, observer)
-Log.debug(Words.describe_body(target))
+Log.debug($core.words_db.describe_body(target))
 
 # {:agent => <Ninja, :name => "Kenji Scrimshank">, :target => <Goat, :name => "Billy Goat Balrog">, :verb => :attack, :tool => :agent_current_weapon}
-puts Words.describe_attack(:attacker => agent, :defender => target, :command => :attack, :tool => :dagger, :result_hash => {:damage_type => :piercing})
-puts Words.describe_attack(:defender => agent, :attacker => target, :command => :attack,                   :result_hash => {:damage_type => [:piercing, :blunt, :nonlethal].rand})
+puts $core.words_db.describe_attack(:attacker => agent, :defender => target, :command => :attack, :tool => :dagger, :result_hash => {:damage_type => :piercing})
+puts $core.words_db.describe_attack(:defender => agent, :attacker => target, :command => :attack,                   :result_hash => {:damage_type => [:piercing, :blunt, :nonlethal].rand})
 
 target = $core.create(:chest, {:name => "Bosom", :randomize => true})
 target_description = Descriptor.describe(target, observer)
-Log.debug(Words.describe_container_class(target_description))
+Log.debug($core.words_db.describe_container_class(target_description))
 
 target.properties[:open] = true
 target_description = Descriptor.describe(target, observer)
-Log.debug(Words.describe_container_class(target_description))
-Log.debug(Words.describe_composition(target_description))
+Log.debug($core.words_db.describe_container_class(target_description))
+Log.debug($core.words_db.describe_composition(target_description))
 
 # Knowledge stuff.
 require './knowledge/knowledge'
 human_quanta = $core.kb.all_quanta_for_type(:human)
 human_quanta.each do |q|
-    Log.debug(Words.generate(q.args.dup))
+    Log.debug($core.words_db.generate(q.args.dup))
 end
 
 # Fred and Jim fell asleep.

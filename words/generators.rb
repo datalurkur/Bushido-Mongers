@@ -3,7 +3,7 @@
 # TODO - add info on acceptable/used arguments to generators
 # TODO - distinguish between adjunct and argument phrases
 module Words
-    def self.generate(args)
+    def generate(args)
         if args[:command]
             generate_command(args)
         elsif args[:thing]
@@ -12,7 +12,7 @@ module Words
         end
     end
 
-    def self.generate_command(args)
+    def generate_command(args)
         case args[:command]
         when :inspect
             target = args[:target]
@@ -53,7 +53,7 @@ module Words
     end
 
     # Basic, stupid clause-making from the knowledge quanta triad, to be modified as appropriately for separate knowledge bits.
-    def self.quanta_args(old_args)
+    def quanta_args(old_args)
         args = old_args.dup
         args[:subject] = args[:thing]
         args[:verb]    = args[:connector]
@@ -80,12 +80,12 @@ module Words
         return args
     end
 
-    def self.generate_knowledge(args)
+    def generate_knowledge(args)
         # I know <clause>!
         # I know that <is_a>.
         # I know how <make>.
         if know_statement = (rand(2) == 0)
-            args[:target]  = DependentClause.new(quanta_args(args))
+            args[:target]  = DependentClause.new(self, quanta_args(args))
             args[:subject] = :i
             args[:verb]    = :know
             gen_sentence(args)
@@ -98,15 +98,15 @@ module Words
     # Imperative is just implied-receiver, no subject.
     # Questions follow subject-auxiliary inversion
     # http://en.wikipedia.org/wiki/Subject%E2%80%93auxiliary_inversion
-    def self.gen_sentence(args={})
+    def gen_sentence(args={})
         generate_clause(Sentence, args)
     end
 
-    def self.generate_clause(clause_class, args={})
-        clause_class.new(args).to_s
+    def generate_clause(clause_class, args={})
+        clause_class.new(self, args).to_s
     end
 
-    def self.describe_attack(args = {})
+    def describe_attack(args = {})
         args[:action] = :attack
         args[:agent]  = args[:attacker]
         args[:target] = args[:defender]
@@ -132,7 +132,7 @@ module Words
     end
 
     private
-    def self.possessor_info(possessor)
+    def possessor_info(possessor)
         # defaults
         person = :third
         # specifics
@@ -141,7 +141,7 @@ module Words
     end
     public
 
-    def self.describe_body(body)
+    def describe_body(body)
         body[:unique] = true
         body[:possessor_info] = possessor_info(body)
 
@@ -161,7 +161,7 @@ module Words
         sentences.join(" ")
     end
 
-    def self.describe_stats(args)
+    def describe_stats(args)
         stats = args[:target]
         sentences = []
 
@@ -185,12 +185,12 @@ module Words
         sentences.flatten.join(" ")
     end
 
-    def self.describe_help(args)
+    def describe_help(args)
         "Basic commands:\n"+
-        args[:target].map { |c| [c, *Words.db.get_related_words(c)].join(" ") }.join("\n") + "\n"
+        args[:target].map { |c| [c, *get_related_words(c)].join(" ") }.join("\n") + "\n"
     end
 
-    def self.describe_container_class(composition, comp_type = :internal)
+    def describe_container_class(composition, comp_type = :internal)
         raise unless Hash === composition
 
         if comp_type == :internal && !composition[:properties][:open]
@@ -219,12 +219,12 @@ module Words
         end
     end
 
-    def self.describe_object(obj)
-        obj[:complement] = NounPhrase.new(obj[:type])
+    def describe_object(obj)
+        obj[:complement] = NounPhrase.new(self, obj[:type])
         gen_copula(obj)
     end
 
-    def self.describe_composition(composition)
+    def describe_composition(composition)
         sentences = [describe_object(composition)]
 
         composition_verbs = {
@@ -258,7 +258,7 @@ module Words
         sentences.flatten.join(" ")
     end
 
-    def self.describe_whole_composition(composition)
+    def describe_whole_composition(composition)
         sentences = []#describe_object(composition)]
 
         composition_verbs = {
@@ -352,11 +352,11 @@ module Words
     # auxiliary - noun copula verb - The cat is sleeping (progressive); The cat is bitten by the dog (passive).
     # existence - there copula noun. "There is a cat." => "There exists a cat."?
     # location - noun copula place-phrase
-    def self.gen_copula(args = {})
+    def gen_copula(args = {})
         create_copula(args).to_s.sentence
     end
 
-    def self.create_copula(args)
+    def create_copula(args)
         args[:subject] = args[:subject] || args[:agent] || :it
 
         if verb = args[:verb] || args[:action] || args[:command]
@@ -376,10 +376,10 @@ module Words
                                  Array(args[:keywords])
         end
 
-        IndependentClause.new(args)
+        IndependentClause.new(self, args)
     end
 
-    def self.describe_room(args = {})
+    def describe_room(args = {})
         Log.debug(args, 9)
         sentences = [gen_sentence(args)]
 
@@ -402,30 +402,30 @@ module Words
 
         exits   = room[:exits]
         if exits && !exits.empty?
-            sentences << gen_sentence(args.merge(:target => Noun.new("exits to #{NounPhrase.new(exits)}")))
+            sentences << gen_sentence(args.merge(:target => Noun.new("exits to #{NounPhrase.new(self, exits)}")))
         end
 
         sentences.join(" ")
     end
 
-    def self.gen_area_name(args = {})
+    def gen_area_name(args = {})
         noun    = {
-                    :monicker => args[:type] || Noun.rand,
-                    :adjectives => args[:keywords] || Adjective.rand,
-                    :unique => true,
+                    :monicker   => args[:type]     || Noun.rand(self),
+                    :adjectives => args[:keywords] || Adjective.rand(self),
+                    :unique     => true,
                   }
-        name    = NounPhrase.new(noun)
+        name    = Words::NounPhrase.new(self, noun)
 
         name.to_s.title
     end
 
-    def self.random_name(args = {})
+    def random_name(args = {})
         noun    = {
-                    :monicker => args[:type] || Noun.rand,
-                    :adjectives => args[:keywords] || Adjective.rand,
-                    :unique => true,
+                    :monicker   => args[:type]     || Noun.rand(self),
+                    :adjectives => args[:keywords] || Adjective.rand(self),
+                    :unique     => true,
                   }
-        name    = NounPhrase.new(noun)
+        name    = NounPhrase.new(self, noun)
 
         name.to_s.title
     end

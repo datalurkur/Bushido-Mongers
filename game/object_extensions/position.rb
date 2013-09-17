@@ -103,7 +103,7 @@ module Position
         @position_uid = new_position.uid
         @position_type = position_type
 
-        update_position_trackers([old_position, old_position_type], [new_position, position_type], locomotes=false)
+        update_position_trackers([old_position, old_position_type], [new_position, position_type], locomotes)
     end
 
     def set_initial_position(new_position, position_type = :interal)
@@ -115,6 +115,7 @@ module Position
     def update_position_trackers(old_position, new_position, locomotes=false)
         o_p, o_t = old_position
         n_p, n_t = new_position
+        #Log.debug("The position of #{self.monicker} changes from #{o_p ? o_p.monicker : "nil"} to #{n_p ? n_p.monicker : "nil"}")
         o_p.remove_object(self, o_t) if o_p
         n_p.add_object(self, n_t) if n_p
 

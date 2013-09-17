@@ -92,7 +92,7 @@ module Words
     class ParseTree < PTInternalNode; end
 
     class Clause < ParseTree
-        def initialize(args)
+        def initialize(db, args)
             to_print = args.dup
             to_print.map { |k,v| v.is_a?(Hash) ? v[:monicker] : v }
             Log.debug(to_print, 7)
@@ -107,10 +107,10 @@ module Words
             end
 
             if subject.is_a?(Hash)
-                if args[:speaker] && subject[:uid] == args[:speaker][:uid]
+                if args[:speaker] && args[:speaker].is_a?(Hash) && subject[:uid] == args[:speaker][:uid]
                     # FIXME: should change based on subjective/objective noun case
                     subject = :i
-                elsif args[:observer] && subject[:uid] == args[:observer][:uid]
+                elsif args[:observer] && args[:observer].is_a?(Hash) && subject[:uid] == args[:observer][:uid]
                     # FIXME: should change based on subjective/objective noun case
                     subject = :you
                 end
@@ -159,14 +159,14 @@ module Words
 
             # Use an associated verb, if any exist.
             unless [:say].include?(verb)
-                associated_verbs = Words.db.get_related_words(verb.to_sym)
+                associated_verbs = db.get_related_words(verb.to_sym)
                 if associated_verbs && associated_verbs.size > 1
                     verb = args[:verb] = associated_verbs.rand
                 end
             end
 
-            subject   = NounPhrase.new(subject, args)
-            predicate = VerbPhrase.new(verb, args)
+            subject   = NounPhrase.new(db, subject, args)
+            predicate = VerbPhrase.new(db, verb, args)
             @children = [subject, predicate]
         end
     end
@@ -177,8 +177,8 @@ module Words
 
     # http://en.wikipedia.org/wiki/Subordinate_clause
     class DependentClause < Clause
-        def initialize(args)
-            super(args)
+        def initialize(db, args)
+            super(db, args)
             @children.insert(0, Subordinator.of_verb?(args[:verb]))
         end
     end
@@ -296,20 +296,20 @@ That is the person whose car I saw.
     end
 
     class Preposition < PTLeaf
-        def self.preposition?(word)
-            Words.db.all_pos(:preposition).include?(word)
+        def self.preposition?(db, word)
+            db.all_pos(:preposition).include?(word)
         end
     end
 
     class PrepositionalPhrase < PTInternalNode
         private
-        def new_prep_noun_phrase(type, args, lookup_type = type)
-            new_phrase(NounPhrase.new(args[type]), lookup_type, args)
+        def new_prep_noun_phrase(db, type, args, lookup_type = type)
+            new_phrase(db, NounPhrase.new(db, args[type]), lookup_type, args)
         end
 
-        def new_phrase(phrase, lookup_type, args)
+        def new_phrase(db, phrase, lookup_type, args)
             # Determine preposition based on verb lookup (and dict/preposition_verb.txt).
-            if prep = Words.db.get_prep_for_verb(args[:verb], lookup_type)
+            if prep = db.get_prep_for_verb(args[:verb], lookup_type)
                 return Preposition.new(prep), phrase
             else
                 return phrase
@@ -337,7 +337,7 @@ That is the person whose car I saw.
         USED_ARGS = [:target, :tool, :destination, :receiver, :material, :success, :statement, :location, :origin]
 
         # The type is the part of the args being used to generate an adverb phrase, and also the third entry in dict/preposition_verb.txt...
-        def initialize(type, args)
+        def initialize(db, type, args)
             handled = false
 
             # Based on noun and argument information, decide which preposition to use, if any.
@@ -346,17 +346,17 @@ That is the person whose car I saw.
             when :target
                 if args[:state].voice == :passive
                     # We switch subject & target in passive, so look up how to treat the subject instead.
-                    super(new_prep_noun_phrase(type, args, :subject))
+                    super(new_prep_noun_phrase(db, type, args, :subject))
                 else
-                    super(new_prep_noun_phrase(type, args))
+                    super(new_prep_noun_phrase(db, type, args))
                 end
                 handled = true
             when :tool, :destination, :location, :origin, :material
                 args[type] = Descriptor.set_unique(args[type]) unless type == :material
-                super(new_prep_noun_phrase(type, args))
+                super(new_prep_noun_phrase(db, type, args))
                 handled = true
             when :receiver
-                super(new_prep_noun_phrase(type, args))
+                super(new_prep_noun_phrase(db, type, args))
                 # In Modern English, an indirect object is often expressed
                 # with a prepositional phrase of "to" or "for". If there
                 # is a direct object, the indirect object can be expressed
@@ -389,9 +389,9 @@ That is the person whose car I saw.
             args.delete(type) if handled
         end
 
-        def self.new_for_args(args)
+        def self.new_for_args(db, args)
             (USED_ARGS & args.keys).collect do |arg|
-                AdverbPhrase.new(arg, args)
+                AdverbPhrase.new(db, arg, args)
             end
         end
     end
@@ -431,11 +431,11 @@ That is the person whose car I saw.
         # modal auxiliary: will, has
         # modal semi-auxiliary: be going to
         # TODO - add modals based on tense/aspect
-        def initialize(verbs, args = {:state => State.new})
+        def initialize(db, verbs, args = {:state => State.new})
             verbs = Array(verbs)
 
             @children = verbs.map do |verb|
-                Verb.new(verb, args)
+                Verb.new(db, verb, args)
             end
 
             # The non-finite ("verbal") verb forms found in English are infinitives, participles and gerunds.
@@ -444,11 +444,11 @@ That is the person whose car I saw.
                 args_for_adverb_phrases = args.dup
                 args_for_adverb_phrases.merge!(args[:action_hash]) if args[:action_hash]
                 args_for_adverb_phrases.merge!(:verb => verbs.last)
-                @children += AdverbPhrase.new_for_args(args_for_adverb_phrases)
+                @children += AdverbPhrase.new_for_args(db, args_for_adverb_phrases)
             end
 
             if args[:complements]
-                @children += args[:complements].map { |c| NounPhrase.new(c) }
+                @children += args[:complements].map { |c| NounPhrase.new(db, c) }
             end
 
             # FIXME - listing won't work while AdverbPhrases are children of VerbPhrase. Add to last V to form second VP?
@@ -469,7 +469,7 @@ That is the person whose car I saw.
     class NounPhrase < PTInternalNode
         include Listable
 
-        def initialize(nouns, args={})
+        def initialize(db, nouns, args={})
             # Convert nouns into an array, if it isn't already.
             nouns = ArrayEvenAHash(nouns)
 
@@ -519,7 +519,7 @@ That is the person whose car I saw.
                 super(
                     nouns.map do |noun|
                         children = generate_children(noun)
-                        children.size > 1 ? NounPhrase.new(children) : children.first
+                        children.size > 1 ? NounPhrase.new(db, children) : children.first
                     end
                 )
             else
@@ -603,14 +603,14 @@ That is the person whose car I saw.
             number
         end
 
-        def self.adjective?(word)
-            (lexeme = Words.db.get_lexeme(word) && lexeme.args[:type]) ||
+        def self.adjective?(db, word)
+            (lexeme = db.get_lexeme(word) && lexeme.args[:type]) ||
             ordinal_adjectives.any? { |k, v| v.include?(word) }
         end
 
-        def self.rand
-            #Log.debug(Words.db.lexemes_of_type(:adjective))
-            Words.db.lexemes_of_type(:adjective).rand.lemma
+        def self.rand(db)
+            #Log.debug(db.lexemes_of_type(:adjective))
+            db.lexemes_of_type(:adjective).rand.lemma
         end
     end
 
@@ -620,12 +620,12 @@ That is the person whose car I saw.
     # http://www.verbix.com/webverbix/English/have.html
     # http://en.wikipedia.org/wiki/Future_tense
     class Verb < PTLeaf
-        def initialize(verb, args = {})
+        def initialize(db, verb, args = {})
             case args[:verb_form]
             when :infinitive
                 super(:to, verb)
             else
-                super(Verb.state_conjugate(verb, args[:state]))
+                super(Verb.state_conjugate(db, verb, args[:state]))
             end
         end
 
@@ -633,14 +633,14 @@ That is the person whose car I saw.
         # List of auxiliaries:
         # be (am, are, is, was, were, being), can, could, dare*, do (does, did), have (has, had, having), may, might, must, need*, ought*, shall, should, will, would
         # TODO - Thus 'shall' is used with the meaning of obligation and 'will' with the meaning of desire or intention.
-        def self.state_conjugate(verb, state)
+        def self.state_conjugate(db, verb, state)
             case state.aspect
             when :stative
                 case state.tense
                 when :future
-                    [conjugate(:will, State.new), verb]
+                    [conjugate(db, :will, State.new), verb]
                 else
-                    [conjugate(verb, state)]
+                    [conjugate(db, verb, state)]
                 end
             when :progressive
                 be_state = State.new
@@ -648,9 +648,9 @@ That is the person whose car I saw.
                 be_state.person = state.person
                 case state.voice
                 when :active
-                    [conjugate(:be, be_state),  active_participle(verb)]
+                    [conjugate(db, :be, be_state),  active_participle(verb)]
                 when :passive
-                    [conjugate(:be, be_state), passive_participle(verb)]
+                    [conjugate(db, :be, be_state), passive_participle(verb)]
                 else
                     raise(StandardError, "Invalid voice #{state.voice}!")
                 end
@@ -661,9 +661,9 @@ That is the person whose car I saw.
 
         # Used for conjugating a single verb.
         # http://en.wikipedia.org/wiki/List_of_English_irregular_verbs
-        def self.conjugate(infinitive, state)
-            if Words.db.conjugation_for?(infinitive, state)
-                return Words.db.conjugate(infinitive, state)
+        def self.conjugate(db, infinitive, state)
+            if db.conjugation_for?(infinitive, state)
+                return db.conjugate(infinitive, state)
             end
 
             infinitive = infinitive.to_s
@@ -823,8 +823,8 @@ That is the person whose car I saw.
             end
         end
 
-        def self.noun?(word)
-            Words.db.all_pos(:noun).include?(word) || definite?(word) || pronoun?(word)
+        def self.noun?(db, word)
+            db.all_pos(:noun).include?(word) || definite?(word) || pronoun?(word)
         end
 
         # N.B. There's overlap between certain pronouns and certain possessive determiners.
@@ -852,8 +852,8 @@ That is the person whose car I saw.
             end
         end
 
-        def self.rand
-            Words.db.lexemes_of_type(:noun).rand.lemma
+        def self.rand(db)
+            db.lexemes_of_type(:noun).rand.lemma
         end
 
         # TODO - use

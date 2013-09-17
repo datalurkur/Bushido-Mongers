@@ -16,7 +16,7 @@ diffs = Debug.deep_compare(packed, repacked)
 failed = false
 diffs.each do |diff|
     next if diff[0][0] == :saved_on
-    Log.error("Diff found at #{diff[0]} - #{diff[1]} | #{diff[2]}")
+    Log.error("Diff found at #{diff[0].inspect} - #{diff[1].inspect} | #{diff[2].inspect}")
     failed = true
 end
 exit(failed ? 1 : 0)

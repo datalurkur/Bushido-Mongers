@@ -26,4 +26,4 @@ class TestCoreLoader
 end
 
 t = TestCoreLoader.new
-3.times { t.test }
+2.times { t.test }

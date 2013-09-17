@@ -1,9 +1,9 @@
-require 'set'
-require './util/log'
 require './util/packer'
+require './words/words'
 
 class WordDB
     include Packer
+    include Words
 
     def self.packable
         [:groups, :associations, :conjugations, :verb_case_maps, :verb_default_case, :lexemes, :lemmas, :derivations]

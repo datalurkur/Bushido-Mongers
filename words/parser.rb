@@ -51,7 +51,6 @@ module WordParser
     def self.load(dict_dir = './words/dict')
         raise(ArgumentError, "Cannot find #{dict_dir}.") unless File.exists?(dict_dir) && File.directory?(dict_dir)
 
-        db = nil
         db = WordDB.new
 
         Words::TYPES.each do |type|
@@ -117,8 +116,6 @@ module WordParser
                 db.add_conjugation_by_person(infinitive, state, words.map(&:to_sym))
             end
         end
-
-        Words.register_db(db)
 
         db
     end

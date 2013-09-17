@@ -3,11 +3,12 @@
 #  destruction down on you as the message packers / unpackers attempt to infinitely 
 #  pack and unpack the core contained within
 
-require "./world/room"
+require './world/room'
+require './net/manifests'
 
 class Descriptor
     def self.create_report(report_type, words_db, details)
-        Log.debug("Creating text-dialect #{report_type} report")
+        Log.debug("Creating text-dialect #{report_type} report", 8)
         case report_type
         when :act_success
             return words_db.generate(details)

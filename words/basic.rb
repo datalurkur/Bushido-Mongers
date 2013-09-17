@@ -5,18 +5,6 @@ module Words
 
     VOWELS = ['a', 'e', 'i', 'o', 'u']
     CONSONANTS = ('a'..'z').to_a - VOWELS
-
-    def self.register_db(db)
-        @db = db
-    end
-
-    def self.db
-        if @db
-            @db
-        else
-            WordParser.load
-        end
-    end
 end
 
 =begin

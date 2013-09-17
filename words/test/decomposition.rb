@@ -12,34 +12,34 @@ words_db = WordParser.load
 # And finally read in some basic noun & adjective information from the raws db.
 WordParser.read_raws(words_db, db)
 
-args = Words.decompose_command("aTTack Spider")
+args = words_db.decompose_command("aTTack Spider")
 Log.debug(args)
 raise unless args[:command] == :attack
 raise unless args[:target] == :spider
 
-args = Words.decompose_command("strike spider")
+args = words_db.decompose_command("strike spider")
 Log.debug(args)
 raise unless args[:command] == :attack
 raise unless args[:target] == :spider
 
-args = Words.decompose_command("spawn gold")
+args = words_db.decompose_command("spawn gold")
 Log.debug(args)
 raise unless args[:command] == :spawn
 raise unless args[:target] == :gold
 
-args = Words.decompose_command("flibberdygibber whoosafarglebert humperdink")
+args = words_db.decompose_command("flibberdygibber whoosafarglebert humperdink")
 Log.debug(args)
 
-args = Words.decompose_command("look self")
+args = words_db.decompose_command("look self")
 Log.debug(args)
 raise unless args[:target] == :self
 
-args = Words.decompose_command("ask self about beef")
+args = words_db.decompose_command("ask self about beef")
 Log.debug(args)
 raise unless args[:receiver] == :self
 raise unless args[:target] == :beef
 
-args = Words.decompose_command("look at self with microscope")
+args = words_db.decompose_command("look at self with microscope")
 Log.debug(args)
 raise unless args[:command] == :inspect
 raise unless args[:target] == :self

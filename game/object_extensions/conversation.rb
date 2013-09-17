@@ -18,7 +18,7 @@ module Conversation
                 if message.has_param?(:receiver) && instance.will_do_command?(message)
                     instance.perform_command(message)
                 else
-                    params = Words.decompose_ambiguous(message.statement)
+                    params = instance.decompose_ambiguous(message.statement)
                     if params[:query]
                         return instance.answer_question(message.agent, params)
                     elsif params[:statement]
@@ -27,7 +27,7 @@ module Conversation
                         # possibility of a lie. Please don't abuse this!
                         if true # believes_statement(agent, params[:statement])
                             instance.add_knowledge_of(params[:thing])
-                            instance.say(message.agent, Words.describe_knowledge(params[:statement]))
+                            instance.say(message.agent, @core.words_db.describe_knowledge(params[:statement]))
                         else
                             instance.say(message.agent, "I don't believe you!")
                         end
@@ -36,6 +36,8 @@ module Conversation
             end
         end
     end
+
+    def decompose_ambiguous(statement); @core.words_db.decompose_ambiguous(statement); end
 
     def answer_question(asker, params)
         Log.debug("#{monicker} answering query #{params.inspect}")
@@ -90,7 +92,7 @@ module Conversation
                 args[k] = Descriptor.describe(v, self) if v.is_a?(BushidoObject)
             end
 
-            self.say(asker, Words.generate(args))
+            self.say(asker, @core.words_db.generate(args))
         else
             self.say(asker, "I don't know anything about that.")
         end
@@ -104,7 +106,7 @@ module Conversation
     end
 
     def perform_command(message)
-        params = Words.decompose_command(message.statement.map(&:to_s).join(" "))
+        params = @core.words_db.decompose_command(message.statement.map(&:to_s).join(" "))
         command = params[:command]
         Log.debug(params)
 

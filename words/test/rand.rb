@@ -10,14 +10,14 @@ require './test/fake'
 $core = FakeCore.new
 
 10.times do |i|
-    Log.debug(Words::Adjective.rand)
+    Log.debug(Words::Adjective.rand($core.words_db))
 end
 
 10.times do |i|
-    Log.debug(Words::Noun.rand)
+    Log.debug(Words::Noun.rand($core.words_db))
 end
 
 10.times do |i|
-    Log.debug(Words.random_name)
+    Log.debug($core.words_db.random_name)
 end
 

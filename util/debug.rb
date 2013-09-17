@@ -8,6 +8,19 @@ class Debug
         end
 
         case a
+        when ObjectDB
+            deep_compare(a.db, b.db, context, ignored)
+        when Set
+            return [[a.size, b.size]] unless a.size == b.size
+            # Breaks sometimes if the contents of the set are unsortable
+            a_a = a.to_a
+            a_b = b.to_a
+            a_a.sort! if a_a.first && a_a.first.respond_to?("<=>")
+            a_b.sort! if a_b.first && a_b.first.respond_to?("<=>")
+            a_a.each_with_index do |x,i|
+                sub_failures = deep_compare(x, a_b[i], context + [i], ignored)
+                failures.concat(sub_failures)
+            end
         when Array
             #Log.debug("#{tab}Comparing arrays #{a.size} | #{b.size}")
             return [[a.size, b.size]] unless a.size == b.size
@@ -23,7 +36,7 @@ class Debug
                 sub_failures = deep_compare(a[k], b[k], context + [k], ignored)
                 failures.concat(sub_failures)
             end
-        when Symbol,Fixnum,TrueClass,FalseClass,NilClass,String,Time,Set,Module,Float
+        when Symbol,Fixnum,TrueClass,FalseClass,NilClass,String,Time,Module,Float
             #Log.debug("#{tab}Comparing #{a.class.inspect}'s #{a} | #{b}")
             return [[context, a, b]] unless a == b
         when WordGroup,Lexicon::Lexeme

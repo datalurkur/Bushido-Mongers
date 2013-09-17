@@ -6,8 +6,8 @@ module Words
     # to adjective and noun information, and can store adjectives and pass them along
     # to the object-finder to narrow the search.
     # parameter: A whitespace-separated list of words in string format.
-    def self.decompose_command(entire_command)
-        Log.debug(["Command text entered: #{entire_command.inspect}"], 1)
+    def decompose_command(entire_command)
+        Log.debug(["Command text entered: #{entire_command.inspect}"], 6)
 
         # handle the special case of command style: 'this is text that i'm speaking, indicated by the initial quote.
         if entire_command[0].chr == "'"
@@ -27,9 +27,9 @@ module Words
         pieces = pieces.select { |p| !Article.article?(p) }
 
         # Look for matching command.
-        commands = self.db.words_of_type(:command)
+        commands = words_of_type(:command)
         unless commands.include?(verb)
-            related = self.db.get_related_words(verb) || []
+            related = get_related_words(verb) || []
             matching_commands = commands & related
             if matching_commands.size > 1
                 raise(StandardError, "'#{verb}' has too many command synonyms: #{matching_commands.inspect}")
@@ -55,7 +55,7 @@ module Words
         args
     end
 
-    def self.decompose_ambiguous(statement)
+    def decompose_ambiguous(statement)
         statement = case statement
         when String, Symbol
             statement.to_s.downcase.split_to_sym
@@ -81,7 +81,7 @@ module Words
     end
 
     private
-    def self.decompose_question(args, pieces)
+    def decompose_question(args, pieces)
         args[:query] = true
         find_and_delete(args, pieces, 0, [:do, :you, :know])
         if index = Question.find_wh_word(pieces)
@@ -116,7 +116,7 @@ module Words
     end
 
     # Used for deleting unused (so far) phrases to help/hack decomposition.
-    def self.find_and_delete(args, pieces, index, phrase)
+    def find_and_delete(args, pieces, index, phrase)
         orig_pieces = pieces.dup
         Log.debug([args, pieces, index, phrase], 7)
         if pieces[index..(index+phrase.size-1)].zip(phrase).all? { |a, b| a == b }
@@ -126,7 +126,7 @@ module Words
     end
 
     # N.B. modifies the pieces array
-    def self.decompose_statement(args, pieces)
+    def decompose_statement(args, pieces)
         # Look for a :to to be followed by a single noun.
         # No adjective trickery here, because we don't fundamentally know
         # what'll decompose into a noun here and we don't want to snarf any of
@@ -144,15 +144,15 @@ module Words
     end
 
     # N.B. modifies the pieces array
-    def self.decompose_phrases(args, pieces)
+    def decompose_phrases(args, pieces)
         # The default case is what case of the sentence a noun with no preposition serves as.
-        default_case = Words.db.get_default_case_for_verb(args[:verb])
+        default_case = get_default_case_for_verb(args[:verb])
         Log.debug("Testing #{default_case} with nil", 6)
         if default_case && noun = find_noun_phrase(0, pieces)
             set_case(default_case, args, noun.first, noun.last)
         end
 
-        prep_map = Words.db.get_prep_map_for_verb(args[:verb])
+        prep_map = get_prep_map_for_verb(args[:verb])
         prep_map.each_pair do |case_name, preposition|
             Log.debug("Testing #{case_name} with #{preposition.inspect}", 9)
             find_prep_phrase(case_name, preposition, pieces, args)
@@ -162,7 +162,7 @@ module Words
     end
 
     private
-    def self.set_case(case_name, args, noun, adjs)
+    def set_case(case_name, args, noun, adjs)
         case_name_adjs = (case_name.to_s + "_adjs").to_sym
         Log.debug("Setting #{case_name.inspect} and #{case_name_adjs.inspect} to #{noun.inspect} and #{adjs.inspect}", 6)
         args[case_name] = noun.downcase
@@ -170,7 +170,7 @@ module Words
     end
 
     # N.B. modifies the pieces array
-    def self.find_prep_phrase(case_name, preposition, pieces, args)
+    def find_prep_phrase(case_name, preposition, pieces, args)
         if (index = pieces.index(preposition))
             Log.debug("Detected '#{preposition}' at #{index}", 6)
             pieces.slice!(index, 1)
@@ -181,7 +181,7 @@ module Words
     end
 
     # N.B. modifies the pieces array
-    def self.find_verb_phrase(index, pieces)
+    def find_verb_phrase(index, pieces)
         return nil if index >= pieces.size
 
         set_snarfback = false
@@ -201,7 +201,7 @@ module Words
     end
 
     # N.B. modifies the pieces array
-    def self.find_noun_phrase(index, pieces)
+    def find_noun_phrase(index, pieces)
         return nil if index >= pieces.size
 
         adjectives = []
@@ -218,9 +218,9 @@ module Words
         #end
         pieces[index..-1].each_with_index do |piece, i|
             Log.debug([piece, i], 4)
-            if Noun.noun?(piece) || # It's an in-game noun.
+            if Noun.noun?(self, piece) || # It's an in-game noun.
                (index + i) == pieces.size - 1     || # It's at the end of the index.
-               Preposition.preposition?(pieces[index + i + 1]) # Or there's a preposition next.
+               Preposition.preposition?(self, pieces[index + i + 1]) # Or there's a preposition next.
                 Log.debug("found noun #{piece}", 6)
                 if noun
                     # It must be an adjective, instead.
@@ -228,7 +228,7 @@ module Words
                 end
                 noun = piece
                 size += 1
-            elsif Adjective.adjective?(piece)
+            elsif Adjective.adjective?(self, piece)
                 Log.debug("found adjective #{piece}", 6)
                 adjectives << piece
                 size += 1
@@ -236,7 +236,7 @@ module Words
                 Log.debug("found possessive determiner #{piece}", 6)
                 adjectives << piece
                 size += 1
-            elsif Preposition.preposition?(piece)
+            elsif Preposition.preposition?(self, piece)
                 # Moving on...
                 break
             else

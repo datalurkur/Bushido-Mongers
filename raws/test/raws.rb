@@ -2,6 +2,7 @@ require './raws/db'
 require './game/tables'
 require './game/object_extensions'
 require './test/fake'
+require './util/debug'
 Log.setup("Main", "test")
 
 # Basic DB parsing tests
@@ -13,7 +14,14 @@ Log.debug("Testing DB Marshal-ability")
 db_data = Marshal.dump(db)
 db = nil
 db = Marshal.load(db_data)
-db = nil
+Log.debug("Testing DB packability")
+packed = Marshal.load(Marshal.dump(ObjectDB.pack(db)))
+unpacked = ObjectDB.unpack(packed)
+diffs = Debug.deep_compare(db, unpacked)
+diffs.each do |diff|
+    Log.error("Diff found at #{diff[0].inspect} : #{diff[1]} / #{diff[2]}")
+end
+raise("Diffs found") unless diffs.empty?
 
 $core = FakeCore.new
 
