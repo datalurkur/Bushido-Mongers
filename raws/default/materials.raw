@@ -29,16 +29,38 @@ organic feather {
 }
 
 /* FIBERS */
-fiber yak_hair {
+abstract fiber wool {}
+wool yak_wool {
     typical_value 1;
 }
 fiber yucca_fiber {
     typical_value 1;
 }
-fiber alpaca_wool {
+wool alpaca_wool {
+    typical_value 2;
+}
+wool cashmere_wool {
+/*    comes_from_animal goat; */
+    typical_value 2;
+}
+wool angora_wool {
+/*    comes_from_animal rabbit; */
     typical_value 2;
 }
 fiber cotton {
+/* generally only in finished textiles from China */
+    typical_value 4;
+}
+fiber hemp {
+/*    rarity common; */
+    typical_value 4;
+}
+fiber linen {
+/*    rarity common; */
+    typical_value 4;
+}
+fiber silk {
+/* restricted to nobility */
     typical_value 4;
 }
 
