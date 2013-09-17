@@ -299,9 +299,20 @@ class GameCore
                 next_to_destroy, destroyer = to_destroy.shift
                 next if destroyed.include?(next_to_destroy)
 
+                destroyed_uid = next_to_destroy.uid
                 next_to_destroy.destroy(destroyer)
-                @object_manifest[BushidoObject].delete(next_to_destroy.uid)
-                @inactive_objects[next_to_destroy.uid] = BushidoObject.pack(next_to_destroy)
+
+                @object_manifest[BushidoObject].delete(destroyed_uid)
+                @inactive_objects[destroyed_uid] = BushidoObject.pack(next_to_destroy)
+
+                @active_characters.each do |username, uid|
+                    if uid == destroyed_uid
+                        @lobby.broadcast(Message.new(:user_dies, {:result => username}))
+                    end
+                    @active_characters[username] = nil
+                    break
+                end
+
                 destroyed << next_to_destroy
             end
         end

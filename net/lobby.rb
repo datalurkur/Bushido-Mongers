@@ -282,18 +282,6 @@ class Lobby
         case message.type
         when :tick
             Log.debug("Lobby tick", 6)
-        when :unit_killed,:object_destroyed
-            @users.keys.each do |username|
-                # Core messages already protected (issued by a protected method)
-                next unless @game_core.active_character(username)
-                character = @game_core.get_character(username)
-                next unless message.location == character.absolute_position
-
-                if message.target == character
-                    Log.info("Character #{character.monicker} dies!")
-                    broadcast(Message.new(:user_dies, {:result => username}))
-                end
-            end
         end
     end
 
