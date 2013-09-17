@@ -91,6 +91,10 @@ module Words
     class PTLeaf    < PTNode; end
     class ParseTree < PTInternalNode; end
 
+    # FIXME: Currently only does declarative.
+    # Imperative is just implied-receiver, no subject.
+    # Questions follow subject-auxiliary inversion
+    # http://en.wikipedia.org/wiki/Subject%E2%80%93auxiliary_inversion
     class Clause < ParseTree
         def initialize(db, args)
             to_print = args.dup
@@ -732,6 +736,8 @@ That is the person whose car I saw.
                 :beaten
             when :wear
                 :worn
+            when :hold
+                :held
             when :throw
                 :thrown
             when :grow
