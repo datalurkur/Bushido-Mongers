@@ -6,6 +6,25 @@
 require "./world/room"
 
 class Descriptor
+    def self.create_report(report_type, words_db, details)
+        Log.debug("Creating text-dialect #{report_type} report")
+        case report_type
+        when :act_success
+            return words_db.generate(details)
+        when :game_event
+            case details[:event_type]
+            when :unit_killed,:object_destroyed,:unit_speaks,:unit_whispers,:unit_acts,:unit_moves
+                return words_db.gen_sentence(details)
+            when :unit_attacks
+                return words_db.describe_attack(details)
+            else
+                return "I don't know how to express a game event of type #{details[:event_type]}"
+            end
+        else
+            return details.to_formatted_string("", true)
+        end
+    end
+
     def self.describe(object, observer)
         case object
         when BushidoObject; BushidoObjectDescriptor.describe(object, observer)

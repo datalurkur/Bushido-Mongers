@@ -29,6 +29,7 @@ Message.define(:receive_chat,        :chat, [:sender,:chat_text,:is_whisper])
 
 # Lobby phase
 Message.define(:access_denied,       :lobby)                                                # S->C
+Message.define(:set_dialect,         :lobby, [:dialect])                                    # C->S
 
 # Game / World loading / saving
 Message.define(:get_saved_worlds,    :lobby)                                                # C->S
@@ -86,8 +87,8 @@ Message.define(:act,           :game, [:command])
 Message.define(:act_clarify,   :game, [:verb, :missing_params])
 Message.define(:clarification, :game, [:missing_param])
 Message.define(:act_fail,      :game, [:reason], "Failed to perform action")
-Message.define(:act_success,   :game, [:description])
-Message.define(:game_event,    :game, [:description])
+Message.define(:act_success,   :game, [:details])
+Message.define(:game_event,    :game, [:details])
 Message.define(:user_dies,     :game, [:result], "User dies")
 
 # Core Game Information
@@ -117,5 +118,5 @@ Message.define(:invalid_input,    :response)
 
 # Mostly just raw text messages
 Message.define(:list,           :interface, [:field, :items])
-Message.define(:properties,     :interface, [:field, :properties])
+Message.define(:report,         :interface, [:field, :contents])
 Message.define(:raw_command,    :interface, [:command])

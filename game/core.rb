@@ -35,6 +35,22 @@ class GameCore
     # Callback set up for characters to send messages to their respective clients via the lobby
     def set_lobby(value); @lobby = value; end
     def clear_lobby;      @lobby = nil;   end
+
+    def send_with_dialect(username, message_type, properties)
+        raise(UnexpectedBehaviorError, "Lobby not set") unless @lobby
+        dialect = @lobby.get_user_dialect(username)
+        details = case dialect
+        when :text
+            Descriptor.create_report(message_type, @words_db, properties)
+        when :metadata
+            properties
+        else
+            Log.error("Unknown dialect, #{dialect}, falling back to metadata")
+            properties
+        end
+        @lobby.send_to_user(username, Message.new(message_type, {:details => details}))
+    end
+
     def send_to_user(username, message)
         raise(UnexpectedBehaviorError, "Lobby not set") unless @lobby
         @lobby.send_to_user(username, message)

@@ -1,5 +1,4 @@
 require './util/basic'
-require './words/words'
 
 # The purpose of the interface modules is to provide an abstraction layer for converting messages to and from whatever form they need to be in to be consumed and processed
 # In the case of the user, this will take on the form of various text formats or commands to a GUI
@@ -11,7 +10,7 @@ module TextInterface
         # While these would appear to be the same, one prompts a response (and this is very different to an AI!)
         when :choose_from_list; list(message.choices, message.field)
         when :list;             list(message.items)
-        when :properties;       properties(message)
+        when :report;           message.contents
         when :act_clarify
             clarify_string = message.verb.title
             message.missing_params.each do |missing|
@@ -92,10 +91,6 @@ module SlimInterface
             title + decorate(items, style).join(" ")
         end
 
-        def properties(message)
-            message.properties.collect { |k,v| "#{k}=>#{v}" }.join(" ")
-        end
-
         def get_choice(context, text)
             index = text.to_i
             unless (1..context.choices.size).include?(index)
@@ -119,27 +114,6 @@ module VerboseInterface
         def list(items, field=nil, style=:number)
             title = field ? "=#{field.title}=\n" : ""
             title + decorate(items, style).join("\n")
-        end
-
-        def properties(message)
-            if message.field == :action_results
-                return Words.generate(message.properties)
-            elsif message.field == :game_event
-                case message.properties[:event_type]
-                when :unit_killed, :object_destroyed, :unit_speaks, :unit_whispers
-                    return Words.gen_sentence(message.properties)
-                when :unit_attacks
-                    return Words.describe_attack(message.properties)
-                when :unit_acts, :unit_moves
-                    return Words.gen_sentence(message.properties)
-                else
-                    return "I don't know how to express a game event of type #{message.properties[:event_type]}"
-                end
-            elsif message.field == :server_link
-                return "Server Link: http://#{message.properties[:host]}#{message.properties[:uri]}"
-            else
-                return message.properties.to_formatted_string("", true)
-            end
         end
 
         def get_choice(context, text)

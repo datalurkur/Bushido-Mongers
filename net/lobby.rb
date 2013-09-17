@@ -12,25 +12,28 @@ class Lobby
 
     def initialize(name, password_hash, creator, &block)
         # Credentials
-        @name           = name
-        @password_hash  = password_hash
+        @name              = name
+        @password_hash     = password_hash
 
         # Game administration / socket maintenance / broadcast list
-        @users          = {}
-        @users[creator] = {:admin => true}
-        @game_creator   = creator
-        @default_admin  = creator
+        @users             = {}
+        @dialects          = {}
+
+        @users[creator]    = {:admin => true}
+        @game_creator      = creator
+        @default_admin     = creator
+        @dialects[creator] = :text
 
         # Local state, basically
-        @game_state     = :no_core
+        @game_state        = :no_core
 
         # Game objects
-        @game_core      = nil
-        @game_args      = {}
+        @game_core         = nil
+        @game_args         = {}
 
         # How the lobby sends messages back to clients (while still using the thread-safe mutexes and methods)
         raise(ArgumentError, "No send callback passed to lobby (block required).") unless block_given?
-        @send_callback = block
+        @send_callback     = block
     end
 
     def is_admin?(username);   @users[username][:admin];                            end
@@ -46,6 +49,8 @@ class Lobby
             return true
         end
     end
+
+    def get_user_dialect(username); @dialects[username]; end
 
     def send_to_user(username, message)
         character = is_playing?(username) ? @game_core.get_character(username) : nil
@@ -95,7 +100,8 @@ class Lobby
 
         Log.info("#{username} added to #{name}")
         broadcast(Message.new(:user_joins, {:result => username}), [username])
-        @users[username] = {}
+        @users[username]    = {}
+        @dialects[username] = :text
 
         # TODO - Add a privilege set so that other users can be granted admin
         if @default_admin == username
@@ -115,6 +121,7 @@ class Lobby
             @game_core.extract_character(username)
         end
         @users.delete(username)
+        @dialects.delete(username)
         Log.info("#{username} was removed from #{name}")
         broadcast(Message.new(:user_leaves, {:result => username}))
     end
@@ -261,7 +268,7 @@ class Lobby
             @game_core.protect do
                 Commands.do(@game_core, command, params)
             end
-            send_to_user(username, Message.new(:act_success, {:description => params}))
+            @game_core.send_with_dialect(username, :act_success, params)
         rescue Exception => e
             Log.error(["Failed to perform command #{command}", e.message, e.backtrace])
             send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
@@ -331,6 +338,8 @@ class Lobby
         end
 
         case message.type
+        when :set_dialect
+            @dialects[username] = message.dialect
         when :get_saved_worlds
             raw_infos = get_saved_cores_info
             info_to_client = {}

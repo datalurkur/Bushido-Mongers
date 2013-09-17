@@ -76,6 +76,6 @@ module Character
     def inform_user(message)
         raise(StateError, "User callback not set for #{monicker}") unless @username
         event_properties = message.params.merge(:event_type => message.type)
-        @core.send_to_user(@username, Message.new(:game_event, {:description => event_properties}))
+        @core.send_with_dialect(@username, :game_event, event_properties)
     end
 end
