@@ -97,6 +97,7 @@ Log.debug($core.words_db.describe_composition(target_description))
 # Knowledge stuff.
 require './knowledge/knowledge'
 human_quanta = $core.kb.all_quanta_for_type(:human)
+Log.debug(human_quanta)
 human_quanta.each do |q|
     Log.debug($core.words_db.generate(q.args.dup))
 end

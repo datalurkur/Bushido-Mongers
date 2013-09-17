@@ -17,7 +17,12 @@ module Words
     # in all instances of all verbs in the present negative form.
     class State
         FIELDS = {
-            :aspect  => [:perfect, :imperfect, :habitual, :stative, :progressive],
+            :aspect  => [:perfect,
+                         :progressive, # e.g. is progressing, is happening, is missing
+                         :imperfect,   # continuing or repeated event or state
+                         :habitual,
+                         :stative
+                        ],
             :tense   => [:present, :past, :future],
             :mood    => [:indicative, :subjunctive, :imperative],
             :person  => [:first, :second, :third, :first_plural, :second_plural, :third_plural],
