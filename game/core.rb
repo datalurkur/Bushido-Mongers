@@ -308,9 +308,9 @@ class GameCore
                 @active_characters.each do |username, uid|
                     if uid == destroyed_uid
                         @lobby.broadcast(Message.new(:user_dies, {:result => username}))
+                        set_active_character(username, nil)
+                        break
                     end
-                    @active_characters[username] = nil
-                    break
                 end
 
                 destroyed << next_to_destroy
