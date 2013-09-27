@@ -55,6 +55,10 @@ module Position
         !!@position_uid
     end
 
+    def get_position_uid
+        @position_uid
+    end
+
     def absolute_position
         safe_position
         obj = self
@@ -100,10 +104,10 @@ module Position
         old_position      = @position_uid ? @core.lookup(@position_uid) : nil
         old_position_type = @position_type
 
+        update_position_trackers([old_position, old_position_type], [new_position, position_type], locomotes)
+
         @position_uid = new_position.uid
         @position_type = position_type
-
-        update_position_trackers([old_position, old_position_type], [new_position, position_type], locomotes)
     end
 
     def set_initial_position(new_position, position_type = :interal)
@@ -116,8 +120,7 @@ module Position
         o_p, o_t = old_position
         n_p, n_t = new_position
         #Log.debug("The position of #{self.monicker} changes from #{o_p ? o_p.monicker : "nil"} to #{n_p ? n_p.monicker : "nil"}")
-        o_p.remove_object(self, o_t) if o_p
-        n_p.add_object(self, n_t) if n_p
+        Log.debug("The position of #{self.monicker} changes from #{o_p ? o_p.uid : "nil"} to #{n_p ? n_p.uid : "nil"}")
 
         locations    = [o_p, n_p].compact
         message_type = locomotes ? :unit_moves : :unit_moved
@@ -128,6 +131,8 @@ module Position
             :destination => n_p
         })
         Message.change_listener_position(@core, self, n_p, o_p)
+        o_p.remove_object(self, o_t) if o_p
+        n_p.add_object(self, n_t) if n_p
     end
 
     def safe_position
