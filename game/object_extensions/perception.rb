@@ -21,9 +21,9 @@ module Perception
             # A player tied to a long pole can still grab apples
             objects    = perceivable_objects_of(self.absolute_position.get_contents(:internal))
             containers = objects.select { |o| o.is_type?(:container) && o.open? }
-            # perceivable objects in room + contents of perceivable open containers in room
-            objects.select { |o| o.matches(filters) } +
-            containers.map { |c| c.select_objects(:internal, false) { |o| o.matches(filters) } }.flatten
+            # perceivable objects in room + (non-recursive) contents of perceivable open containers in room
+            contained_objects = containers.map   { |c| c.get_contents(:internal) }.flatten
+            (objects + contained_objects).select { |o| o.matches(filters) }
         when :grasped, :worn
             return [] unless uses?(Composition) && uses?(Equipment)
             all_equipment(location).select do |object|

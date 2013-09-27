@@ -17,9 +17,7 @@ Behavior.define(:random_movement) do |actor|
 end
 
 Behavior.define(:flee) do |actor|
-    # FIXME - We need a better way to determine if two parties should behave aggressively towards each other
-    aligned_list = actor.filter_objects(:position, {:uses => Perception})
-    enemies = aligned_list.select { |npc| Behavior.are_enemies?(npc, actor) }
+    enemies = Behavior.enemies_in_area(actor)
     if enemies.empty?
         false
     else
@@ -45,16 +43,13 @@ end
 #   Incidentally, this also gives us a logical place to insert taunts and challenges.
 Behavior.define(:attack) do |actor|
     # FIXME - We need a better way to determine if two parties should behave aggressively towards each other
-    aligned_list = actor.filter_objects(:position, {:uses => Perception})
-    aligned_list.reject! { |a| a == actor }
-    enemies = aligned_list.select { |npc| Behavior.are_enemies?(npc, actor) }
-    if enemies.empty?
-        false
-    else
-        attackee = enemies.first
-        #Log.debug("#{actor.monicker} is attacking #{attackee.monicker}", 5)
+    enemies = Behavior.enemies_in_area(actor)
+    if attackee = enemies.first
+        Log.debug("#{actor.monicker} is attacking #{attackee.monicker}", 5)
         actor.do_command(:attack, {:agent => actor, :target => attackee})
         true
+    else
+        false
     end
 end
 

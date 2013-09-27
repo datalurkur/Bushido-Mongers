@@ -17,6 +17,13 @@ class Behavior
             actions[behavior].call(actor)
         end
 
+        def enemies_in_area(actor)
+            potential_enemies = actor.filter_objects(:position, {:uses => Perception})
+            potential_enemies.delete(actor)
+            enemies = potential_enemies.select { |npc| Behavior.are_enemies?(npc, actor) }
+        end
+
+        # FIXME - We need a better way to determine if two parties should behave aggressively towards each other
         def are_enemies?(actor_a, actor_b)
             # TODO - Make faction interactions more complex
             (actor_a.factions.keys & actor_b.factions.keys).empty?

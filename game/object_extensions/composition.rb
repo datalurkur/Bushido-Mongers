@@ -239,5 +239,4 @@ private
         raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
         @container_contents[type] ||= []
     end
-
 end

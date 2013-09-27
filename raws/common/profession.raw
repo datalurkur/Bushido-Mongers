@@ -1,8 +1,8 @@
 abstract profession {
     class_many optional sym skills;
-    class sym typical_behavior;
+    skills intrinsic_fighting defense;
 
-    typical_behavior random_attack_and_move;
+    class sym typical_behavior;
 }
 
 abstract professional {

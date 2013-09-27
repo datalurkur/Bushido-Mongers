@@ -1,16 +1,16 @@
 abstract archetype monster {
     factions monster;
-    typical_profession thug;
+    default_behavior random_attack_and_move;
 }
 
 abstract archetype animal {
     factions neutral;
-    typical_profession commoner;
+    default_behavior flee_if_threatened;
 }
 
 abstract archetype civil {
     factions civil;
-    typical_profession commoner;
+    default_behavior flee_if_threatened;
     feral false;
     uses conversation;
 }

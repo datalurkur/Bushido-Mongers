@@ -1,16 +1,18 @@
-abstract profession unskilled_profession {
-    skills intrinsic_fighting defense;
+abstract profession civilian {
     typical_behavior flee_if_threatened;
 }
-
-static unskilled_profession commoner {}
-static unskilled_profession forager {
-    typical_behavior roam_and_consume;
-}
-static unskilled_profession hunter {}
-static unskilled_profession guard {}
-static unskilled_profession blacksmith {}
-static unskilled_profession merchant {}
-static unskilled_profession thug {
+abstract profession warrior {
     typical_behavior random_attack_and_move;
 }
+
+static civilian commoner {}
+static civilian forager {
+    typical_behavior roam_and_consume;
+}
+static warrior hunter {}
+static warrior guard {}
+static civilian blacksmith {
+/*	typical_behavior craft; */
+}
+static civilian merchant {}
+static warrior thug {}
