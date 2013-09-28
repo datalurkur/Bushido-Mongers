@@ -9,8 +9,8 @@ db.add_family(
     {:noun => "substandard", :adverb => :substandardly}
 )
 
-#packed = WordDB.pack(db)
-#db = WordDB.unpack(packed)
+packed = WordDB.pack(db)
+db = WordDB.unpack(packed)
 
 related_groups_for_bad = db.get_related_groups(:bad)
 Log.debug(["Related to :bad", related_groups_for_bad.inspect])

@@ -120,7 +120,6 @@ module Position
         o_p, o_t = old_position
         n_p, n_t = new_position
         #Log.debug("The position of #{self.monicker} changes from #{o_p ? o_p.monicker : "nil"} to #{n_p ? n_p.monicker : "nil"}")
-        Log.debug("The position of #{self.monicker} changes from #{o_p ? o_p.uid : "nil"} to #{n_p ? n_p.uid : "nil"}")
 
         locations    = [o_p, n_p].compact
         message_type = locomotes ? :unit_moves : :unit_moved
