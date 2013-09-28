@@ -61,8 +61,8 @@ module WordParser
 
         load_files(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/).each do |pos, lines|
             lines.each do |line|
-                families = line.split(/\s+/).map(&:to_sym).collect { |word| {pos => word} }
-                db.add_family(*families)
+                words = line.split(/\s+/).map(&:to_sym)
+                db.associate(words, pos)
             end
         end
 
@@ -74,7 +74,7 @@ module WordParser
                 preposition, case_name = words
                 preposition = nil if preposition == :nil
                 db.add_verb_preposition(:default, preposition, case_name)
-                db.add_family(:preposition => preposition) if preposition
+                db.add_lexeme(preposition, :preposition) if preposition
             end
         end
 
@@ -86,7 +86,6 @@ module WordParser
                 verb, preposition, case_name = words
                 preposition = nil if preposition == :nil
                 db.add_verb_preposition(verb, preposition, case_name)
-                db.add_family(:preposition => preposition) if preposition
             end
         end
 =end
@@ -97,7 +96,7 @@ module WordParser
                 verb, preposition, case_name = words
                 preposition = nil if preposition == :nil
                 db.add_verb_preposition(verb, preposition, case_name)
-                db.add_family(:preposition => preposition) if preposition
+                db.add_lexeme(preposition, :preposition) if preposition
             end
         end
 
@@ -107,7 +106,7 @@ module WordParser
                 infinitive = words.shift.to_sym
 
                 # add infinitive as a verb
-                db.add_family(:verb => infinitive)
+                db.add_lexeme(infinitive, :verb)
 
                 # Convert properties ("present,second") into a State
                 properties = words.shift.split(",").map(&:to_sym)

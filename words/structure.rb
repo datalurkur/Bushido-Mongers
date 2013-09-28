@@ -163,7 +163,7 @@ module Words
 
             # Use an associated verb, if any exist.
             unless [:say].include?(verb)
-                associated_verbs = db.get_related_words(verb.to_sym)
+                associated_verbs = db.associated_verbs(verb.to_sym)
                 if associated_verbs && associated_verbs.size > 1
                     verb = args[:verb] = associated_verbs.rand
                 end
@@ -301,7 +301,7 @@ That is the person whose car I saw.
 
     class Preposition < PTLeaf
         def self.preposition?(db, word)
-            db.all_pos(:preposition).include?(word)
+            db.words_of_type(:preposition).include?(word)
         end
     end
 
@@ -613,8 +613,7 @@ That is the person whose car I saw.
         end
 
         def self.rand(db)
-            #Log.debug(db.lexemes_of_type(:adjective))
-            db.lexemes_of_type(:adjective).rand.lemma
+            db.words_of_type(:adjective).rand
         end
     end
 
@@ -830,7 +829,7 @@ That is the person whose car I saw.
         end
 
         def self.noun?(db, word)
-            db.all_pos(:noun).include?(word) || definite?(word) || pronoun?(word)
+            db.words_of_type(:noun).include?(word) || definite?(word) || pronoun?(word)
         end
 
         # N.B. There's overlap between certain pronouns and certain possessive determiners.
@@ -859,7 +858,7 @@ That is the person whose car I saw.
         end
 
         def self.rand(db)
-            db.lexemes_of_type(:noun).rand.lemma
+            db.words_of_type(:noun).rand
         end
 
         # TODO - use

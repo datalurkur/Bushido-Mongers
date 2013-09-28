@@ -9,6 +9,17 @@ class WordDB
         [:groups, :associations, :conjugations, :verb_case_maps, :verb_default_case, :lexemes, :lemmas, :derivations]
     end
 
+    def unpack_custom(args)
+        # Fix what would otherwise be duplicate references in associations.
+        @associations.map! do |set|
+            set.map! do |l|
+                l = self.get_lexeme(l.lemma)
+            end
+        end
+    end
+
+    attr_accessor :associations
+
     def initialize
         @groups       = []
         @associations = []
@@ -22,73 +33,56 @@ class WordDB
         @derivations = []
     end
 
-    def collect_groups(*list_of_words)
-        list_of_words.collect do |word|
-            if Symbol === word
-                find_group_for(word)
-            else
-                # Check if a definition exists
-                if matched = find_group_for(word, false)
-                    matched
-                elsif mergee = find_group_matching_any(word, false)
-                    merge(mergee, word)
-                else
-                    @groups << WordGroup.new(word)
-                    @groups.last
-                end
-            end
-        end
-    end
+    # Generic Association Methods
 
-    def find_group_matching_any(word, verbose=true)
-        case word
-        when Hash
-            # FIXME - O(n^2) for all groups
-            matching = @groups.select { |group| word.any? { |pos, w| group[pos] == w } }
-            raise(StandardError, "Duplicate word groups found in #{self.class} for #{word.inspect}.") unless matching.size < 2
-            Log.debug("No word group '#{word.inspect}' found!") if matching.size <= 0 && verbose
-            matching.first
-        when Symbol,String, WordGroup
-            # Symbol,String should've been caught by find_group_for already
-            # WordGroup would ideally be checked, but it's not implemented yet.
-            raise(NotImplementedError)
-        else
-            Log.debug("Couldn't find group matching word class #{word.class}")
-        end
-    end
+    def associate(words, l_type)
+        words.map! { |w| add_lexeme(w, l_type) }
 
-    def all_pos(pos)
-        @groups.select { |g| g.has?(pos) }.collect { |g| g[pos] }
-    end
-
-    # requirements: mergee is a WordGroup, merger is a Hash
-    def merge(mergee, merger)
-        Log.debug(["Merging:", mergee, merger])
-        merger.each { |k, v| mergee[k] = v }
-        mergee
-    end
-
-    def associate_groups(*list_of_groups)
         # nothing to associate
-        return if list_of_groups.size < 2
+        return if words.size < 2
 
-        # Find and remove old associations
+        # Find and remove old set
         @associations.each do |set|
-            if !(set & list_of_groups).empty?
-                list_of_groups = (list_of_groups + set.to_a).uniq
+            if !(set & words).empty?
+                words = (words + set.to_a).uniq
                 @associations.delete(set)
             end
         end
 
-        @associations << Set.new(list_of_groups)
+        @associations << Set.new(words)
     end
 
-    def add_family(*list_of_words)
-        Log.debug("Adding family #{list_of_words.inspect}", 6)
-        list_of_groups = collect_groups(*list_of_words)
-        associate_groups(*list_of_groups)
-        list_of_groups
+    def associated_lexemes_of(word)
+        lexeme = add_lexeme(word)
+        @associations.each do |set|
+            if set.include?(lexeme)
+                return (set.to_a - [lexeme])
+            end
+        end
+        []
     end
+
+    def associated_words_of(word)
+        associated_lexemes_of(word).map(&:lemma)
+    end
+
+    def get_associations_by_type(word, type)
+        lexemes = associated_lexemes_of(word)
+        lexemes.select do |l|
+            l.types.include?(type)
+        end
+    end
+
+    def associated_verbs(word)
+        get_associations_by_type(word, :verb).map(&:lemma)
+    end
+
+    # How do we decide which type to use? First POS?
+#    def get_synonyms(word)
+#        get_associations_by_type(word, word.types.first)
+#    end
+
+    # Verb & Preposition Association Methods
 
     def add_verb_preposition(verb, preposition, case_name)
         @verb_case_maps[verb] ||= {}
@@ -97,31 +91,6 @@ class WordDB
         else
             @verb_default_case[verb] = case_name
         end
-    end
-
-    # Get a list of related groups
-    def get_related_groups(word_or_group)
-        group = find_group_for(word_or_group)
-        return nil if group.nil?
-        @associations.each do |set|
-            if set.include?(group)
-                return set.to_a - [group]
-            end
-        end
-        nil
-    end
-
-    # Get a list of related words with the same part of speech as the query word
-    def get_related_words(word)
-        group = find_group_for(word)
-        return nil if group.nil?
-        pos = group.part_of_speech(word)
-        @associations.each do |set|
-            if set.include?(group)
-                return (set.to_a - [group]).select { |g| g.has?(pos) }.collect { |g| g[pos] }
-            end
-        end
-        nil
     end
 
     # Verbs have different prepositions for different cases.
@@ -171,28 +140,11 @@ class WordDB
         end
     end
 
-    private
-    def find_group_for(word, verbose = true)
-        case word
-        when Symbol,String
-            matching = @groups.select { |group| group.contains?(word.to_sym) }
-            Log.debug("Warning - '#{word}' appears in more than one word group") if matching.size > 1
-            Log.debug("No reference to '#{word}' found!", 9) if matching.size <= 0 && verbose
-            matching.first
-        when WordGroup, Hash
-            matching = @groups.select { |group| group == word.to_sym }
-            raise(StandardError, "Duplicate word groups found in #{self.class} for #{word.inspect}.") unless matching.size < 2
-            Log.debug("No word group '#{word.inspect}' found!") if matching.size <= 0 && verbose
-            matching.first
-        else
-            raise(ArgumentError, "Can't find groups given type #{word.class}.")
-        end
-    end
+    # Lexeme Methods
 
-    public
-    def add_lexeme(lemma, l_type, args = {})
+    def add_lexeme(lemma, l_type = [], args = {})
         lemma = lemma.to_sym
-        Log.debug("db.add_lexeme(#{lemma.inspect} (#{l_type.inspect}) #{args.inspect})", 8)
+        Log.debug("db.add_lexeme(#{lemma.inspect}, #{l_type.inspect}, #{args.inspect})", 8)
         if !@lemmas.include?(lemma)
             @lemmas  << lemma
             l = Lexicon::Lexeme.new(lemma, l_type, args)
@@ -217,6 +169,8 @@ class WordDB
         lexemes_of_type(l_type).map(&:lemma)
     end
 
+    # Derivation Methods
+
     def add_derivation(derivation)
         @derivations << derivation
         if @lemmas.include?(derivation.derived.lemma)
@@ -227,50 +181,4 @@ class WordDB
         end
         derivation.derived
     end
-end
-
-class WordGroup
-    def initialize(args={})
-        @parts_of_speech = args.to_sym
-    end
-
-    # Values should all be converted to symbols already
-    def to_sym
-        self
-    end
-
-    def [](part_of_speech)
-        parts_of_speech[part_of_speech]
-    end
-
-    def []=(part_of_speech, word)
-        parts_of_speech[part_of_speech] = word
-    end
-
-    def part_of_speech(word)
-        raise(ArgumentError, "#{word} is not a member of #{parts_of_speech.inspect}.") unless contains?(word)
-        parts_of_speech.find { |k,v| v == word }.first
-    end
-
-    def has?(part_of_speech)
-        parts_of_speech.has_key?(part_of_speech)
-    end
-
-    def contains?(word)
-        parts_of_speech.values.include?(word)
-    end
-
-    def ==(other)
-        case other
-        when WordGroup
-            parts_of_speech == other.parts_of_speech
-        when Hash
-            parts_of_speech == other
-        else
-            raise(NotImplementedError, "Can't compare wordgroup to #{other.class}.")
-        end
-    end
-
-    protected
-    attr_reader :parts_of_speech
 end
