@@ -187,7 +187,7 @@ module Words
 
     def describe_help(args)
         "Basic commands:\n"+
-        args[:target].map { |c| [c, *get_related_words(c)].join(" ") }.join("\n") + "\n"
+        args[:target].map { |c| [c, *associated_verbs(c)].join(" ") }.join("\n") + "\n"
     end
 
     def describe_container_class(composition, comp_type = :internal)
@@ -421,8 +421,8 @@ module Words
 
     def random_name(args = {})
         noun    = {
-                    :monicker   => args[:type]     || Noun.rand(self),
-                    :adjectives => args[:keywords] || Adjective.rand(self),
+                    :monicker   => Noun.rand(self),
+                    :adjectives => Adjective.rand(self),
                     :unique     => true,
                   }
         name    = NounPhrase.new(self, noun)

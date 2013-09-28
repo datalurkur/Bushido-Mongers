@@ -11,7 +11,7 @@ class Lexicon
 		end
 
 		def add_type(l_type)
-			@types += Array(l_type)
+			@types = (@types + Array(l_type)).uniq
 		end
 
 		def add_args(args)

@@ -5,7 +5,7 @@ humanoid,monster oni {
 
 humanoid,monster jikininki {
     consumes body_part;
-    typical_profession forager;
+    default_behavior roam_and_consume;
 
     spawns_in mountain sewer meadow dock;
 }

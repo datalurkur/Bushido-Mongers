@@ -3,39 +3,38 @@ require './words/words'
 Log.setup("Main", "family_test")
 
 db = WordParser.load
-db.add_family(
-    {:noun => "bad", :adverb => "badly", :adjective => "bad"},
-    {:noun => :poor, :adverb => :poorly},
-    {:noun => "substandard", :adverb => :substandardly}
-)
+
+#packed = WordDB.pack(db)
+#db = WordDB.unpack(packed)
+
+db.associate([:bad, :fail, :miserable, :poor, :flailing, :blind, :clumsy, :substandard], [:adjective, :descriptive])
+Log.debug(db.associated_words_of(:bad))
 
 packed = WordDB.pack(db)
 db = WordDB.unpack(packed)
 
-related_groups_for_bad = db.get_related_groups(:bad)
-Log.debug(["Related to :bad", related_groups_for_bad.inspect])
+associated_lexemes = db.associated_lexemes_of(:bad)
+Log.debug(["Related to :bad", associated_lexemes.inspect])
 
-related_to_first_relation = db.get_related_groups(related_groups_for_bad.first)
-Log.debug(["Related to #{related_groups_for_bad.first}", related_to_first_relation.inspect])
+other_associated_lexemes = db.associated_lexemes_of(associated_lexemes.first.lemma)
+Log.debug(["Related to #{other_associated_lexemes.first.inspect}", other_associated_lexemes.inspect])
 
-adv = related_to_first_relation.find { |g| g[:adverb] }[:adverb]
-Log.debug(["Adverb:", adv])
-related_adv = db.get_related_words(adv)
+related_adv = db.get_associations_by_type(associated_lexemes.first.lemma, :adverb)
 Log.debug(["Related adverbs:", related_adv])
 
-nouns = db.all_pos(:noun)
-Log.debug(["Nouns", nouns])
+nouns = db.words_of_type(:noun)
+Log.debug(["Nouns", nouns.select { rand(10) == 0 }])
 
-Log.debug(db.get_related_groups(:inspect))
+Log.debug(db.associated_verbs(:inspect))
 
 japanese_names = db.words_of_type(:japanese)
 
 Log.debug("Japanese names: #{japanese_names.inspect}")
 Log.debug("Character name: #{japanese_names.rand}")
 
-see_synonyms = db.get_related_words(:see)
+see_synonyms = db.associated_verbs(:see)
 
 Log.debug(see_synonyms.inspect)
 Log.debug(see_synonyms.rand)
 
-Log.debug(db.get_related_words(:attack).inspect)
+Log.debug(db.associated_verbs(:attack).inspect)

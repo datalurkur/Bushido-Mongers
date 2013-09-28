@@ -39,7 +39,7 @@ class Debug
         when Symbol,Fixnum,TrueClass,FalseClass,NilClass,String,Time,Module,Float
             #Log.debug("#{tab}Comparing #{a.class.inspect}'s #{a} | #{b}")
             return [[context, a, b]] unless a == b
-        when WordGroup,Lexicon::Lexeme
+        when Lexicon::Lexeme
             return failures if ignored.include?(a.class)
             ignored.concat([a.class])
             Log.warning("Ignoring comparison of class #{a.class.inspect}")
@@ -68,7 +68,7 @@ class Debug
             end
         when Symbol,Fixnum,TrueClass,FalseClass,NilClass,Proc,String,Time,Float,Module
             types << object.class
-        when WordGroup,Lexicon::Lexeme,Words::State
+        when Lexicon::Lexeme,Words::State
             types << object.class
         else
             raise "Unhandled type in deep search: #{object.class.inspect}"

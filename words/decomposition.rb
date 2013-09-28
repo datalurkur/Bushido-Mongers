@@ -29,7 +29,7 @@ module Words
         # Look for matching command.
         commands = words_of_type(:command)
         unless commands.include?(verb)
-            related = get_related_words(verb) || []
+            related = associated_verbs(verb) || []
             matching_commands = commands & related
             if matching_commands.size > 1
                 raise(StandardError, "'#{verb}' has too many command synonyms: #{matching_commands.inspect}")

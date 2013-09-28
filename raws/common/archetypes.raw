@@ -1,6 +1,6 @@
 abstract archetype {
     class_many optional sym factions;
-    class optional sym typical_profession;
+    class optional sym default_behavior;
 
     class_many optional sym spawns_in;
     class sym spawn_rarity;

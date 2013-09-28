@@ -57,16 +57,14 @@ class BushidoCore < GameCore
         if player
             agent.setup_extension(Character, hash)
             # FIXME - Add starting skills from new player info
-            # As a hack, just add a random profession for now
+            # Just add a random profession for now
             random_profession = @db.static_types_of(:profession).rand
+            Log.debug("Player #{hash[:name]} has profession #{random_profession}")
             starting_skills = @db.info_for(random_profession, :skills)
         else
             agent.setup_extension(NpcBehavior, hash)
-            if agent.class_info[:typical_profession]
-                profession_info = @db.info_for(agent.class_info[:typical_profession])
-                agent.set_behavior(profession_info[:typical_behavior])
-                starting_skills = profession_info[:skills]
-            end
+            agent.set_behavior(agent.class_info[:default_behavior])  if agent.class_info[:default_behavior]
+            starting_skills = agent.class_info[:profession][:skills] if agent.class_info[:profession]
         end
         agent.setup_skill_set(starting_skills)
 

@@ -66,6 +66,7 @@ require './raws/db'
 require './test/fake'
 require './game/descriptors'
 
+# Body descriptions.
 observer = $core.create_npc(:human, :name => "Kenji Skrimshank", :position => $core.create(FakeRoom))
 agent = Descriptor.describe(observer, observer)
 Log.debug($core.words_db.describe_body(agent))
