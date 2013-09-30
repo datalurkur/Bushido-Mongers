@@ -608,7 +608,7 @@ That is the person whose car I saw.
         end
 
         def self.adjective?(db, word)
-            (lexeme = db.get_lexeme(word) && lexeme.args[:type]) ||
+            ((lexeme = db.get_lexeme(word)) && lexeme.args[:type]) ||
             ordinal_adjectives.any? { |k, v| v.include?(word) }
         end
 
