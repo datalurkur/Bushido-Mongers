@@ -4,6 +4,9 @@ Log.setup("Main", "family_test")
 
 db = WordParser.load
 
+#packed = WordDB.pack(db)
+#db = WordDB.unpack(packed)
+
 db.associate([:bad, :fail, :miserable, :poor, :flailing, :blind, :clumsy, :substandard], [:adjective, :descriptive])
 Log.debug(db.associated_words_of(:bad))
 
