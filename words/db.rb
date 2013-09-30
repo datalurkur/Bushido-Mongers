@@ -21,7 +21,6 @@ class WordDB
     attr_accessor :associations
 
     def initialize
-        @groups       = []
         @associations = []
         @conjugations = {}
 
@@ -142,12 +141,13 @@ class WordDB
 
     # Lexeme Methods
 
-    def add_lexeme(lemma, l_type = [], args = {})
-        lemma = lemma.to_sym
+    def add_lexeme(word, l_type = [], args = {})
+        lemma = word.is_a?(Lexicon::Lexeme) ? word.lemma : word.to_sym
+
         Log.debug("db.add_lexeme(#{lemma.inspect}, #{l_type.inspect}, #{args.inspect})", 8)
         if !@lemmas.include?(lemma)
             @lemmas  << lemma
-            l = Lexicon::Lexeme.new(lemma, l_type, args)
+            l = word.is_a?(Lexicon::Lexeme) ? word : Lexicon::Lexeme.new(lemma, l_type, args)
             @lexemes << l
         else
             l = get_lexeme(lemma)
