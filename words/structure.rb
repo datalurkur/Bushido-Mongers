@@ -239,7 +239,7 @@ module Words
     end
 
     class Statement < Sentence
-        def statement?(pieces)
+        def self.statement?(pieces)
             # ??
             false
         end
@@ -952,12 +952,12 @@ That is the person whose car I saw.
 
         def self.use_an?(word)
             case word.to_sym
-            when :honorable, :honest
+            when :honorable, :honest, :hour, :heir, :herb
                 true
             when :union, :united, :unicorn, :used, :one
                 false
             else
-                !!word.to_s.match(/^[aeiouy]/)
+                !!word.to_s.match(/^[aeiou]/)
             end
         end
 

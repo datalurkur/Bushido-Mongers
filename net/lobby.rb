@@ -211,7 +211,7 @@ class Lobby
                 creator  = @game_core.get_character(username)
                 position = creator.absolute_position
                 if params[:command] == :spawn
-                    @game_core.create(params[:target], {:position => position})
+                    @game_core.create(params[:target], {:position => position, :randomize => true, :creator => creator})
                 elsif params[:command] == :summon
                     @game_core.create_npc(params[:target], {:position => position})
                 end
@@ -261,7 +261,9 @@ class Lobby
             @game_core.protect do
                 Commands.do(@game_core, command, params)
             end
-            @game_core.send_with_dialect(username, :act_success, params)
+            if @game_core.db.info_for(params[:command])[:send_success]
+                @game_core.send_with_dialect(username, :act_success, params)
+            end
         rescue Exception => e
             Log.error(["Failed to perform command #{command}", e.message, e.backtrace])
             send_to_user(username, Message.new(:act_fail, {:reason => e.message}))

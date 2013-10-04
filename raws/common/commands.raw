@@ -6,6 +6,9 @@ abstract command {
 
     class optional sym invocation;
     class optional sym skill;
+
+    class bool send_success;
+    send_success true;
 }
 
 /* Info commands. */
@@ -24,6 +27,7 @@ static command attack {
     target object;
     location body_part;
     tool object; /* weapon-specific lookups happen if no tool is specified */
+    send_success false;
 }
 
 static command consume {
@@ -59,14 +63,15 @@ static command close {
 
 /* PC-NPC Interactions. */
 
-abstract command towards_civil {
+abstract command verbal_command {
     class optional sym receiver;
-    receiver civil;
+    receiver object;
+    send_success false;
 }
 
-static towards_civil say {}
-static towards_civil whisper {}
-static towards_civil ask {}
+static verbal_command say {}
+static verbal_command whisper {}
+static verbal_command ask {}
 
 /* Item construction. */
 

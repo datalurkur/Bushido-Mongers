@@ -1,7 +1,7 @@
 module Conversation
     class << self
         def listens_for(instance)
-            [:unit_speaks]
+            [:unit_speaks, :unit_whispers]
         end
 
         def at_message(instance, message)
@@ -14,7 +14,7 @@ module Conversation
             case message.type
             when :unit_speaks, :unit_whispers
                 return unless instance == message.receiver && message.response_needed
-                Log.debug(["Statement received by #{instance.monicker}: #{message.statement}"], 6)
+                Log.debug(["Statement received by #{instance.monicker}: #{message.statement.map(&:to_s).join(" ")}"], 1)
                 if message.has_param?(:receiver) && instance.will_do_command?(message)
                     instance.perform_command(message)
                 else
@@ -135,7 +135,7 @@ module Conversation
 
 #private
     def say(receiver, statement, response_needed = false)
-        Log.debug("#{self.monicker} says, \"#{statement}\"")
+        Log.debug("#{self.monicker} says, \"#{statement.inspect}\"")
         message = Message.new(:unit_speaks, {
             :agent           => self,
             :receiver        => receiver,
