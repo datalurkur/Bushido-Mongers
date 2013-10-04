@@ -26,7 +26,7 @@ recipes = smith.get_knowledge(:katana, :make, :recipe)
 Log.debug(["Smith knows about the following katana recipes:", recipes.inspect])
 
 guru = core.create_npc(:human, params)
-guru.add_knowledge(:constructed, :make, :recipe)
+guru.add_knowledge(:made, :make, :recipe)
 recipes = guru.get_knowledge(:katana, :make, :recipe)
 Log.debug(["Guru knows about the following katana recipes:", recipes.inspect])
 

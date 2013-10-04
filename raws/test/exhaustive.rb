@@ -17,7 +17,7 @@ $core.db.each_type(true) do |type|
 
         args[req] = value
     end
-    if $core.db.is_type?(type, :constructed)
+    if $core.db.is_type?(type, :made)
         args[:randomize] = true
     end
     Log.debug(["Creating a #{type.inspect}"])

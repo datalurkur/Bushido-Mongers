@@ -1,9 +1,9 @@
 require './util/log'
 
-module Constructed
+module Made
     class << self
         def at_creation(instance, params)
-            Log.debug(["Constructing a #{instance.monicker} with params", params], 8)
+            Log.debug(["Making a #{instance.monicker} with params", params], 8)
             components = params[:components]
             quality    = params[:quality]
             creator    = nil
@@ -24,7 +24,7 @@ module Constructed
 
             # Created object quality depends on the quality of its components as well
             avg_component_quality = components.inject(0.0) { |s,i|
-                s + Quality.index_of(i.is_type?(:constructed) ? i.properties[:quality] : Quality.standard)
+                s + Quality.index_of(i.is_type?(:made) ? i.properties[:quality] : Quality.standard)
             } / components.size
             quality_value = (Quality.index_of(quality) + avg_component_quality) / 2.0
             quality_level = Quality.value_at(Quality.clamp_index(quality_value.ceil))
@@ -42,7 +42,7 @@ module Constructed
         end
 
         def unpack(core, instance, raw_data)
-            raise(MissingProperty, "Constructed data corrupted") unless raw_data.has_key?(:creator)
+            raise(MissingProperty, "No creator for made object #{instance.inspect}") unless raw_data.has_key?(:creator)
             instance.set_creator(raw_data[:creator])
         end
     end

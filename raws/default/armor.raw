@@ -1,4 +1,4 @@
-constructed,armor head_armor {
+made,armor head_armor {
     slot head;
     typical_size small;
 
@@ -21,7 +21,7 @@ constructed,armor head_armor {
     }
 }
 
-constructed,armor body_armor {
+made,armor body_armor {
     /* FIXME - Make this torso or something */
     slot humanoid;
     typical_size small;
@@ -45,7 +45,7 @@ constructed,armor body_armor {
     }
 }
 
-constructed,armor arm_armor {
+made,armor arm_armor {
     slot arm;
     typical_size small;
 
@@ -68,7 +68,7 @@ constructed,armor arm_armor {
     }
 }
 
-constructed,armor hand_armor {
+made,armor hand_armor {
     slot hand;
     typical_size tiny;
 
@@ -91,7 +91,7 @@ constructed,armor hand_armor {
     }
 }
 
-constructed,armor leg_armor {
+made,armor leg_armor {
     slot leg;
     typical_size small;
 
@@ -114,7 +114,7 @@ constructed,armor leg_armor {
     }
 }
 
-constructed,armor foot_armor {
+made,armor foot_armor {
     slot foot;
     typical_size tiny;
 

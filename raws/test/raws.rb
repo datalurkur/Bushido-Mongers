@@ -34,7 +34,7 @@ Log.debug("Creating a #{test_item_type}")
 test_item_args = {:creator => $core.create(:iron), :relative_size => :medium, :quality => :fine, :components => [$core.create(:iron)], :position => $core.create(FakeRoom)}
 test_item = $core.create(test_item_type, test_item_args)
 Log.debug("Test item is a metal? #{test_item.is_type?(:metal)}")
-Log.debug("Test item is a constructable? #{test_item.is_type?(:constructed)}")
+Log.debug("Test item is made? #{test_item.is_type?(:made)}")
 Log.debug("Test item is a head armor? #{test_item.is_type?(:hear_armor)}")
 
 # NPC tests
@@ -68,7 +68,7 @@ Log.debug("What can I produce at an anvil?")
 anvil_commands = $core.db.info_for(:anvil, :location_of)
 Log.debug(["Verbs that happen at an anvil:", anvil_commands])
 selected_command = anvil_commands.first
-anvil_products = $core.db.find_subtypes(:constructed, {:recipes => {:technique => selected_command}}, true)
+anvil_products = $core.db.find_subtypes(:made, {:recipes => {:technique => selected_command}}, true)
 Log.debug(["Things produced at an anvil by means of #{selected_command}", anvil_products])
 
 Log.debug("What can I do with a hammer?")

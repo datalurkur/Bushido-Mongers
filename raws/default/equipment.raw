@@ -1,4 +1,0 @@
-abstract equipment armor {
-    /* FIXME - Probably include an armor module to determine armor value based on material */
-    /* FIXME - We need to deal with armor sizing requiring more components */
-}

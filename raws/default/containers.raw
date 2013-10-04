@@ -1,4 +1,4 @@
-equipment,constructed,container backpack {
+made,equipment,container backpack {
     slot humanoid;
 
     recipes {
@@ -7,7 +7,7 @@ equipment,constructed,container backpack {
     }
 }
 
-constructed,container chest {
+made,container chest {
     recipes {
         technique craft;
         components wood wood wood wood;

@@ -462,8 +462,8 @@ module Commands
 
             # If the player has a goal of what they want to make in mind, find the recipes for that thing and then see if the rest of the information given by the player is enough to establish which recipe they want to use
             Log.debug("Target provided - #{params[:target].inspect}")
-            # Verify that the target is a :constructed
-            raise(NoMatchError, "#{params[:target].inspect} is not a constructable type") unless core.db.is_type?(params[:target], :constructed)
+            # Verify that the target is a :made
+            raise(NoMatchError, "#{params[:target].inspect} cannot be made.") unless core.db.is_type?(params[:target], :made)
 
             # Find a recipe (or throw an exception if there's a problem)
             params[:recipe] = find_recipe(core, params)
@@ -490,7 +490,7 @@ module Commands
                 quality = Quality.value_at(quality_value)
 
                 # Construct the new object
-                # The "constructed" extension ensures that components are removed from the world, quality is computed correctly given the quality of the ingredients, and the creator is assigned
+                # The "made" extension ensures that components are removed from the world, quality is computed correctly given the quality of the ingredients, and the creator is assigned
                 core.create(params[:target], {
                     :components => params[:components],
                     :quality    => quality,

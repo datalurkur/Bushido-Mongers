@@ -50,7 +50,7 @@ abstract object,effect_target composition {
     has_many optional sym external;
 }
 
-abstract composition constructed {
+abstract composition made {
     class_many map recipes {
         sym technique;
         many sym components;
@@ -59,15 +59,15 @@ abstract composition constructed {
     }
 
     has sym quality;
-    uses constructed;
+    uses made;
 }
 
 post_process {
-    Log.debug("Propagating component information for constructed objects", 6)
-    instantiable_types_of(:constructed).each do |constructed|
-        recipes = info_for(constructed, :recipes)
+    Log.debug("Propagating components information for made objects", 6)
+    instantiable_types_of(:made).each do |made|
+        recipes = info_for(made, :recipes)
         if recipes.nil? || recipes.empty?
-            Log.error("No recipes found for #{constructed.inspect}")
+            Log.error("No recipes found for #{made.inspect}")
             next
         end
 
@@ -85,10 +85,10 @@ post_process {
                 end
                 types_of(component) do |subtype|
                     if has_type?(subtype)
-                        Log.debug("#{subtype} is used in #{constructed}", 6)
+                        Log.debug("#{subtype} is used in #{made}", 6)
                         name = :used_in
                         # This is going to become a performance issue later
-                        modify_info(subtype, name, []) << constructed
+                        modify_info(subtype, name, []) << made
                         modify_info(subtype, name).uniq!
                     else
                         Log.error("#{subtype.inspect} not defined as db type")

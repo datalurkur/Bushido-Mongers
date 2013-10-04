@@ -1,8 +1,8 @@
-abstract melee_weapon sword {
+abstract made,melee_weapon sword {
     type piercing;
 }
 
-constructed,sword katana {
+sword katana {
     japanese_name katana;
     handedness one;
     /* can_parry */
@@ -14,7 +14,7 @@ constructed,sword katana {
     }
 }
 
-constructed,sword wakizashi {
+sword wakizashi {
     japanese_name wakizashi; /* literally 'side-inserted sword' */
     handedness one;
     /* can_parry */
@@ -26,7 +26,7 @@ constructed,sword wakizashi {
     }
 }
 
-constructed,sword dagger {
+sword dagger {
     japanese_name tanto;
     handedness one;
     /* can_parry */
@@ -38,7 +38,7 @@ constructed,sword dagger {
     }
 }
 
-constructed,sword nagamaki {
+sword nagamaki {
     japanese_name nagamaki;
     handedness two;
     /* can_parry */
@@ -50,7 +50,7 @@ constructed,sword nagamaki {
     }
 }
 
-constructed,sword cavalry_sword {
+sword cavalry_sword {
     japanese_name ōdachi; /* also nodachi */
     handedness two;
     /* can_parry */
@@ -63,7 +63,7 @@ constructed,sword cavalry_sword {
     }
 }
 
-constructed,melee_weapon longstaff {
+made,melee_weapon longstaff {
     japanese_name bo;
     type blunt;
     handedness two;
@@ -76,7 +76,7 @@ constructed,melee_weapon longstaff {
     }
 }
 
-constructed,melee_weapon shortstaff {
+made,melee_weapon shortstaff {
     japanese_name jo;
     type blunt;
     handedness two;
@@ -89,7 +89,7 @@ constructed,melee_weapon shortstaff {
     }
 }
 
-constructed,melee_weapon halfstaff {
+made,melee_weapon halfstaff {
     japanese_name hanbo;
     type blunt;
     handedness two;
@@ -102,7 +102,7 @@ constructed,melee_weapon halfstaff {
     }
 }
 
-constructed,melee_weapon jutte {
+made,melee_weapon jutte {
     japanese_name jutte;
     type nonlethal;
     handedness one;
@@ -115,7 +115,7 @@ constructed,melee_weapon jutte {
     }
 }
 
-constructed,melee_weapon spear {
+made,melee_weapon spear {
     japanese_name yari;
     type piercing;
     handedness two;
@@ -127,7 +127,7 @@ constructed,melee_weapon spear {
     }
 }
 
-constructed,melee_weapon sickle {
+made,melee_weapon sickle {
     type piercing;
     handedness one;
 
@@ -137,7 +137,7 @@ constructed,melee_weapon sickle {
     }
 }
 
-constructed,melee_weapon chain_and_sickle {
+made,melee_weapon chain_and_sickle {
     japanese_name kusarigama;
     type blunt; /* FIXME: s.b. either blunt or piercing, depending on the part wielded */
     handedness two;
@@ -150,7 +150,7 @@ constructed,melee_weapon chain_and_sickle {
     }
 }
 
-constructed,melee_weapon hammer {
+made,melee_weapon hammer {
     type blunt;
     handedness one;
 
@@ -160,7 +160,7 @@ constructed,melee_weapon hammer {
     }
 }
 
-constructed,melee_weapon glaive {
+made,melee_weapon glaive {
     japanese_name naginata;
     type piercing;
     handedness two;
@@ -173,7 +173,7 @@ constructed,melee_weapon glaive {
     }
 }
 
-constructed,melee_weapon sai {
+made,melee_weapon sai {
     japanese_name sai;
     type piercing;
     handedness one;
@@ -186,7 +186,7 @@ constructed,melee_weapon sai {
     }
 }
 
-constructed,melee_weapon nunchucks {
+made,melee_weapon nunchucks {
     japanese_name nunchaku;
     type blunt;
     handedness one;
@@ -199,7 +199,7 @@ constructed,melee_weapon nunchucks {
     }
 }
 
-constructed,ranged_weapon long_bow {
+made,ranged_weapon long_bow {
     japanese_name daikyū;
     type piercing;
     handedness two;
@@ -214,7 +214,7 @@ constructed,ranged_weapon long_bow {
     }
 }
 
-constructed,ranged_weapon short_bow {
+made,ranged_weapon short_bow {
     japanese_name hankyū;
     type piercing;
     handedness two;
@@ -225,7 +225,7 @@ constructed,ranged_weapon short_bow {
     }
 }
 
-constructed,ranged_weapon matchlock {
+made,ranged_weapon matchlock {
     japanese_name tanegashima;
     type explosive;
     handedness two;
@@ -236,7 +236,7 @@ constructed,ranged_weapon matchlock {
     }
 }
 
-constructed,ammunition arrow {
+made,ammunition arrow {
     class sym japanese_name;
     japanese_name ya;
 

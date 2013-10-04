@@ -19,6 +19,11 @@ abstract weapon {
     length 1; /* about a foot */
 }
 
+abstract equipment armor {
+    /* FIXME - Probably include an armor module to determine armor value based on material */
+    /* FIXME - We need to deal with armor sizing requiring more components */
+}
+
 abstract weapon melee_weapon {}
 
 abstract weapon ranged_weapon {}
