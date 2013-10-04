@@ -60,7 +60,11 @@ module Commands
         end
 
         def find_all_objects(agent, object_type, object_string, locations)
-            Log.debug("Finding all objects named #{object_string.inspect} of type #{object_type.inspect} for #{agent.monicker} in #{locations.inspect}")
+            Log.debug("Finding all objects" +
+                      (object_string ? " named #{object_string.inspect}" : '') +
+                      (object_type   ? " of type #{object_type.inspect}" : '') +
+                      (locations     ? " in #{locations.inspect}"        : '') +
+                      " for #{agent.monicker}")
             agent.find_all_objects(object_type, object_string, locations)
         end
     end
@@ -99,7 +103,7 @@ module Commands
             end
 
             target = params[:target]
-            if !target.nil? && (params[:agent].monicker.match(target.to_s) || (core.words_db.get_related_words(:self)+[:self]).include?(target))
+            if !target.nil? && (params[:agent].monicker.match(target.to_s) || (core.words_db.associated_words_of(:self)+[:self]).include?(target))
                 # Examine the agent.
                 params[:target] = params[:agent]
             elsif target
@@ -253,7 +257,7 @@ module Commands
         end
 
         def self.do(core, params)
-            params[:agent].skills[:stealth].properties[:hidden] = true
+            params[:agent].get_aspect(:stealth).properties[:hidden] = true
         end
     end
 
@@ -265,7 +269,7 @@ module Commands
         end
 
         def self.do(core, params)
-            params[:agent].skills[:stealth].properties[:hidden] = false
+            params[:agent].get_aspect(:stealth).properties[:hidden] = false
         end
     end
 
@@ -442,11 +446,11 @@ module Commands
         end
     end
 
-    module Construct
+    module Make
         def self.stage(core, params)
 =begin
             Here we need to take some combination of:
-                - a target contructable
+                - a target object (to be :made)
                 - a list of components
                 - a technique
                 - a tool
@@ -455,14 +459,14 @@ module Commands
                 a) Return more information about that thing (or query for more information about the intention)
                 b) Link those things into a recipe and prepare to construct it
 =end
-            raise(MissingObjectExtension, "Only creatures with skill can construct objects") unless params[:agent].uses?(HasAspects)
+            raise(MissingObjectExtension, "Only creatures with skill can make objects") unless params[:agent].uses?(HasAspects)
             Log.debug("#{params[:agent].monicker} is attempting to #{params[:command]} an object")
 
             raise(MissingProperty, "What do you want to #{params[:command]}?") unless params[:target]
 
             # If the player has a goal of what they want to make in mind, find the recipes for that thing and then see if the rest of the information given by the player is enough to establish which recipe they want to use
             Log.debug("Target provided - #{params[:target].inspect}")
-            # Verify that the target is a :made
+            # Verify that the target is :made
             raise(NoMatchError, "#{params[:target].inspect} cannot be made.") unless core.db.is_type?(params[:target], :made)
 
             # Find a recipe (or throw an exception if there's a problem)
@@ -525,13 +529,12 @@ module Commands
             #  (Example: A "hood" is actually a head_armor made of cloth, but "hood" isn't an entry in the raws)
             recipes = core.db.info_for(params[:target], :recipes)
             Log.debug(["#{recipes.size} recipes found for #{params[:target].inspect} - ", recipes])
-            failure_string = "You don't know how to make a #{params[:target]}"
+            failure_string = "You don't know how to #{params[:command]} a #{params[:target]}"
             raise(FailedCommandError, "#{failure_string}.") if recipes.empty?
 
             # Begin filtering the recipes based on parameters
 
             # Find recipes that use the "technique" given by the command
-            failure_string.sub!("make", params[:command].to_s)
             recipes = recipes.select { |r| r[:technique] == params[:command] }
             raise(FailedCommandError, "#{failure_string}, perhaps try a different technique.") if recipes.empty?
 
@@ -629,7 +632,8 @@ module Commands
             rejected_recipes.each { |r| recipe_map.delete(r) }
             raise(NoMatchError, "Unable to gather the materials needed to #{params[:command]} a #{params[:target]}") if recipe_map.empty?
             ambiguous_recipes.each { |r| recipe_map.delete(r) }
-            raise(NoMatchError, "It is unclear what available materials should be used to #{params[:command]} a #{params[:target]}") if recipe_map.empty? || recipe_map.size > 1
+            raise(NoMatchError, "It is unclear what available materials should be used to #{params[:command]} a #{params[:target]}") if recipe_map.empty?
+            raise(NoMatchError, "It is unclear what available materials should be used to #{params[:command]} a #{params[:target]}: options are: #{recipe_map.inspect}") if  recipe_map.size > 1
             recipe = recipe_map.keys[0]
 
             # If we had enough parameters to select a recipe, but some were left blank, fill in the missing pieces in the parameters before object lookup

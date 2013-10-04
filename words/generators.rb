@@ -41,13 +41,14 @@ module Words
             return describe_room(args)
         when :attack, :get, :stash, :drop, :hide, :unhide, :equip, :unequip, :open, :close
             return gen_sentence(args)
-        when :say
-            return gen_sentence(args.merge(:verb => :say))
+        when :say, :craft
+            return gen_sentence(args.merge(:verb => args[:command]))
         when :stats
             return describe_stats(args)
         when :help
             return describe_help(args)
         else
+            Log.debug(["UNKNOWN COMMAND", args.keys])
             return "I don't know how to express the results of a(n) #{args[:command]}, pester zphobic to work on this"
         end
     end
@@ -69,7 +70,7 @@ module Words
 
                 args[:subject]    = (rand(2) == 0) ? :i : :you
                 args[:target]     = args[:thing]
-                args[:material]   = recipe[:components]
+                args[:components] = recipe[:components]
             elsif args[:connector] == :have
                 args[:target] = Descriptor.set_unique(args[:target])
                 args[:target][:possessor_info] = possessor_info(args[:subject])

@@ -338,7 +338,7 @@ That is the person whose car I saw.
     The instrumental case indicates an object used in performing an action: We wiped the floor with a mop. and Written by hand. => :tool, :material
 =end
     class AdverbPhrase < PrepositionalPhrase
-        USED_ARGS = [:target, :tool, :destination, :receiver, :material, :success, :statement, :location, :origin]
+        USED_ARGS = [:target, :tool, :destination, :receiver, :components, :success, :statement, :location, :origin]
 
         # The type is the part of the args being used to generate an adverb phrase, and also the third entry in dict/preposition_verb.txt...
         def initialize(db, type, args)
@@ -355,8 +355,8 @@ That is the person whose car I saw.
                     super(new_prep_noun_phrase(db, type, args))
                 end
                 handled = true
-            when :tool, :destination, :location, :origin, :material
-                args[type] = Descriptor.set_unique(args[type]) unless type == :material
+            when :tool, :destination, :location, :origin, :components
+                args[type] = Descriptor.set_unique(args[type]) unless type == :components
                 super(new_prep_noun_phrase(db, type, args))
                 handled = true
             when :receiver

@@ -1,6 +1,6 @@
 require './util/exceptions'
 
-module HasAspects
+module HasAspects # Aspectual?
     class << self
         def listens_for(i); [:tick]; end
 
@@ -88,18 +88,17 @@ module HasAspects
     # =================
     # COMMON PUBLIC API
     # =================
-    def get_aspect(aspect)
-        if attributes.has_key?(aspect)
-            @core.lookup(attributes[aspect])
-        elsif skills.has_key?(aspect)
-            @core.lookup(skills[aspect])
-        elsif @core.db.is_type?(aspect, :skill)
-            skill = @core.create(aspect)
-            skills[aspect] = skill.uid
-            skill
+    def get_aspect(aspect_name)
+        if attributes.has_key?(aspect_name)
+            @core.lookup(attributes[aspect_name])
+        elsif skills.has_key?(aspect_name)
+            @core.lookup(skills[aspect_name])
+        elsif @core.db.is_type?(aspect_name, :skill)
+            aspect = @core.create(aspect_name)
+            skills[aspect_name] = aspect.uid
+            aspect
         else
             raise(UnknownType, "#{aspect} is not a defined skill or aspect")
-            nil
         end
     end
 
@@ -122,6 +121,9 @@ module HasAspects
 
     def make_opposed_attempt(aspect_name, target)
         Log.debug("#{monicker} uses #{aspect_name} against #{target.monicker}", 6)
+
+        # Return failed-to-oppose/automatic success, for debugging purposes.
+        #return [true, [:difficulty, 1]]
 
         aspect = get_aspect(aspect_name)
         raise(MissingProperty, "#{self.monicker} has no aspect #{aspect_name}") if aspect.nil?
@@ -195,7 +197,7 @@ module HasAspects
         #   close to 0 or num_values, so check that the range is not very close to those boundaries.
         # FIXME: These values are all experimentally hard-coded. Really we should calculate the distribution
         #   function of the acceptable_range being hit and bark if it's low (P<0.05? P<0.01? We'll eventually be
-        #   generating a LOT of these).
+        #   generating a LOT of these, so we'll want them to be fast).
         report_generation_count = false
         if (num_values / range_size > 1_000) || (range_end < num_values / 50.0) || (range_begin > num_values - (num_values / 50.0))
             Log.warning("Unlikely acceptable value range (#{acceptable_range}) for #{self.monicker} " +

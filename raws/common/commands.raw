@@ -70,28 +70,30 @@ static towards_civil ask {}
 
 /* Item construction. */
 
-abstract command construct {
-    invocation construct;
+abstract command make {
+    invocation make;
 }
 
-static construct cook {}
+static make cook {}
 
-static construct forge {
+static make forge {
     location anvil;
     tool hammer;
 
     skill smithing;
 }
 
-static construct craft {
+static make craft {
     skill crafting;
 }
 
-static construct make_bow {
+/*
+static make make_bow {
     skill bowmaking;
 }
+*/
 
-static construct fletch {
+static make fletch {
     skill fletching;
 }
 
