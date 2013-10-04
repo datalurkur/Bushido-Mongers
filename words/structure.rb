@@ -650,10 +650,8 @@ That is the person whose car I saw.
                 # Do other state fields need copying here?
                 be_state.person = state.person
                 case state.voice
-                when :active
-                    [conjugate(db, :be, be_state),  active_participle(verb)]
-                when :passive
-                    [conjugate(db, :be, be_state), passive_participle(verb)]
+                when :active, :passive
+                    [conjugate(db, :be, be_state),  self.send("#{state.voice}_participle", [verb])]
                 else
                     raise(StandardError, "Invalid voice #{state.voice}!")
                 end

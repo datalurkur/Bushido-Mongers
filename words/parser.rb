@@ -124,10 +124,10 @@ module WordParser
     # Can only happen on the server side.
     def self.read_raws(db, raws_db)
         Log.debug("Reading raws")
-        add_raws(db, raws_db, :command,   :verb,      "commands",  true)
-        add_raws(db, raws_db, :object,    :noun,      "item types")
-        add_raws(db, raws_db, :archetype, :noun,      "NPC types")
-        add_raws(db, raws_db, :material,  :adjective, "materials")
+        add_raws(db, raws_db, :command,      :verb,      "commands",  true)
+        add_raws(db, raws_db, :object,       :noun,      "item types")
+        add_raws(db, raws_db, :archetype,    :noun,      "NPC types")
+        add_raws(db, raws_db, :raw_material, :adjective, "materials")
     end
 
     private
