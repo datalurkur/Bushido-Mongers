@@ -20,7 +20,7 @@ class PlayingState < State
             begin_exchange(@clarification) if(message.missing_params.size <= 1)
         when :act_fail, :save_pending, :save_fail, :save_success
             pass_to_client(message)
-        when :act_success
+        when :act_staged
             @client.send_to_client(Message.new(:report, {:field => :action_results, :contents => message.details}))
         when :game_event
             @client.send_to_client(Message.new(:report, {:field => :game_event, :contents => message.details}))

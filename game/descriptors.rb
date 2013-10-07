@@ -10,7 +10,7 @@ class Descriptor
     def self.create_report(report_type, words_db, details)
         Log.debug("Creating text-dialect #{report_type} report", 8)
         case report_type
-        when :act_success
+        when :act_staged
             return words_db.generate(details)
         when :game_event
             case details[:event_type]

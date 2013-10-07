@@ -257,16 +257,14 @@ class Lobby
             return
         end
 
+        @game_core.send_with_dialect(username, :act_staged, params)
+
         begin
             @game_core.protect do
                 Commands.do(@game_core, command, params)
             end
-            if @game_core.db.info_for(params[:command])[:send_success]
-                @game_core.send_with_dialect(username, :act_success, params)
-            end
         rescue Exception => e
             Log.error(["Failed to perform command #{command}", e.message, e.backtrace])
-            send_to_user(username, Message.new(:act_fail, {:reason => e.message}))
         end
     end
 

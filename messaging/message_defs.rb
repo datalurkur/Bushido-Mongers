@@ -87,7 +87,7 @@ Message.define(:act,           :game, [:command])
 Message.define(:act_clarify,   :game, [:verb, :missing_params])
 Message.define(:clarification, :game, [:missing_param])
 Message.define(:act_fail,      :game, [:reason], "Failed to perform action")
-Message.define(:act_success,   :game, [:details])
+Message.define(:act_staged,    :game, [:details])
 Message.define(:game_event,    :game, [:details])
 Message.define(:user_dies,     :game, [:result], "User dies")
 
