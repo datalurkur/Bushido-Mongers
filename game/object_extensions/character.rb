@@ -52,8 +52,6 @@ module Character
                     end
 
                     instance.inform_user(message)
-                elsif message.agent == instance
-                    instance.inform_user(message)
                 end
             when :unit_killed, :object_destroyed
                 if instance.witnesses?([message.location])
