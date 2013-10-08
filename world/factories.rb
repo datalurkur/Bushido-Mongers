@@ -38,7 +38,7 @@ class << self
         params = Zone.get_params(core, :parent => parent_zone_type, :depth => depth)
 
         Log.debug(params.inspect, 6)
-        name = "#{core.words_db.gen_area_name(params)}-#{rand(1000)}"
+        name = "#{core.words_db.random_name(params)}"
 
         area = if (depth < 1) || (rand() < config[:area_size_tendency])
             Log.debug("Generating room #{name}", 5)

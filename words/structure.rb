@@ -409,23 +409,26 @@ That is the person whose car I saw.
     # TODO - handle premodifiers and postmodifiers
     # TODO - handle participles
     class AdjectivePhrase < PrepositionalPhrase
-        USED_ARGS = [:subtarget, :location]
+        USED_ARGS = [:subtarget, :location, :of_phrase]
 
         # The type is the part of the args being used to generate an adverb phrase.
         # args must be defined.
-        def initialize(type, args)
+        def initialize(db, type, args)
             case type
             when :subtarget, :location
                 args[type] = Descriptor.set_unique(args[type])
-                super(new_prep_noun_phrase(type, args))
+                super(new_prep_noun_phrase(db, type, args))
+            when :of_phrase
+                # The preposition is simply :of; no need to look it up.
+                super(Preposition.new(:of), NounPhrase.new(db, args[type]))
             end
         end
 
         # The hash here expects a :verb entry, which is used for preposition lookups.
-        def self.new_for_descriptor(descriptor_hash)
+        def self.new_for_descriptor(db, descriptor_hash)
             return [] unless Hash === descriptor_hash
             (USED_ARGS & descriptor_hash.keys).collect do |arg|
-                AdjectivePhrase.new(arg, descriptor_hash)
+                AdjectivePhrase.new(db, arg, descriptor_hash)
             end
         end
     end
@@ -511,7 +514,7 @@ That is the person whose car I saw.
                     hash[:unique]         = noun[:unique] unless noun[:unique].nil?
                     hash[:possessor_info] = noun[:possessor_info] if noun[:possessor_info]
                     hash[:adjectives]     = Adjective.new_for_descriptor(noun)
-                    hash[:adj_phrases]    = AdjectivePhrase.new_for_descriptor(noun.merge(:verb => args[:verb]))
+                    hash[:adj_phrases]    = AdjectivePhrase.new_for_descriptor(db, noun.merge(:verb => args[:verb]))
                     hash[:adj_phrases]   += noun[:properties][:adjective_phrases] if noun[:properties] && noun[:properties][:adjective_phrases]
                 else
                     hash[:monicker] = noun

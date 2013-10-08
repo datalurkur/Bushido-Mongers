@@ -127,7 +127,7 @@ module WordParser
         add_raws(db, raws_db, :command,      :verb,      "commands",  true)
         add_raws(db, raws_db, :object,       :noun,      "item types")
         add_raws(db, raws_db, :archetype,    :noun,      "NPC types")
-        add_raws(db, raws_db, :raw_material, :adjective, "materials")
+        #add_raws(db, raws_db, :raw_material, :adjective, "materials")
     end
 
     private

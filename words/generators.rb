@@ -422,9 +422,10 @@ module Words
 
     def random_name(args = {})
         noun    = {
-                    :monicker   => Noun.rand(self),
-                    :adjectives => Adjective.rand(self),
+                    :monicker   => [args[:type], Noun.rand(self)].rand,
+                    :adjectives => [args[:keywords], Adjective.rand(self)].rand,
                     :unique     => true,
+                    :of_phrase  => Descriptor.set_unique(Noun.rand(self))
                   }
         name    = NounPhrase.new(self, noun)
 
