@@ -9,7 +9,7 @@ require './test/fake'
 # We want the raws in the words db, which setting up a core accomplishes.
 $core = FakeCore.new
 
-$db = WordParser.load
+$db = WordDB.new
 
 # Generate ALL the derivations!
 pos_mapping =

@@ -194,8 +194,8 @@ class GameCore
             raw_group = args[:raw_group] || "default"
             @db       = ObjectDB.get(raw_group)
             @kb       = ObjectKB.new(@db, true)
-            @words_db = WordParser.load
-            WordParser.read_raws(@words_db, @db)
+            @words_db = WordDB.new
+            @words_db.read_raws(@db)
 
             # Setup the physical world
             # ------------------------

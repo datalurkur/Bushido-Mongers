@@ -20,7 +20,7 @@ class WordDB
 
     attr_accessor :associations
 
-    def initialize
+    def initialize(dict_dir = './words/dict')
         @associations = []
         @conjugations = {}
 
@@ -30,6 +30,12 @@ class WordDB
         @lexemes = []
         @lemmas  = []
         @derivations = []
+
+        WordParser.load_dictionary(self, dict_dir)
+    end
+
+    def read_raws(raws_db)
+        WordParser.read_raws(self, raws_db)
     end
 
     # Generic Association Methods

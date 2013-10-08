@@ -2,7 +2,7 @@ require './words/words'
 
 Log.setup("Main", "family_test")
 
-db = WordParser.load
+db = WordDB.new
 
 #packed = WordDB.pack(db)
 #db = WordDB.unpack(packed)

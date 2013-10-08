@@ -8,9 +8,9 @@ require './raws/db'
 db = ObjectDB.get('default')
 require './words/words'
 
-words_db = WordParser.load
+words_db = WordDB.new
 # And finally read in some basic noun & adjective information from the raws db.
-WordParser.read_raws(words_db, db)
+words_db.read_raws(words_db, db)
 
 args = words_db.decompose_command("aTTack Spider")
 Log.debug(args)
