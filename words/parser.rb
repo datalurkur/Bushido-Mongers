@@ -32,42 +32,41 @@ I you he we you they
 
 module WordParser
     private
+    # Returns a hash: {:"first matching regex" => array of arrays of words }
     def self.load_files(dir, glob_str, regex = /(.*)/)
         files = {}
         Dir.glob("#{dir}/#{glob_str}").each_with_index do |file, i|
             if match = file.match(regex)
                 match = match[1].to_sym
             else
-                match = i
+                raise LoadError, "No match #{regex.inspect} for #{file}?"
             end
 
-            files[match] = File.readlines(file)
+            list = File.readlines(file).map { |l| l.split(/\s+/).map(&:to_sym) }
+            files[match] = list
         end
         files
     end
 
     public
-    # The de-facto Words initializer.
     def self.load_dictionary(db, dict_dir)
         raise(ArgumentError, "Cannot find #{dict_dir}.") unless File.exists?(dict_dir) && File.directory?(dict_dir)
 
         Words::TYPES.each do |type|
-            load_files(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/).each do |additional_type, lines|
-                lines.map(&:chomp).each { |l| db.add_lexeme(l, [type, additional_type]) }
+            load_files(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/).each do |additional_type, list|
+                list.each { |l| l.each { |w| db.add_lexeme(w, [type, additional_type]) } }
             end
         end
 
-        load_files(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/).each do |pos, lines|
-            lines.each do |line|
-                words = line.split(/\s+/).map(&:to_sym)
+        load_files(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/).each do |pos, list|
+            list.each do |words|
                 db.associate(words, pos)
             end
         end
 
         # nil corresponds to no preposition; i.e. usually the direct object
-        load_files(dict_dir, "preposition_base.txt").each do |match, lines|
-            lines.each do |line|
-                words = line.split(/\s+/).map(&:to_sym)
+        load_files(dict_dir, "preposition_base.txt").each do |match, list|
+            list.each do |words|
                 raise "Specifier '#{words.inspect}' should be 2 words!" unless words.size == 2
                 preposition, case_name = words
                 preposition = nil if preposition == :nil
@@ -77,9 +76,8 @@ module WordParser
         end
 
 =begin
-        load_files(dict_dir, "preposition_noun.txt").each do |match, lines|
-            lines.each do |line|
-                words = line.split(/\s+/).map(&:to_sym)
+        load_files(dict_dir, "preposition_noun.txt").each do |match, list|
+            list.each do |words|
                 raise "Specifier '#{words.inspect}' should be 3 words!" unless words.size == 3
                 verb, preposition, case_name = words
                 preposition = nil if preposition == :nil
@@ -87,9 +85,8 @@ module WordParser
             end
         end
 =end
-        load_files(dict_dir, "preposition_verb.txt").each do |match, lines|
-            lines.each do |line|
-                words = line.split(/\s+/).map(&:to_sym)
+        load_files(dict_dir, "preposition_verb.txt").each do |match, list|
+            list.each do |words|
                 raise "Specifier '#{words.inspect}' should be 3 words!" unless words.size == 3
                 verb, preposition, case_name = words
                 preposition = nil if preposition == :nil
@@ -98,16 +95,16 @@ module WordParser
             end
         end
 
-        load_files(dict_dir, "conjugations.txt").each do |match, lines|
-            lines.each do |line|
-                words = line.split(/\s+/)
-                infinitive = words.shift.to_sym
+        load_files(dict_dir, "conjugations.txt").each do |match, list|
+            list.each do |words|
+                next if words.empty?
+                infinitive = words.shift
 
                 # add infinitive as a verb
                 db.add_lexeme(infinitive, :verb)
 
                 # Convert properties ("present,second") into a State
-                properties = words.shift.split(",").map(&:to_sym)
+                properties = words.shift.to_s.split(",").map(&:to_sym)
                 state = Words::State.new(*properties)
 
                 db.add_conjugation_by_person(infinitive, state, words.map(&:to_sym))
