@@ -20,22 +20,18 @@ class WordDB
 
     attr_accessor :associations
 
-    def initialize(dict_dir = './words/dict')
+    def initialize(raws_db = nil, dict_dir = './words/dict')
         @associations = []
-        @conjugations = {}
 
         @verb_case_maps     = {}
         @verb_default_case  = {}
 
         @lexemes = []
-        @lemmas  = []
-        @derivations = []
 
+        # Read in some basic noun & adjective information from the raws db.
+        WordParser.read_raws(self, raws_db) if raws_db
+        # Read in words from the dictionary directory.
         WordParser.load_dictionary(self, dict_dir)
-    end
-
-    def read_raws(raws_db)
-        WordParser.read_raws(self, raws_db)
     end
 
     # Generic Association Methods
@@ -115,52 +111,60 @@ class WordDB
 
     # For 'special' conjugations. Basic rules are in Verb::conjugate.
     def conjugate(infinitive, state)
-        @conjugations[state][infinitive]
+        original = add_lexeme(infinitive, [:verb, :base])
+        morphed  = original.args[:morphs][state]
+        morphed.lemma
     end
 
     def conjugation_for?(infinitive, state)
-        !!(@conjugations[state] && @conjugations[state][infinitive])
-    end
-
-    def add_conjugation(infinitive, state, expr)
-        @conjugations[state] ||= {}
-        @conjugations[state][infinitive] = expr
+        original = add_lexeme(infinitive, [:verb, :base])
+        !!original.args[:morphs][state]
     end
 
     #  Words::State::FIELDS[:person] => [:first, :second, :third, :first_plural, :second_plural, :third_plural],
     def add_conjugation_by_person(infinitive, state, list)
-        first_person = list.first
+        original = add_lexeme(infinitive, [:verb, :base])
+
+        first_person = add_lexeme(list.first, [:verb, :morphed], :morph_type => state.with_person(:first))
+        Log.debug(first_person, 5)
+
         Words::State::FIELDS[:person].each do |person|
-            curr_state = state.dup
+            curr_state = state.with_person(person)
 
-            curr_state.person = person
-
-            expr = list.shift
-            if expr
-                add_conjugation(infinitive, curr_state, expr)
+            if entry = list.shift
+                morphed = add_lexeme(entry, [:verb, :morphed], :morph_type => curr_state)
+                add_morph(:inflection, curr_state, original, morphed)
             else
                 # If the list is unfilled, use the first person as default.
-                add_conjugation(infinitive, curr_state, first_person)
+                add_morph(:inflection, curr_state, original, first_person)
             end
         end
     end
 
     # Lexeme Methods
 
+    # If a lexeme is already in the list, the types and args given are added to the lexeme.
     def add_lexeme(word, l_type = [], args = {})
-        lemma = word.is_a?(Lexicon::Lexeme) ? word.lemma : word.to_sym
-
-        Log.debug("db.add_lexeme(#{lemma.inspect}, #{l_type.inspect}, #{args.inspect})", 8)
-        if !@lemmas.include?(lemma)
-            @lemmas  << lemma
-            l = word.is_a?(Lexicon::Lexeme) ? word : Lexicon::Lexeme.new(lemma, l_type, args)
-            @lexemes << l
+        Log.debug([word, l_type, args], 9)
+        if word.is_a?(Lexicon::Lexeme)
+            lexeme = get_lexeme(word.lemma)
+            if lexeme.nil?
+                lexeme = word
+                @lexemes << lexeme
+            end
+            lexeme.add_type(l_type)
+            lexeme.add_args(args)
         else
-            l = get_lexeme(lemma)
-            l.add_type(l_type)
-            l.add_args(args)
+            if lexeme = get_lexeme(word.to_sym)
+                lexeme.add_type(l_type)
+                lexeme.add_args(args)
+            else
+                lexeme = Lexicon::Lexeme.new(word, l_type, args)
+                Log.debug("Creating new lexeme #{lexeme.inspect}", 5)
+                @lexemes << lexeme
+            end
         end
-        l
+        lexeme
     end
 
     def get_lexeme(lemma)
@@ -171,20 +175,32 @@ class WordDB
         @lexemes.find_all { |l| l.types.include?(l_type) }
     end
 
+    def base_lexemes_of_type(l_type)
+        lexemes_of_type(l_type).select { |l| l.types.include?(:base) }
+    end
+
     def words_of_type(l_type)
         lexemes_of_type(l_type).map(&:lemma)
     end
 
-    # Derivation Methods
+    # Derivation & Inflection Methods
 
-    def add_derivation(derivation)
-        @derivations << derivation
-        if @lemmas.include?(derivation.derived.lemma)
-            Log.debug("adding derivation of pre-existing lexeme #{derivation.derived}")
-        else
-            @lexemes << derivation.derived
-            @lemmas  << derivation.derived.lemma
+    # Takes lexemes and returns the morphed lexeme.
+    def add_morph(morph_type, pattern, original, morphed = nil)
+        morph_class = Lexicon.const_get(morph_type.to_s.capitalize.to_sym)
+
+        morphed = morph_class.default_lexeme(self, pattern, original) if morphed.nil?
+        morph_class.check_consistency(pattern, original, morphed)
+
+        # Mark morph pattern on original lexeme.
+        if original.args[:morphs][pattern] && !(original.lemma == original.args[:morphs][pattern].lemma)
+            Log.warning("Pattern #{pattern.inspect} already used for #{original.lemma}: was #{original.args[:morphs][pattern].lemma}, wants #{morphed.lemma}")
         end
-        derivation.derived
+        original.args[:morphs][pattern] = morphed
+
+        add_lexeme(original, [:base])
+        l = add_lexeme(morphed,  [:morphed], :morph_type => pattern)
+        #Log.debug(l.inspect)
+        l
     end
 end

@@ -8,6 +8,7 @@ module Words
     #                      :prospective, # describing an event that occurs subsequent to a given reference time
     #                      :gnomic,      # for aphorisms. Similar to :habitual, doesn't usually use articles.
     #
+    # http://en.wikipedia.org/wiki/Irrealis_mood
     # http://en.wikipedia.org/wiki/Subjunctive_mood
     # The form of the subjunctive is distinguishable from the indicative in five circumstances:
     # in the third person singular of any verb in the present form;
@@ -15,18 +16,35 @@ module Words
     # in the first and third persons singular of the verb "be" in the past form;
     # in all instances of all verbs in the future form; and
     # in all instances of all verbs in the present negative form.
+
+    # Other aspects:
+    # http://en.wikipedia.org/wiki/Lexical_aspect
+
+    # Implicit verb state:
+    # stative: declaring a state
+    # There are several subcategories of stative, that sometimes follow different prepositional rules:
+    # verbs denoting sensations (feel, hear)
+    # verbs denoting reasoning and mental attitude (believe, understand)
+    # verbs denoting positions/stance (lie, surround)
+    # verbs denoting relations (resemble, contain)
+    # -OR-
+    # dynamic: action
+
+    # inchoative - starting a state
+
+    # Mood
+
     class State
         FIELDS = {
             :aspect  => [:perfect,
                          :progressive, # e.g. is progressing, is happening, is missing
                          :imperfect,   # continuing or repeated event or state
                          :habitual,
-                         :stative
                         ],
             :tense   => [:present, :past, :future],
             :mood    => [:indicative, :subjunctive, :imperative],
             :person  => [:first, :second, :third, :first_plural, :second_plural, :third_plural],
-            :voice   => [:active, :passive]
+            :voice   => [:active, :passive],
         }
 
         attr_accessor :aspect, :tense, :mood, :person, :voice
@@ -51,15 +69,26 @@ module Words
             @voice  = :active
         end
 
+        def with_person(person)
+            other = self.dup
+            if FIELDS[:person].include?(person)
+                other.person = person
+            else
+                raise(StandardError, "Not a person type: #{person}.")
+            end
+            other
+        end
+
         def self.plural_person(person)
             index = FIELDS[:person].index(person)
             case index
             when 0, 1, 2
                 FIELDS[:person][ index + 3 ]
             when 3, 4, 5
+                raise StandardError
                 person
             else
-                raise(StandardError, "Not in State.person field: #{person}.")
+                raise(StandardError, "Not a person type: #{person}.")
             end
         end
 

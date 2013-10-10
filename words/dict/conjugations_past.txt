@@ -1,8 +1,0 @@
-#do   past did done doing
-#say  past said saying
-#eat  past ate
-#eat  path,eaten eating
-#beat past beat beaten beating
-#write past wrote written writing
-#drink past drank drunk drinking
-#sing past sang sung singing

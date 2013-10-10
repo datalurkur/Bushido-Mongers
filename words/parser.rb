@@ -1,4 +1,5 @@
 require './words/db'
+require './words/lexemes'
 require './util/timer'
 
 =begin
@@ -50,11 +51,12 @@ module WordParser
 
     public
     def self.load_dictionary(db, dict_dir)
+        Log.debug("Loading dictionary.")
         raise(ArgumentError, "Cannot find #{dict_dir}.") unless File.exists?(dict_dir) && File.directory?(dict_dir)
 
         Words::TYPES.each do |type|
             load_files(dict_dir, "#{type}s_*.txt", /^.*#{type}s_(.*).txt/).each do |additional_type, list|
-                list.each { |l| l.each { |w| db.add_lexeme(w, [type, additional_type]) } }
+                list.each { |l| l.each { |w| db.add_lexeme(w, [type, additional_type, :base]) } }
             end
         end
 
@@ -71,7 +73,7 @@ module WordParser
                 preposition, case_name = words
                 preposition = nil if preposition == :nil
                 db.add_verb_preposition(:default, preposition, case_name)
-                db.add_lexeme(preposition, :preposition) if preposition
+                db.add_lexeme(preposition, [:preposition, :base]) if preposition
             end
         end
 
@@ -85,6 +87,7 @@ module WordParser
             end
         end
 =end
+
         load_files(dict_dir, "preposition_verb.txt").each do |match, list|
             list.each do |words|
                 raise "Specifier '#{words.inspect}' should be 3 words!" unless words.size == 3
@@ -101,15 +104,64 @@ module WordParser
                 infinitive = words.shift
 
                 # add infinitive as a verb
-                db.add_lexeme(infinitive, :verb)
 
-                # Convert properties ("present,second") into a State
                 properties = words.shift.to_s.split(",").map(&:to_sym)
-                state = Words::State.new(*properties)
-
-                db.add_conjugation_by_person(infinitive, state, words.map(&:to_sym))
+                if properties.all? { |p| Lexicon::Inflection::PATTERNS.include?(p) }
+                    # add e.g. past_participles and gerunds
+                    original = db.add_lexeme(infinitive, [:verb, :base])
+                    properties.each do |p|
+                        morphed_lemma = words.shift
+                        morphed  = db.add_lexeme(morphed_lemma, [:verb, :morphed], :morphed_type => p)
+                        db.add_morph(:inflection, p, original, morphed)
+                    end
+                else
+                    # Convert properties ("present,second") into a State
+                    state = Words::State.new(*properties)
+                    db.add_conjugation_by_person(infinitive, state, words)
+                end
             end
         end
+
+        load_files(dict_dir, "inflections_*.txt", /^.*inflections_(.*).txt/).each do |pattern, list|
+            list.each do |words|
+                next if words.empty?
+                raise "Inflection of #{pattern} '#{words.inspect}' should be 2 words!" unless words.size == 2
+
+                original, morphed = words
+                db.add_morph(:inflection, pattern, original, morphed)
+            end
+        end
+
+        # Add lexemes for regular inflections.
+        [:past_participle, :gerund].each do |pattern|
+            Log.debug("Generating #{pattern}s")
+            db.base_lexemes_of_type(:verb).each do |lexeme|
+                db.add_morph(:inflection, pattern, lexeme) unless lexeme.args[:morphs][pattern]
+            end
+        end
+        [:plural].each do |pattern|
+            Log.debug("Generating #{pattern}s")
+            db.base_lexemes_of_type(:noun).each do |lexeme|
+                db.add_morph(:inflection, pattern, lexeme) unless lexeme.args[:morphs][pattern]
+            end
+        end
+
+        load_files(dict_dir, "derivations_*.txt", /^.*derivations_(.*).txt/).each do |pattern, list|
+            list.each do |words|
+                next if words.empty?
+                raise "Derivation of #{pattern} '#{words.inspect}' should be 2 words!" unless words.size == 2
+
+                original, morphed = words
+                db.add_morph(:derivation, pattern, original, morphed)
+            end
+        end
+
+        # Add lexemes for regular derivations.
+        #[].each do |pattern|
+        #    db.base_lexemes_of_type(:verb) do |lexeme|
+        #        db.add_morph(:derivation, pattern, lexeme) unless lexeme.args[:morphs][pattern]
+        #    end
+        #end
 
         db
     end
@@ -129,7 +181,7 @@ module WordParser
     def self.add_raws(db, raws_db, raw_category, word_type, desc, static=false)
         types = static ? raws_db.static_types_of(raw_category) : raws_db.instantiable_types_of(raw_category)
         types.each do |raw_type|
-            db.add_lexeme(raw_type, [raw_category, word_type])
+            db.add_lexeme(raw_type, [raw_category, word_type, :base])
         end
         Log.debug("Found #{types.size} #{desc}.")
     end

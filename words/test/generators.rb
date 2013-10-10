@@ -38,6 +38,12 @@ s.tense = :present
 john_and_mary(s)
 s.tense = :past
 john_and_mary(s)
+s.aspect = :progressive
+john_and_mary(s)
+s.tense = :future
+john_and_mary(s)
+s.tense = :present
+john_and_mary(s)
 
 Log.debug($core.words_db.gen_copula)
 Log.debug($core.words_db.gen_copula(:complement => :sunny))
@@ -98,7 +104,7 @@ Log.debug($core.words_db.describe_composition(target_description))
 # Knowledge stuff.
 require './knowledge/knowledge'
 human_quanta = $core.kb.all_quanta_for_type(:human)
-Log.debug(human_quanta)
+#Log.debug(human_quanta)
 human_quanta.each do |q|
     Log.debug($core.words_db.generate(q.args.dup))
 end

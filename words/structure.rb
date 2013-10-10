@@ -12,7 +12,7 @@ descriptor hashes (see ./game/descriptors) or symbols can be passed in as nouns 
 also accept pre-created parts of speech (all the PTNode subclasses defined under Sentence). Verb conjugation is
 dependent on both abnormal word knowledge and generic rules, which work for most cases.
 
-N.B. Certain word classes have overloaded the base initialize class that just takes children. word classes are:
+N.B. Certain word classes have overloaded the base initialize class that just takes children. Those word classes are:
 Article and subclasses
 Noun and subclasses
 Verb
@@ -25,11 +25,11 @@ TODO:
 There needs to be some way of representing similar syntactic function - might help for coordinating conjunction determination.
 Make coordinators not suck.
 Start fleshing out auxiliaries.
-Read word DB automatically in a way that doesn't involve the game core, which is quite unintuitive.
 http://en.wikipedia.org/wiki/Phraseme
 Plurals.
 Refactoring preposition associations.
 Negatives of nouns, negatives of verbs, negatives of adjectives.
+http://en.wikipedia.org/wiki/Nominative_absolute
 LOTS BESIDES
 
 =end
@@ -156,7 +156,7 @@ module Words
                     :unit_whispers    => :whisper
                 }
                 verb = event_mapping[args[:event_type]]
-                Log.debug("No verb for event_type #{args[:event_type].inspect}!") unless verb
+                Log.debug("No verb for event type #{args[:event_type].inspect}!") unless verb
             end
 
             raise unless verb
@@ -637,29 +637,38 @@ That is the person whose car I saw.
 
         # Used for adding auxiliaries, modals, aspects, etc.
         # List of auxiliaries:
-        # be (am, are, is, was, were, being), can, could, dare*, do (does, did), have (has, had, having), may, might, must, need*, ought*, shall, should, will, would
+        # be (am, are, is, was, were, being), can, could, dare*, do (does, did),
+        # have (has, had, having), may, might, must, need*, ought*, shall, should, will, would
         # TODO - Thus 'shall' is used with the meaning of obligation and 'will' with the meaning of desire or intention.
         def self.state_conjugate(db, verb, state)
             case state.aspect
             when :stative
                 case state.tense
                 when :future
-                    [conjugate(db, :will, State.new), verb]
+                    [:will, verb]
                 else
                     [conjugate(db, verb, state)]
                 end
             when :progressive
+                raise(StandardError, "Invalid voice #{state.voice}!") unless [:active, :passive].include?(state.voice)
+
+                verbs = []
+                verbs << :will if state.tense == :future
+
                 be_state = State.new
                 # Do other state fields need copying here?
+                Log.debug(state.inspect, 5)
+
                 be_state.person = state.person
-                case state.voice
-                when :active, :passive
-                    [conjugate(db, :be, be_state),  self.send("#{state.voice}_participle", [verb])]
-                else
-                    raise(StandardError, "Invalid voice #{state.voice}!")
-                end
+                be_state.tense  = state.tense
+
+                Log.debug(conjugate(db, :be, be_state), 5)
+
+                verbs << conjugate(db, :be, be_state)
+                verbs << self.send("#{state.voice}_participle", db, verb)
+                verbs
             else
-                raise(NotImplementedError)
+                raise(NotImplementedError, "Aspect #{state.aspect.inspect}")
             end
         end
 
@@ -668,29 +677,9 @@ That is the person whose car I saw.
         def self.conjugate(db, infinitive, state)
             if db.conjugation_for?(infinitive, state)
                 return db.conjugate(infinitive, state)
-            end
-
-            infinitive = infinitive.to_s
-            # Regular conjugation.
-            infinitive = case state.tense
-            when :present
-                if state.person == :third
-                    sibilant?(infinitive) ? "#{infinitive}es" : "#{infinitive}s"
-                else
-                    infinitive
-                end
-            when :past
-                # Double the ending letter, if necessary.
-                # TODO - add exceptions to dictionary rather than hard-coding here.
-                unless [:detect, :inspect, :grasp].include?(infinitive.to_sym)
-                    infinitive.gsub!(/([nbpt])$/, '\1\1')
-                end
-                # drop any ending 'e'
-                infinitive.sub!(/e$/, '')
-                infinitive += 'ed'
-            when :future
-                # Handled in state_conjugate.
-                raise(NotImplementedError)
+            else
+                infinitive
+                #raise StandardError
             end
         end
 
@@ -698,59 +687,35 @@ That is the person whose car I saw.
         # or progressive participle, is identical in form to the gerund;
         # the term present participle is sometimes used to include the
         # gerund. The term gerund-participle is also used.
-        def self.present_participle(infinitive)     gerund(infinitive); end
-        def self.active_participle(infinitive)      gerund(infinitive); end
-        def self.imperfect_participle(infinitive)   gerund(infinitive); end
-        def self.progressive_participle(infinitive) gerund(infinitive); end
-        def self.gerund(infinitive)
-            # handle irregular forms.
-            case infinitive
-            when :be
-                :being
-            else
-                # Regular form.
-                infinitive = infinitive.to_s
-                # drop any ending 'e'
-                infinitive.sub!(/e$/, '')
-                infinitive += 'ing'
-            end
+        def self.present_participle(db, infinitive)     gerund(db, infinitive); end
+        def self.active_participle(db, infinitive)      gerund(db, infinitive); end
+        def self.imperfect_participle(db, infinitive)   gerund(db, infinitive); end
+        def self.progressive_participle(db, infinitive) gerund(db, infinitive); end
+        def self.gerund(db, infinitive)
+            _inflection_lookup(db, infinitive, :gerund)
         end
 
         # [The other participle], called variously the past, passive, or
         # perfect participle, is usually identical to the verb's preterite
         # (past tense) form, though in irregular verbs the two usually differ.
-        def self.passive_participle(infinitive) past_participle(infinitive); end
-        def self.perfect_participle(infinitive) past_participle(infinitive); end
-        def self.past_participle(infinitive)
-            # TODO - put these irregular forms in dictionary.
-            case infinitive
-            when :do
-                :done
-            when :eat
-                :eaten
-            when :write
-                :written
-            when :bite
-                :bitten
-            when :beat
-                :beaten
-            when :wear
-                :worn
-            when :hold
-                :held
-            when :throw
-                :thrown
-            when :grow
-                :grown
-            when :fly
-                :flown
-            else
-                # Regular form.
-                state = State.new
-                state.tense = :past
-                conjugate(infinitive, state)
-            end
+        def self.passive_participle(db, infinitive) past_participle(db, infinitive); end
+        def self.perfect_participle(db, infinitive) past_participle(db, infinitive); end
+        def self.past_participle(db, infinitive)
+            _inflection_lookup(db, infinitive, :past_participle)
         end
+
+        private
+        def self._inflection_lookup(db, infinitive, morph_type)
+            Log.debug("getting #{morph_type} for #{infinitive}", 5)
+            lexeme = db.add_lexeme(infinitive, [:verb, :base])
+            participle = lexeme.args[:morphs][morph_type]
+            if participle.nil?
+                Log.debug("Adding regular #{morph_type} for #{infinitive}")
+                participle = db.add_morph(:inflection, morph_type, lexeme)
+            end
+            participle.lemma
+        end
+        public
 
         # However if the base form ends in one of the sibilant sounds
         # (/s/, /z/, /ʃ/, /ʒ/, /tʃ/, /dʒ/), and its spelling does not end in a
