@@ -53,6 +53,7 @@ shut  past shut
 run   past ran
 drop  past dropped
 spot  past spotted
+spot  gerund spotting
 chop  past chopped
 put   past put
 equip past equipped

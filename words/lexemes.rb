@@ -25,6 +25,10 @@ class Lexicon
 	# Sub-classes must define pattern_match?, which determines if a pattern is valid.
 	# http://en.wikipedia.org/wiki/Word_formation#Types_of_word_formation
 	class MorphologicalRule
+		def self.sym_to_class(morph_type)
+			Lexicon.const_get(morph_type.to_s.capitalize.to_sym)
+		end
+
 		# Make sure parts of speech are correct, and that the pattern is known.
 		def self.check_consistency(pattern, original, morphed)
 			raise(ArgumentError, "Invalid pattern #{pattern.inspect}") unless pattern_match?(pattern)
@@ -95,7 +99,6 @@ class Lexicon
 		end
 	end
 
-
 	class Inflection < MorphologicalRule
 		PATTERNS =
 		[
@@ -128,19 +131,14 @@ class Lexicon
 				(lemma_str + "s").to_sym
             when Words::State
 	            # Regular conjugation.
-	            case state.tense
+	            case pattern.tense
 	            when :present
-	                if state.person == :third
-	                    sibilant?(lemma_str) ? "#{lemma_str}es" : "#{lemma_str}s"
+	                if pattern.person == :third
+	                    Words::Verb.sibilant?(lemma_str) ? "#{lemma_str}es" : "#{lemma_str}s"
 	                else
 	                    original.lemma
 	                end
 	            when :past
-	                # Double the ending letter, if necessary.
-	                # TODO - add exceptions to dictionary rather than hard-coding here.
-#                   unless [:detect, :inspect, :grasp, :construct, :craft, :contain, ].include?(infinitive.to_sym)
-#    		            infinitive.gsub!(/([nbpt])$/, '\1\1')
-#      	   		    end
 	                # drop any ending 'e'
 	                lemma_str.sub!(/e$/, '')
 	                lemma_str += 'ed'

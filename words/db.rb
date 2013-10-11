@@ -6,7 +6,7 @@ class WordDB
     include Words
 
     def self.packable
-        [:groups, :associations, :conjugations, :verb_case_maps, :verb_default_case, :lexemes, :lemmas, :derivations]
+        [:associations, :verb_case_maps, :verb_default_case, :lexemes]
     end
 
     def unpack_custom(args)
@@ -26,7 +26,7 @@ class WordDB
         @verb_case_maps     = {}
         @verb_default_case  = {}
 
-        @lexemes = []
+        @lexemes = {}
 
         # Read in some basic noun & adjective information from the raws db.
         WordParser.read_raws(self, raws_db) if raws_db
@@ -109,7 +109,7 @@ class WordDB
         @verb_default_case[verb] || @verb_default_case[:default]
     end
 
-    # For 'special' conjugations. Basic rules are in Verb::conjugate.
+    # Look up conjugation by referencing the lexeme.
     def conjugate(infinitive, state)
         original = add_lexeme(infinitive, [:verb, :base])
         morphed  = original.args[:morphs][state]
@@ -150,7 +150,7 @@ class WordDB
             lexeme = get_lexeme(word.lemma)
             if lexeme.nil?
                 lexeme = word
-                @lexemes << lexeme
+                @lexemes[lexeme.lemma] = lexeme
             end
             lexeme.add_type(l_type)
             lexeme.add_args(args)
@@ -161,18 +161,18 @@ class WordDB
             else
                 lexeme = Lexicon::Lexeme.new(word, l_type, args)
                 Log.debug("Creating new lexeme #{lexeme.inspect}", 5)
-                @lexemes << lexeme
+                @lexemes[lexeme.lemma] = lexeme
             end
         end
         lexeme
     end
 
     def get_lexeme(lemma)
-        @lexemes.find { |l| l.lemma == lemma }
+        @lexemes[lemma]
     end
 
     def lexemes_of_type(l_type)
-        @lexemes.find_all { |l| l.types.include?(l_type) }
+        @lexemes.values.find_all { |l| l.types.include?(l_type) }
     end
 
     def base_lexemes_of_type(l_type)
@@ -187,20 +187,18 @@ class WordDB
 
     # Takes lexemes and returns the morphed lexeme.
     def add_morph(morph_type, pattern, original, morphed = nil)
-        morph_class = Lexicon.const_get(morph_type.to_s.capitalize.to_sym)
+        morph_class = Lexicon::MorphologicalRule.sym_to_class(morph_type)
 
         morphed = morph_class.default_lexeme(self, pattern, original) if morphed.nil?
         morph_class.check_consistency(pattern, original, morphed)
 
         # Mark morph pattern on original lexeme.
-        if original.args[:morphs][pattern] && !(original.lemma == original.args[:morphs][pattern].lemma)
+        if original.args[:morphs][pattern] && !(morphed.lemma == original.args[:morphs][pattern].lemma)
             Log.warning("Pattern #{pattern.inspect} already used for #{original.lemma}: was #{original.args[:morphs][pattern].lemma}, wants #{morphed.lemma}")
         end
-        original.args[:morphs][pattern] = morphed
 
-        add_lexeme(original, [:base])
-        l = add_lexeme(morphed,  [:morphed], :morph_type => pattern)
-        #Log.debug(l.inspect)
-        l
+        original = add_lexeme(original, [:base])
+        original.args[:morphs][pattern] = morphed
+        morphed  = add_lexeme(morphed,  [:morphed], :morph_type => pattern, :morphed_from => original)
     end
 end

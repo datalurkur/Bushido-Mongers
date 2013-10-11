@@ -51,7 +51,7 @@ module WordParser
 
     public
     def self.load_dictionary(db, dict_dir)
-        Log.debug("Loading dictionary.")
+        Log.debug("Loading dictionary")
         raise(ArgumentError, "Cannot find #{dict_dir}.") unless File.exists?(dict_dir) && File.directory?(dict_dir)
 
         Words::TYPES.each do |type|
@@ -122,13 +122,27 @@ module WordParser
             end
         end
 
+        # Add lexemes for regular conjugations.
+        [
+            Words::State.new(:present, :second), Words::State.new(:present, :third),
+            Words::State.new(:past, :second), Words::State.new(:past, :third)
+        ].each do |pattern|
+            db.base_lexemes_of_type(:verb).each do |lexeme|
+                db.add_morph(:inflection, pattern, lexeme) unless lexeme.args[:morphs][pattern]
+            end
+        end
+
         load_files(dict_dir, "inflections_*.txt", /^.*inflections_(.*).txt/).each do |pattern, list|
             list.each do |words|
                 next if words.empty?
                 raise "Inflection of #{pattern} '#{words.inspect}' should be 2 words!" unless words.size == 2
 
+                morph_type = :inflection
+                morph_class = Lexicon::MorphologicalRule.sym_to_class(morph_type)
                 original, morphed = words
-                db.add_morph(:inflection, pattern, original, morphed)
+                original = db.add_lexeme(original, morph_class.original_type(pattern))
+                morphed  = db.add_lexeme( morphed, morph_class.morphed_type(pattern))
+                db.add_morph(morph_type, pattern, original, morphed)
             end
         end
 
@@ -151,8 +165,12 @@ module WordParser
                 next if words.empty?
                 raise "Derivation of #{pattern} '#{words.inspect}' should be 2 words!" unless words.size == 2
 
+                morph_type = :derivation
+                morph_class = Lexicon::MorphologicalRule.sym_to_class(morph_type)
                 original, morphed = words
-                db.add_morph(:derivation, pattern, original, morphed)
+                original = db.add_lexeme(original, morph_class.original_type(pattern))
+                morphed  = db.add_lexeme( morphed, morph_class.morphed_type(pattern))
+                db.add_morph(morph_type, pattern, original, morphed)
             end
         end
 

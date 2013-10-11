@@ -657,12 +657,8 @@ That is the person whose car I saw.
 
                 be_state = State.new
                 # Do other state fields need copying here?
-                Log.debug(state.inspect, 5)
-
                 be_state.person = state.person
                 be_state.tense  = state.tense
-
-                Log.debug(conjugate(db, :be, be_state), 5)
 
                 verbs << conjugate(db, :be, be_state)
                 verbs << self.send("#{state.voice}_participle", db, verb)
@@ -676,10 +672,10 @@ That is the person whose car I saw.
         # http://en.wikipedia.org/wiki/List_of_English_irregular_verbs
         def self.conjugate(db, infinitive, state)
             if db.conjugation_for?(infinitive, state)
-                return db.conjugate(infinitive, state)
+                db.conjugate(infinitive, state)
             else
-                infinitive
-                #raise StandardError
+                Log.debug("#{infinitive} not conjugated for #{state.inspect}", 6)
+                db.add_morph(:inflection, state, db.add_lexeme(infinitive)).lemma
             end
         end
 
@@ -706,11 +702,11 @@ That is the person whose car I saw.
 
         private
         def self._inflection_lookup(db, infinitive, morph_type)
-            Log.debug("getting #{morph_type} for #{infinitive}", 5)
+            Log.debug("getting #{morph_type} for #{infinitive}", 8)
             lexeme = db.add_lexeme(infinitive, [:verb, :base])
             participle = lexeme.args[:morphs][morph_type]
             if participle.nil?
-                Log.debug("Adding regular #{morph_type} for #{infinitive}")
+                Log.debug("Adding regular #{morph_type} for #{infinitive}", 8)
                 participle = db.add_morph(:inflection, morph_type, lexeme)
             end
             participle.lemma

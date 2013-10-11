@@ -31,19 +31,17 @@ def john_and_mary(state)
     Log.debug($core.words_db.gen_sentence(:agent => :John, :action  => :see,  :target      => :Mary, :state=>state))
 end
 
+def john_and_mary_tenses(state)
+    Words::State::FIELDS[:tense].each do |t|
+        state.tense = t
+        john_and_mary(state)
+    end
+end
+
 s = Words::State.new
-s.tense = :future
-john_and_mary(s)
-s.tense = :present
-john_and_mary(s)
-s.tense = :past
-john_and_mary(s)
+john_and_mary_tenses(s)
 s.aspect = :progressive
-john_and_mary(s)
-s.tense = :future
-john_and_mary(s)
-s.tense = :present
-john_and_mary(s)
+john_and_mary_tenses(s)
 
 Log.debug($core.words_db.gen_copula)
 Log.debug($core.words_db.gen_copula(:complement => :sunny))
