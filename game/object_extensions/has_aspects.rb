@@ -102,6 +102,10 @@ module HasAspects # Aspectual?
         end
     end
 
+    def all_aspects
+        (attributes.values + skills.values).map { |uid| @core.lookup(uid) }
+    end
+
     def make_attempt(aspect_name, difficulty)
         (difficulty = Difficulty.value_of(difficulty)) if (Symbol === difficulty)
         Log.debug("#{monicker} making an attempt to use #{aspect_name} with difficulty #{difficulty}", 6)

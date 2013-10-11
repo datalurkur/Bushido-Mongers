@@ -217,16 +217,16 @@ class Lobby
                 end
                 "#{params[:command].title}ing a #{params[:target]}"
             when :help
-                params[:target] ||= @game_core.db.static_types_of(:command)
-                @game_core.words_db.describe_help(params)
+                params[:list] ||= @game_core.db.static_types_of(:command)
+                @game_core.words_db.describe_list(params)
             when :stats
                 raise(StateError, "User #{username} has no character") unless @game_core.active_character(username)
                 character = @game_core.get_character(username)
                 raise(InvalidCommandError, "Character #{character.monicker} has no stats") unless character.uses?(HasAspects)
                 params[:agent] = character
                 # FIXME - Allow users to request a specific subset of stats
-                params[:target] = [character.attributes.values, character.attributes.values]
-                @game_core.words_db.describe_stats(params)
+                params[:list] = character.all_aspects
+                @game_core.words_db.describe_list(params)
             else
                 raise(ArgumentError, "Unrecognized command '#{params[:command]}'")
             end

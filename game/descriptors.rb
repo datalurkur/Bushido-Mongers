@@ -63,6 +63,7 @@ class Descriptor
             # Collect property information
             d[:properties]       = Descriptor.describe(object.properties, observer)
 
+            # Send along container contents for open containers.
             if object.uses?(Composition)
                 d[:container_contents] = {}
                 object.container_classes.each do |prop|
@@ -104,7 +105,7 @@ class Descriptor
                 d[:properties][:adjectives] ||= []
                 if object.is_type?(:skill)
                     Log.debug([object.monicker, d[:properties][:intrinsic]])
-                    d[:properties][:adjectives] << GenericSkill.value_below(d[:properties][:intrinsic])
+                    d[:properties][:adjectives] <<  GenericSkill.value_below(d[:properties][:intrinsic])
                 else
                     d[:properties][:adjectives] << GenericAspect.value_below(d[:properties][:intrinsic])
                 end

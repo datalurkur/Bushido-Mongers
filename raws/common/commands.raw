@@ -9,6 +9,7 @@ abstract command {
 }
 
 /* Info commands. */
+static command inventory {}
 static command stats {}
 static command help {}
 

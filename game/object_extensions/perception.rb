@@ -1,12 +1,23 @@
 require './util/exceptions'
 
 module Perception
-    class << self
-        PERCEIVABLE_LOCATIONS = [:position, :grasped, :stashed, :worn, :body]
-    end
+    PERCEIVABLE_LOCATIONS = [:grasped, :stashed, :worn, :position, :external]
 
     def perceivable_objects_of(list)
         list.select { |obj| can_perceive?(obj) }
+    end
+
+    # Explode inventory into appropriate categories.
+    def explode_locations(locations)
+        if i = locations.index(:all)
+            locations.insert(i, *PERCEIVABLE_LOCATIONS)
+            locations.delete(:all)
+        end
+        if i = locations.index(:inventory)
+            locations.insert(i, :grasped, :stashed, :worn)
+            locations.delete(:inventory)
+        end
+        locations
     end
 
     # TODO - There should be some sort of cached perception check here,
@@ -76,40 +87,28 @@ module Perception
     end
 
     def find_all_objects(object_type, object_string, locations)
-        matches = []
-        # Explode inventory into appropriate categories.
-        if i = locations.index(:inventory)
-            locations.insert(i, :grasped, :stashed, :worn)
-            locations.delete(:inventory)
-        end
+        explode_locations(locations)
         Log.debug(["Searching #{locations.size} locations for #{object_type.inspect}/#{object_string.inspect}", locations])
-        locations.each do |location|
+
+        matches = locations.inject([]) do |matches, location|
             new_matches = filter_objects(location, {:type => object_type, :name => object_string})
             Log.debug("#{new_matches.size} matches found at #{location}")
-            matches.concat(new_matches)
+            matches + new_matches
         end
         matches
     end
 
     def find_object(type_class, object, adjectives, locations)
         Log.warning("#{object.monicker} in find_object") if BushidoObject === object
-#        return object if (BushidoObject === object)
+
+        explode_locations(locations)
 
         Log.debug(["Searching!", type_class, object, locations], 6)
         Log.debug(["Adjectives!", adjectives], 6) if adjectives && !adjectives.empty?
 
-        # Explode inventory into appropriate categories.
-        if i = locations.index(:inventory)
-            locations.insert(i, :grasped, :stashed, :worn)
-            locations.delete(:inventory)
-        end
-
         # Sort through the potentials and find out which ones match the query
-        potentials = []
-        locations.each do |location|
-            results = filter_objects(location, {:type => type_class, :name => object})
-            potentials.concat(results)
-            break unless potentials.empty?
+        potentials = locations.inject([]) do |potentials, location|
+            potentials + filter_objects(location, {:type => type_class, :name => object})
         end
 
         Log.debug([potentials.map(&:monicker)], 6)

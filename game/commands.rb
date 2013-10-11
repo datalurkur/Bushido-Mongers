@@ -25,39 +25,34 @@ module Commands
         end
 
         # Requires standard param values: agent, command.
-        # Requires parameter 'filters', which is a hash:
-        #  key: parameter to lookup.
-        #  value: where to look for the object, in order.
-        # Takes optional parameter value :'key'_type_class, where 'key' is a key of :needed.
-        def find_objects(core, params, filters, optional=[])
-            # Complain about missing parameters unless they're optional
-            missing_params = filters.keys.select { |req| !(params[req] || optional.include?(req)) }
-            raise AmbiguousCommandError.new(params[:command], missing_params) unless missing_params.empty?
-
-            filters.each do |p, lookup_locs|
-                next unless lookup_locs
-                object_type = params[:"#{p}_type_class"] || core.db.info_for(params[:command], p)
-                if !object_type
-                    Log.debug("No object type found for #{params[:command]} #{p.inspect} field!")
-                    next
-                end
-                params[p] = params[:agent].find_object(
-                    object_type,
-                    params[p],
-                    params[(p.to_s + "_adjs").to_sym] || [],
-                    lookup_locs
-                )
-                Log.debug("Found #{params[p].monicker} for #{p}")
+        def find_object_for_key(core, params, key, object_type = nil, search_locations = [:all], optional = [])
+            if params[key].nil?
+                Log.warning("Finding object for nil parameter #{key.inspect}")
+                return
             end
 
-            unless params[:no_sanity_check]
-                params.keys.select { |p| params[p].is_a?(Array) }.each do |p|
-                    Log.debug("Parameter #{p.inspect} found from text but not searched for! Add searching for this parameter to #{params[:command]}.")
-                    # FIXME - there might be valid reasons to return an array... Handle this in a more robust way.
-                    params.delete(p)
-                end
+            object_type ||= params[key] if core.db.has_type?(params[key])
+            object_type ||= core.db.info_for(params[:command], key)
+            Log.debug(object_type)
+            params[key] = params[:agent].find_object(
+                            object_type,
+                            params[key],
+                            params[(key.to_s + "_adjs").to_sym] || [],
+                            search_locations
+                        )
+            Log.debug("Found #{params[key].monicker} for #{key}")
+            verify_params(params, [key], optional)
+        end
+
+        def verify_params(params, required, optional = [])
+            missing_params = required.select { |k| params[k].nil? }
+            raise AmbiguousCommandError.new(params[:command], missing_params) unless missing_params.empty?
+            unused_params = params.keys - (required + optional) - [:agent, :command, :verb]
+            unused_params.each do |key|
+                Log.debug("Parameter #{key.inspect} found but not required or optional. Add searching for this parameter to #{params[:command]}")
             end
         end
+
 
         def find_all_objects(agent, object_type, object_string, locations)
             Log.debug("Finding all objects" +
@@ -78,16 +73,19 @@ module Commands
                 raise(InvalidCommandError, "No aspects!")
             end
             # Reach into agent and pull out stat details.
-            list = []
-            list << params[:agent].attributes.values
-            list << params[:agent].skills.values
-            params[:target] = list
+            params[:list] = params[:agent].all_aspects
         end
     end
 
     module Help
         def self.stage(core, params)
-            params[:target] = core.db.static_types_of(:command)
+            params[:list] = core.db.static_types_of(:command)
+        end
+    end
+
+    module Inventory
+        def self.stage(core, params)
+            params[:list] = params[:agent]
         end
     end
 
@@ -96,7 +94,8 @@ module Commands
     module Inspect
         def self.stage(core, params)
             if params[:location]
-                Commands.find_objects(core, params, :location => [:grasped, :worn, :stashed, :position])
+                Commands.find_object_for_key(core, params, :location)
+
                 if params[:location].is_type?(:container) && !params[:location].open?
                     raise(FailedCommandError, "#{params[:location].monicker} is closed.")
                 end
@@ -107,8 +106,7 @@ module Commands
                 # Examine the agent.
                 params[:target] = params[:agent]
             elsif target
-                params[:target_type_class] = :object
-                Commands.find_objects(core, params, :target => [:grasped, :worn, :stashed, :position, :body])
+                Commands.find_object_for_key(core, params, :target, :object)
             else
                 # Assume the player wants a broad overview of what he can see, describe the room
                 params[:target] = params[:agent].absolute_position
@@ -118,8 +116,8 @@ module Commands
 
     module Consume
         def self.stage(core, params)
-            params[:target_type_class] = (params[:agent].class_info[:consumes] || core.db.info_for(params[:command], :target))
-            Commands.find_objects(core, params, :target => [:inventory, :position])
+            target_class = params[:agent].class_info[:consumes]
+            Commands.find_object_for_key(core, params, :target, target_class, [:inventory, :position])
 
             unless params[:agent].class_info[:on_consume] || params[:target].is_type?(:consumable)
                 raise(FailedCommandError, "#{params[:agent].monicker} doesn't know how to eat a(n) #{params[:target].monicker}")
@@ -148,8 +146,8 @@ module Commands
 
     module Get
         def self.stage(core, params)
-            Commands.find_objects(core, params, :target => [:position, :stashed, :worn])
-            raise(MissingObjectExtensionError, "Agents must have an inventory to pick things up") unless params[:agent].uses?(Equipment)
+            raise(MissingObjectExtensionError, "Must have an inventory to pick things up!") unless params[:agent].uses?(Equipment)
+            Commands.find_object_for_key(core, params, :target, nil, [:position, :stashed, :worn])
         end
 
         def self.do(core, params)
@@ -159,7 +157,8 @@ module Commands
 
     module Stash
         def self.stage(core, params)
-            Commands.find_objects(core, params, :target => [:grasped, :worn, :position])
+            raise(MissingObjectExtensionError, "Must have an inventory to pick things up!") unless params[:agent].uses?(Equipment)
+            Commands.find_object_for_key(core, params, :target, nil, [:position, :stashed, :worn])
         end
 
         def self.do(core, params)
@@ -169,7 +168,8 @@ module Commands
 
     module Drop
         def self.stage(core, params)
-            Commands.find_objects(core, params, :target => [:inventory])
+            raise(MissingObjectExtensionError, "Must have an inventory to pick things up!") unless params[:agent].uses?(Equipment)
+            Commands.find_object_for_key(core, params, :target, nil, [:inventory])
         end
 
         def self.do(core, params)
@@ -179,9 +179,9 @@ module Commands
 
     module Equip
         def self.stage(core, params)
-            Commands.find_objects(core, params, :target => [:grasped, :stashed])
+            Commands.find_object_for_key(core, params, :target, nil, [:grasped, :stashed])
             # TODO - take 'on' preposition that establishes destination
-#            Commands.find_objects(core, params, :destination => [:body])
+            #Commands.find_object_for_key(core, params, :destination, nil, [:external])
         end
 
         def self.do(core, params)
@@ -214,8 +214,9 @@ module Commands
 
     module Unequip
         def self.stage(core, params)
-            Commands.find_objects(core, params, :target => [:worn])
-#            Commands.find_objects(core, params, :destination => [:body])
+            Commands.find_object_for_key(core, params, :target, nil, [:worn])
+            # TODO - take 'on' preposition that establishes destination
+            #Commands.find_object_for_key(core, params, :destination, nil, [:external])
         end
 
         def self.do(core, params)
@@ -275,20 +276,14 @@ module Commands
 
     module Attack
         def self.stage(core, params)
-            # Search for tool and possibly target without complaining about extra parameters.
-            params[:no_sanity_check] = true
             if params[:tool]
-                Commands.find_objects(core, params, :tool => [:grasped])
+                Commands.find_object_for_key(core, params, :tool, nil, [:grasped])
             end
 
+            Commands.find_object_for_key(core, params, :target)
+            # Search within the target for the location, if it exists.
             if params[:location]
-                # Find the target, then search within the target for the location.
-                Commands.find_objects(core, params, :target => [:position])
-                params.delete(:no_sanity_check)
-                Commands.find_objects(core, params, :location => [params[:target]])
-            else
-                params.delete(:no_sanity_check)
-                Commands.find_objects(core, params, :target => [:position])
+                Commands.find_object_for_key(core, params, :location, nil, [params[:target]])
             end
         end
 
@@ -351,7 +346,7 @@ module Commands
 
     module Open
         def self.stage(core, params)
-            Commands.find_objects(core, params, :target => [:position, :inventory])
+            Commands.find_object_for_key(core, params, :target, nil, [:position, :inventory])
 
             if params[:target].open?
                 raise(FailedCommandError, "#{params[:target].monicker} is already open.")
@@ -367,7 +362,7 @@ module Commands
 
     module Close
         def self.stage(core, params)
-            Commands.find_objects(core, params, :target => [:position, :inventory])
+            Commands.find_object_for_key(core, params, :target, nil, [:position, :inventory])
 
             if !params[:target].open?
                 raise(FailedCommandError, "#{params[:target].monicker} is already closed.")
@@ -386,9 +381,7 @@ module Commands
     module Say
         def self.stage(core, params)
             if params[:receiver]
-                params[:no_sanity_check] = true
-                Commands.find_objects(core, params, :receiver => [:position], :statement => nil)
-                params.delete(:no_sanity_check)
+                Commands.find_object_for_key(core, params, :receiver, nil, [:position], [:statement])
             end
         end
 
@@ -399,9 +392,7 @@ module Commands
 
     module Whisper
         def self.stage(core, params)
-            params[:no_sanity_check] = true
-            Commands.find_objects(core, params, :receiver => [:position], :statement => nil)
-            params.delete(:no_sanity_check)
+            Commands.find_object_for_key(core, params, :receiver, nil, [:position], [:statement])
         end
 
         def self.do(core, params)
@@ -424,8 +415,7 @@ module Commands
 
     module Ask
         def self.stage(core, params)
-            params[:no_sanity_check] = true
-            Commands.find_objects(core, params, {:receiver => [:position]}, [:target])
+            Commands.find_object_for_key(core, params, :receiver, nil, :position)
         end
 
         def self.do(core, params)
@@ -473,11 +463,9 @@ module Commands
             params[:recipe] = find_recipe(core, params)
 
             # Now we have to check that the player actually has access to all of the stuff in the params
-            # TODO - Verify that find_objects can deal with abstract object types like :metal
-            Commands.find_objects(core, params.merge(:no_sanity_check => true), {
-                :location   => [:position], # Location generally refers to something too large to carry
-                :tool       => [:inventory], # A tool might be in a hand or in a pocket
-            }, [:location, :tool])
+            # TODO - Verify that find_object functionality can deal with abstract object types like :metal
+            Commands.find_object_for_key(core, params, :location, nil, [:position], [:tool])
+            Commands.find_object_for_key(core, params, :tool,     nil, [:inventory])
 
             # We have enough information to construct something!
         end

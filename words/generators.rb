@@ -39,14 +39,12 @@ module Words
             end
         when :move
             return describe_room(args)
-        when :attack, :get, :stash, :drop, :hide, :unhide, :equip, :unequip, :open, :close
+        when :attack, :get, :stash, :drop, :hide, :unhide, :equip, :unequip, :open, :close, :consume
             return gen_sentence(args)
         when :say, :craft
             return gen_sentence(args.merge(:verb => args[:command]))
-        when :stats
-            return describe_stats(args)
-        when :help
-            return describe_help(args)
+        when :stats, :help
+            return describe_list(args)
         else
             Log.debug(["UNKNOWN COMMAND", args.keys])
             return "I don't know how to express the results of a(n) #{args[:command]}, pester zphobic to work on this"
@@ -162,26 +160,55 @@ module Words
         sentences.join(" ")
     end
 
-    def describe_stats(args)
-        stats = args[:target]
-        sentences = []
-
-        stats.each do |list|
-            list.map! do |s|
-                case s
-                when BushidoObject, Room; Descriptor.describe(s, args[:agent])
-                else s
-                end
-            end
-            list.each do |stat|
-                stat[:possessor] = args[:agent]
-            end
-            sentences << gen_sentence(
-                :subject => args[:agent],
-                :verb    => :have,
-                :target  => list
-            )
+    def assign_possessor_to_list(possessor, list)
+        list.each do |entry|
+            entry[:possessor] = possessor
         end
+    end
+
+    def describe_list(args)
+        Log.debug(args[:list])
+        list = args[:list].map { |entry| Descriptor.describe(entry, args[:observer]) }
+
+        flat_list = false
+
+        case args[:command]
+        when :stats
+            subject = args[:agent]
+            verb    = :have
+            assign_possessor_to_list(subject, list)
+        when :help
+            list.map! { |c| [c, *associated_verbs(c)].join(" ") }
+            list.insert(0, "Basic commands:")
+            flat_list = true
+        when :inventory
+
+        else
+            Log.warning("Invalid command #{args[:command]}?")
+        end
+
+        sentences = []
+        if flat_list
+            sentences << list.join("\n")
+        else
+            list.each do |entry|
+                sentences << gen_sentence(
+                    :observer => args[:observer],
+                    :subject  => subject,
+                    :verb     => verb,
+                    :target   => entry
+                )
+            end
+        end
+
+=begin
+        args[:list].map! do |s|
+            case s
+            when BushidoObject, Room; Descriptor.describe(s, args[:agent])
+            else s
+            end
+        end
+=end
 
         sentences.flatten.join(" ")
     end
