@@ -11,6 +11,17 @@ $core = FakeCore.new
 Log.debug($core.words_db.gen_area_name({:type => :mountain, :keywords => [:beautiful]}))
 Log.debug($core.words_db.gen_area_name({:type => :sewer,    :keywords => [:dank]}))
 
+s = Words::State.new
+raise unless s.eql?(s)
+sp = s.dup
+sp.voice = :passive
+raise if s.eql?(sp)
+raise if sp.eql?(s)
+s  = Words::State.new(:past, :present)
+s2 = Words::State.new(:past, :present)
+raise unless s.eql?(s2)
+raise unless s2.eql?(s)
+
 Log.debug(
     $core.words_db.describe_room(
         :command => :inspect,

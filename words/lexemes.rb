@@ -117,10 +117,8 @@ class Lexicon
 		def self.default_lexeme(db, pattern, original)
 			lemma_str = original.lemma.to_s
 			inflected_lemma = case pattern
-			when :past_participle 	 # -ness (slow → slowness)
-                state = Words::State.new
-                state.tense = :past
-                Words::Verb.conjugate(db, original.lemma, state)
+			when :past_participle
+				Words::Verb.conjugate(db, original.lemma, Words::State.new(:past))
             when :gerund
                 # drop any ending 'e'
                 lemma_str.sub!(/e$/, '')

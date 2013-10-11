@@ -165,7 +165,9 @@ module WordParser
                 next if words.empty?
                 raise "Derivation of #{pattern} '#{words.inspect}' should be 2 words!" unless words.size == 2
 
+                #Lexicon::MorphologicalRule.add_morph(db, morph_type, pattern, original, morphed)
                 morph_type = :derivation
+
                 morph_class = Lexicon::MorphologicalRule.sym_to_class(morph_type)
                 original, morphed = words
                 original = db.add_lexeme(original, morph_class.original_type(pattern))

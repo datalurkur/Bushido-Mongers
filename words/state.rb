@@ -96,18 +96,14 @@ module Words
             self.person = State.plural_person(self.person)
         end
 
-        # State is used in WordDB's special conjugation hash.
+        # State is used in hashes.
+
         def eql?(other)
-            case other
-            when State
-                @aspect == other.aspect &&
-                @tense  == other.tense  &&
-                @mood   == other.mood   &&
-                @person == other.person &&
-                @voice  == other.voice
-            else
-                raise(NotImplementedError, "Can't compare word state to #{other.class}.")
+            raise(NotImplementedError, "Can't compare word state to #{other.class}.") unless other.is_a?(State)
+            FIELDS.each do |field, list|
+                return false if (self.send(field) != other.send(field) && !(self.send(field).nil? || other.send(field).nil?))
             end
+            return true
         end
 
         def hash

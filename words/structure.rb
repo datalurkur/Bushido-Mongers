@@ -641,6 +641,9 @@ That is the person whose car I saw.
         # have (has, had, having), may, might, must, need*, ought*, shall, should, will, would
         # TODO - Thus 'shall' is used with the meaning of obligation and 'will' with the meaning of desire or intention.
         def self.state_conjugate(db, verb, state)
+            verbs = []
+            verbs << :will if state.tense == :future
+
             case state.aspect
             when :stative
                 case state.tense
@@ -659,6 +662,9 @@ That is the person whose car I saw.
                 # Do other state fields need copying here?
                 be_state.person = state.person
                 be_state.tense  = state.tense
+
+                Log.debug(state, 8)
+                Log.debug(be_state, 8)
 
                 verbs << conjugate(db, :be, be_state)
                 verbs << self.send("#{state.voice}_participle", db, verb)
