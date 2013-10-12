@@ -152,7 +152,7 @@ module Composition
         Log.debug("Removing #{object.monicker} from #{monicker}", 6)
         raise(ArgumentError, "Invalid container class #{type}.") unless composed_of?(type)
         unless container_contents(type).include?(object.uid)
-            Log.error(["No object #{object.monicker} found in #{monicker}'s #{type}s", caller])
+            Log.error(["No #{object.monicker} found in #{monicker}'s #{type}s", caller])
             return
         end
         container_contents(type).delete(object.uid)

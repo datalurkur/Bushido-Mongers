@@ -24,7 +24,7 @@ module Commands
             mod.do(core, params) if mod.respond_to?(:do)
         end
 
-        # Requires standard param values: agent, command.
+        # Requires standard param values: agent, command, and the given key.
         def find_object_for_key(core, params, key, object_type = nil, search_locations = [:all], optional = [])
             if params[key].nil?
                 Log.warning("Finding object for nil parameter #{key.inspect}")
@@ -33,13 +33,14 @@ module Commands
 
             object_type ||= params[key] if core.db.has_type?(params[key])
             object_type ||= core.db.info_for(params[:command], key)
+
             Log.debug(object_type)
             params[key] = params[:agent].find_object(
                             object_type,
                             params[key],
                             params[(key.to_s + "_adjs").to_sym] || [],
                             search_locations
-                        )
+                          )
             Log.debug("Found #{params[key].monicker} for #{key}")
             verify_params(params, [key], optional)
         end
