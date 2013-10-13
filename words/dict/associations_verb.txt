@@ -7,7 +7,7 @@ inspect examine search
 detect
 search
 move go leave walk
-get fetch grab take pick
+get fetch grab take pick retrieve
 grasp
 stash put place
 drop ditch

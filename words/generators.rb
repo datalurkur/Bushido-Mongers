@@ -46,6 +46,8 @@ module Words
             return gen_sentence(args.merge(:verb => args[:command]))
         when :stats, :help
             return describe_list(args)
+        when :inventory
+            return describe_inventory(args)
         else
             Log.debug(["UNKNOWN COMMAND", args.keys])
             return "I don't know how to express the results of a(n) #{args[:command]}, pester zphobic to work on this"
@@ -175,15 +177,15 @@ module Words
 
         case args[:command]
         when :stats
-            subject = args[:agent]
             verb    = :have
-            assign_possessor_to_list(subject, list)
+            assign_possessor_to_list(args[:agent], list)
         when :help
             list.map! { |c| [c, *associated_verbs(c)].join(" ") }
             list.insert(0, "Basic commands:")
             flat_list = true
         when :inventory
-
+            verb    = args[:verb]
+            assign_possessor_to_list(args[:agent], list)
         else
             Log.warning("Invalid command #{args[:command]}?")
         end
@@ -195,28 +197,14 @@ module Words
             list.each do |entry|
                 sentences << gen_sentence(
                     :observer => args[:observer],
-                    :subject  => subject,
+                    :subject  => args[:agent],
                     :verb     => verb,
                     :target   => entry
                 )
             end
         end
 
-=begin
-        args[:list].map! do |s|
-            case s
-            when BushidoObject, Room; Descriptor.describe(s, args[:agent])
-            else s
-            end
-        end
-=end
-
         sentences.flatten.join(" ")
-    end
-
-    def describe_help(args)
-        "Basic commands:\n"+
-        args[:target].map { |c| [c, *associated_verbs(c)].join(" ") }.join("\n") + "\n"
     end
 
     def describe_container_class(composition, comp_type = :internal)
@@ -251,6 +239,23 @@ module Words
     def describe_object(obj)
         obj[:complement] = NounPhrase.new(self, obj[:type])
         gen_copula(obj)
+    end
+
+    def describe_inventory(args)
+        composition_verbs = {
+            :external => :attach,
+            :worn     => :wear,
+            :grasped  => :hold
+        }
+
+        descriptions = []
+        [:grasped, :worn].each do |location|
+            list_args = args.dup
+            list_args[:list] = args[location]
+            list_args[:verb] = composition_verbs[location]
+            descriptions << describe_list(list_args)
+        end
+        descriptions
     end
 
     def describe_composition(composition)

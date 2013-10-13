@@ -86,7 +86,11 @@ module Commands
 
     module Inventory
         def self.stage(core, params)
-            params[:list] = params[:agent]
+            raise(MissingObjectExtensionError, "Must have an inventory!") unless params[:agent].uses?(Equipment)
+            #params[:list] = params[:agent]
+            [:grasped, :worn].each do |location|
+                params[location] = params[:agent].objects_in_location(location)
+            end
         end
     end
 
