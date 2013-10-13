@@ -15,8 +15,14 @@ static command help {}
 
 /* World-interaction commands. */
 
+static command look {
+    location composition;
+    target object;
+}
+
 static command inspect {
     location composition;
+    target object;
 }
 
 static command move {}

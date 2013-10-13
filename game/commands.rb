@@ -92,7 +92,7 @@ module Commands
 
     ### WORLD-INTERACTION COMMANDS ###
 
-    module Inspect
+    module Look
         def self.stage(core, params)
             if params[:location]
                 Commands.find_object_for_key(core, params, :location)
@@ -103,16 +103,22 @@ module Commands
             end
 
             target = params[:target]
-            if !target.nil? && (params[:agent].monicker.match(target.to_s) || (core.words_db.associated_words_of(:self)+[:self]).include?(target))
-                # Examine the agent.
-                params[:target] = params[:agent]
-            elsif target
-                Commands.find_object_for_key(core, params, :target, :object)
+            if target
+                # Examine the agent in the event of :self, :me, etc.
+                if (core.words_db.associated_words_of(:self)+[:self]).include?(target)
+                    params[:target] = params[:agent]
+                else
+                    Commands.find_object_for_key(core, params, :target)
+                end
             else
                 # Assume the player wants a broad overview of what he can see, describe the room
                 params[:target] = params[:agent].absolute_position
             end
         end
+    end
+
+    module Inspect
+        def self.stage(core, params) Look.stage(core, params); end
     end
 
     module Consume

@@ -14,7 +14,8 @@ module Words
 
     def generate_command(args)
         case args[:command]
-        when :inspect
+        # TODO: Separate behavior for inspect command, with more info
+        when :look, :inspect
             target = args[:target]
             location = args[:location]
             if location
