@@ -8,7 +8,7 @@ require './raws/db'
 db = ObjectDB.get('default')
 require './words/words'
 
-words_db = WordDB.new(db)
+words_db = Lexicon.new(db)
 
 args = words_db.decompose_command("aTTack Spider")
 Log.debug(args)
@@ -39,6 +39,6 @@ raise unless args[:target] == :beef
 
 args = words_db.decompose_command("look at self with microscope")
 Log.debug(args)
-raise unless args[:command] == :inspect
+raise unless args[:command] == :look
 raise unless args[:target] == :self
-raise unless args[:tool] == :microscope
+#raise unless args[:tool] == :microscope

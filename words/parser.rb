@@ -1,5 +1,5 @@
 require './words/db'
-require './words/lexemes'
+require './words/lexicon'
 require './util/timer'
 
 =begin

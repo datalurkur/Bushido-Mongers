@@ -85,7 +85,7 @@ class GameCore
 
             hash[:db]              = ObjectDB.pack(@db)
             hash[:kb]              = ObjectKB.pack(@kb)
-            hash[:words_db]        = WordDB.pack(@words_db)
+            hash[:words_db]        = Lexicon.pack(@words_db)
 
             hash[:object_manifest] = {}
             @object_manifest.keys.each do |klass|
@@ -113,7 +113,7 @@ class GameCore
             # -------------------------------
             @db       = ObjectDB.unpack(hash[:db])
             @kb       = ObjectKB.unpack(@db, hash[:kb])
-            @words_db = WordDB.unpack(hash[:words_db])
+            @words_db = Lexicon.unpack(hash[:words_db])
 
             # Unpack objects
             # -------------------------------
@@ -194,7 +194,7 @@ class GameCore
             raw_group = args[:raw_group] || "default"
             @db       = ObjectDB.get(raw_group)
             @kb       = ObjectKB.new(@db, true)
-            @words_db = WordDB.new(@db)
+            @words_db = Lexicon.new(@db)
 
             # Setup the physical world
             # ------------------------

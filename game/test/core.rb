@@ -8,7 +8,7 @@ core = DefaultCore.new
 core.setup(:world_depth => 2, :world_size => 2)
 
 packed = DefaultCore.pack(core)
-types = Debug.deep_search_types(packed, [ObjectDB,ObjectKB,WordDB,BushidoObject])
+types = Debug.deep_search_types(packed, [ObjectDB,ObjectKB,Lexicon,BushidoObject])
 Log.debug("Packed data includes: #{types.inspect}")
 core = DefaultCore.unpack(packed)
 repacked = DefaultCore.pack(core)

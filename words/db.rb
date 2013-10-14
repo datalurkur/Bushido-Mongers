@@ -1,7 +1,7 @@
 require './util/packer'
 require './words/words'
 
-class WordDB
+class Lexicon
     include Packer
     include Words
 
@@ -146,7 +146,7 @@ class WordDB
     # If a lexeme is already in the list, the types and args given are added to the lexeme.
     def add_lexeme(word, l_type = [], args = {})
         Log.debug([word, l_type, args], 9)
-        if word.is_a?(Lexicon::Lexeme)
+        if word.is_a?(Lexeme)
             lexeme = get_lexeme(word.lemma)
             if lexeme.nil?
                 lexeme = word
@@ -159,7 +159,7 @@ class WordDB
                 lexeme.add_type(l_type)
                 lexeme.add_args(args)
             else
-                lexeme = Lexicon::Lexeme.new(word, l_type, args)
+                lexeme = Lexeme.new(word, l_type, args)
                 Log.debug("Creating new lexeme #{lexeme.inspect}", 5)
                 @lexemes[lexeme.lemma] = lexeme
             end
@@ -187,7 +187,7 @@ class WordDB
 
     # Takes lexemes and returns the morphed lexeme.
     def add_morph(morph_type, pattern, original, morphed = nil)
-        morph_class = Lexicon::MorphologicalRule.sym_to_class(morph_type)
+        morph_class = MorphologicalRule.sym_to_class(morph_type)
 
         morphed = morph_class.default_lexeme(self, pattern, original) if morphed.nil?
         morph_class.check_consistency(pattern, original, morphed)

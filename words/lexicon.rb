@@ -89,7 +89,7 @@ class Lexicon
 			else
 				raise ArgumentError, "No knowledge of how to apply #{pattern} to #{original.lemma}"
 			end
-			morphed = Lexicon::Lexeme.new(derived_lemma, morphed_type(pattern), :morph_type => pattern)
+			morphed = Lexeme.new(derived_lemma, morphed_type(pattern), :morph_type => pattern)
 			check_consistency(pattern, original, morphed)
 			morphed
 		end
@@ -148,7 +148,7 @@ class Lexicon
 				raise ArgumentError, "No knowledge of how to apply #{pattern} to #{original.lemma}"
 			end
 
-			morphed = Lexicon::Lexeme.new(inflected_lemma, morphed_type(pattern), :morph_type => pattern)
+			morphed = Lexeme.new(inflected_lemma, morphed_type(pattern), :morph_type => pattern)
 			check_consistency(pattern, original, morphed)
 			morphed
 		end
@@ -165,4 +165,5 @@ class Lexicon
 			end
 		end
 	end
+
 end

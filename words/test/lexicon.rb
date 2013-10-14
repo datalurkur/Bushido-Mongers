@@ -2,16 +2,16 @@ require './words/words'
 
 Log.setup("Main", "family_test")
 
-db = WordDB.new
+db = Lexicon.new
 
-#packed = WordDB.pack(db)
-#db = WordDB.unpack(packed)
+#packed = Lexicon.pack(db)
+#db = Lexicon.unpack(packed)
 
 db.associate([:bad, :fail, :miserable, :poor, :flailing, :blind, :clumsy, :substandard], [:adjective, :descriptive])
 Log.debug(db.associated_words_of(:bad))
 
-packed = WordDB.pack(db)
-db = WordDB.unpack(packed)
+packed = Lexicon.pack(db)
+db = Lexicon.unpack(packed)
 
 associated_lexemes = db.associated_lexemes_of(:bad)
 Log.debug(["Related to :bad", associated_lexemes.inspect])

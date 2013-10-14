@@ -32,7 +32,7 @@ class FakeCore < DefaultCore
         raw_group = args[:raw_group] || "default"
         @db       = ObjectDB.get(raw_group)
         @kb       = ObjectKB.new(@db, true)
-        @words_db = WordDB.new(@db)
+        @words_db = Lexicon.new(@db)
 
         # Prepare for object creation
         # ---------------------------
