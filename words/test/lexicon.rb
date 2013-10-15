@@ -7,19 +7,19 @@ db = Lexicon.new
 #packed = Lexicon.pack(db)
 #db = Lexicon.unpack(packed)
 
-db.associate([:bad, :fail, :miserable, :poor, :flailing, :blind, :clumsy, :substandard], [:adjective, :descriptive])
-Log.debug(db.associated_words_of(:bad))
+db.associate([:bad, :fail, :miserable, :poor, :flailing, :blind, :clumsy, :substandard], :synonym)
+Log.debug(db.associated_words_of(:bad, :synonym))
 
 packed = Lexicon.pack(db)
 db = Lexicon.unpack(packed)
 
-associated_lexemes = db.associated_lexemes_of(:bad)
+associated_lexemes = db.associated_lexemes_of(:bad, :synonym)
 Log.debug(["Related to :bad", associated_lexemes.inspect])
 
-other_associated_lexemes = db.associated_lexemes_of(associated_lexemes.first.lemma)
+other_associated_lexemes = db.associated_lexemes_of(associated_lexemes.first.lemma, :synonym)
 Log.debug(["Related to #{other_associated_lexemes.first.inspect}", other_associated_lexemes.inspect])
 
-related_adv = db.get_associations_by_type(associated_lexemes.first.lemma, :adverb)
+related_adv = db.get_associations_by_type(associated_lexemes.first.lemma, :synonym, :adverb)
 Log.debug(["Related adverbs:", related_adv])
 
 nouns = db.words_of_type(:noun)

@@ -1,8 +1,0 @@
-nil target
-to destination
-with tool
-using tool
-from components
-by subject
-in location
-from origin

@@ -6,7 +6,7 @@ class Lexicon
 		# infinitive form of the verb.
 		attr_reader :lemma, :types, :args
 
-		def initialize(lemma, l_type, args = {})
+		def initialize(lemma, l_type = [], args = {})
 			@lemma = lemma.to_sym
 			@types = Array(l_type)
 			@args  = args
@@ -20,6 +20,8 @@ class Lexicon
 		def add_args(args)
 			@args.merge!(args)
 		end
+
+		def to_s; @lemma; end
 	end
 
 	# Sub-classes must define pattern_match?, which determines if a pattern is valid.
@@ -166,4 +168,8 @@ class Lexicon
 		end
 	end
 
+	def verify
+		# Words are not in multiple sets for certain association types; synonyms in particular.
+		# Warn if words contain many parts-of-speech as types.
+	end
 end

@@ -169,6 +169,11 @@ module Words
                 end
             end
 
+            # This ordering only works for active voice, not passive.
+            # Really we should make a distinction between patient / direct object
+            # and between subject / agent. Right now we hack it in the :target
+            # adverbial clause handling.
+            # http://en.wikipedia.org/wiki/Patient_(grammar)
             subject   = NounPhrase.new(db, subject, args)
             predicate = VerbPhrase.new(db, verb, args)
             @children = [subject, predicate]
@@ -311,9 +316,9 @@ That is the person whose car I saw.
             new_phrase(db, NounPhrase.new(db, args[type]), lookup_type, args)
         end
 
-        def new_phrase(db, phrase, lookup_type, args)
-            # Determine preposition based on verb lookup (and dict/preposition_verb.txt).
-            if prep = db.get_prep_for_verb(args[:verb], lookup_type)
+        def new_phrase(db, phrase, case_name, args)
+            # Determine preposition based on verb lookup (and dict/prepositions.txt).
+            if prep = db.prep_for_verb(args[:verb], case_name)
                 return Preposition.new(prep), phrase
             else
                 return phrase

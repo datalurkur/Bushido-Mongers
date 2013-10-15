@@ -27,6 +27,8 @@ raise unless args[:target] == :gold
 
 args = words_db.decompose_command("flibberdygibber whoosafarglebert humperdink")
 Log.debug(args)
+args = words_db.decompose_command("Has Anyone Really Been Far Even as Decided to Use Even Go Want to do Look More Like?")
+#Log.debug(args)
 
 args = words_db.decompose_command("look self")
 Log.debug(args)

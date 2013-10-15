@@ -44,13 +44,12 @@ module Words
             return decompose_statement(args, regular_case_pieces)
         end
 
-        phrase_args = decompose_phrases(args, pieces)
+        find_phrases(pieces, args)
 
         if pieces.size > 0
             Log.debug(["Ignoring potentially important syntactic pieces", pieces])
         end
 
-        args.merge!(phrase_args)
         Log.debug(args, 6)
         args
     end
@@ -143,24 +142,6 @@ module Words
         args
     end
 
-    # N.B. modifies the pieces array
-    def decompose_phrases(args, pieces)
-        # The default case is what case of the sentence a noun with no preposition serves as.
-        default_case = get_default_case_for_verb(args[:verb])
-        Log.debug("Testing #{default_case} with nil", 6)
-        if default_case && noun = find_noun_phrase(0, pieces)
-            set_case(default_case, args, noun.first, noun.last)
-        end
-
-        prep_map = get_prep_map_for_verb(args[:verb])
-        prep_map.each_pair do |case_name, preposition|
-            Log.debug("Testing #{case_name} with #{preposition.inspect}", 9)
-            find_prep_phrase(case_name, preposition, pieces, args)
-        end
-
-        args
-    end
-
     private
     def set_case(case_name, args, noun, adjs)
         case_name_adjs = (case_name.to_s + "_adjs").to_sym
@@ -170,12 +151,26 @@ module Words
     end
 
     # N.B. modifies the pieces array
-    def find_prep_phrase(case_name, preposition, pieces, args)
-        if (index = pieces.index(preposition))
-            Log.debug("Detected '#{preposition}' at #{index}", 6)
-            pieces.slice!(index, 1)
-            if noun = find_noun_phrase(index, pieces)
-                set_case(case_name, args, noun.first, noun.last)
+    def find_phrases(pieces, args)
+        # Index doesn't currently move, but I'd rather have a variable for it regardless.
+        index = 0
+        while(pieces.size > 0)
+            Log.debug("Marching through pieces #{pieces.inspect} at #{index}", 6)
+            if words_of_type(:preposition).include?(pieces[index])
+                # There's a preposition here. Figure out how it applies to the verb.
+                preposition = pieces[index]
+                pieces.slice!(index, 1)
+                noun, modifiers = find_noun_phrase(index, pieces)
+                Log.debug("found prep #{preposition} with noun_phrase #{noun}, #{modifiers.inspect}", 6)
+            else
+                noun, modifiers = find_noun_phrase(index, pieces)
+                Log.debug("found noun_phrase #{noun}, #{modifiers.inspect}", 6)
+            end
+
+            if case_name = case_for_verb(args[:verb], preposition)
+                # No preposition found; this is the default (preposition-less).
+                Log.debug("Adding NP to #{case_name.inspect}", 6)
+                set_case(case_name, args, noun, modifiers)
             end
         end
     end

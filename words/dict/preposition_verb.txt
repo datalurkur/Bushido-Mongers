@@ -1,16 +1,19 @@
+default target
+default to destination
+default into destination
+default with tool
+default using tool
+default from components
+default by subject
+default in location
+default from origin
+move destination
+travel destination
+go destination
+walk destination
+leave destination
 look at target
-attack with tool
-move to destination
-move nil destination
-travel to destination
-travel nil destination
-go to destination
-go nil destination
-walk to destination
-walk into destination
-walk nil destination
 leave for destination
-leave nil destination
 drop to destination
 throw at destination
 attach to target
@@ -28,8 +31,8 @@ give to receiver
 send to receiver
 say to receiver
 talk to receiver
-tell nil receiver
-ask about target
-nil for target
-ask nil receiver
 speak to receiver
+tell receiver
+ask receiver
+ask about target
+ask for target

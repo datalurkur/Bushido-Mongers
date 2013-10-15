@@ -66,14 +66,55 @@ module WordParser
             end
         end
 
-        # nil corresponds to no preposition; i.e. usually the direct object
-        load_files(dict_dir, "preposition_base.txt").each do |match, list|
+        load_files(dict_dir, "preposition_verb.txt").each do |match, list|
             list.each do |words|
-                raise "Specifier '#{words.inspect}' should be 2 words!" unless words.size == 2
-                preposition, case_name = words
-                preposition = nil if preposition == :nil
-                db.add_verb_preposition(:default, preposition, case_name)
-                db.add_lexeme(preposition, [:preposition, :base]) if preposition
+                case words.size
+                when 2
+                    verb, case_name = words
+                when 3
+                    verb, preposition, case_name = words
+                    db.add_lexeme(preposition, [:preposition, :base]) if preposition
+                else
+                    raise "Specifier '#{words.inspect}' should be 2-3 words: <verb> <optional prep> <case>!"
+                end
+
+                if verb == :default
+                    verb = nil
+                else
+                    db.add_lexeme(verb,  [:verb, :base])
+                end
+                db.add_lexeme(case_name, [:grammar_case])
+
+                association_type = if verb && preposition
+                    :preposition_case # Verb/preposition case
+                elsif verb
+                    :default_case_for_verb # Verb/no preposition case
+                elsif preposition
+                    :default_preposition # preposition case,  for any verb
+                else
+                    :default_case_for_any_verb # Case when no preposition, for any verb. There will only be one.
+                end
+                db.associate([verb, preposition, case_name].compact, association_type)
+
+=begin
+                    if preposition
+                        db.associate([verb, preposition, case_name], :preposition_case)
+                    else
+                        db.associate([verb, case_name], :direct_case)
+                    end
+                else
+                    if preposition
+                        db.associate([preposition, case_name].compact, :default_preposition)
+                    else
+                        db.associate([case_name].compact, :default_case)
+                    end
+                end
+=end
+                    # Normally the verb and preposition are associated under the case, but defaults are special.
+#                    db.associate([:default, preposition].compact, case_name)
+#                else
+#                db.associate([verb, preposition, case_name].compact, :grammar_case)
+#                end
             end
         end
 
@@ -88,6 +129,7 @@ module WordParser
         end
 =end
 
+=begin
         load_files(dict_dir, "preposition_verb.txt").each do |match, list|
             list.each do |words|
                 raise "Specifier '#{words.inspect}' should be 3 words!" unless words.size == 3
@@ -97,6 +139,7 @@ module WordParser
                 db.add_lexeme(preposition, :preposition) if preposition
             end
         end
+=end
 
         load_files(dict_dir, "conjugations.txt").each do |match, list|
             list.each do |words|

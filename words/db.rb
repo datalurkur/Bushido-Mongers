@@ -6,25 +6,24 @@ class Lexicon
     include Words
 
     def self.packable
-        [:associations, :verb_case_maps, :verb_default_case, :lexemes]
+        [:associations, :lexemes]
     end
 
     def unpack_custom(args)
         # Fix what would otherwise be duplicate references in associations.
-        @associations.map! do |set|
-            set.map! do |l|
-                l = self.get_lexeme(l.lemma)
+        @associations.each do |association_type, sets|
+            sets.map! do |s|
+                s.map do |l|
+                    l = self.get_lexeme(l.lemma)
+                end
             end
         end
     end
 
-    attr_accessor :associations
+    attr_accessor :default_lexeme
 
     def initialize(raws_db = nil, dict_dir = './words/dict')
-        @associations = []
-
-        @verb_case_maps     = {}
-        @verb_default_case  = {}
+        @associations = {}
 
         @lexemes = {}
 
@@ -36,78 +35,93 @@ class Lexicon
 
     # Generic Association Methods
 
-    def associate(words, l_type)
-        words.map! { |w| add_lexeme(w, l_type) }
+    def associate(words, association_type)
+        Log.debug([words, association_type], 7)
+        words.map! { |w| add_lexeme(w) }
 
-        # nothing to associate
-        return if words.size < 2
-
-        # Find and remove old set
-        @associations.each do |set|
+        @associations[association_type] ||= []
+        # Find and remove old set; just for synonyms?
+=begin
+        @associations[association_type].each do |set|
             if !(set & words).empty?
+                Log.debug("Deleting past association set #{set.inspect} because of #{words.inspect}")
                 words = (words + set.to_a).uniq
-                @associations.delete(set)
+                @associations[association_type].delete(set)
             end
         end
+=end
 
-        @associations << Set.new(words)
+        @associations[association_type] << Set.new(words)
     end
 
-    def associated_lexemes_of(word)
+    def associations_of(word, association_type)
         lexeme = add_lexeme(word)
-        @associations.each do |set|
-            if set.include?(lexeme)
-                return (set.to_a - [lexeme])
-            end
-        end
-        []
+        @associations[association_type] ||= []
+        @associations[association_type].select { |set| set.include?(lexeme) }.map { |set| set.to_a - [lexeme] }
     end
 
-    def associated_words_of(word)
-        associated_lexemes_of(word).map(&:lemma)
+    def associated_lexemes_of(word, association_type)
+        associations_of(word, association_type).flatten
     end
 
-    def get_associations_by_type(word, type)
-        lexemes = associated_lexemes_of(word)
+    def associated_words_of(word, association_type)
+        associated_lexemes_of(word, association_type).map(&:lemma)
+    end
+
+    def get_associations_by_type(word, association_type, type)
+        lexemes = associated_lexemes_of(word, association_type)
         lexemes.select do |l|
             l.types.include?(type)
         end
     end
 
-    def associated_verbs(word)
-        get_associations_by_type(word, :verb).map(&:lemma)
+    def get_sets_with(words, association_type)
+        words = words.map { |w| add_lexeme(w) }
+        @associations[association_type] ||= []
+        @associations[association_type].find_all { |s| words.all? { |w| s.include?(w) } }
     end
 
-    # How do we decide which type to use? First POS?
+    def get_type_from_sets_with(words, association_type, type)
+        sets = get_sets_with(words, association_type)
+
+        lexemes = []
+        sets.each { |s| s.each { |l| lexemes << l if l.types.include?(type) } }
+        lexemes
+    end
+
+    def associated_verbs(word)
+        associated_words_of(word, :verb)
+    end
+
 #    def get_synonyms(word)
 #        get_associations_by_type(word, word.types.first)
 #    end
 
     # Verb & Preposition Association Methods
 
-    def add_verb_preposition(verb, preposition, case_name)
-        @verb_case_maps[verb] ||= {}
+    def prep_for_verb(verb, case_name)
+        prepositions     = get_type_from_sets_with([verb, case_name], :preposition_case, :preposition)
+        def_prepositions = get_type_from_sets_with([      case_name], :default_preposition, :preposition)
+
+        prepositions = def_prepositions if prepositions.empty?
+        preposition = prepositions.first.lemma if prepositions.first
+    end
+
+    def case_for_verb(verb, preposition = nil)
+        cases = []
         if preposition
-            @verb_case_maps[verb][case_name] = preposition
+            cases     = get_type_from_sets_with([verb, preposition], :preposition_case, :grammar_case)
+            def_cases = get_type_from_sets_with([      preposition], :default_preposition, :grammar_case)
         else
-            @verb_default_case[verb] = case_name
+            cases     = get_type_from_sets_with([verb], :default_case_for_verb, :grammar_case)
+            def_cases = get_type_from_sets_with([], :default_case_for_any_verb, :grammar_case)
         end
+
+        cases = def_cases if cases.empty?
+        cases.first.lemma
     end
 
-    # Verbs have different prepositions for different cases.
-    def get_prep_map_for_verb(verb)
-        @verb_case_maps[:default].dup.merge(@verb_case_maps[verb] || {})
-    end
-
-    # Verbs have different prepositions for different designations.
-    def get_prep_for_verb(verb, case_name)
-        @verb_case_maps[verb] ||= {}
-        @verb_case_maps[verb][case_name] || @verb_case_maps[:default][case_name]
-    end
-
-    def get_default_case_for_verb(verb)
-        @verb_default_case[verb] || @verb_default_case[:default]
-    end
+    # Conjugation Methods
 
     # Look up conjugation by referencing the lexeme.
     def conjugate(infinitive, state)
