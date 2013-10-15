@@ -95,26 +95,6 @@ module WordParser
                     :default_case_for_any_verb # Case when no preposition, for any verb. There will only be one.
                 end
                 db.associate([verb, preposition, case_name].compact, association_type)
-
-=begin
-                    if preposition
-                        db.associate([verb, preposition, case_name], :preposition_case)
-                    else
-                        db.associate([verb, case_name], :direct_case)
-                    end
-                else
-                    if preposition
-                        db.associate([preposition, case_name].compact, :default_preposition)
-                    else
-                        db.associate([case_name].compact, :default_case)
-                    end
-                end
-=end
-                    # Normally the verb and preposition are associated under the case, but defaults are special.
-#                    db.associate([:default, preposition].compact, case_name)
-#                else
-#                db.associate([verb, preposition, case_name].compact, :grammar_case)
-#                end
             end
         end
 
@@ -125,18 +105,6 @@ module WordParser
                 verb, preposition, case_name = words
                 preposition = nil if preposition == :nil
                 db.add_verb_preposition(verb, preposition, case_name)
-            end
-        end
-=end
-
-=begin
-        load_files(dict_dir, "preposition_verb.txt").each do |match, list|
-            list.each do |words|
-                raise "Specifier '#{words.inspect}' should be 3 words!" unless words.size == 3
-                verb, preposition, case_name = words
-                preposition = nil if preposition == :nil
-                db.add_verb_preposition(verb, preposition, case_name)
-                db.add_lexeme(preposition, :preposition) if preposition
             end
         end
 =end
