@@ -99,6 +99,24 @@ class Lexicon
 
     # Verb & Preposition Association Methods
 
+    def add_case_for_verb_preposition(case_name, verb = nil, preposition = nil)
+        add_lexeme(case_name,   [:grammar_case, :noun, :base])
+        add_lexeme(verb,        [:verb, :base]) if verb
+        add_lexeme(preposition, [:preposition, :base]) if preposition
+
+        association_type = if verb && preposition
+            :preposition_case # Verb/preposition case
+        elsif preposition
+            :default_preposition # preposition case, for any verb
+        elsif verb
+            :default_case_for_verb # Verb/no preposition case. Only one for each verb.
+        else
+            :default_case_for_any_verb # Case when no preposition, for any verb. There will only be one.
+        end
+
+        associate([verb, preposition, case_name].compact, association_type)
+    end
+
     def prep_for_verb(verb, case_name)
         prepositions     = get_type_from_sets_with([verb, case_name], :preposition_case, :preposition)
         def_prepositions = get_type_from_sets_with([      case_name], :default_preposition, :preposition)

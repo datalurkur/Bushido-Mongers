@@ -73,28 +73,12 @@ module WordParser
                     verb, case_name = words
                 when 3
                     verb, preposition, case_name = words
-                    db.add_lexeme(preposition, [:preposition, :base]) if preposition
                 else
                     raise "Specifier '#{words.inspect}' should be 2-3 words: <verb> <optional prep> <case>!"
                 end
 
-                if verb == :default
-                    verb = nil
-                else
-                    db.add_lexeme(verb,  [:verb, :base])
-                end
-                db.add_lexeme(case_name, [:grammar_case])
-
-                association_type = if verb && preposition
-                    :preposition_case # Verb/preposition case
-                elsif verb
-                    :default_case_for_verb # Verb/no preposition case
-                elsif preposition
-                    :default_preposition # preposition case,  for any verb
-                else
-                    :default_case_for_any_verb # Case when no preposition, for any verb. There will only be one.
-                end
-                db.associate([verb, preposition, case_name].compact, association_type)
+                verb = nil if verb == :default
+                db.add_case_for_verb_preposition(case_name, verb, preposition)
             end
         end
 
