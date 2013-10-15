@@ -62,7 +62,8 @@ module WordParser
 
         load_files(dict_dir, "associations_*.txt", /^.*associations_(.*).txt/).each do |pos, list|
             list.each do |words|
-                db.associate(words, pos)
+                words.each { |w| db.add_lexeme(w, [pos, :base])}
+                db.associate(words, :synonym)
             end
         end
 

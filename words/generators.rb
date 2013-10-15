@@ -180,7 +180,7 @@ module Words
             verb    = :have
             assign_possessor_to_list(args[:agent], list)
         when :help
-            list.map! { |c| [c, *associated_verbs(c)].join(" ") }
+            list.map! { |c| [c, *synonyms_of(c)].join(" ") }
             list.insert(0, "Basic commands:")
             flat_list = true
         when :inventory

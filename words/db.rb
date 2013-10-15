@@ -89,13 +89,9 @@ class Lexicon
         lexemes
     end
 
-    def associated_verbs(word)
-        associated_words_of(word, :verb)
+    def synonyms_of(word)
+        associated_words_of(word, :synonym)
     end
-
-#    def get_synonyms(word)
-#        get_associations_by_type(word, word.types.first)
-#    end
 
     # Verb & Preposition Association Methods
 

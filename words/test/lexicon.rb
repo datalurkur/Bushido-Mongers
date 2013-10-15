@@ -25,16 +25,16 @@ Log.debug(["Related adverbs:", related_adv])
 nouns = db.words_of_type(:noun)
 Log.debug(["Nouns", nouns.select { rand(10) == 0 }])
 
-Log.debug(db.associated_verbs(:inspect))
+Log.debug(db.synonyms(:inspect))
 
 japanese_names = db.words_of_type(:japanese)
 
 Log.debug("Japanese names: #{japanese_names.inspect}")
 Log.debug("Character name: #{japanese_names.rand}")
 
-see_synonyms = db.associated_verbs(:see)
+see_synonyms = db.synonyms(:see)
 
 Log.debug(see_synonyms.inspect)
 Log.debug(see_synonyms.rand)
 
-Log.debug(db.associated_verbs(:attack).inspect)
+Log.debug(db.synonyms(:attack).inspect)

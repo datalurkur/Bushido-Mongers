@@ -109,7 +109,7 @@ module Commands
             target = params[:target]
             if target
                 # Examine the agent in the event of :self, :me, etc.
-                if (core.words_db.associated_words_of(:self)+[:self]).include?(target)
+                if (core.words_db.associated_words_of(:self, :synonym)+[:self]).include?(target)
                     params[:target] = params[:agent]
                 else
                     Commands.find_object_for_key(core, params, :target)

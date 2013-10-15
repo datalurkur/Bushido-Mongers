@@ -163,9 +163,9 @@ module Words
 
             # Use an associated verb, if any exist.
             unless [:say].include?(verb)
-                associated_verbs = db.associated_verbs(verb.to_sym)
-                if associated_verbs && associated_verbs.size > 1
-                    verb = args[:verb] = associated_verbs.rand
+                synonyms = db.synonyms_of(verb.to_sym)
+                if synonyms && synonyms.size > 1
+                    verb = args[:verb] = synonyms.rand
                 end
             end
 
