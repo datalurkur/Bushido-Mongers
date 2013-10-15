@@ -312,16 +312,13 @@ That is the person whose car I saw.
 
     class PrepositionalPhrase < PTInternalNode
         private
-        def new_prep_noun_phrase(db, type, args, lookup_type = type)
-            new_phrase(db, NounPhrase.new(db, args[type]), lookup_type, args)
-        end
-
-        def new_phrase(db, phrase, case_name, args)
-            # Determine preposition based on verb lookup (and dict/prepositions.txt).
-            if prep = db.prep_for_verb(args[:verb], case_name)
-                return Preposition.new(prep), phrase
+        def new_prep_noun_phrase(db, case_name, args, case_lookup = case_name)
+            np = NounPhrase.new(db, args[case_name])
+            # Determine preposition based on the verb and the case.
+            if prep = db.prep_for_verb(args[:verb], case_lookup)
+                return Preposition.new(prep), np
             else
-                return phrase
+                return np
             end
         end
     end
@@ -345,27 +342,27 @@ That is the person whose car I saw.
     class AdverbPhrase < PrepositionalPhrase
         USED_ARGS = [:target, :tool, :destination, :receiver, :components, :success, :statement, :location, :origin]
 
-        # The type is the part of the args being used to generate an adverb phrase, and also the third entry in dict/preposition_verb.txt...
-        def initialize(db, type, args)
+        # The case_name is the part of the args being used to generate an adverb phrase, and also the third entry in dict/preposition_verb.txt...
+        def initialize(db, case_name, args)
             handled = false
 
             # Based on noun and argument information, decide which preposition to use, if any.
-            case type
+            case case_name
             # TODO - destination preposition s.b. 'into' when moving to indoor locations
             when :target
                 if args[:state].voice == :passive
                     # We switch subject & target in passive, so look up how to treat the subject instead.
-                    super(new_prep_noun_phrase(db, type, args, :subject))
+                    super(new_prep_noun_phrase(db, case_name, args, :subject))
                 else
-                    super(new_prep_noun_phrase(db, type, args))
+                    super(new_prep_noun_phrase(db, case_name, args))
                 end
                 handled = true
             when :tool, :destination, :location, :origin, :components
-                args[type] = Descriptor.set_unique(args[type]) unless type == :components
-                super(new_prep_noun_phrase(db, type, args))
+                args[case_name] = Descriptor.set_unique(args[case_name]) unless case_name == :components
+                super(new_prep_noun_phrase(db, case_name, args))
                 handled = true
             when :receiver
-                super(new_prep_noun_phrase(db, type, args))
+                super(new_prep_noun_phrase(db, case_name, args))
                 # In Modern English, an indirect object is often expressed
                 # with a prepositional phrase of "to" or "for". If there
                 # is a direct object, the indirect object can be expressed
@@ -378,7 +375,7 @@ That is the person whose car I saw.
                 # Eventually this will be more complex, and describe either
                 # how the blow was evaded (parry, blocked, hit armor, etc)
                 # or how and where the blow hit.
-                if args[type]
+                if args[case_name]
                     super(:",", :hitting)
                 else
                     super(:",", :missing)
@@ -395,7 +392,7 @@ That is the person whose car I saw.
             end
 
             # We don't want to generate this again for other verbs and so forth.
-            args.delete(type) if handled
+            args.delete(case_name) if handled
         end
 
         def self.new_for_args(db, args)
