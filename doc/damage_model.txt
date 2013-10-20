@@ -1,0 +1,17 @@
+Modeling Complex Damage
+1) Damage should be scalable and translatable (flat damage reduction and % damage reduction)
+2) Damage sources should be allowed to be dimished sequentially (damage reductions should stack in complex ways)
+3) Damage should result in complex behavior (destruction of damage reducers out-of-order, for example)
+    a) Bones breaking without skin being shorn off
+    b) Damage penetrating skin and continuing to do damage to muscle as skin sloughs off
+    c) Extreme temperatures penetrating the effects of an ironskin potion to freeze the skin
+
+Damage Reducers / Absorbers
+1) Each layer in a composition should provide a damage absorber model, which reduces damage to sub-layers possibly at the expense of is own integrity
+2) Layers should be linkable to an object, upon whose destruction the damage absorber no longer applies
+3) Layer order should be respected
+4) Layers should respond to complex triggers (ironskin potion might be negated by an acid potion, or might just wear off after a period of time)
+
+Composition Creation
+1) Compositions will need to allow the specification of layer order
+2) Compositions should respect layer order during construction and subsequent calculations that involve layering
