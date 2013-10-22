@@ -26,6 +26,8 @@ module Commands
 
         # Requires standard param values: agent, command, and the given key.
         def find_object_for_key(core, params, key, object_type = nil, search_locations = [:all], optional = [])
+            search_locations = Array(search_locations)
+            optional         = Array(optional)
             if params[key].nil?
                 Log.warning("Finding object for nil parameter #{key.inspect}")
                 return
@@ -426,7 +428,7 @@ module Commands
 
     module Ask
         def self.stage(core, params)
-            Commands.find_object_for_key(core, params, :receiver, nil, :position)
+            Commands.find_object_for_key(core, params, :receiver, nil, [:position])
         end
 
         def self.do(core, params)
@@ -468,13 +470,13 @@ module Commands
             # If the player has a goal of what they want to make in mind, find the recipes for that thing and then see if the rest of the information given by the player is enough to establish which recipe they want to use
             Log.debug("Target provided - #{params[:target].inspect}")
             # Verify that the target is :made
-            raise(NoMatchError, "#{params[:target].inspect} cannot be made.") unless core.db.is_type?(params[:target], :made)
+            raise(NoMatchError, "#{params[:target]} cannot be made.") unless core.db.is_type?(params[:target], :made)
 
             # Find a recipe (or throw an exception if there's a problem)
             params[:recipe] = find_recipe(core, params)
 
             # Now we have to check that the player actually has access to all of the stuff in the params
-            # TODO - Verify that find_object functionality can deal with abstract object types like :metal
+            # TODO - find_object functionality can deal with abstract object types like :metal
             Commands.find_object_for_key(core, params, :location, nil, [:position], [:tool])
             Commands.find_object_for_key(core, params, :tool,     nil, [:inventory])
 
@@ -565,7 +567,7 @@ module Commands
             if params[:components]
                 # For each component provided, get a list of world objects that match
                 Log.debug("Resolving recipe components")
-                params[:components].each do |component|
+                Array(params[:components]).each do |component|
                     # Find all the stuff that matches this and get the corresponding types
                     component_map[component] = Commands.find_all_objects(params[:agent], nil, component, [:inventory])
                     raise(NoMatchError, "Unable to find '#{component}'") if component_map[component].empty?

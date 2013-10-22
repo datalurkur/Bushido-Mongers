@@ -9,6 +9,7 @@ module Perception
 
     # Explode inventory into appropriate categories.
     def explode_locations(locations)
+        locations = Array(locations)
         if i = locations.index(:all)
             locations.insert(i, *PERCEIVABLE_LOCATIONS)
             locations.delete(:all)
