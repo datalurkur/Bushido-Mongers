@@ -7,7 +7,7 @@ extension_of body biped {
     symmetric {
         object_type leg;
         container_class external;
-        symmetry_type balanced_axial;
+        symmetries median;
         count 2;
     }
 }
@@ -16,7 +16,7 @@ extension_of body quadriped {
     symmetric {
         object_type leg;
         container_class external;
-        symmetry_type balanced_axial;
+        symmetries median frontal;
         count 4;
     }
 }
@@ -25,7 +25,7 @@ extension_of body octiped {
     symmetric {
         object_type leg;
         container_class external;
-        symmetry_type balanced_axial;
+        symmetries median frontal axial;
         count 8;
     }
 }

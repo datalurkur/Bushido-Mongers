@@ -31,8 +31,7 @@ module Composition
 
             instance.initial_composure(params)
 
-            called = params[:called] || instance.properties[:called]
-            instance.set_called(called) if called
+            instance.set_called(params[:called]) if params[:called]
         end
 
         def at_destruction(instance, destroyer, vaporize)
@@ -59,13 +58,14 @@ module Composition
                     }
                 end
             end
-            complex_parts = type_info[:symmetric]
-            complex_parts += type_info[:morphic].select { |p| p[:morphism_classes].include?(morphism) } if morphism
-            complex_parts.each do |part|
+            symmetric_parts = type_info[:symmetric]
+            morphic_parts   = type_info[:morphic].select { |p| p[:morphism_classes].include?(morphism) }
+            (symmetric_parts + morphic_parts).each do |part|
                 typical_parts << {
-                    :type  => part[:object_type],
-                    :count => part[:count] || 1,
-                    :klass => part[:container_class]
+                    :type       => part[:object_type],
+                    :count      => part[:count] || 1,
+                    :klass      => part[:container_class],
+                    :symmetries => part[:symmetries]
                 }
             end
             typical_parts
@@ -127,12 +127,31 @@ module Composition
                 Log.error("No container class #{part[:klass].inspect} found for #{monicker}")
                 next
             end
+
+            Log.debug("Creating #{part.inspect}")
+
+            if part[:symmetries]
+                symmetries = []
+                part[:symmetries].each do |symmetry|
+                    Log.error("No symmetry class #{symmetry} found for #{monicker}") unless @core.db.types_of(:symmetry).include?(symmetry)
+                    symmetries << @core.db.info_for(symmetry).merge(:count => 0)
+                end
+            end
+
             part[:count].times do |i|
-                # FIXME - Actually use the symmetry class to assign names here
+                symmetry_positions = []
+                if symmetries
+                    symmetries.each do |info|
+                        symmetry_positions << info[:portions][info[:count]]
+                        info[:count] += 1
+                    end
+                end
+
                 @core.create(part[:type], params.merge(
-                    :position      => self,
-                    :position_type => part[:klass],
-                    :randomize     => true
+                    :position           => self,
+                    :position_type      => part[:klass],
+                    :symmetry_positions => symmetry_positions,
+                    :randomize          => true
                 ))
             end
         end

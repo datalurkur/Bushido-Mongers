@@ -44,6 +44,7 @@ module Commands
                             search_locations
                           )
             Log.debug("Found #{params[key].monicker} for #{key}")
+            Log.debug(params[key], 9)
             verify_params(params, [key], optional)
         end
 
@@ -89,7 +90,6 @@ module Commands
     module Inventory
         def self.stage(core, params)
             raise(MissingObjectExtensionError, "Must have an inventory!") unless params[:agent].uses?(Equipment)
-            #params[:list] = params[:agent]
             [:grasped, :worn].each do |location|
                 params[location] = params[:agent].objects_in_location(location)
             end

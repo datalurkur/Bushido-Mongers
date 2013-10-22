@@ -5,6 +5,8 @@ module Position
     class << self
         def at_creation(instance, params)
             instance.set_position(params[:position], params[:position_type] || :internal) if params[:position]
+
+            instance.properties[:adjectives] += params[:symmetry_positions] if params[:symmetry_positions]
         end
 
         def at_destruction(instance, destroyer, vaporize)

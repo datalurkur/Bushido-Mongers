@@ -14,13 +14,13 @@ abstract body,basic_attributes,biped,can_wear humanoid {
     symmetric {
         object_type arm;
         container_class external;
-        symmetry_type balanced_axial;
+        symmetries median;
         count 2;
     }
     symmetric {
         object_type kidney;
         container_class internal;
-        symmetry_type balanced_axial;
+        symmetries median;
         count 2;
     }
     morphic {
@@ -33,14 +33,14 @@ abstract body,basic_attributes,biped,can_wear humanoid {
         container_class external;
         object_type testicle;
         count 2;
-        symmetry_type balanced_axial;
+        symmetries median;
     }
     morphic {
         morphism_classes female hermaphrodite;
         container_class external;
         object_type breast;
         count 2;
-        symmetry_type balanced_axial;
+        symmetries median;
     }
 }
 
@@ -86,7 +86,7 @@ abstract body,basic_attributes kraken {
     symmetric {
         object_type tentacle;
         container_class external;
-        symmetry_type balanced_axial;
+        /* symmetries ?; */
         count 8;
     }
 }
@@ -122,7 +122,7 @@ abstract body,basic_attributes,biped,can_wear tortoise {
     symmetric {
         object_type arm;
         container_class external;
-        symmetry_type balanced_axial;
+        symmetries median;
         count 2;
     }
 }

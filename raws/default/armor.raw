@@ -1,138 +1,155 @@
-made,armor head_armor {
+abstract made,armor head_armor {
     slot head;
     typical_size small;
+}
 
+head_armor hood {
     recipes {
         technique craft;
         components fabric;
-        called hood;
-    }
-
-    recipes {
-        technique craft;
-        components leather;
-        called cap;
-    }
-
-    recipes {
-        technique forge;
-        components metal;
-        called helm;
     }
 }
 
-made,armor body_armor {
+head_armor cap {
+    recipes {
+        technique craft;
+        components leather;
+    }
+}
+
+head_armor helm {
+    recipes {
+        technique forge;
+        components metal;
+    }
+}
+
+abstract made,armor body_armor {
     /* FIXME - Make this torso or something */
     slot humanoid;
     typical_size small;
+}
 
+body_armor shirt {
     recipes {
         technique craft;
         components fabric fabric fabric;
-        called shirt;
     }
+}
 
+body_armor cuirass {
     recipes {
         technique craft;
         components leather leather leather;
-        called cuirass;
     }
+}
 
+body_armor breastplate {
     recipes {
         technique forge;
         components metal metal metal;
-        called breastplate;
     }
 }
 
-made,armor arm_armor {
+abstract made,armor arm_armor {
     slot arm;
     typical_size small;
+}
 
+arm_armor sleeves {
     recipes {
         technique craft;
         components fabric fabric;
-        called sleeves;
     }
 
     recipes {
         technique craft;
         components leather leather;
-        called sleeves;
-    }
-
-    recipes {
-        technique forge;
-        components metal metal;
-        called pauldrons;
     }
 }
 
-made,armor hand_armor {
+arm_armor pauldrons {
+    recipes {
+        technique forge;
+        components metal metal;
+    }
+}
+
+abstract made,armor hand_armor {
     slot hand;
     typical_size tiny;
+}
 
+hand_armor gloves {
     recipes {
         technique craft;
         components fabric;
-        called gloves;
     }
 
     recipes {
         technique craft;
         components leather;
-        called gloves;
-    }
-
-    recipes {
-        technique forge;
-        components metal;
-        called gauntlets;
     }
 }
 
-made,armor leg_armor {
+hand_armor gauntlets {
+    recipes {
+        technique forge;
+        components metal;
+    }
+}
+
+abstract made,armor leg_armor {
     slot leg;
     typical_size small;
+}
 
+leg_armor pants {
     recipes {
         technique craft;
         components fabric fabric;
-        called pants;
-    }
-
-    recipes {
-        technique craft;
-        components leather leather;
-        called leggings;
-    }
-
-    recipes {
-        technique forge;
-        components metal metal;
-        called greaves;
     }
 }
 
-made,armor foot_armor {
+leg_armor leggings {
+    recipes {
+        technique craft;
+        components leather leather;
+    }
+}
+
+leg_armor greaves {
+    recipes {
+        technique forge;
+        components metal metal;
+    }
+}
+
+abstract made,armor foot_armor {
     slot foot;
     typical_size tiny;
+}
 
+foot_armor shoe {
     recipes {
         technique craft;
         components fabric;
-        called shoes;
     }
 
     recipes {
         technique craft;
         components leather;
-        called boots;
+    }
+}
+
+foot_armor boot {
+    recipes {
+        technique craft;
+        components leather leather;
     }
 
     recipes {
         technique forge;
         components metal;
-        called boots;
     }
 }

@@ -1,13 +1,22 @@
-abstract symmetry_type {
-    has_many string primary_directions;
-    has_many optional string secondary_directions;
-    has_many optional string tertiary_directions;
+abstract symmetry {
+    has_many sym portions;
 }
 
-abstract symmetry_type balanced_axial {
-    primary_directions left right;
-    secondary_directions front rear;
-    tertiary_directions interior anterior;
+/* TODO: For humans a coronal plane is vertical and a transverse plane is horizontal, but for (embryos and) quadrupeds a coronal plane is horizontal and a transverse plane is vertical. */
+
+/* sagittal or median plane (Y-Z), also superior-inferior */
+abstract symmetry median {
+    portions left right;
+}
+
+/* coronal or frontal plane (Y-X), also ventral-dorsal */
+abstract symmetry frontal {
+    portions anterior posterior;
+}
+
+/* transverse or horizonal plane (X-Z), also cranial-caudal */
+abstract symmetry axial {
+    portions upper lower;
 }
 
 abstract object,effect_target composition {
@@ -19,17 +28,16 @@ abstract object,effect_target composition {
         int count;
         sym container_class;
         sym object_type;
-        sym symmetry_type;
+        many sym symmetries;
     }
 
     has_many optional map morphic {
-        many sym morphism_classes;
-
+        int count;
         sym container_class;
         sym object_type;
+        many sym symmetries;
 
-        int count;
-        sym symmetry_type;
+        many sym morphism_classes;
     }
 
     uses composition;
@@ -55,7 +63,6 @@ abstract composition made {
         sym technique;
         many sym components;
         int duplicates;
-        string called;
     }
 
     has sym quality;
