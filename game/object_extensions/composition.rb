@@ -128,7 +128,7 @@ module Composition
                 next
             end
 
-            Log.debug("Creating #{part.inspect}")
+            Log.debug("Creating #{part.inspect}", 7)
 
             if part[:symmetries]
                 symmetries = []
