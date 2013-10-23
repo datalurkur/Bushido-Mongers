@@ -24,9 +24,9 @@ AdverbPhrase
 TODO:
 There needs to be some way of representing similar syntactic function - might help for coordinating conjunction determination.
 Make coordinators not suck.
-Start fleshing out auxiliaries.
+Flesh out auxiliaries - right now we just have the basic time tense markers.
 http://en.wikipedia.org/wiki/Phraseme
-Plurals.
+Plurals - lexemes in, need more structural support.
 Refactoring preposition associations.
 Negatives of nouns, negatives of verbs, negatives of adjectives.
 http://en.wikipedia.org/wiki/Nominative_absolute
@@ -588,6 +588,7 @@ That is the person whose car I saw.
             # Look in the properties
             if descriptor_hash[:properties]
                 adjectives += Array(descriptor_hash[:properties][:adjectives])
+                adjectives += Array(descriptor_hash[:properties][:quality]) if descriptor_hash[:properties][:quality]
             end
             adjectives
         end

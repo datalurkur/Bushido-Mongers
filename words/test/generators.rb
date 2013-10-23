@@ -93,6 +93,13 @@ kenji_leg = observer.get_contents(:external).find { |bp| bp.get_type == :leg }
 observer.component_destroyed(kenji_leg, :external, observer)
 Log.debug($core.words_db.describe_body(Descriptor.describe(observer, observer)))
 
+#args = {:agent => agent}
+#Log.debug($core.words_db.describe_inventory(args))
+
+kenji_arm = observer.get_contents(:external).find { |bp| bp.get_type == :arm }
+Log.debug(kenji_arm)
+Log.debug($core.words_db.describe_composition(Descriptor.describe(kenji_arm, observer)))
+
 target = $core.create(:goat, {:position => $core.create(FakeRoom), :name => "Billy Goat Balrog"})
 target = Descriptor.describe(target, observer)
 Log.debug($core.words_db.describe_body(target))

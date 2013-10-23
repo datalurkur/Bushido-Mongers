@@ -6,16 +6,17 @@ default using tool
 default from components
 default by subject
 default in location
+default at location
 default from origin
 move destination
 travel destination
 go destination
 walk destination
 leave destination
-look at target
 leave for destination
 drop to destination
-throw at destination
+look at target
+throw at target
 attach to target
 attach to subject
 wear on subject

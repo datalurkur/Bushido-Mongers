@@ -1,4 +1,4 @@
-# Generators return strings. Creators return some form of ParseTree or PTNode.
+    # Generators return strings. Creators return some form of ParseTree or PTNode.
 
 # TODO - add info on acceptable/used arguments to generators
 # TODO - distinguish between adjunct and argument phrases
@@ -36,21 +36,21 @@ module Words
             elsif target[:is_type].include?(:object)
                 return gen_sentence(args)
             else
-                return "I don't know how to describe a #{target[:type].inspect}, bother zphobic to fix this"
+                return "I don't know how to describe a #{target[:type].inspect}"
             end
         when :move
             return describe_room(args)
         when :attack, :get, :stash, :drop, :hide, :unhide, :equip, :unequip, :open, :close, :consume
             return gen_sentence(args)
-        when :say, :craft
+        when :say, :craft, :ask
             return gen_sentence(args.merge(:verb => args[:command]))
         when :stats, :help
             return describe_list(args)
         when :inventory
             return describe_inventory(args)
         else
-            Log.debug(["UNKNOWN COMMAND", args.keys])
-            return "I don't know how to express the results of a(n) #{args[:command]}, pester zphobic to work on this"
+            Log.debug(["UNKNOWN COMMAND", args[:command], args.keys])
+            return gen_sentence(args)
         end
     end
 
@@ -94,18 +94,6 @@ module Words
         else
             gen_sentence(quanta_args(args))
         end
-    end
-
-    # FIXME: Currently only does declarative.
-    # Imperative is just implied-receiver, no subject.
-    # Questions follow subject-auxiliary inversion
-    # http://en.wikipedia.org/wiki/Subject%E2%80%93auxiliary_inversion
-    def gen_sentence(args={})
-        generate_clause(Sentence, args)
-    end
-
-    def generate_clause(clause_class, args={})
-        clause_class.new(self, args).to_s
     end
 
     def describe_attack(args = {})
@@ -170,7 +158,7 @@ module Words
     end
 
     def describe_list(args)
-        Log.debug(args[:list])
+#        Log.debug(args[:list])
         list = args[:list].map { |entry| Descriptor.describe(entry, args[:observer]) }
 
         flat_list = false
@@ -183,7 +171,7 @@ module Words
             list.map! { |c| [c, *synonyms_of(c)].join(" ") }
             list.insert(0, "Basic commands:")
             flat_list = true
-        when :inventory
+        when :inventory, :composition
             verb    = args[:verb]
             assign_possessor_to_list(args[:agent], list)
         else
@@ -199,7 +187,8 @@ module Words
                     :observer => args[:observer],
                     :subject  => args[:agent],
                     :verb     => verb,
-                    :target   => entry
+                    :target   => entry,
+                    :state    => args[:state] || State.new
                 )
             end
         end
@@ -214,7 +203,7 @@ module Words
             composition[:definite] = true
             return gen_copula(
                 :subject    => composition,
-                :adjective  => :closed
+                :complement => :closed
             )
         end
 
@@ -228,7 +217,7 @@ module Words
             )
         else
             composition[:unique] = true
-            gen_sentence(
+            gen_copula(
                 :subject  => composition,
                 :verb     => composition_verbs[comp_type],
                 :target   => (list && !list.empty? ? list : Noun.new(:nothing))
@@ -237,11 +226,12 @@ module Words
     end
 
     def describe_object(obj)
-        obj[:complement] = NounPhrase.new(self, obj[:type])
-        gen_copula(obj)
+        gen_copula(obj.merge(:complement => NounPhrase.new(obj[:db], obj)))
     end
 
     def describe_inventory(args)
+        args[:command] = :inventory
+
         composition_verbs = {
             :external => :attach,
             :worn     => :wear,
@@ -251,15 +241,15 @@ module Words
         descriptions = []
         [:grasped, :worn].each do |location|
             list_args = args.dup
-            list_args[:list] = args[location]
+            list_args[:list] = args[location] || []
             list_args[:verb] = composition_verbs[location]
             descriptions << describe_list(list_args)
         end
         descriptions
     end
 
-    def describe_composition(composition)
-        sentences = [describe_object(composition)]
+    def describe_composition(args)
+        args[:command] = :composition
 
         composition_verbs = {
             :external => :attach,
@@ -267,6 +257,20 @@ module Words
             :grasped  => :hold
         }
 
+        #args[:state] = State.new(:progressive)
+
+        descriptions = [describe_object(args)]
+        [:external, :grasped, :worn].each do |location|
+            list_args = args.dup
+            list_args[:list] = args[:container_contents][location] || []
+#            list_args[:list] = args[location] || []
+            list_args[:subject] = :it
+            list_args[:verb] = composition_verbs[location]
+            descriptions << describe_list(list_args)
+        end
+        descriptions
+
+=begin
         composition_verbs.keys.each do |comp_type|
             list = composition[:container_contents][comp_type]
             if list && !list.empty?
@@ -288,8 +292,8 @@ module Words
                 end
             end
         end
-
         sentences.flatten.join(" ")
+=end
     end
 
     def describe_whole_composition(composition)
@@ -378,39 +382,6 @@ module Words
 =end
 
         sentences.flatten.join(" ")
-    end
-
-    # identity - noun copula definite-noun - The cat is Garfield; the cat is my only pet.
-    # class membership - noun copula noun - the cat is a feline.
-    # predication - noun copula adjective
-    # auxiliary - noun copula verb - The cat is sleeping (progressive); The cat is bitten by the dog (passive).
-    # existence - there copula noun. "There is a cat." => "There exists a cat."?
-    # location - noun copula place-phrase
-    def gen_copula(args = {})
-        create_copula(args).to_s.sentence
-    end
-
-    def create_copula(args)
-        args[:subject] = args[:subject] || args[:agent] || :it
-
-        if verb = args[:verb] || args[:action] || args[:command]
-            args[:complement] = verb unless args[:complement]
-        end
-
-        args[:verb] = :is
-
-        # If :complement is defined, it's assumed to be the only one.
-        if args[:complement]
-            args[:complements] = [Adjective.new(args[:complement])]
-        else
-            # Or, you know, some subset of these.
-            args[:complements] = Adjective.new_for_descriptor(args[:subject]) +
-                                 Array(args[:complements]) +
-                                 Array(args[:adjectives]) +
-                                 Array(args[:keywords])
-        end
-
-        IndependentClause.new(self, args)
     end
 
     def describe_room(args = {})
