@@ -31,11 +31,14 @@ Log.debug(["Number of types of objects:", $core.db.instantiable_types_of(:object
 # Basic item creation tests
 test_item_type = :head_armor
 Log.debug("Creating a #{test_item_type}")
-test_item_args = {:creator => $core.create(:iron), :relative_size => :medium, :quality => :fine, :components => [$core.create(:iron)], :position => $core.create(FakeRoom)}
+test_item_args = {:creator => $core.create(:iron), :relative_size => :medium, :quality => :fine, :components => [$core.create(:iron)], :position => $core.create(FakeRoom), :randomize => true}
 test_item = $core.create(test_item_type, test_item_args)
 Log.debug("Test item is a metal? #{test_item.is_type?(:metal)}")
 Log.debug("Test item is made? #{test_item.is_type?(:made)}")
 Log.debug("Test item is a head armor? #{test_item.is_type?(:hear_armor)}")
+
+Log.debug("Test item size? #{test_item.size}")
+Log.debug("Test item quality? #{test_item.properties[:quality]}")
 
 # NPC tests
 Log.debug(["Types of NPCs:", $core.db.instantiable_types_of(:archetype)])
