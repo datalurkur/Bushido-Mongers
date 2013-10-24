@@ -5,7 +5,7 @@ module Position
     class << self
         def at_creation(instance, params)
             instance.set_position(params[:position], params[:position_type] || :internal) if params[:position]
-
+            instance.set_symmetry(params[:symmetry_positions]) if params[:symmetry_positions]
             instance.properties[:adjectives] += params[:symmetry_positions] if params[:symmetry_positions]
         end
 
@@ -135,6 +135,14 @@ module Position
         o_p.remove_object(self, o_t) if o_p
         n_p.add_object(self, n_t) if n_p
     end
+
+    def set_symmetry(positions)
+        self.properties[:adjectives] ||= []
+        self.properties[:adjectives]  += positions
+        @symmetry_positions            = positions # For inheritance only.
+    end
+
+    def get_symmetry; @symmetry_positions; end
 
     def safe_position
         raise UnexpectedBehaviorError, "#{self.monicker} (#{self.get_type}) has no position!" unless has_position?

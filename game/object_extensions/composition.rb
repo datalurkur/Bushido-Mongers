@@ -19,6 +19,7 @@ module Composition
         end
 
         def at_creation(instance, params)
+            raise(ObjectExtensionCollision, "Composition requires Position") if !instance.uses?(Position)
             raise(ObjectExtensionCollision, "Composition and Atomic are not compatible object extensions") if instance.uses?(Atomic)
 
             instance.size = if params[:size]
@@ -139,7 +140,7 @@ module Composition
             end
 
             part[:count].times do |i|
-                symmetry_positions = []
+                symmetry_positions = self.get_symmetry || []
                 if symmetries
                     symmetries.each do |info|
                         symmetry_positions << info[:portions][info[:count]]
