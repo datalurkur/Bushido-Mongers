@@ -2,7 +2,6 @@ require './game/managers/manager'
 require './util/packer'
 
 # TODO
-#   - Listen for ticks and automatically spawn new population members
 #   - Listen for death messages and adjust rarity accordingly
 #   - Listen for move messages and disable spawns that have players in them (no fun in spawning things directly on top of players)
 #   - Make the population manager save-/load-friendly
@@ -54,7 +53,7 @@ class PopulationManager < Manager
             unit_moves(unit, nil, message.location)
         when :tick
             Log.info("#{self.class} spawning new population members", 4)
-            Log.warning("IMPLEMENT ME")
+            spawn
         when :unit_renamed
             if message.params[:old_name]
                 old_name = hash_name(message.old_name)
@@ -102,6 +101,27 @@ class PopulationManager < Manager
         (@disabled_spawns << location.uid) unless @disabled_spawns.include?(location.uid)
     end
 
+    def spawn
+        @groups.each do |type, hash|
+            unless hash[:rarity] == :extinct || hash[:rarity] == :singular
+                if Rarity.roll(hash[:rarity])
+                    # TODO - codify how creatures reproduce
+                    # TODO - have an off-screen/unloaded population that periodically rotates through
+                    # FIXME - magic numberrr
+                    (hash[:populations].size * 1.0).floor.times do |i|
+                        spawn_location_types = spawns_for(type)
+                        position   = @core.world.get_random_location(spawn_location_types)
+                        position ||= @core.world.get_random_location
+
+                        Log.debug("Generating #{type} in #{position.monicker}")
+
+                        # FIXME - borrow creation arguments from a pre-existing population member
+                        @core.create(type, :randomize => true, :position => position)
+                    end
+                end
+            end
+        end
+    end
 
     private
     def load_from_raws

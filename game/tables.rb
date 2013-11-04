@@ -99,6 +99,7 @@ end
 
 module Quality
     def self.raw_values; [
+        [:broken,      0.0],
         [:atrocious,   0.1],
         [:shoddy,      0.2],
         [:poor,        0.35],
@@ -116,11 +117,13 @@ module Quality
 end
 
 module Chance
+    # These numbers describe a Kernel.rand, and standard deviations from it.
     def self.raw_values; [
         [:unhead_of,  0.00001],
         [:rare,       0.001],
         [:unusual,    0.022],
         [:uncommon,   0.158],
+        [:unlikely,   0.3],
         [:coin_toss,  0.5],
         [:common,     0.7],
         [:likely,     0.842],
@@ -211,8 +214,8 @@ module GenericSkill
     def self.raw_values; [
         [:no,           0.0],
         [:laughable,    0.1],
-        [:novice,       0.2],
-        [:passable,     0.3], # initiate
+        [:novice,       0.2], # initiate
+        [:passable,     0.3],
         [:capable,      0.4], # apprentice
         [:competent,    0.5],
         [:proficient,   0.6], # journeyman
