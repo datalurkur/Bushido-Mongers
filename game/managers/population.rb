@@ -118,6 +118,9 @@ class PopulationManager < Manager
                             position   = @core.world.get_random_location(spawn_location_types)
                             position ||= @core.world.get_random_location
                             break unless @disable_spawns.include?(position.uid)
+                            count    ||= 0
+                            count     += 1
+                            break if count > 100
                         end
 
                         Log.debug("Generating #{type} in #{position.monicker}")
