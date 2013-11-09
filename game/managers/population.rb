@@ -105,13 +105,20 @@ class PopulationManager < Manager
         @groups.each do |type, hash|
             unless hash[:rarity] == :extinct || hash[:rarity] == :singular
                 if Rarity.roll(hash[:rarity])
-                    # TODO - codify how creatures reproduce
+                    # TODO - raws should codify how creatures reproduce
+                    # TODO - Have reproduction be the deciding factor for at least some species (civilized),
+                    # and follow per-pregnancy ticks, rather than a batch form like this
                     # TODO - have an off-screen/unloaded population that periodically rotates through
-                    # FIXME - magic numberrr
-                    (hash[:populations].size * 1.0).floor.times do |i|
+                    # FIXME - magic numberrrs
+                    (hash[:populations].size * 0.25).floor.times do |i|
+                        next if hash[:populations].size > 100
                         spawn_location_types = spawns_for(type)
-                        position   = @core.world.get_random_location(spawn_location_types)
-                        position ||= @core.world.get_random_location
+
+                        loop do
+                            position   = @core.world.get_random_location(spawn_location_types)
+                            position ||= @core.world.get_random_location
+                            break unless @disable_spawns.include?(position.uid)
+                        end
 
                         Log.debug("Generating #{type} in #{position.monicker}")
 
