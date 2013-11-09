@@ -144,7 +144,7 @@ class << self
 end
 end
 
-class ZoneLineWorldFactory < WorldFactory
+class FantasmTestWorldFactory < WorldFactory
 class << self
     def generate(core, config = {}, zone_types = [])
         set_defaults(config)

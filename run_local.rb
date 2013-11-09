@@ -13,6 +13,23 @@ $client_config = {
     :character_name  => "test_character"
 }
 
+# FIXME: Used as a stand-in until we have proper game_args being passed into GameCore.
+if $TestWorldFactory
+    require './test/fake'
+    class DefaultCore
+        private
+        def setup_world(args)
+            Log.debug("Creating world")
+            @world = $TestWorldFactory.generate(self, args)
+
+            Log.debug("Populating world with NPCs and items")
+            @world.populate
+        end
+    end
+end
+
+#MeteredMethods.enable
+
 Log.setup("Main", "local")
 
 $server = GameServer.new("test", Time.now.to_i, "latest.repro")

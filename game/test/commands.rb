@@ -3,17 +3,7 @@ require './test/fake'
 
 Log.setup("Main", "command_test")
 
-# FIXME: Used as a stand-in until we have proper game_args being passed into GameCore.
-class DefaultCore
-    private
-    def setup_world(args)
-        Log.debug("Creating world")
-        @world = ZoneLineWorldFactory.generate(self, args)
-
-        Log.debug("Populating world with NPCs and items")
-        @world.populate
-    end
-end
+$TestWorldFactory = FantasmTestWorldFactory
 
 require './run_local'
 
@@ -34,8 +24,17 @@ $client.stack.specify_response_for(:begin_playing) do |stack, message|
     cmd_and_wait(stack, "get rock")
     cmd_and_wait(stack, "look self")
     cmd_and_wait(stack, "drop rock")
-    $client.release_control
     $client.stop
+end
+
+# FIXME - doesn't work
+$client.stack.specify_response_for(:report) do |stack, message|
+    if message.game_event
+        Log.debug("Game event!")
+        $client.send_to_client(Message.new(:report, {:field => :game_event, :contents => message.details}))
+    else
+        Log.debug(["Message", message])
+    end
 end
 
 $client.start
