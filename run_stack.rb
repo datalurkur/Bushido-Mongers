@@ -1,19 +1,20 @@
 require './bushido'
 require './util/traps'
-require './util/timer'
+require './util/cfg_reader'
 
-$config = {
+config = CFGReader.read("test")
+$client_config = {
     :server_hostname => "localhost",
-    :server_port     => DEFAULT_LISTEN_PORT,
+    :server_port     => config[:listen_port],
     :username        => "test_user",
     :password        => "stack_pass",
     :lobby_name      => "test_lobby",
     :lobby_password  => "test",
-    :character_name  => "test character"
+    :character_name  => "test_character"
 }
 
 Log.setup("Main", "stack")
-$client = StackClient.new($config)
+$client = StackClient.new($client_config)
 
 trap_signals do
     $client.stop if $client
@@ -21,36 +22,33 @@ trap_signals do
 end
 
 $client.stack.set_state(:join_lobby)
-$client.stack.specify_response_for(:choose_from_list, {:field => :server_menu}) do |stack, message|
+$client.stack.specify_response_for(:choose_from_list, :field => :server_menu) do |stack, message|
     if stack.get_state == :join_lobby
-        puts "Attempting to join lobby #{$config[:lobby_name]}/#{$config[:lobby_password]}"
+        puts "Attempting to join lobby #{$client_config[:lobby_name]}/#{$client_config[:lobby_password]}"
         stack.put_response(:join_lobby)
     else
-        puts "Attempting to create lobby #{$config[:lobby_name]}/#{$config[:lobby_password]}"
+        puts "Attempting to create lobby #{$client_config[:lobby_name]}/#{$client_config[:lobby_password]}"
         stack.put_response(:create_lobby)
     end
 end
-$client.stack.specify_response_for(:choose_from_list, {:field => :lobby_name}) do |stack, message|
-    stack.put_response(message.choices.rand)
+$client.stack.specify_response_for(:text_field, :field => :lobby_name) do |stack, message|
+    stack.put_response($client_config[:lobby_name])
 end
-$client.stack.specify_response_for(:text_field, {:field => :lobby_name}) do |stack, message|
-    stack.put_response($config[:lobby_name])
-end
-$client.stack.specify_response_for(:text_field, {:field => :lobby_password}) do |stack, message|
-    stack.put_response($config[:lobby_password])
+$client.stack.specify_response_for(:text_field, :field => :lobby_password) do |stack, message|
+    stack.put_response($client_config[:lobby_password])
 end
 $client.stack.specify_response_for(:join_fail) do |stack, message|
     stack.set_state(:create_lobby)
 end
 $client.stack.specify_response_for(:create_fail) do |stack, message|
-    $config[:lobby_name] += "_"
+    $client_config[:lobby_name] += "_"
 end
 [:join_success, :create_success].each do |msg|
     $client.stack.specify_response_for(msg) do |stack, message|
         stack.set_state(:generate_game)
     end
 end
-$client.stack.specify_response_for(:choose_from_list, {:field => :lobby_menu}) do |stack, message|
+$client.stack.specify_response_for(:choose_from_list, :field => :lobby_menu) do |stack, message|
     case stack.get_state
     when :generate_game
         stack.put_response(:generate_game)
@@ -59,6 +57,9 @@ $client.stack.specify_response_for(:choose_from_list, {:field => :lobby_menu}) d
     when :create_character
         stack.put_response(:create_character)
     end
+end
+$client.stack.specify_response_for(:generation_pending) do |stack, message|
+    stack.set_state(:wait_for_gen)
 end
 $client.stack.specify_response_for(:generation_success) do |stack, message|
     stack.set_state(:start_game)
@@ -82,27 +83,32 @@ $client.stack.specify_response_for(:start_fail) do |stack, message|
         $client.release_control
     end
 end
-$client.stack.specify_response_for(:text_field, {:field => :character_name}) do |stack, message|
-    stack.put_response($config[:character_name])
+$client.stack.specify_response_for(:text_field, :field => :character_name) do |stack, message|
+    stack.put_response($client_config[:character_name])
 end
-$client.stack.specify_response_for(:choose_from_list, {:field => :character_archetype}) do |stack, message|
+$client.stack.specify_response_for(:choose_from_list, :field => :character_archetype) do |stack, message|
     stack.put_response(message.choices.rand)
 end
-$client.stack.specify_response_for(:choose_from_list, {:field => :character_morphism}) do |stack, message|
+$client.stack.specify_response_for(:choose_from_list, :field => :character_morphism) do |stack, message|
     stack.put_response(message.choices.rand)
 end
-$client.stack.specify_response_for(:choose_from_list, {:field => :character_options}) do |stack, message|
+$client.stack.specify_response_for(:choose_from_list, :field => :character_options) do |stack, message|
     stack.put_response(:create)
 end
 $client.stack.specify_response_for(:character_ready) do |stack, message|
     stack.clear_state
 end
+$client.stack.specify_response_for(:character_not_ready) do |stack, message|
+    $client.release_control
+end
 $client.stack.specify_response_for(:begin_playing) do |stack, message|
     $client.release_control
 end
 
-$client.start
+if __FILE__ == $0
+    $client.start
 
-while $client.running?
-    sleep 10
+    while $client.running?
+        sleep 10
+    end
 end

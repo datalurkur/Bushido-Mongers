@@ -64,8 +64,13 @@ end
 $client.stack.specify_response_for(:join_fail) do |stack, message|
     stack.set_state(:create_lobby)
 end
-$client.stack.specify_response_for(:join_success) do |stack, message|
-    stack.set_state(:generate_game)
+$client.stack.specify_response_for(:create_fail) do |stack, message|
+    $client_config[:lobby_name] += "_"
+end
+[:join_success, :create_success].each do |msg|
+    $client.stack.specify_response_for(msg) do |stack, message|
+        stack.set_state(:generate_game)
+    end
 end
 $client.stack.specify_response_for(:choose_from_list, :field => :lobby_menu) do |stack, message|
     case stack.get_state
