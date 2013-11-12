@@ -167,7 +167,7 @@ class BushidoObjectBase
 
     def matches(args = {})
         (args[:uses] ? self.uses?(args[:uses])    : true) &&
-        (args[:type] ? self.is_type?(args[:type]) : true) &&
+        (args[:type] ? self.is_type?(args[:type]) || type_ancestry.include?(args[:type]) : true) &&
         (args[:name] ? self.monicker.match(/#{args[:name]}/i) : true)
     end
 
