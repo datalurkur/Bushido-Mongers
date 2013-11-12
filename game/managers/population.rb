@@ -16,9 +16,10 @@ class PopulationManager < Manager
     def listens_for; [:tick,:unit_animated,:unit_moves,:unit_moved,:unit_killed,:unit_renamed]; end
 
     def setup
-        @named          = {}
-        @groups         = {}
-        @diabled_spawns = []
+        Log.debug("Population manager setting up")
+        @named           = {}
+        @groups          = {}
+        @disabled_spawns = []
 
         load_from_raws
 
@@ -117,7 +118,7 @@ class PopulationManager < Manager
                         loop do
                             position   = @core.world.get_random_location(spawn_location_types)
                             position ||= @core.world.get_random_location
-                            break unless @disable_spawns.include?(position.uid)
+                            break unless @disabled_spawns.include?(position.uid)
                             count    ||= 0
                             count     += 1
                             break if count > 100
