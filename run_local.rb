@@ -13,6 +13,23 @@ $client_config = {
     :character_name  => "test_character"
 }
 
+# FIXME: Used as a stand-in until we have proper game_args being passed into GameCore.
+if $TestWorldFactory
+    require './test/fake'
+    class DefaultCore
+        private
+        def setup_world(args)
+            Log.debug("Creating world")
+            @world = $TestWorldFactory.generate(self, args)
+
+            Log.debug("Populating world with NPCs and items")
+            @world.populate
+        end
+    end
+end
+
+#MeteredMethods.enable
+
 Log.setup("Main", "local")
 
 $server = GameServer.new("test", Time.now.to_i, "latest.repro")
@@ -47,8 +64,13 @@ end
 $client.stack.specify_response_for(:join_fail) do |stack, message|
     stack.set_state(:create_lobby)
 end
-$client.stack.specify_response_for(:join_success) do |stack, message|
-    stack.set_state(:generate_game)
+$client.stack.specify_response_for(:create_fail) do |stack, message|
+    $client_config[:lobby_name] += "_"
+end
+[:join_success, :create_success].each do |msg|
+    $client.stack.specify_response_for(msg) do |stack, message|
+        stack.set_state(:generate_game)
+    end
 end
 $client.stack.specify_response_for(:choose_from_list, :field => :lobby_menu) do |stack, message|
     case stack.get_state

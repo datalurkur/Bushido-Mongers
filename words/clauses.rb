@@ -13,23 +13,35 @@ module Words
 
 	# identity - noun copula definite-noun - The cat is Garfield; the cat is my only pet.
     def identity_copula(args = {})
-        args[:subject] = args[:subject] || args[:agent] || :it
+        create_copula(args.merge(:complement => NounPhrase.new(self, args[:name])))
     end
     # class membership - noun copula noun - the cat is a feline.
+    def type_copula(args = {})
+        create_copula(args.merge(:complement => NounPhrase.new(self, args[:type])))
+    end
     # predication - noun copula adjective
+    def adjective_copula(args = {})
+        create_copula(args.merge(:complement => Adjective.new(args[:adjectives].rand)))
+    end
     # auxiliary - noun copula verb - The cat is sleeping (progressive); The cat is bitten by the dog (passive).
+    # -- handled in structure.rb
     # existence - there copula noun. "There is a cat." => "There exists a cat."?
+    def existence_copula(args = {})
+        args[:subject] = :there
+        create_copula(args.merge(:complement => Adjective.new(args[:type].rand)))
+    end
     # location - noun copula place-phrase
     def gen_copula(args = {})
         create_copula(args).to_s.sentence
     end
 
     def create_copula(args)
+        # Set :it as default.
         args[:subject] = args[:subject] || args[:agent] || :it
 
-        if verb = args[:verb] || args[:action] || args[:command]
-            args[:complement] = verb unless args[:complement]
-        end
+        #if verb = args[:verb] || args[:action] || args[:command]
+        #    args[:complement] = verb unless args[:complement]
+        #end
 
         args[:verb] = :is
 

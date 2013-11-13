@@ -2,7 +2,6 @@ require './game/managers/manager'
 require './util/packer'
 
 # TODO
-#   - Listen for ticks and automatically spawn new population members
 #   - Listen for death messages and adjust rarity accordingly
 #   - Listen for move messages and disable spawns that have players in them (no fun in spawning things directly on top of players)
 #   - Make the population manager save-/load-friendly
@@ -17,9 +16,10 @@ class PopulationManager < Manager
     def listens_for; [:tick,:unit_animated,:unit_moves,:unit_moved,:unit_killed,:unit_renamed]; end
 
     def setup
-        @named          = {}
-        @groups         = {}
-        @diabled_spawns = []
+        Log.debug("Population manager setting up")
+        @named           = {}
+        @groups          = {}
+        @disabled_spawns = []
 
         load_from_raws
 
@@ -54,7 +54,7 @@ class PopulationManager < Manager
             unit_moves(unit, nil, message.location)
         when :tick
             Log.info("#{self.class} spawning new population members", 4)
-            Log.warning("IMPLEMENT ME")
+            spawn
         when :unit_renamed
             if message.params[:old_name]
                 old_name = hash_name(message.old_name)
@@ -102,6 +102,37 @@ class PopulationManager < Manager
         (@disabled_spawns << location.uid) unless @disabled_spawns.include?(location.uid)
     end
 
+    def spawn
+        @groups.each do |type, hash|
+            unless hash[:rarity] == :extinct || hash[:rarity] == :singular
+                if Rarity.roll(hash[:rarity])
+                    # TODO - raws should codify how creatures reproduce
+                    # TODO - Have reproduction be the deciding factor for at least some species (civilized),
+                    # and follow per-pregnancy ticks, rather than a batch form like this
+                    # TODO - have an off-screen/unloaded population that periodically rotates through
+                    # FIXME - magic numberrrs
+                    (hash[:populations].size * 0.25).floor.times do |i|
+                        next if hash[:populations].size > 100
+                        spawn_location_types = spawns_for(type)
+
+                        loop do
+                            position   = @core.world.get_random_location(spawn_location_types)
+                            position ||= @core.world.get_random_location
+                            break unless @disabled_spawns.include?(position.uid)
+                            count    ||= 0
+                            count     += 1
+                            break if count > 100
+                        end
+
+                        Log.debug("Generating #{type} in #{position.monicker}")
+
+                        # FIXME - borrow creation arguments from a pre-existing population member
+                        @core.create(type, :randomize => true, :position => position)
+                    end
+                end
+            end
+        end
+    end
 
     private
     def load_from_raws

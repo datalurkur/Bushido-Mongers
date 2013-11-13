@@ -21,7 +21,7 @@ class World < Area
         end
     end
 
-    def get_random_location(types=nil)
+    def get_random_location(types = nil)
         candidates = self.leaves
         (candidates = candidates.select { |c| types.include?(c) }) if types
         candidates.rand

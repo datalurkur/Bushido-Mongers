@@ -11,7 +11,7 @@ class FakeLobby
 end
 
 class FakeCore < DefaultCore
-    # No need to call setup separately for FakeCore.
+    # So we don't have to call setup separately for FakeCore.
     def initialize
         super
         setup({})

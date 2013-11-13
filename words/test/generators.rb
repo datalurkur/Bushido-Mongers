@@ -117,6 +117,9 @@ target_description = Descriptor.describe(target, observer)
 Log.debug($core.words_db.describe_container_class(target_description))
 Log.debug($core.words_db.describe_composition(target_description))
 
+Log.debug($core.words_db.identity_copula(agent).sentence)
+Log.debug($core.words_db.type_copula(agent).sentence)
+
 # Knowledge stuff.
 require './knowledge/knowledge'
 human_quanta = $core.kb.all_quanta_for_type(:human)
