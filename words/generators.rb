@@ -226,7 +226,7 @@ module Words
     end
 
     def describe_object(obj)
-        gen_copula(obj.merge(:complement => NounPhrase.new(obj[:db], obj)))
+        gen_copula(obj.merge(:complement => NounPhrase.new(self, obj)))
     end
 
     def describe_inventory(args)

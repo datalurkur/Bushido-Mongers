@@ -456,8 +456,8 @@ That is the person whose car I saw.
                 @children += AdverbPhrase.new_for_args(db, args_for_adverb_phrases)
             end
 
-            if args[:complements]
-                @children += args[:complements].map { |c| NounPhrase.new(db, c) }
+            if args[:complement]
+                @children += Array(args[:complement])
             end
 
             # FIXME - listing won't work while AdverbPhrases are children of VerbPhrase. Add to last V to form second VP?
@@ -479,7 +479,7 @@ That is the person whose car I saw.
         include Listable
 
         def initialize(db, nouns, args={})
-            # Convert nouns into an array, if it isn't already.
+            # Convert nouns into an array if it isn't already.
             nouns = ArrayEvenAHash(nouns)
 
             if nouns.all? { |n| n.is_a?(PTNode) }
@@ -527,17 +527,17 @@ That is the person whose car I saw.
             if @list = (nouns.size > 1)
                 super(
                     nouns.map do |noun|
-                        children = generate_children(noun)
+                        children = generate_children(db, noun)
                         children.size > 1 ? NounPhrase.new(db, children) : children.first
                     end
                 )
             else
-                super(generate_children(nouns.first))
+                super(generate_children(db, nouns.first))
             end
         end
 
         private
-        def generate_children(noun)
+        def generate_children(db, noun)
             monicker = noun[:monicker]
             children = []
 
@@ -558,7 +558,7 @@ That is the person whose car I saw.
 
             children += noun[:adj_phrases] if noun[:adj_phrases]
 
-            if !noun[:plural] && determiner = Determiner.new_for_noun(noun, children.first, noun[:unique])
+            if !noun[:plural] && determiner = Determiner.new_for_noun(db, noun, children.first, noun[:unique])
                 children.insert(0, determiner)
             end
 
@@ -781,10 +781,10 @@ That is the person whose car I saw.
             end
         end
 
-        def self.needs_article?(noun)
+        def self.needs_article?(db, noun)
             !Noun.proper?(noun) &&
             !Noun.pronoun?(noun) &&
-            ![:luck].include?(gen_noun_text(noun))
+            !db.words_of_type(:uncountable).include?(gen_noun_text(noun))
         end
 
         def self.proper?(noun)
@@ -855,8 +855,8 @@ That is the person whose car I saw.
 
     class Determiner < PTLeaf
         class << self
-            def new_for_noun(noun, first_word, unique)
-                if Noun.needs_article?(noun[:monicker])
+            def new_for_noun(db, noun, first_word, unique)
+                if Noun.needs_article?(db, noun[:monicker])
                     if noun[:possessor_info] && unique.nil?
                         PossessivePronoun.new(noun[:possessor_info])
                     else
