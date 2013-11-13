@@ -37,14 +37,23 @@ module Commands
             object_type ||= core.db.info_for(params[:command], key)
 
             Log.debug(object_type)
-            params[key] = params[:agent].find_object(
+            result = params[:agent].find_object(
                             object_type,
                             params[key],
                             params[(key.to_s + "_adjs").to_sym] || [],
                             search_locations
                           )
-            Log.debug("Found #{params[key].monicker} for #{key}")
-            Log.debug(params[key], 9)
+            Log.debug("Found #{result.monicker} for #{key}", 6)
+            Log.debug(result, 9)
+            params[key] = result
+
+            verify_params(params, [key], optional)
+
+            result
+        end
+
+        def find_and_set_object_for_key(core, params, key, object_type = nil, search_locations = [:all], optional = [])
+            find_object_for_key(core, params, key, object_type, search_locations, optional)
             verify_params(params, [key], optional)
         end
 
@@ -474,6 +483,7 @@ module Commands
 
             # Find a recipe (or throw an exception if there's a problem)
             params[:recipe] = find_recipe(core, params)
+            #params[:recipe] = get_recipe(core, params)
 
             # Now we have to check that the player actually has access to all of the stuff in the params
             # TODO - find_object functionality can deal with abstract object types like :metal
@@ -523,17 +533,56 @@ module Commands
             match
         end
 
+        def self.compare_and_find_object(core, params, recipes, param, search_locations)
+            if params[param]
+                recipes = recipes.select { |r| r[param] == params[param] }
+                if recipes.empty?
+                    raise(FailedCommandError, "No recipes found for #{param} #{params[param]}")
+                end
+            else
+                # Search for the parameter.
+                recipes.each do |recipe|
+                    if recipe[param]
+                        Log.debug("Recipe has #{param} #{recipe[param]}", 9)
+                    else
+                        Log.debug("Searching for object for #{param}")
+                        Commands.find_object_for_key(core, params, param, search_locations[param])
+                    end
+                end
+            end
+        end
+
+        # TODO: Send the failure messages back to be formatted by Words.
+        def self.get_recipe(core, params)
+            # Get all recipes for the intended object and do a little massaging.
+            recipes = core.db.info_for(params[:target], :recipes)
+
+            search_locations =
+            {
+                :location => [:position],
+                :tool     => [:grasped, :stashed]
+            }
+
+            [:location, :tool].each do |param|
+                compare_and_find_object(core, params, recipes, param, search_locations[param])
+            end
+
+            # Find objects matching any given components
+            found_objects = []
+            (param[:components] || []).each do |component|
+            end
+
+        end
+
         def self.find_recipe(core, params)
             # Get a list of recipes used to make the thing
             # TODO - Use player knowledge of recipes here
-            # TODO - Include raws that are "called" other things
-            #  (Example: A "hood" is actually a head_armor made of cloth, but "hood" isn't an entry in the raws)
             recipes = core.db.info_for(params[:target], :recipes)
             Log.debug(["#{recipes.size} recipes found for #{params[:target].inspect} - ", recipes])
             failure_string = "You don't know how to #{params[:command]} a #{params[:target]}"
             raise(FailedCommandError, "#{failure_string}.") if recipes.empty?
 
-            # Begin filtering the recipes based on parameters
+            # Begin filtering the recipes based on parametes
 
             # Find recipes that use the "technique" given by the command
             recipes = recipes.select { |r| r[:technique] == params[:command] }
