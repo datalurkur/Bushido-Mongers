@@ -2,7 +2,6 @@ class GameError < StandardError; end
 class ParserError < StandardError; end
 
 class AmbiguousMatchError < GameError; end
-class InvalidCommandError < GameError; end
 class MissingObjectExtensionError < GameError; end
 class MissingProperty < GameError; end
 class NoMatchError < GameError; end
@@ -18,3 +17,4 @@ class AmbiguousCommandError < GameError
   end
 end
 class FailedCommandError < GameError; end
+class InvalidCommandError < GameError; end

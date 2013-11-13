@@ -28,12 +28,12 @@ $client.stack.specify_response_for(:begin_playing) do |stack, message|
 end
 
 # FIXME - doesn't work
-$client.stack.specify_response_for(:report) do |stack, message|
+$client.stack.specify_response_for(:report, :field => :game_event) do |stack, message|
     if message.game_event
         Log.debug("Game event!")
-        $client.send_to_client(Message.new(:report, {:field => :game_event, :contents => message.details}))
+        $client.send_to_client(message)
     else
-        Log.debug(["Message", message])
+        Log.debug(["Message!", message])
     end
 end
 
