@@ -45,7 +45,7 @@ $client.stack.specify_response_for(:create_fail) do |stack, message|
 end
 [:join_success, :create_success].each do |msg|
     $client.stack.specify_response_for(msg) do |stack, message|
-        stack.set_state(:generate_game)
+        stack.put_response(:generate_game)
     end
 end
 $client.stack.specify_response_for(:choose_from_list, :field => :lobby_menu) do |stack, message|
