@@ -22,7 +22,6 @@ class Lobby
         @users[creator]    = {:admin => true}
         @game_creator      = creator
         @default_admin     = creator
-        @dialects[creator] = :text
 
         # Local state, basically
         @game_state        = :no_core
@@ -50,7 +49,7 @@ class Lobby
         end
     end
 
-    def get_user_dialect(username); @dialects[username]; end
+    def get_user_dialect(username); @dialects[username] || :text; end
 
     def send_to_user(username, message)
         if !@send_callback.call(username, message)

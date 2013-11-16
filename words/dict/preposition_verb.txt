@@ -4,7 +4,6 @@ default into destination
 default with tool
 default using tool
 default from components
-default by subject
 default in location
 default at location
 default from origin
@@ -37,3 +36,7 @@ tell receiver
 ask receiver
 ask about target
 ask for target
+attach to location
+wear on location
+grasp in location
+hold in location

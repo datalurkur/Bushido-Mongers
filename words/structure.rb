@@ -36,19 +36,6 @@ LOTS BESIDES
 
 require './util/basic'
 
-class Descriptor
-    def self.set_unique(args)
-        if Hash === args
-            args[:unique] = true
-            return args
-        elsif Array === args
-            args.map { |thing| set_unique(thing) }
-        else
-            {:monicker => args, :unique => true}
-        end
-    end
-end
-
 module Words
     # Each node in the tree is either a root node, a branch node, or a leaf node.
     class PTNode
@@ -83,9 +70,9 @@ module Words
 
         # Uncomment this to display <PartOfSpeech>(children) for each node except Listables.
         # e.g. Sentence(NounPhrase(the, chest), VerbPhrase(is, closed)).
-#        def to_s
-#            self.class.to_s.split(/::/).last + "(" + @children.join(", ") + ")"
-#        end
+        #def to_s
+        #    self.class.to_s.split(/::/).last + "(" + @children.join(", ") + ")"
+        #end
     end
 
     class PTLeaf    < PTNode; end
@@ -106,9 +93,9 @@ module Words
             subject = args[:subject] || args[:agent]
 
             # active is the default; otherwise, swap the subject/D.O.
-            if args[:state].voice == :passive
-                subject, args[:target] = args[:target], subject
-            end
+            #if args[:state].voice == :passive
+            #    subject, args[:target] = args[:target], subject
+            #end
 
             if subject.is_a?(Hash)
                 if args[:speaker] && args[:speaker].is_a?(Hash) && subject[:uid] == args[:speaker][:uid]
@@ -159,7 +146,7 @@ module Words
                 Log.debug("No verb for event type #{args[:event_type].inspect}!") unless verb
             end
 
-            raise unless verb
+            raise "No verb found from keys #{args.keys.inspect}" unless verb
 
             # Use an associated verb, if any exist.
             unless [:say].include?(verb)
@@ -174,7 +161,16 @@ module Words
             # and between subject / agent. Right now we hack it in the :target
             # adverbial clause handling.
             # http://en.wikipedia.org/wiki/Patient_(grammar)
-            subject   = NounPhrase.new(db, subject, args)
+            subject = if args[:state].voice == :active
+                NounPhrase.new(db, subject, args.merge(:case => :nominative))
+            else
+                NounPhrase.new(db, subject, args)
+            end
+
+            if subject.plural?
+                args[:state].plural_person!
+            end
+
             predicate = VerbPhrase.new(db, verb, args)
             @children = [subject, predicate]
         end
@@ -313,7 +309,7 @@ That is the person whose car I saw.
     class PrepositionalPhrase < PTInternalNode
         private
         def new_prep_noun_phrase(db, case_name, args, case_lookup = case_name)
-            np = NounPhrase.new(db, args[case_name])
+            np = NounPhrase.new(db, args[case_name], args)
             # Determine preposition based on the verb and the case.
             if prep = db.prep_for_verb(args[:verb], case_lookup)
                 return Preposition.new(prep), np
@@ -352,13 +348,13 @@ That is the person whose car I saw.
             when :target
                 if args[:state].voice == :passive
                     # We switch subject & target in passive, so look up how to treat the subject instead.
-                    super(new_prep_noun_phrase(db, case_name, args, :subject))
+                    super(new_prep_noun_phrase(db, case_name, args.merge(:case => :nominative), :subject))
                 else
                     super(new_prep_noun_phrase(db, case_name, args))
                 end
                 handled = true
             when :tool, :destination, :location, :origin, :components
-                args[case_name] = Descriptor.set_unique(args[case_name]) unless case_name == :components
+                args[:state].add_unique_object(args[case_name]) unless case_name == :components
                 super(new_prep_noun_phrase(db, case_name, args))
                 handled = true
             when :receiver
@@ -418,11 +414,11 @@ That is the person whose car I saw.
         def initialize(db, type, args)
             case type
             when :subtarget, :location
-                args[type] = Descriptor.set_unique(args[type])
+                args[:state].add_unique_object(args[type])
                 super(new_prep_noun_phrase(db, type, args))
             when :of_phrase
                 # The preposition is simply :of; no need to look it up.
-                super(Preposition.new(:of), NounPhrase.new(db, args[type]))
+                super(Preposition.new(:of), NounPhrase.new(db, args[type], args))
             end
         end
 
@@ -478,7 +474,7 @@ That is the person whose car I saw.
     class NounPhrase < PTInternalNode
         include Listable
 
-        def initialize(db, nouns, args={})
+        def initialize(db, nouns, args = {})
             # Convert nouns into an array if it isn't already.
             nouns = ArrayEvenAHash(nouns)
 
@@ -504,12 +500,12 @@ That is the person whose car I saw.
                         hash[:monicker] = :thing
                     end
 
-                    if noun[:count] && noun[:count] > 1
-                        hash[:monicker] = Noun.pluralize(hash[:monicker])
+                    unless [String, Symbol].include?(hash[:monicker].class)
+                        raise TypeError, "Expected String or Symbol monicker; got (#{hash[:monicker].class}) instead!"
                     end
 
-                    unless [String, Symbol].include?(hash[:monicker].class)
-                        raise TypeError, "Expected String or Symbol monicker; got #{hash[:monicker].inspect} (#{hash[:monicker].class}) instead!"
+                    if noun[:count] && noun[:count] > 1
+                        hash[:monicker] = Noun.pluralize(hash[:monicker])
                     end
 
                     hash[:plural]         = (noun[:count] && noun[:count] > 1)
@@ -518,23 +514,30 @@ That is the person whose car I saw.
                     hash[:adjectives]     = Adjective.new_for_descriptor(noun)
                     hash[:adj_phrases]    = AdjectivePhrase.new_for_descriptor(db, noun.merge(:verb => args[:verb]))
                     hash[:adj_phrases]   += noun[:properties][:adjective_phrases] if noun[:properties] && noun[:properties][:adjective_phrases]
+                when BushidoObjectBase
+                    hash[:monicker] = noun.monicker || :thing
+                    hash[:type]     = noun.get_type
+                    hash[:plural]   = db.words_of_type(:uncountable).include?(noun.monicker.to_sym) || db.words_of_type(:always_plural).include?(noun.monicker.to_sym)
+                    hash[:unique]   = (args[:state] && args[:state].unique_object?(noun))
                 else
                     hash[:monicker] = noun
                 end
                 hash
             end
 
-            if @list = (nouns.size > 1)
+            if @list = @plural = (nouns.size > 1)
                 super(
                     nouns.map do |noun|
                         children = generate_children(db, noun)
-                        children.size > 1 ? NounPhrase.new(db, children) : children.first
+                        children.size > 1 ? NounPhrase.new(db, children, args) : children.first
                     end
                 )
             else
                 super(generate_children(db, nouns.first))
             end
         end
+
+        def plural?; @plural; end
 
         private
         def generate_children(db, noun)
@@ -561,6 +564,8 @@ That is the person whose car I saw.
             if !noun[:plural] && determiner = Determiner.new_for_noun(db, noun, children.first, noun[:unique])
                 children.insert(0, determiner)
             end
+
+            @plural = noun[:plural] || false
 
             children
         end
@@ -808,13 +813,13 @@ That is the person whose car I saw.
             # If it's e.g. a BushidoObject then it's not a pronoun.
             return false unless noun.respond_to?(:to_sym)
             case noun.to_sym
-            # Subject person pronouns.
+            # Nominative person pronouns.
             when :I, :i, :you, :he, :she, :ze, :it, :we, :they, :who
                 true
             # Possessive pronouns.
             when :mine, :yours, :his, :hers, :zirs, :its, :ours, :theirs
                 true
-            # Object person pronouns.
+            # Non-nominative person pronouns.
             when :me, :you, :him, :her, :zir, :it, :us, :them, :whom
                 true
             # Existentials.

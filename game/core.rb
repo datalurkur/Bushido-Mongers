@@ -46,7 +46,7 @@ class GameCore
         dialect = @lobby.get_user_dialect(username)
         details = case dialect
         when :text
-            Descriptor.create_report(message_type, @words_db, sanitized_properties)
+            Descriptor.create_report(message_type, @words_db, properties.merge(:observer => character, :speaker => :game))
         when :metadata
             sanitized_properties
         else

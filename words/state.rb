@@ -67,6 +67,8 @@ module Words
             @mood   = :indicative
             @person = :third
             @voice  = :active
+
+            @unique_objects = []
         end
 
         def with_person(person)
@@ -94,6 +96,19 @@ module Words
 
         def plural_person!
             self.person = State.plural_person(self.person)
+        end
+
+        # Mark certain discrete objects for uniqueness, which determines definiteness.
+        def add_unique_object(object)
+            @unique_objects << object
+        end
+
+        def del_unique_object(object)
+            @unique_objects.delete(object)
+        end
+
+        def unique_object?(object)
+            @unique_objects.include?(object)
         end
 
         # State is used in hashes.

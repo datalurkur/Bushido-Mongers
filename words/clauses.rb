@@ -12,12 +12,12 @@ module Words
     end
 
 	# identity - noun copula definite-noun - The cat is Garfield; the cat is my only pet.
-    def identity_copula(args = {})
-        create_copula(args.merge(:complement => NounPhrase.new(self, args[:name])))
+    def identity_copula(object)
+        create_copula(:complement => NounPhrase.new(self, object.monicker))
     end
     # class membership - noun copula noun - the cat is a feline.
-    def type_copula(args = {})
-        create_copula(args.merge(:complement => NounPhrase.new(self, args[:type])))
+    def type_copula(object)
+        create_copula(:complement => NounPhrase.new(self, object.get_type))
     end
     # predication - noun copula adjective
     def adjective_copula(args = {})
@@ -31,6 +31,23 @@ module Words
         create_copula(args.merge(:complement => Adjective.new(args[:type].rand)))
     end
     # location - noun copula place-phrase
+    # e.g. It is in the foyer.
+    # e.g. It is attached to the monkey.
+    def location_copula(location, in_location, location_type = :internal)
+        composition_verbs = {
+            :internal => :contain,
+            :external => :attach,
+            :worn     => :wear,
+            :grasped  => :hold
+        }
+        verb = composition_verbs[location_type]
+        state = State.new(:passive, :progressive)
+
+        IndependentClause.new(self, :subject => in_location, :verb => verb, :location => location, :state => state)
+        # TODO - fix active voice of same statement
+        # IndependentClause.new(self, :subject => location, :verb => verb, :location => NounPhrase.new(self, in_location))
+    end
+
     def gen_copula(args = {})
         create_copula(args).to_s.sentence
     end

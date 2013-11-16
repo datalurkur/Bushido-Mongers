@@ -18,22 +18,15 @@ module Words
         when :look, :inspect
             target = args[:target]
             location = args[:location]
-            if location
-                if location[:is_type].include?(:container)
-                    return describe_container_class(location)
-                else
-                    return describe_composition(location)
-                end
-            elsif target[:is_type].include?(:room)
+            if location && location.uses?(Composition)
+                return describe_composition(location)
+            elsif target.is_a?(Room)
                 return describe_room(args)
-            elsif target[:is_type].include?(:body)
+            elsif target.matches(:type => :body)
                 return describe_body(target)
-            elsif target[:is_type].include?(:container)
-                # Needs to be ahead of :composition, as containers are compositions.
-                return describe_container_class(target)
-            elsif target[:is_type].include?(:composition)
+            elsif target.uses?(Composition)
                 return describe_composition(target)
-            elsif target[:is_type].include?(:object)
+            elsif target.is_a?(BushidoObjectBase)
                 return gen_sentence(args)
             else
                 return "I don't know how to describe a #{target[:type].inspect}"
@@ -47,7 +40,7 @@ module Words
         when :stats, :help
             return describe_list(args)
         when :inventory
-            return describe_inventory(args)
+            return describe_inventory(args[:agent])
         else
             Log.debug(["UNKNOWN COMMAND", args[:command], args.keys])
             return gen_sentence(args)
@@ -73,7 +66,8 @@ module Words
                 args[:target]     = args[:thing]
                 args[:components] = recipe[:components]
             elsif args[:connector] == :have
-                args[:target] = Descriptor.set_unique(args[:target])
+                args[:state] ||= State.new
+                args[:state].add_unique_object(args[:target])
                 args[:target][:possessor_info] = possessor_info(args[:subject])
                 args[:target][:monicker] = (args[:target][:monicker].to_s + ' ' + args[:value].to_s).to_sym if args[:value]
             end
@@ -132,18 +126,21 @@ module Words
     public
 
     def describe_body(body)
-        body[:unique] = true
-        body[:possessor_info] = possessor_info(body)
+        state = State.new(:progressive)
+        state.add_unique_object(body)
+
+#        body[:possessor_info] = possessor_info(body)
 
         sentences = []
-        if body[:missing_parts].empty?
-            sentences << gen_sentence(:subject => body, :verb => :have, :target => "normal #{body[:type]} body")
+        missing_parts = body.atypical_body(:missing)
+        if missing_parts.empty?
+            sentences << gen_sentence(:subject => body, :verb => :have, :target => "normal #{body.get_type} body")
         else
-            sentences << gen_sentence(:subject => body, :verb => :have, :target => "#{body[:type]} body")
+            sentences << gen_sentence(:subject => body, :verb => :have, :target => "#{body.get_type} body")
             sentences << gen_sentence(:subject => body,
                                       :verb    => :miss,
-                                      :target  => body[:missing_parts],
-                                      :state   => State.new(:progressive))
+                                      :target  => missing_parts,
+                                      :state   => state)
         end
 
         # TODO - Add more information about abilities, features, etc.
@@ -196,39 +193,7 @@ module Words
         sentences.flatten.join(" ")
     end
 
-    def describe_container_class(composition, comp_type = :internal)
-        raise unless Hash === composition
-
-        if comp_type == :internal && !composition[:properties][:open]
-            composition[:definite] = true
-            return gen_copula(
-                :subject    => composition,
-                :complement => :closed
-            )
-        end
-
-        list = composition[:container_contents][comp_type]
-        composition_verbs = { :internal => :contain }
-
-        if rand(2) == 0
-            gen_copula(
-                :subject   => (list && !list.empty? ? list : Noun.new(:nothing)),
-                :location  => composition
-            )
-        else
-            composition[:unique] = true
-            gen_copula(
-                :subject  => composition,
-                :verb     => composition_verbs[comp_type],
-                :target   => (list && !list.empty? ? list : Noun.new(:nothing))
-            )
-        end
-    end
-
-    def describe_object(obj)
-        gen_copula(obj.merge(:complement => NounPhrase.new(self, obj)))
-    end
-
+=begin
     def describe_inventory(args)
         args[:command] = :inventory
 
@@ -248,143 +213,67 @@ module Words
         descriptions
     end
 
-    def describe_composition(args)
-        args[:command] = :composition
-
-        composition_verbs = {
-            :external => :attach,
-            :worn     => :wear,
-            :grasped  => :hold
-        }
-
-        #args[:state] = State.new(:progressive)
-
-        descriptions = [describe_object(args)]
-        [:external, :grasped, :worn].each do |location|
-            list_args = args.dup
-            list_args[:list] = args[:container_contents][location] || []
-#            list_args[:list] = args[location] || []
-            list_args[:subject] = :it
-            list_args[:verb] = composition_verbs[location]
-            descriptions << describe_list(list_args)
-        end
-        descriptions
-
+    # AddModifier(composition, :closed)
 =begin
-        composition_verbs.keys.each do |comp_type|
-            list = composition[:container_contents][comp_type]
-            if list && !list.empty?
-                list.each do |part|
-                    part[:possessor_info] = composition[:possessor_info]
-                end
-                sentences << gen_sentence(
-                                :subject => composition[:possessor],
-                                :verb    => composition_verbs[comp_type],
-                                :target  => list.dup,
-                                # Currently-progressing state, so passive progressive.
-                                :state   => State.new)
-                sentences += list.collect do |part|
-                    if part[:is_type].include?(:composition)
-                        describe_composition(part)
-                    else
-                        gen_copula(:subject => part)
-                    end
-                end
-            end
+        # TODO - handle all lists in either active or passive forms.
+        if rand(2) == 0
+            gen_copula(
+                :subject   => (list && !list.empty? ? list : Noun.new(:nothing)),
+                :location  => composition # FIXME - LocationPhrase
+            )
+        else
+            composition[:unique] = true
+            gen_copula(
+                :subject  => composition,
+                :verb     => composition_verbs[comp_type],
+                :target   => (list && !list.empty? ? list : Noun.new(:nothing))
+            )
         end
-        sentences.flatten.join(" ")
 =end
+
+    def describe_inventory(agent)
+        return unless agent.uses?(Corporeal)
+        [:grasped, :worn].collect do |klass|
+            agent.external_body_parts.collect { |bp| describe_composition_klass(bp, klass) }.compact.join(" ")
+        end.flatten.compact
+#        [describe_composition_klass(agent, :grasped), describe_composition_klass(agent, :worn)].compact
     end
 
-    def describe_whole_composition(composition)
-        sentences = []#describe_object(composition)]
+    def describe_composition_klass(composition, klass)
+        if composition.composed_of?(klass)
+            list = composition.get_contents(klass)
+            list = [:nothing] if list.empty?
+            return location_copula(composition, list, klass).sentence
+        end
+    end
 
-        composition_verbs = {
-            :external => :attach,
-            :worn     => :wear,
-            :grasped  => :hold
-        }
-
-        search_list = [composition]
-        external = []
-        worn     = []
-        held     = []
-
-        while !search_list.empty?
-            current_comp = search_list.shift
-            composition_verbs.keys.each do |comp_type|
-                list = current_comp[:container_contents][comp_type]
-                if list && !list.empty?
-                    # Add any compositions to the search list.
-                    search_list += list.select { |p| p[:is_type].include?(:composition) }
-                    # Cascade possession down.
-                    list.each { |p| p[:possessor_info] = current_comp[:possessor_info] }
-
-                    location = {
-                        :monicker => current_comp[:part_name] || current_comp[:monicker],
-                        :possessor_info => current_comp[:possessor_info]
-                    }
-                    case comp_type
-                    when :external
-                        external += list
-                    when :worn
-                        worn += list.each { |p| p[:location] = location }
-                    when :grasped
-                        held += list.each { |p| p[:location] = location }
-                    end
+    def describe_composition(composition, klasses = nil)
+        unless klasses
+            klasses = if composition.container?
+                # AddModifier(composition, :closed)
+                if !composition.open?
+                    return gen_copula(
+                        :subject    => composition,
+                        :complement => :closed
+                    )
                 end
+                [:internal]
+            else
+                [:external, :grasped, :worn]
             end
         end
 
-        # FIXME: Here is where we can interpolate the lists and e.g. pluralize where appropriate ("a leg and a leg" => "two legs").
+        descriptions = [type_copula(composition).sentence]
 
-        unless external.empty?
-            sentences << gen_sentence(
-                :subject  => composition,
-                :verb     => composition_verbs[:external],
-                :target   => external,
-                :state    => State.new(:passive, :progressive)
-            )
-        end
-
-        unless worn.empty?
-            sentences << gen_sentence(
-                :subject  => composition[:possessor_info][:possessor],
-                :verb     => composition_verbs[:worn],
-                :target   => worn,
-                :state    => State.new(:progressive)
-            )
-        end
-
-        unless held.empty?
-            sentences << gen_sentence(
-                :subject  => composition[:possessor_info][:possessor],
-                :verb     => composition_verbs[:grasped],
-                :target   => held,
-                :state    => State.new(:progressive)
-            )
-        end
-=begin
-        comp_list.each do |comp_type, list|
-            list.each do |part, part_location|
-                part[:possessor_info] = part_location[:possessor_info]
-                subject = part_location[:possessor_info] ? composition[:possessor_info][:possessor] : nil # And if possessor isn't defined?
-                sentences << gen_sentence(
-                    :subject  => composition[:possessor_info][:possessor],
-                    :verb     => composition_verbs[comp_type],
-                    :target   => part,
-                    :location => part_location,
-                    :state    => State.new(:progressive)
-                )
-            end
-            sentences << "\n"
-        end
-=end
-
-        sentences.flatten.join(" ")
+        klasses.each { |klass| descriptions << describe_composition_klass(composition, klass) }
+        descriptions.compact
     end
 
     def describe_room(args = {})
+        # AddExistenceDetail(RoomType)
+        # AddModifier(Room, keywords/adjectives)
+        # AddExistenceDetail(observer.perceivable_objects_of(room.get_contents(:internal) - [observer]))
+        # AddExistenceDetail(Exits)
         Log.debug(args, 9)
         sentences = [gen_sentence(args)]
 
@@ -399,13 +288,19 @@ module Words
         # FIXME - Use available senses.
         args.merge!(:verb => :see)
 
-        # FIXME - In the future, these will be object IDs, and need to be looked up from a core for more information
-        objects = room[:objects]
+        if room.is_a?(Room)
+            objects = args[:observer].perceivable_objects_of(room.get_contents(:internal) - [args[:observer]])
+            exits   = room.connected_directions
+        else
+            # When sent a debug hash. Only happens in testing...
+            objects = room[:objects]
+            exits   = room[:exits]
+        end
+
         if objects && !objects.empty?
             sentences << gen_sentence(args.merge(:target => objects))
         end
 
-        exits   = room[:exits]
         if exits && !exits.empty?
             sentences << gen_sentence(args.merge(:target => Noun.new("exits to #{NounPhrase.new(self, exits)}")))
         end
@@ -417,9 +312,10 @@ module Words
         noun    = {
                     :monicker   => args[:type]     || Noun.rand(self),
                     :adjectives => args[:keywords] || Adjective.rand(self),
-                    :unique     => true,
                   }
-        name    = Words::NounPhrase.new(self, noun)
+        state = State.new
+        state.add_unique_object(noun)
+        name    = Words::NounPhrase.new(self, noun, :state => state)
 
         name.to_s.title
     end
@@ -428,10 +324,11 @@ module Words
         noun    = {
                     :monicker   => [args[:type], Noun.rand(self)].rand,
                     :adjectives => [args[:keywords], Adjective.rand(self)].rand,
-                    :unique     => true,
-                    :of_phrase  => Descriptor.set_unique(Noun.rand(self))
                   }
-        name    = NounPhrase.new(self, noun)
+        state = State.new
+        state.add_unique_object(noun)
+        state.add_unique_object(noun[:of_phrase])
+        name    = NounPhrase.new(self, noun, :state => state)
 
         name.to_s.title
     end

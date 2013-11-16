@@ -115,6 +115,7 @@ class PopulationManager < Manager
                         next if hash[:populations].size > 100
                         spawn_location_types = spawns_for(type)
 
+                        position = nil
                         loop do
                             position   = @core.world.get_random_location(spawn_location_types)
                             position ||= @core.world.get_random_location

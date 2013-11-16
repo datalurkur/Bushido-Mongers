@@ -30,6 +30,28 @@ module Corporeal
     def external_body_parts; all_body_parts(:external); end
     def internal_body_parts; all_body_parts(:internal); end
 
+    # Find missing or extra body parts by subtraction from the typical parts.
+    def atypical_body(abnormal_type = :missing)
+        raise TypeError unless [:missing, :extra].include?(abnormal_type)
+
+        # External body parts here should really be something like perceivable-body-parts.
+        externals = self.typical_parts.select { |bp| bp[:klass] == :external }
+        part_list = self.external_body_parts.collect(&:get_type) - [self.get_type]
+
+        part_list.each do |p|
+            if index = externals.find_index { |bp| bp[:type] == p }
+                externals[index][:count] -= 1
+            end
+        end
+
+        case abnormal_type
+        when :missing
+            return externals.select { |bp| bp[:count] > 0 }
+        when :extra
+            return externals.select { |bp| bp[:count] < 0 }
+        end
+    end
+
     def alive?
         uses?(Character) || uses?(NpcBehavior)
     end

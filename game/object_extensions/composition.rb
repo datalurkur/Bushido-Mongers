@@ -188,7 +188,7 @@ module Composition
         end
     end
 
-    def full?(type=:internal)
+    def full?(type = :internal)
         case type
         when :grasped
             container_contents(type).size > 0

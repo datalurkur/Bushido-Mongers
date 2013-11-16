@@ -70,6 +70,8 @@ module WordParser
         load_files(dict_dir, "preposition_verb.txt").each do |match, list|
             list.each do |words|
                 case words.size
+                when 0
+                    next
                 when 2
                     verb, case_name = words
                 when 3

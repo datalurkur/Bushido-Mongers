@@ -1,6 +1,6 @@
 have present have have has
 have past 	 had
-be   present am  are is
+be   present am  are is are are are
 be   past    was were was
 be   past_participle been
 be   gerund  being

@@ -83,42 +83,41 @@ require './game/descriptors'
 
 # Body descriptions.
 observer = $core.create_npc(:human, :name => "Kenji Skrimshank", :position => $core.create(FakeRoom))
-agent = Descriptor.describe(observer, observer)
-Log.debug($core.words_db.describe_body(agent))
+Log.debug($core.words_db.describe_body(observer))
+Log.debug($core.words_db.describe_inventory(observer))
 # Test missing parts.
 kenji_leg = observer.get_contents(:external).find { |bp| bp.get_type == :leg }
 observer.component_destroyed(kenji_leg, :external, observer)
-Log.debug($core.words_db.describe_body(Descriptor.describe(observer, observer)))
+Log.debug($core.words_db.describe_body(observer))
 kenji_leg = observer.get_contents(:external).find { |bp| bp.get_type == :leg }
 observer.component_destroyed(kenji_leg, :external, observer)
-Log.debug($core.words_db.describe_body(Descriptor.describe(observer, observer)))
+Log.debug($core.words_db.describe_body(observer))
 
 #args = {:agent => agent}
 #Log.debug($core.words_db.describe_inventory(args))
 
 kenji_arm = observer.get_contents(:external).find { |bp| bp.get_type == :arm }
-Log.debug(kenji_arm)
-Log.debug($core.words_db.describe_composition(Descriptor.describe(kenji_arm, observer)))
+Log.debug($core.words_db.describe_composition(kenji_arm))
 
 target = $core.create(:goat, {:position => $core.create(FakeRoom), :name => "Billy Goat Balrog"})
-target = Descriptor.describe(target, observer)
+#target = Descriptor.describe(target, observer)
 Log.debug($core.words_db.describe_body(target))
 
 # {:agent => <Ninja, :name => "Kenji Scrimshank">, :target => <Goat, :name => "Billy Goat Balrog">, :verb => :attack, :tool => :agent_current_weapon}
-puts $core.words_db.describe_attack(:attacker => agent, :defender => target, :command => :attack, :tool => :dagger, :result_hash => {:damage_type => :piercing})
-puts $core.words_db.describe_attack(:defender => agent, :attacker => target, :command => :attack,                   :result_hash => {:damage_type => [:piercing, :blunt, :nonlethal].rand})
+puts $core.words_db.describe_attack(:attacker => observer, :defender => target, :command => :attack, :tool => :dagger, :result_hash => {:damage_type => :piercing})
+puts $core.words_db.describe_attack(:defender => observer, :attacker => target, :command => :attack,                   :result_hash => {:damage_type => [:piercing, :blunt, :nonlethal].rand})
 
 target = $core.create(:chest, {:name => "Bosom", :randomize => true})
-target_description = Descriptor.describe(target, observer)
-Log.debug($core.words_db.describe_container_class(target_description))
+#target_description = Descriptor.describe(target, observer)
+Log.debug($core.words_db.describe_composition(target))
 
 target.properties[:open] = true
-target_description = Descriptor.describe(target, observer)
-Log.debug($core.words_db.describe_container_class(target_description))
-Log.debug($core.words_db.describe_composition(target_description))
+#target_description = Descriptor.describe(target, observer)
+#Log.debug($core.words_db.describe_container_class(target_description))
+Log.debug($core.words_db.describe_composition(target))
 
-Log.debug($core.words_db.identity_copula(agent).sentence)
-Log.debug($core.words_db.type_copula(agent).sentence)
+Log.debug($core.words_db.identity_copula(observer).sentence)
+Log.debug($core.words_db.type_copula(observer).sentence)
 
 # Knowledge stuff.
 require './knowledge/knowledge'
