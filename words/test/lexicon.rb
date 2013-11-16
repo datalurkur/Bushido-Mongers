@@ -43,5 +43,4 @@ Log.debug(see_synonyms.inspect)
 Log.debug(see_synonyms.rand)
 
 Log.debug(db.synonyms_of(:attack).inspect)
-
 Log.debug(db.synonyms_of(:attack).inspect)

@@ -62,14 +62,14 @@ module Words
                 recipes = args[:db].raw_info_for(args[:thing])[:class_values][:recipes]
                 recipe  = recipes.rand
 
-                args[:subject]    = (rand(2) == 0) ? :i : :you
+                args[:subject]    = (rand(2) == 0) ? :I : :you
                 args[:target]     = args[:thing]
                 args[:components] = recipe[:components]
             elsif args[:connector] == :have
                 args[:state] ||= State.new
                 args[:state].add_unique_object(args[:target])
-                args[:target][:possessor_info] = possessor_info(args[:subject])
-                args[:target][:monicker] = (args[:target][:monicker].to_s + ' ' + args[:value].to_s).to_sym if args[:value]
+#                args[:target][:possessor_info] = possessor_info(args[:subject])
+#                args[:target][:monicker] = (args[:target][:monicker].to_s + ' ' + args[:value].to_s).to_sym if args[:value]
             end
         end
 

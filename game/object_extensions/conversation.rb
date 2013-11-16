@@ -14,7 +14,9 @@ module Conversation
             case message.type
             when :unit_speaks, :unit_whispers
                 return unless instance == message.receiver && message.response_needed
-                Log.debug(["Statement received by #{instance.monicker}: #{message.statement.map(&:to_s).join(" ")}"], 1)
+                # Statement is an array of symbols
+                statement_s = message.statement.map(&:to_s).join(" ")
+                Log.debug(["Statement received by #{instance.monicker}: #{statement_s}"], 1)
                 if message.has_param?(:receiver) && instance.will_do_command?(message)
                     instance.perform_command(message)
                 else
@@ -135,7 +137,10 @@ module Conversation
 
 #private
     def say(receiver, statement, response_needed = false)
-        Log.debug("#{self.monicker} says, \"#{statement.inspect}\"")
+        Log.debug("#{self.monicker} says, #{statement.inspect}")
+        if statement.is_a?(String)
+            statement = statement.split(/\s/).map(&:to_sym)
+        end
         message = Message.new(:unit_speaks, {
             :agent           => self,
             :receiver        => receiver,
@@ -148,7 +153,10 @@ module Conversation
     end
 
     def whisper(receiver, statement, response_needed = false)
-        Log.debug("#{self.monicker} whispers, \"#{statement}\"")
+        Log.debug("#{self.monicker} whispers, #{statement.inspect}")
+        if statement.is_a?(String)
+            statement = statement.split(/\s/).map(&:to_sym)
+        end
         message = Message.new(:unit_whispers, {
             :agent           => self,
             :receiver        => receiver,
