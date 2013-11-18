@@ -62,7 +62,7 @@ module Conversation
             end
         when :event
         when :location
-            #Find potential_locations, and answer appropriately.
+            # Search potential_locations, and answer appropriately.
         when :meaning
         when :task
             if params[:thing] == :quest
@@ -80,7 +80,6 @@ module Conversation
         talk_about_knowledge(asker, knowledge)
         return params
     end
-
 
     def talk_about_knowledge(asker, knows)
         # Do final selection.
@@ -152,6 +151,7 @@ module Conversation
         message
     end
 
+    # TODO: Some sort of perception check to determine whether the message is received.
     def whisper(receiver, statement, response_needed = false)
         Log.debug("#{self.monicker} whispers, #{statement.inspect}")
         if statement.is_a?(String)

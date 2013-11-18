@@ -44,16 +44,12 @@ module Commands
                             search_locations
                           )
             Log.debug("Found #{result.monicker} for #{key}", 6)
-            Log.debug(result, 9)
-            params[key] = result
-
-            verify_params(params, [key], optional)
-
             result
         end
 
         def find_and_set_object_for_key(core, params, key, object_type = nil, search_locations = [:all], optional = [])
-            find_object_for_key(core, params, key, object_type, search_locations, optional)
+            params[key] = find_object_for_key(core, params, key, object_type, search_locations, optional)
+
             verify_params(params, [key], optional)
         end
 
@@ -110,7 +106,7 @@ module Commands
     module Look
         def self.stage(core, params)
             if params[:location]
-                Commands.find_object_for_key(core, params, :location)
+                Commands.find_and_set_object_for_key(core, params, :location)
 
                 if params[:location].is_type?(:container) && !params[:location].open?
                     raise(FailedCommandError, "#{params[:location].monicker} is closed.")
@@ -123,7 +119,7 @@ module Commands
                 if (core.words_db.associated_words_of(:self, :synonym)+[:self]).include?(target)
                     params[:target] = params[:agent]
                 else
-                    Commands.find_object_for_key(core, params, :target)
+                    Commands.find_and_set_object_for_key(core, params, :target)
                 end
             else
                 # Assume the player wants a broad overview of what he can see, describe the room
@@ -139,7 +135,7 @@ module Commands
     module Consume
         def self.stage(core, params)
             target_class = params[:agent].class_info[:consumes]
-            Commands.find_object_for_key(core, params, :target, target_class, [:inventory, :position])
+            Commands.find_and_set_object_for_key(core, params, :target, target_class, [:inventory, :position])
 
             unless params[:agent].class_info[:on_consume] || params[:target].is_type?(:consumable)
                 raise(FailedCommandError, "#{params[:agent].monicker} doesn't know how to eat a(n) #{params[:target].monicker}")
@@ -169,7 +165,7 @@ module Commands
     module Get
         def self.stage(core, params)
             raise(MissingObjectExtensionError, "Must have an inventory to pick things up!") unless params[:agent].uses?(Equipment)
-            Commands.find_object_for_key(core, params, :target, nil, [:position, :stashed, :worn])
+            Commands.find_and_set_object_for_key(core, params, :target, nil, [:position, :stashed, :worn])
         end
 
         def self.do(core, params)
@@ -180,7 +176,7 @@ module Commands
     module Stash
         def self.stage(core, params)
             raise(MissingObjectExtensionError, "Must have an inventory to pick things up!") unless params[:agent].uses?(Equipment)
-            Commands.find_object_for_key(core, params, :target, nil, [:position, :stashed, :worn])
+            Commands.find_and_set_object_for_key(core, params, :target, nil, [:position, :stashed, :worn])
         end
 
         def self.do(core, params)
@@ -191,7 +187,7 @@ module Commands
     module Drop
         def self.stage(core, params)
             raise(MissingObjectExtensionError, "Must have an inventory to pick things up!") unless params[:agent].uses?(Equipment)
-            Commands.find_object_for_key(core, params, :target, nil, [:inventory])
+            Commands.find_and_set_object_for_key(core, params, :target, nil, [:inventory])
         end
 
         def self.do(core, params)
@@ -201,9 +197,9 @@ module Commands
 
     module Equip
         def self.stage(core, params)
-            Commands.find_object_for_key(core, params, :target, nil, [:grasped, :stashed])
+            Commands.find_and_set_object_for_key(core, params, :target, nil, [:grasped, :stashed])
             # TODO - take 'on' preposition that establishes destination
-            #Commands.find_object_for_key(core, params, :destination, nil, [:external])
+            #Commands.find_and_set_object_for_key(core, params, :destination, nil, [:external])
         end
 
         def self.do(core, params)
@@ -236,9 +232,9 @@ module Commands
 
     module Unequip
         def self.stage(core, params)
-            Commands.find_object_for_key(core, params, :target, nil, [:worn])
+            Commands.find_and_set_object_for_key(core, params, :target, nil, [:worn])
             # TODO - take 'on' preposition that establishes destination
-            #Commands.find_object_for_key(core, params, :destination, nil, [:external])
+            #Commands.find_and_set_object_for_key(core, params, :destination, nil, [:external])
         end
 
         def self.do(core, params)
@@ -299,13 +295,13 @@ module Commands
     module Attack
         def self.stage(core, params)
             if params[:tool]
-                Commands.find_object_for_key(core, params, :tool, nil, [:grasped])
+                Commands.find_and_set_object_for_key(core, params, :tool, nil, [:grasped])
             end
 
-            Commands.find_object_for_key(core, params, :target)
+            Commands.find_and_set_object_for_key(core, params, :target)
             # Search within the target for the location, if it exists.
             if params[:location]
-                Commands.find_object_for_key(core, params, :location, nil, [params[:target]])
+                Commands.find_and_set_object_for_key(core, params, :location, nil, [params[:target]])
             end
         end
 
@@ -368,7 +364,7 @@ module Commands
 
     module Open
         def self.stage(core, params)
-            Commands.find_object_for_key(core, params, :target, nil, [:position, :inventory])
+            Commands.find_and_set_object_for_key(core, params, :target, nil, [:position, :inventory])
 
             if params[:target].open?
                 raise(FailedCommandError, "#{params[:target].monicker} is already open.")
@@ -384,7 +380,7 @@ module Commands
 
     module Close
         def self.stage(core, params)
-            Commands.find_object_for_key(core, params, :target, nil, [:position, :inventory])
+            Commands.find_and_set_object_for_key(core, params, :target, nil, [:position, :inventory])
 
             if !params[:target].open?
                 raise(FailedCommandError, "#{params[:target].monicker} is already closed.")
@@ -403,7 +399,7 @@ module Commands
     module Say
         def self.stage(core, params)
             if params[:receiver]
-                Commands.find_object_for_key(core, params, :receiver, nil, [:position], [:statement])
+                Commands.find_and_set_object_for_key(core, params, :receiver, nil, [:position], [:statement])
             end
         end
 
@@ -414,30 +410,18 @@ module Commands
 
     module Whisper
         def self.stage(core, params)
-            Commands.find_object_for_key(core, params, :receiver, nil, [:position], [:statement])
+            # Look for receiver. We should probably set it to :self or something otherwise.
+            Commands.find_and_set_object_for_key(core, params, :receiver, nil, [:position], [:statement])
         end
 
         def self.do(core, params)
-            message = Message.new(:unit_whispers,
-                :agent           => params[:agent],
-                :receiver        => params[:receiver],
-                :statement       => params[:statement],
-                :response_needed => true
-            )
-            if params[:receiver]
-                params[:receiver].process_message(message)
-            else
-                Log.warning("Whisper with no receiver?")
-                message.params[:receiver] = :nobody
-                locations = [params[:agent].absolute_position]
-                Message.dispatch_positional(core, locations, message.type, message.params.merge(:statement => ''))
-            end
+            params[:agent].whisper(params[:receiver], params[:statement], true)
         end
     end
 
     module Ask
         def self.stage(core, params)
-            Commands.find_object_for_key(core, params, :receiver, nil, [:position])
+            Commands.find_and_set_object_for_key(core, params, :receiver, nil, [:position])
         end
 
         def self.do(core, params)
@@ -487,8 +471,8 @@ module Commands
 
             # Now we have to check that the player actually has access to all of the stuff in the params
             # TODO - find_object functionality can deal with abstract object types like :metal
-            Commands.find_object_for_key(core, params, :location, nil, [:position], [:tool])
-            Commands.find_object_for_key(core, params, :tool,     nil, [:inventory])
+            Commands.find_and_set_object_for_key(core, params, :location, nil, [:position], [:tool])
+            Commands.find_and_set_object_for_key(core, params, :tool,     nil, [:inventory])
 
             # We have enough information to construct something!
         end
@@ -546,7 +530,7 @@ module Commands
                         Log.debug("Recipe has #{param} #{recipe[param]}", 9)
                     else
                         Log.debug("Searching for object for #{param}")
-                        Commands.find_object_for_key(core, params, param, search_locations[param])
+                        Commands.find_and_set_object_for_key(core, params, param, search_locations[param])
                     end
                 end
             end
