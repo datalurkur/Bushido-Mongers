@@ -70,7 +70,11 @@ class AutomationStack
         response_proc = find_response_for(message)
         if response_proc
             Thread.new do
-                response_proc.call(self, message)
+                begin
+                    response_proc.call(self, message)
+                catch Exception => e
+                    Log.debug("Caught exception in response proc", e.message, e.backtrace)
+                end
             end
         end
     end
