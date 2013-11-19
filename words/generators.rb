@@ -315,7 +315,7 @@ module Words
                   }
         state = State.new
         state.add_unique_object(noun)
-        name    = Words::NounPhrase.new(self, noun, :state => state)
+        name  = Words::NounPhrase.new(self, noun, :state => state)
 
         name.to_s.title
     end
@@ -324,11 +324,12 @@ module Words
         noun    = {
                     :monicker   => [args[:type], Noun.rand(self)].rand,
                     :adjectives => [args[:keywords], Adjective.rand(self)].rand,
+                    :of_phrase  => Noun.rand(self)
                   }
         state = State.new
         state.add_unique_object(noun)
         state.add_unique_object(noun[:of_phrase])
-        name    = NounPhrase.new(self, noun, :state => state)
+        name  = NounPhrase.new(self, noun, :state => state)
 
         name.to_s.title
     end
