@@ -1,24 +1,19 @@
-require './world/factories'
-
-$TestWorldFactory = FantasmTestWorldFactory
-
+require './bushido'
 require './util/traps'
 require './util/cfg_reader'
 require './net/lobby_bypass_client'
 
-Log.setup("Main", "local")
+Log.setup("Main", "debug")
 
 # FIXME: Used as a stand-in until we have proper game_args being passed into GameCore.
-if $TestWorldFactory
-    class DefaultCore
-        private
-        def setup_world(args)
-            Log.debug("Creating world")
-            @world = $TestWorldFactory.generate(self, args)
+class DefaultCore
+    private
+    def setup_world(args)
+        Log.debug("Creating world")
+        @world = FantasmTestWorldFactory.generate(self, args)
 
-            Log.debug("Populating world with NPCs and items")
-            @world.populate
-        end
+        Log.debug("Populating world with NPCs and items")
+        @world.populate
     end
 end
 
@@ -38,12 +33,11 @@ trap_signals do
     exit
 end
 
-if __FILE__ == $0
-    $client.start
+$server.start
+$client.start
 
-    while $client.running?
-        sleep 10
-    end
-
-    $server.stop
+while $client.running?
+    sleep 10
 end
+
+$server.stop
