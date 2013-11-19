@@ -104,8 +104,8 @@ target = $core.create(:goat, {:position => $core.create(FakeRoom), :name => "Bil
 Log.debug($core.words_db.describe_body(target))
 
 # {:agent => <Ninja, :name => "Kenji Scrimshank">, :target => <Goat, :name => "Billy Goat Balrog">, :verb => :attack, :tool => :agent_current_weapon}
-puts $core.words_db.describe_attack(:attacker => observer, :defender => target, :command => :attack, :tool => :dagger, :result_hash => {:damage_type => :piercing})
-puts $core.words_db.describe_attack(:defender => observer, :attacker => target, :command => :attack,                   :result_hash => {:damage_type => [:piercing, :blunt, :nonlethal].rand})
+Log.debug($core.words_db.describe_attack(:attacker => observer, :defender => target, :command => :attack, :tool => :dagger, :result_hash => {:damage_type => :piercing}))
+Log.debug($core.words_db.describe_attack(:defender => observer, :attacker => target, :command => :attack,                   :result_hash => {:damage_type => [:piercing, :blunt, :nonlethal].rand}))
 
 target = $core.create(:chest, {:name => "Bosom", :randomize => true})
 #target_description = Descriptor.describe(target, observer)

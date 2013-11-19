@@ -48,10 +48,10 @@ $server.start
 $client.stack.set_state(:join_lobby)
 $client.stack.specify_response_for(:choose_from_list, :field => :server_menu) do |stack, message|
     if stack.get_state == :join_lobby
-        puts "Attempting to join lobby #{$client_config[:lobby_name]}/#{$client_config[:lobby_password]}"
+        Log.debug("Attempting to join lobby #{$client_config[:lobby_name]}/#{$client_config[:lobby_password]}")
         stack.put_response(:join_lobby)
     else
-        puts "Attempting to create lobby #{$client_config[:lobby_name]}/#{$client_config[:lobby_password]}"
+        Log.debug("Attempting to create lobby #{$client_config[:lobby_name]}/#{$client_config[:lobby_password]}")
         stack.put_response(:create_lobby)
     end
 end
@@ -92,7 +92,7 @@ $client.stack.specify_response_for(:generation_fail) do |stack, message|
     if message.reason == :already_generated
         stack.set_state(:start_game)
     else
-        puts "Couldn't generate world - #{message.reason}"
+        Log.debug("Couldn't generate world - #{message.reason}")
         $client.release_control
     end
 end
@@ -103,7 +103,7 @@ $client.stack.specify_response_for(:start_fail) do |stack, message|
     if message.reason == :already_started
         stack.set_state(:create_character)
     else
-        puts "Couldn't start game - #{message.reason}"
+        Log.debug("Couldn't start game - #{message.reason}")
         $client.release_control
     end
 end

@@ -8,7 +8,6 @@ $TestWorldFactory = FantasmTestWorldFactory
 require './run_local'
 
 $client.stack.specify_response_for(:properties) do |stack, message|
-    # NOTE: DEAR GOD DO NOT EVER USE 'puts' FOR ANYTHING
     Log.debug(VerboseInterface.properties(message))
 end
 
