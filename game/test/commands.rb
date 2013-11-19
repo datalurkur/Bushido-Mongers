@@ -54,7 +54,7 @@ $cmd_list = [
 
 $cmd_index = 0
 $waiting_since = 0
-$max_wait_time = 3
+$max_wait_time = 5
 $mutex = Mutex.new
 $failed = false
 
@@ -92,14 +92,19 @@ $client.stack.specify_response_for(:begin_playing) do |stack, message|
 end
 
 $client.stack.specify_response_for(:report, :field => :action_results) do |stack, message|
+    Log.info("Action results: #{message.contents}")
     exec_next_cmd(stack)
+end
+
+$client.stack.specify_response_for(:report, :field => :game_event) do |stack, message|
+    Log.info("Game event: #{message.contents}")
 end
 
 $server.start
 $client.start
 
 while $client.running?
-    sleep 10
+    sleep 1
 end
 
 $server.stop

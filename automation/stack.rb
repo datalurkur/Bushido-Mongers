@@ -73,6 +73,7 @@ class AutomationStack
                 begin
                     response_proc.call(self, message)
                 catch Exception => e
+                    # FIXME - Why does this message not print?
                     Log.debug("Caught exception in response proc", e.message, e.backtrace)
                 end
             end

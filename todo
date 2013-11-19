@@ -67,11 +67,6 @@ Discuss how this factors into worldgen.
 Recipes right now are a bit hacked together, and the logic for parsing text into recipe instantiation is atrocious.  Fix it.
 
 ------------------------
--World Saving / Loading-
-------------------------
-While the foundational work for this is done, we have yet to implement full world saving and loading.
-
-------------------------
 -Client Command History-
 ------------------------
 Allow clients to access a command history in some sensible way.  Arrow keys don't work for Ruby scripts, so we'll have to find a different way / create a better client.

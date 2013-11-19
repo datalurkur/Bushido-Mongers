@@ -1,11 +1,13 @@
+require './util/log'
+Log.setup("Main", "local")
+
+require './util/timer'
+MeteredMethods.enable
+
 require './bushido'
 require './util/traps'
 require './util/cfg_reader'
 require './net/lobby_bypass_client'
-
-Log.setup("Main", "local")
-
-#MeteredMethods.enable
 
 config = CFGReader.read("test")
 client_config = CFGReader.read("test_lobby").merge(:server_port => config[:listen_port])

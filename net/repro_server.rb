@@ -39,6 +39,7 @@ class ReproServer < GameServer
             Log.debug("Message expected for #{event.extra}, but received on #{socket}: #{message.inspect}")
         else
             Log.debug("Event out-of-order: (#{socket}) #{message.inspect} (expected (#{next_event.extra}) #{next_event.data.inspect})")
+            @repro_index += 1
         end
     end
 end
