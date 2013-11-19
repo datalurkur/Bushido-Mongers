@@ -113,8 +113,12 @@ class ObjectKB < KB
             all_quanta_for_type(object)
         elsif Symbol === object
             Log.warning("Quanta for bareword Symbol #{object.inspect} not supported!")
-            read_identities_for_object(object) if @use_identities
-            # add_identities(object)
+            if @use_identities
+                # add_identities(object)
+                read_identities_for_object(object)
+            else
+                []
+            end
         end
     end
 end

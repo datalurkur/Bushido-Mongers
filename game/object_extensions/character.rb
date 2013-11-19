@@ -43,16 +43,17 @@ module Character
                 end
             when :unit_speaks, :unit_whispers
                 # TODO - Add in distance scoping for different actions (shouting can be witnessed from further away than talking)
-                # TODO - This witnesses? check is pretty stupid: It passes in the abs_pos and then checks whether it's the abs_pos.
-                if (message.agent != instance) && instance.witnesses?([instance.absolute_position])
-                    if message.type == :unit_whispers && instance != message.reciever
-                        # Whisper can be reported, but with no content (e.g. Bob whispers to Charlie.)
-                        # TODO - Do a perception check here to see if the statement is overheard!
-                        message.statement = ''
-                    end
-
-                    instance.inform_user(message)
+                # FIXME - This witnesses? check is pretty stupid: It passes in the abs_pos and then checks whether it's the abs_pos.
+                Log.debug("#{instance.monicker} receiving #{message.type}")
+#                if (message.agent != instance)# && instance.witnesses?([instance.absolute_position])
+                if message.type == :unit_whispers && instance != message.reciever
+                    # Whisper can be reported, but with no content (e.g. Bob whispers to Charlie.)
+                    message.statement = ''
                 end
+                Log.debug("#{instance.monicker} informing #{message.type}")
+
+                instance.inform_user(message)
+#                end
             when :unit_killed, :object_destroyed
                 if instance.witnesses?([message.location])
                     instance.inform_user(message)

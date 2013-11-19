@@ -19,5 +19,5 @@ GROUP_KNOWLEDGE =
 # These apply to individual entities; e.g. a human's name or profession.
 IDENTITIES =
 [
-	[:self, :have, :name, Proc.new { |odb, object| object.monicker } ]
+	[:self, :have, :name, Proc.new { |odb, object| object.is_a?(BushidoObjectBase) ? object.monicker : object } ]
 ]

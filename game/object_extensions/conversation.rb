@@ -5,36 +5,41 @@ module Conversation
         end
 
         def at_message(instance, message)
+            return unless listens_for(instance).include?(message.type)
+            Log.debug(["Message #{message.type} received by #{instance.monicker}"], 1)
             # Characters engage in conversation themselves.
             return     if instance.uses?(Character)
             # But other entities need perception and knowledge to talk.
             return unless instance.uses?(Perception)
             return unless instance.uses?(Knowledge)
 
-            case message.type
-            when :unit_speaks, :unit_whispers
-                return unless instance == message.receiver && message.response_needed
-                # Statement is an array of symbols
-                statement_s = message.statement.map(&:to_s).join(" ")
-                Log.debug(["Statement received by #{instance.monicker}: #{statement_s}"], 1)
-                if message.has_param?(:receiver) && instance.will_do_command?(message)
-                    instance.perform_command(message)
-                else
-                    params = instance.decompose_ambiguous(message.statement)
-                    if params[:query]
-                        return instance.answer_question(message.agent, params)
-                    elsif params[:statement]
-                        # FIXME - This should only happen if the speaker is believed.
-                        # For now it is a naive world, without the considered
-                        # possibility of a lie. Please don't abuse this!
-                        if true # believes_statement(agent, params[:statement])
-                            instance.add_knowledge_of(params[:thing])
-                            instance.say(message.agent, @core.words_db.describe_knowledge(params[:statement]))
-                        else
-                            instance.say(message.agent, "I don't believe you!")
-                        end
+            # Statement is an array of symbols
+            statement_s = message.statement.map(&:to_s).join(" ")
+
+            Log.debug(["Message received by #{instance.monicker}: #{statement_s}"], 1)
+            return unless instance == message.receiver && message.response_needed
+            Log.debug(["Response needed from #{instance.monicker} to #{statement_s}"], 6)
+
+            if instance.will_do_command?(message)
+                return instance.perform_command(message)
+            else
+                params = instance.decompose_ambiguous(message.statement)
+                if params[:query]
+                    instance.answer_question(message.agent, params)
+                elsif params[:statement]
+                    # FIXME - This should only happen if the speaker is believed.
+                    # For now it is a naive world, without the considered
+                    # possibility of a lie. Please don't abuse this!
+                    if true # believes_statement(agent, params[:statement])
+                        instance.add_knowledge_of(params[:thing])
+                        instance.say(message.agent, @core.words_db.describe_knowledge(params[:statement]))
+                    else
+                        instance.say(message.agent, "I don't believe you!")
                     end
+                else
+                    instance.say(message.agent, "I don't understand.")
                 end
+                return params
             end
         end
     end
@@ -48,6 +53,7 @@ module Conversation
         knowledge = []
         case params[:query_lookup]
         when :civil
+            self.say(asker, "I don't know how to answer that question.")
         when :object
             # Something like an 'ask about': report a random fact related to the subject.
             if self.knows_of_class?(params[:thing])
@@ -132,11 +138,12 @@ module Conversation
             Log.debug("#{self.monicker} failed because: #{e.message}")
             say(message.agent, "I failed you because: #{e.message}")
         end
+        params
     end
 
 #private
     def say(receiver, statement, response_needed = false)
-        Log.debug("#{self.monicker} says, #{statement.inspect}")
+        Log.debug("#{self.monicker} says, #{statement.inspect} to #{receiver.monicker}#{response_needed ? ", wanting a response" : ""}")
         if statement.is_a?(String)
             statement = statement.split(/\s/).map(&:to_sym)
         end
@@ -153,7 +160,7 @@ module Conversation
 
     # TODO: Some sort of perception check to determine whether the message is received.
     def whisper(receiver, statement, response_needed = false)
-        Log.debug("#{self.monicker} whispers, #{statement.inspect}")
+        Log.debug("#{self.monicker} whispers, #{statement.inspect} to #{receiver.monicker}#{response_needed ? ", wanting a response" : ""}")
         if statement.is_a?(String)
             statement = statement.split(/\s/).map(&:to_sym)
         end
