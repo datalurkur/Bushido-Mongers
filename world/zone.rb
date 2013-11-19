@@ -15,7 +15,7 @@ class Zone
             end
         end
 
-        # Returns args used to populate gen_area_name, Area.new and Room.new.
+        # Returns args used to populate randomized_room_name, Area.new and Room.new.
         def get_params(core, args = {})
             args[:depth] ||= 0
             args[:type] = case args[:type]

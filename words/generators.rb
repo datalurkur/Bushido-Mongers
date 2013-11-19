@@ -308,19 +308,7 @@ module Words
         sentences.join(" ")
     end
 
-    def gen_area_name(args = {})
-        noun    = {
-                    :monicker   => args[:type]     || Noun.rand(self),
-                    :adjectives => args[:keywords] || Adjective.rand(self),
-                  }
-        state = State.new
-        state.add_unique_object(noun)
-        name  = Words::NounPhrase.new(self, noun, :state => state)
-
-        name.to_s.title
-    end
-
-    def random_name(args = {})
+    def randomized_room_name(room_params = {})
         noun    = {
                     :monicker   => [args[:type], Noun.rand(self)].rand,
                     :adjectives => [args[:keywords], Adjective.rand(self)].rand,

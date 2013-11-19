@@ -8,8 +8,8 @@ require './test/fake'
 
 $core = FakeCore.new
 
-Log.debug($core.words_db.gen_area_name({:type => :mountain, :keywords => [:beautiful]}))
-Log.debug($core.words_db.gen_area_name({:type => :sewer,    :keywords => [:dank]}))
+Log.debug($core.words_db.randomized_room_name({:type => :mountain, :keywords => [:beautiful]}))
+Log.debug($core.words_db.randomized_room_name({:type => :sewer,    :keywords => [:dank]}))
 
 s = Words::State.new
 raise unless s.eql?(s)
@@ -86,21 +86,17 @@ observer = $core.create_npc(:human, :name => "Kenji Skrimshank", :position => $c
 Log.debug($core.words_db.describe_body(observer))
 Log.debug($core.words_db.describe_inventory(observer))
 # Test missing parts.
-kenji_leg = observer.get_contents(:external).find { |bp| bp.get_type == :leg }
-observer.component_destroyed(kenji_leg, :external, observer)
-Log.debug($core.words_db.describe_body(observer))
-kenji_leg = observer.get_contents(:external).find { |bp| bp.get_type == :leg }
-observer.component_destroyed(kenji_leg, :external, observer)
-Log.debug($core.words_db.describe_body(observer))
 
-#args = {:agent => agent}
-#Log.debug($core.words_db.describe_inventory(args))
+2.times do
+    kenji_leg = observer.get_contents(:external).find { |bp| bp.get_type == :leg }
+    observer.component_destroyed(kenji_leg, :external, observer)
+    Log.debug($core.words_db.describe_body(observer))
+end
 
 kenji_arm = observer.get_contents(:external).find { |bp| bp.get_type == :arm }
 Log.debug($core.words_db.describe_composition(kenji_arm))
 
 target = $core.create(:goat, {:position => $core.create(FakeRoom), :name => "Billy Goat Balrog"})
-#target = Descriptor.describe(target, observer)
 Log.debug($core.words_db.describe_body(target))
 
 # {:agent => <Ninja, :name => "Kenji Scrimshank">, :target => <Goat, :name => "Billy Goat Balrog">, :verb => :attack, :tool => :agent_current_weapon}
@@ -108,12 +104,8 @@ Log.debug($core.words_db.describe_attack(:attacker => observer, :defender => tar
 Log.debug($core.words_db.describe_attack(:defender => observer, :attacker => target, :command => :attack,                   :result_hash => {:damage_type => [:piercing, :blunt, :nonlethal].rand}))
 
 target = $core.create(:chest, {:name => "Bosom", :randomize => true})
-#target_description = Descriptor.describe(target, observer)
 Log.debug($core.words_db.describe_composition(target))
-
 target.properties[:open] = true
-#target_description = Descriptor.describe(target, observer)
-#Log.debug($core.words_db.describe_container_class(target_description))
 Log.debug($core.words_db.describe_composition(target))
 
 Log.debug($core.words_db.identity_copula(observer).sentence)

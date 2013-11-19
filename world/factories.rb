@@ -12,7 +12,7 @@ class << self
 
         params = Zone.get_params(core, :depth => depth)
 
-        world_name = core.words_db.gen_area_name(params)
+        world_name = core.words_db.randomized_room_name(params)
 
         world = core.create(World, params.merge(:name => world_name, :size => size, :depth => depth))
         populate_area(core, world, config)
@@ -36,9 +36,9 @@ class << self
         parent_zone_type = parent_area.respond_to?(:zone_type) ? parent_area.zone_type : nil
 
         params = Zone.get_params(core, :parent => parent_zone_type, :depth => depth)
+        name   = core.words_db.randomized_room_name(params)
 
         Log.debug(params.inspect, 6)
-        name = "#{core.words_db.random_name(params)}"
 
         area = if (depth < 1) || (rand() < config[:area_size_tendency])
             Log.debug("Generating room #{name}", 5)
