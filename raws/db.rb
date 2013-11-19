@@ -41,8 +41,6 @@ class ObjectDB
         end
     end
 
-    metered :find_subtypes, :create, :types_of
-
     attr_reader :hash, :db
 
     def initialize(db, group_hash)

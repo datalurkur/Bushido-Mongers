@@ -71,6 +71,8 @@ module Commands
                       " for #{agent.monicker}")
             agent.find_all_objects(object_type, object_string, locations)
         end
+
+        metered :find_all_objects, :verify_params, :find_and_set_object_for_key, :find_object_for_key, :do, :stage
     end
 
     ### HELPER COMMANDS ###

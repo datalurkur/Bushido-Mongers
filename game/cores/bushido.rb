@@ -10,6 +10,7 @@ class BushidoCore < GameCore
         create_agent(type, false, hash)
     end
 
+    # TIMING: Why does this method take 5 seconds to execute?
     def create_character(username, details)
         agent_params = details.reject { |k,v| [:archetype].include?(k) }
 
@@ -132,4 +133,6 @@ class BushidoCore < GameCore
             mobs_to_spawn.to_i.times { create_agent(type, false, {:position => real_spawn_locations.rand}) }
         end
     end
+
+    metered :populations, :create_npc, :create_character, :create_agent, :setup_world, :setup_managers, :seed_population
 end
