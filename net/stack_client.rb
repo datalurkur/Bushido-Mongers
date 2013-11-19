@@ -5,10 +5,10 @@ require './ui/client_interface'
 class StackClient < GameClient
     attr_reader :stack
 
-    def initialize(config={})
+    def initialize(config = {})
         @stack = AutomationStack.new
         setup_control_pipeline
-        super(MetaDataInterface,config)
+        super(MetaDataInterface, config)
     end
 
     def setup_control_pipeline
