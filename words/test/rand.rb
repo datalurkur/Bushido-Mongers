@@ -18,6 +18,6 @@ end
 end
 
 10.times do |i|
-    Log.debug($core.words_db.random_name)
+    Log.debug($core.words_db.randomized_room_name)
 end
 

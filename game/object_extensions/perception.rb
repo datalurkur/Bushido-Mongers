@@ -51,24 +51,18 @@ module Perception
             return [] unless uses?(Composition) && uses?(Corporeal)
             external_body_parts
         when BushidoObject
-            Log.debug("Finding #{filters[:name]}, #{filters[:type]} in #{location.monicker}", 6)
+            Log.debug("Searching in #{location.monicker}", 6)
             if location.uses?(Composition)
-                if location.uses?(Perception)
-                    # TODO - This is weird. We shouldn't be using the external
-                    # perception to search, but it doesn't matter yet.
-                    # TODO - enable searching for internal parts if a body knowledge,
-                    # skill-check passes, presumably using can_percieve?.
-                    raise StandardError, "Searching in non-room non-container BushidoObject?"
-                    #search_space = [:grasped, :stashed, :worn, :external]
-                    #result = location.find_object(filters[:type], filters[:name], [], search_space)
-                    #Log.debug(result)
-                    #return [result]
-                elsif location.is_type?(:container)
+                if location.container?
                     if location.open?
                         location.container_contents(:internal)
                     else
                         raise(FailedCommandError, "You can't search inside the #{location.monicker} because it's closed.")
                     end
+                elsif location.uses?(Perception)
+                    # TODO - enable searching for internal parts if a body knowledge,
+                    # skill-check passes, presumably using can_percieve?.
+                    raise(StandardError, "Searching in non-room non-container BushidoObject?")
                 end
             else
                 [location]
@@ -79,62 +73,64 @@ module Perception
         end
     end
 
-    def filter_objects(location, filters)
-        objects_in_location(location).select { |object| object.matches(filters) }
+    # Return all the objects matching the filter at locations.
+    def filter_objects(locations, filter)
+        locations = explode_locations(locations)
+
+        Log.debug("#{self.monicker} is finding things" +
+                  (filter[:name] ? " named #{filter[:name].inspect}"   : '') +
+                  (filter[:type] ? " of type #{filter[:type].inspect}" : '') +
+                  (filter[:uses] ? " that use #{filter[:uses].inspect}"   : '') +
+                  (filter[:adjectives] ? " with adjectives #{filter[:adjectives].inspect}" : '') +
+                  (locations     ? " in #{locations.inspect}"          : ''),
+                 5)
+
+        matches = locations.inject([]) do |matches, location|
+            new_matches = objects_in_location(location).select { |object| object.matches(filter) }
+            Log.debug("#{new_matches.size} matches found at #{location}", 6)
+            matches + new_matches
+        end
     end
 
     def find_all_objects(object_type, object_string, locations)
-        explode_locations(locations)
-        Log.debug(["Searching #{locations.size} locations for #{object_type.inspect}/#{object_string.inspect}", locations])
-
-        matches = locations.inject([]) do |matches, location|
-            new_matches = filter_objects(location, {:type => object_type, :name => object_string})
-            Log.debug("#{new_matches.size} matches found at #{location}")
-            matches + new_matches
-        end
-        matches
+        filter_objects(locations, filter_for(object_type, object_string))
     end
 
-    def find_object(type_class, object, adjectives, locations)
-        Log.warning("#{object.monicker} in find_object") if BushidoObject === object
+    def filter_for(object_type = nil, object_string = nil, adjectives = [])
+       {:type => object_type, :name => object_string, :adjectives => adjectives}
+    end
 
-        explode_locations(locations)
-
-        Log.debug(["Searching!", type_class, object, locations], 6)
-        Log.debug(["Adjectives!", adjectives], 6) if adjectives && !adjectives.empty?
+    def find_object(locations = [:all], filter = {})
+        locations = explode_locations(locations)
 
         # Sort through the potentials and find out which ones match the query
-        potentials = locations.inject([]) do |potentials, location|
-            potentials + filter_objects(location, {:type => type_class, :name => object})
-        end
+        potentials = filter_objects(locations, filter)
 
         Log.debug([potentials.map(&:monicker)], 6)
 
         case potentials.size
         when 0
-            objects = find_all_objects(nil, object, locations)
-            Log.debug([type_class, object, locations, objects])
-            if objects && objects.is_a?(Array) && !objects.empty?
-                raise(NoMatchError, "You can't do that to a #{objects.first.get_type}!")
+            # Whether there are actually instances of this object type around
+            # changes how the command fails.
+            if filter_objects(filter_for(filter[:type])).empty?
+                raise(NoMatchError, "You can't do that to a #{filter[:type]}!")
             else
-                raise(NoMatchError, "No #{object} found.")
+                raise(NoMatchError, "No #{filter[:type]} found.")
             end
         when 1
             return potentials.first
         else
-            if adjectives
-                number = adjectives.map { |a| Words::Adjective.ordinal?(a) }.compact.first
-                if number
-                    return potentials[number - 1]
-                else
-                    Log.debug("#{self.monicker} assumes the first #{object}.")
-                    return potentials.first
-                    # TODO: Possibilities:
-                    # * try re-searching here based on other descriptive information/heuristics.
-                    # * Throw AmbiguousCommandError and request more info
-                end
+            if filter[:adjectives] && (number = filter[:adjectives].map { |a| Words::Adjective.ordinal?(a) }.compact.first)
+                Log.debug([number, number.class])
+                Log.debug("Found adjective for #{number - 1}")
+                raise(NoMatchError, "Not that many #{filter[:type]}s!") if number > potentials.size
+                return potentials[number - 1]
             else
+                Log.debug("#{self.monicker} assumes the first #{filter[:type]}.")
                 return potentials.first
+                # TODO: Possibilities:
+                # * try re-searching here based on other descriptive information/heuristics.
+                # * Throw AmbiguousCommandError and request more info
             end
         end
     end

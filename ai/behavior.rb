@@ -18,7 +18,7 @@ class Behavior
         end
 
         def enemies_in_area(actor)
-            potential_enemies = actor.filter_objects(:position, {:uses => Perception})
+            potential_enemies = actor.filter_objects(:position, :uses => Perception)
             potential_enemies.delete(actor)
             enemies = potential_enemies.select { |npc| Behavior.are_enemies?(npc, actor) }
         end

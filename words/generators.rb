@@ -168,9 +168,6 @@ module Words
             list.map! { |c| [c, *synonyms_of(c)].join(" ") }
             list.insert(0, "Basic commands:")
             flat_list = true
-        when :inventory, :composition
-            verb    = args[:verb]
-            assign_possessor_to_list(args[:agent], list)
         else
             Log.warning("Invalid command #{args[:command]}?")
         end
@@ -193,27 +190,6 @@ module Words
         sentences.flatten.join(" ")
     end
 
-=begin
-    def describe_inventory(args)
-        args[:command] = :inventory
-
-        composition_verbs = {
-            :external => :attach,
-            :worn     => :wear,
-            :grasped  => :hold
-        }
-
-        descriptions = []
-        [:grasped, :worn].each do |location|
-            list_args = args.dup
-            list_args[:list] = args[location] || []
-            list_args[:verb] = composition_verbs[location]
-            descriptions << describe_list(list_args)
-        end
-        descriptions
-    end
-
-    # AddModifier(composition, :closed)
 =begin
         # TODO - handle all lists in either active or passive forms.
         if rand(2) == 0

@@ -268,7 +268,7 @@ class SafeBushidoObject < BushidoObjectBase
         super(*args)
     end
 
-    def filter_objects(location, filters)
+    def filter_objects(locations, filter)
         raise(MissingObjectExtensionError, "The perception extension is required to filter objects") unless uses?(Perception)
     end
 end

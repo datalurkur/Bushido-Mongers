@@ -57,10 +57,8 @@ end
 # Question: Can players / AI do things furtively / in secret?
 Behavior.define(:consume) do |actor|
     consumable_type = actor.class_info[:consumes] || :consumable
-    consumables = [:position, :grasped, :stashed].collect do |location|
-        actor.filter_objects(location, {:type => consumable_type})
-    end.flatten
-    consumables.reject! { |c| c == actor }
+    consumables = actor.filter_objects([:position, :grasped, :stashed], :type => consumable_type)
+    consumables.reject! { |c| c == actor } # Make sure jikininki don't eat themselves :-p
 
     if consumables.empty?
         Log.debug("#{actor.monicker} finds nothing to consume", 6)
