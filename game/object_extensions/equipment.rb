@@ -16,11 +16,9 @@ module Equipment
         Log.debug("Adding random equipment to #{monicker}", 6)
         external_body_parts.each do |part|
             if part.properties[:can_equip] && !part.properties[:can_equip].empty?
-                #Log.debug(["Looking for equipment worn on #{part.monicker}", part.properties[:can_equip]], 6)
+                Log.debug(["Looking for equipment worn on #{part.monicker}", part.properties[:can_equip]], 6)
                 equipment_types = @core.db.instantiable_types_of(part.properties[:can_equip].rand)
-                equipment_piece = @core.create(equipment_types.rand, :randomize => true)
-                #Log.debug(["Found", equipment_piece], 6)
-                wear(part, equipment_piece)
+                equipment_piece = @core.create(equipment_types.rand, :randomize => true, :position => part, :position_type => :worn)
             end
         end
     end
@@ -31,29 +29,38 @@ module Equipment
     end
 
     def grasp(part, object)
-        raise(FailedCommandError, "Can't hold #{object.monicker}; already holding #{part.grasped}") if part.full?(:graped)
+        raise(FailedCommandError, "Can't hold #{object.monicker}; already holding #{part.grasped}") if part.full?(:grasped)
         object.set_position(part, :grasped)
     end
 
     # TODO - stash priorities for a) particular items (e.g. arrows go in quiver) and b) particular commands.
+    # rename stash_or_drop?
     def stash(object)
         Log.debug("Stashing #{object.monicker}")
+        #if position, position_type = find_stash_location(object)
+        #    object.set_position(position, position_type)
+        #end
         if grasper = available_grasper
             grasp(grasper, object)
         elsif container = available_container
             object.set_position(container, :internal)
         else
-            raise(FailedCommandError, "Couldn't stash #{object.monicker}; no place to put it.")
+            # http://www.youtube.com/watch?v=d5dlRiJPips
+            object.set_position(self.absolute_position, :internal)
         end
+        object
     end
+
+    # TODO - genericize stash to find a position and a position_type,
+    # so we can use stash functionality when passing in
+    # initial position
+    #def find_stash_location(object)
+    #end
 
     def remove(equipment)
         # TODO - check for curses :-p
-        # TODO - check that equipment is actually equipped
         raise(FailedCommandError, "Not wearing #{equipment.monicker}.") unless all_equipment(:worn).include?(equipment)
-        unless stash(equipment)
-            equipment.set_position(self.absolute_position, :internal)
-        end
+        stash(equipment)
     end
 
     def available_grasper

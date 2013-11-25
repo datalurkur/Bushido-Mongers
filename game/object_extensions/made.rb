@@ -22,6 +22,18 @@ module Made
                 instance.set_creator(params[:creator].uid)
             end
 
+            unless params[:position]
+                if params[:creator].nil?
+                    Log.warning("#{instance.monicker} being created with no creator and no position")
+                end
+                if params[:creator].uses?(Equipment)
+                    params[:creator].stash(instance)
+                else
+                    Log.warning("Stashing #{instance.monicker} on agent #{agent.monicker} without equipment; dropping")
+                    object.set_position(self.absolute_position, :internal)
+                end
+            end
+
             # Created object quality depends on the quality of its components as well
             avg_component_quality = components.inject(0.0) { |s,i|
                 s + Quality.index_of(i.is_type?(:made) ? i.properties[:quality] : Quality.standard)
@@ -30,11 +42,6 @@ module Made
             quality_level = Quality.value_at(Quality.clamp_index(quality_value.ceil))
 
             instance.properties[:quality] = quality_level
-
-            # Remove component items from the world, unless they're freshly created.
-            components.each do |component|
-                component.set_position(instance, :incidental)
-            end
         end
 
         def pack(instance)
@@ -55,11 +62,11 @@ module Made
     end
 
     def get_random_components(params)
-        p = params.reject { |k,v| k == :components || k == :quality || k == :position }
+        p = params.reject { |k, v| k == :components || k == :quality || k == :position }
         # Choose a random recipe
         recipe = class_info[:recipes].rand
         recipe[:components].collect do |component_type|
-            @core.create(component_type, p)
+            @core.create(component_type, p.merge(:position => self, :position_type => :incidental))
         end
     end
 end
