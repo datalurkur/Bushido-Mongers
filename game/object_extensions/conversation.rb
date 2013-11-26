@@ -119,7 +119,7 @@ module Conversation
 
         begin
             Log.debug("#{self.monicker} performing command #{command}", 8)
-            params = Commands.stage(@core, command, params.merge(:agent => self))
+            params = Commands.stage(@core, params.merge(:agent => self))
         rescue Exception => e
             Log.debug(["Failed to stage command #{command}", e.message, e.backtrace])
             if AmbiguousCommandError === e
@@ -131,7 +131,7 @@ module Conversation
         end
 
         begin
-            Commands.do(@core, command, params)
+            Commands.do(@core, params)
             Log.debug("#{self.monicker} did it! Yay!")
             say(message.agent, "I did it! Yay!")
         rescue Exception => e

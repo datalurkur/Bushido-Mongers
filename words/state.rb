@@ -36,10 +36,10 @@ module Words
 
     class State
         FIELDS = {
-            :aspect  => [:perfect,
+            :aspect  => [:perfect,     # expressing completed action
                          :progressive, # e.g. is progressing, is happening, is missing
                          :imperfect,   # continuing or repeated event or state
-                         :habitual,
+                         :habitual,    # regular activity
                         ],
             :tense   => [:present, :past, :future],
             :mood    => [:indicative, :subjunctive, :imperative],

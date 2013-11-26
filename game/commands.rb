@@ -1,4 +1,5 @@
 require './util/log'
+require './util/timer'
 
 module Commands
     class << self
@@ -11,16 +12,17 @@ module Commands
             invocation.to_caml.to_const(Commands)
         end
 
-        def stage(core, command, params)
+        def stage(core, params)
+            raise(ArgumentError, "No command given") unless params[:command]
             raise(ArgumentError, "An agent must be present for a command to be staged") unless params[:agent]
-            mod = get_command_module(core, command)
-            params.merge!(:command => command)
+            mod = get_command_module(core, params[:command])
             mod.stage(core, params)
             params
         end
 
-        def do(core, command, params)
-            mod = get_command_module(core, command)
+        def do(core, params)
+            raise(ArgumentError, "No command given") unless params[:command]
+            mod = get_command_module(core, params[:command])
             mod.do(core, params) if mod.respond_to?(:do)
         end
 
@@ -448,23 +450,21 @@ module Commands
             raise(MissingObjectExtension, "Only creatures with skill can make objects") unless params[:agent].uses?(HasAspects)
             raise(MissingProperty, "What do you want to #{params[:command]}?") unless params[:target]
             # Verify that the target is :made
-            raise(NoMatchError, "#{params[:target]} cannot be made.") unless core.db.is_type?(params[:target], :made)
+            raise(NoMatchError, "#{params[:target]} cannot be made.") unless core.db.has_type?(params[:target]) && core.db.is_type?(params[:target], :made)
 
             # If the player has a goal of what they want to make in mind, find the recipes for that thing and then see if the rest of the information given by the player is enough to establish which recipe they want to use
             Log.debug("#{params[:agent].monicker} is attempting to #{params[:command]} a #{params[:target]}")
 
+            # TODO - find a better place for this?
+            params[:components] = Array(params[:components]) if params[:components]
+
             # Find a recipe (or throw an exception if there's a problem)
-            params[:recipe] = find_recipe(core, params)
-            #params[:recipe] = get_recipe(core, params)
-
-            # Now we have to check that the player actually has access to all of the stuff in the params
-            # TODO - find_object functionality can deal with abstract object types like :metal
-            Commands.find_object_for_key(core, params, :location, nil, [:position], [:tool])
-            Commands.find_object_for_key(core, params, :tool,     nil, [:inventory])
-
-            # We have enough information to construct something!
+            params[:recipe] = get_recipe(core, params)
+            # get_recipe also fills params[:components] with actual local objects,
+            # so we have enough information to construct something!
         end
 
+        # TODO - should pull out the tool used, if applicable.
         def self.do(core, params)
             # Determine object quality
             related_skill        = core.db.info_for(params[:command])[:skill] || params[:command]
@@ -483,7 +483,8 @@ module Commands
                     :quality    => quality,
                     :creator    => params[:agent]
                 })
-                Log.debug("#{params[:agent].monicker} has #{params[:command]}ed a #{quality} #{params[:target]}")
+
+                Log.debug("#{params[:agent].monicker} has #{params[:command]}ed a #{quality} (#{quality_value}) #{params[:target]}")
             else
                 # Failed!  Destroy the components
                 params[:components].each do |component|
@@ -493,192 +494,129 @@ module Commands
             end
         end
 
-        def self.contains_type?(core, type, list)
-            match = nil
-            list.each do |item|
-                Log.debug("Is #{item.monicker} a #{type.inspect}?")
-                if core.db.is_type?(item.get_type, type)
-                    match = item
-                    break
+        # Given a type_list, find each matching object locally, ignoring
+        # items already in the manifest.
+        def self.find_components(agent, type_list, manifest)
+            components = type_list.map do |type_class|
+                matches = agent.filter_objects([:grasped, :stashed], :type => type_class)
+                matches.reject! { |o| manifest.include?(o) }
+                if matches.empty?
+                    raise(FailedCommandError, "You don't have enough #{type_class}.")
+                else
+                    manifest << matches.first
+                    matches.first
                 end
             end
-            match
+            components
         end
 
-        def self.compare_and_find_object(core, params, recipes, param, search_locations)
-            if params[param]
-                recipes = recipes.select { |r| r[param] == params[param] }
-                if recipes.empty?
-                    raise(FailedCommandError, "No recipes found for #{param} #{params[param]}")
-                end
-            else
-                # Search for the parameter.
-                recipes.each do |recipe|
-                    if recipe[param]
-                        Log.debug("Recipe has #{param} #{recipe[param]}", 9)
-                    else
-                        Log.debug("Searching for object for #{param}")
-                        Commands.find_object_for_key(core, params, param, nil, search_locations)
-                    end
-                end
-            end
-        end
-
-        # TODO: Send the failure messages back to be formatted by Words.
-        def self.get_recipe(core, params)
-            # Get all recipes for the intended object.
-            recipes = core.db.info_for(params[:target], :recipes)
-
-            recipes.each do |recipe|
-                # Is there a list of items available that fit the components?
-                # Is technique something that can be done by agent?
-                # Does technique have a location? Is that satisfied?
-                # Is there a list of items available that fit the components?
-                # If these are all accurate, the recipe is found and can be used.
-                # Otherwise, squack.
-            end
-
-            # Fill out location and tool information.
-            search_locations =
-            {
-                :location => [:position],
-                :tool     => [:grasped, :stashed]
-            }
-
-            search_locations.each do |param, search_locs|
-                compare_and_find_object(core, params, recipes, param, search_locs)
-            end
-
-            # Find objects matching any given components
-            found_objects = []
-            (param[:components] || []).each do |component|
-            end
-        end
-
-
-        def self.find_recipe(core, params)
-            # Get a list of recipes used to make the thing
-            # TODO - Use player knowledge of recipes here
-            recipes = core.db.info_for(params[:target], :recipes)
-            Log.debug(["#{recipes.size} recipes found for #{params[:target].inspect} - ", recipes])
-            failure_string = "You don't know how to #{params[:command]} a #{params[:target]}"
-            raise(FailedCommandError, "#{failure_string}.") if recipes.empty?
-
-            # Begin filtering the recipes based on parametes
-
-            # Find recipes that use the "technique" given by the command
-            recipes = recipes.select { |r| r[:technique] == params[:command] }
-            raise(FailedCommandError, "#{failure_string}, perhaps try a different technique.") if recipes.empty?
-
-            # Find recipes that use the location given (anvil, for example)
-            if params[:location]
-                failure_string += " at a #{params[:location]}"
-                recipes = recipes.select { |r| r[:location] == params[:location] }
-                raise(FailedCommandError, "#{failure_string}, perhaps try a different location.") if recipes.empty?
-            end
-
-            # Find recipes that use the tool given (hammer, for example)
-            if params[:tool]
-                failure_string += " with a #{params[:tool]}"
-                recipes = recipes.select { |r| r[:tool] == params[:tool] }
-                raise(FailedCommandError, "#{failure_string}, perhaps try a different tool.") if recipes.empty?
-            end
-
-            # Construct a hash that will store a mapping of real-world components to component requirements
-            recipe_map    = {}
-            recipes.each do |recipe|
-                recipe_map[recipe] = {
-                    :requirements => recipe[:components].dup,
-                    :components   => []
-                }
-            end
-
-            # Begin mapping the given components onto the recipe requirements
-            component_map = {}
+        def self.check_recipe(params, recipe, manifest)
             if params[:components]
-                # For each component provided, get a list of world objects that match
-                Log.debug("Resolving recipe components")
-                Array(params[:components]).each do |component|
-                    # Find all the stuff that matches this and get the corresponding types
-                    component_map[component] = params[:agent].find_all_objects(component, nil, [:inventory])
-                    raise(NoMatchError, "Unable to find '#{component}'") if component_map[component].empty?
-                    Log.debug("Component #{component} matched to #{component_map[component].size} objects")
-                end
+                # Verify that specified components meet recipe component requirements
+                pc = params[:components]
+                rc = recipe[:components]
+                raise(FailedCommandError, "Too many components specified.") if pc.size > rc.size
+                raise(FailedCommandError, "Can't specify partial components yet.") if pc.size < rc.size
 
-                # Iterate through the recipes, attempting to match up components with requirements
-                Log.debug("Mapping recipe components")
-                rejected_recipes = []
-                recipe_map.each do |recipe,recipe_data|
-                    Log.debug(["Mapping components for", recipe])
-                    full_match = true
-                    # Loop over user-provided components first, so that extra components can be caught early
-                    component_map.each do |component,component_matches|
-                        Log.debug("Finding requirement matches for #{component.inspect}")
-                        # Every component in the map must have a valid match, or this recipe is not valid
-                        match = nil
-                        recipe_data[:requirements].each do |requirement|
-                            Log.debug("Checking #{requirement.inspect} for a match")
-                            if (match = contains_type?(core, requirement, component_matches))
-                                Log.debug("Recipe requirement #{requirement} matches an entry for #{component} (#{match.monicker})")
-                                recipe_data[:components] << match
-                                recipe_data[:requirements].delete(requirement)
-                                break
-                            end
-                        end
-                        unless match
-                            Log.debug("Component #{component} was not matched to a recipe requirement")
-                            full_match = false
+                # N.B. At this point pc is local BOBs while rc is still a list of types.
+                # If all the components specified match a recipe component type, we've found a working
+                # permutation and thus a match.
+                match = false
+                pc.permutation do |perm|
+                    perm_match = true
+                    recipe[:components].each do |r|
+                        object = perm.pop
+                        if object.matches(:type => r)
+                            next
+                        else
+                            perm_match = false
                             break
                         end
                     end
-                    unless full_match
-                        Log.debug("Recipe #{recipe} has a match with user-specified components")
-                        rejected_recipes << recipe
-                    end
-                end
-                rejected_recipes.each { |r| recipe_map.delete(r) }
-            end
-
-            # Fill in missing components for recipes
-            rejected_recipes  = []
-            ambiguous_recipes = []
-            recipe_map.each do |recipe,recipe_data|
-                Log.debug(["Filling in missing requirements for", recipe])
-                recipe_data[:requirements].each do |requirement|
-                    matches = params[:agent].find_all_objects(requirement, nil, [:inventory])
-                    matches.reject! { |o| recipe_data[:components].include?(o) }
-                    if matches.size > 1
-                        Log.debug(["Multiple matches found for recipe requirement #{requirement}", matches])
-                        ambiguous_recipes << recipe
-                        break
-                    elsif matches.empty?
-                        Log.debug("No matches found for recipe requirement #{requirement}")
-                        rejected_recipes << recipe
+                    if perm_match
+                        match = true
                         break
                     else
-                        recipe_data[:components] << matches[0]
+                        next
                     end
+                end
+                raise(FailedCommandError, "Can't reconcile specified components with recipe components.") unless match
+            else
+                # No components specified. Find items based on the recipe type list.
+                # In case of exception in find_components, don't wreck the original manifest.
+                local_manifest = manifest
+                params[:components] = find_components(params[:agent], recipe[:components], local_manifest)
+                manifest = local_manifest
+            end
+
+            # Is technique something that can be done by agent?
+
+            # Does the technique have a location? Is that satisfied?
+            if recipe[:location] # TODO - should be derived from technique=>skill=>location
+                Log.warning("recipe[:location #{recipe[:location]}")
+                if params[:location]
+                    matches = params[:agent].filter_objects([:position], Commands.filter_for_key(core, params, :location))
+                    matches.select! { |o| object.matches(:type => recipe[:location]) }
+                elsif
+                    matches = params[:agent].filter_objects([:position], :type => recipe[:location])
+                end
+                matches.reject! { |o| manifest.include?(o) }
+                raise(FailedCommandError, "Not at #{recipe[:location]}.") if matches.empty?
+                params[:location] = matches.first
+            end
+
+            # Was there a tool specified?
+            if recipe[:tool] # TODO - should be derived from technique=>skill=>tool
+                if params[:tool]
+                    matches = params[:agent].filter_objects([:grasped, :stashed], Commands.filter_for_key(core, params, :tool))
+                    matches.select! { |o| object.matches(:type => recipe[:tool]) }
+                else
+                    matches = params[:agent].filter_objects([:grasped], :type => recipe[:location])
+                end
+                matches.reject! { |o| manifest.include?(o) }
+                raise(FailedCommandError, "Can't find the necessary #{recipe[:tool]}.") if matches.empty?
+                params[:location] = matches.first
+            end
+
+            # If nothing has errored out, the recipe is found and can be used.
+
+            return recipe
+        end
+
+        # TODO: Send the failure messages back to be formatted by Words.
+        # FIXME - Doesn't properly check for technique, location and tool.
+        # They need to be moved to the skill for this to happen properly.
+        def self.get_recipe(core, params)
+            # Get all recipes for the intended object.
+            recipes = core.db.info_for(params[:target], :recipes)
+            matching_recipe = nil
+            # The manifest stores all local components already selected for use in the recipe,
+            # so they aren't selected twice.
+            manifest    = []
+
+            # The user has specified a list of components to use. Replace with world objects.
+            if params[:components]
+                params[:components] = find_components(params[:agent], params[:components], manifest)
+            end
+
+            last_error = nil
+            recipes.each do |recipe|
+                begin
+                    if self.check_recipe(params, recipe, manifest)
+                        matching_recipe = recipe
+                    end
+                rescue GameError => e
+                    last_error = e
                 end
             end
 
-            rejected_recipes.each { |r| recipe_map.delete(r) }
-            raise(NoMatchError, "Unable to gather the materials needed to #{params[:command]} a #{params[:target]}") if recipe_map.empty?
-            ambiguous_recipes.each { |r| recipe_map.delete(r) }
-            raise(NoMatchError, "It is unclear what available materials should be used to #{params[:command]} a #{params[:target]}") if recipe_map.empty?
-            raise(NoMatchError, "It is unclear what available materials should be used to #{params[:command]} a #{params[:target]}: options are: #{recipe_map.inspect}") if  recipe_map.size > 1
-            recipe = recipe_map.keys[0]
-
-            # If we had enough parameters to select a recipe, but some were left blank, fill in the missing pieces in the parameters before object lookup
-            Log.debug("Clarifying tool and location if necessary")
-            [:tool, :location].each do |key|
-                params[key] ||= recipe[key] if recipe[key]
+            if matching_recipe
+                Log.debug("Found matching recipe #{matching_recipe.inspect}")
+                Log.debug([matching_recipe, params[:components]], 6)
+                return matching_recipe
+            else
+                raise(last_error)
             end
-
-            Log.debug("Re-mapping components")
-            params[:components] = recipe_map[recipe][:components]
-
-            Log.debug("Done!")
-            return recipe
         end
-    end
-end
+    end # module Make
+end # module Commands

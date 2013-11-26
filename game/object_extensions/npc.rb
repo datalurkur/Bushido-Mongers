@@ -30,11 +30,11 @@ module NpcBehavior
         @behavior      = BehaviorSet.create(behavior)
     end
 
-    def do_command(command, args)
+    def do_command(args)
         begin
-            Commands.do(@core, command, args)
+            Commands.do(@core, args.merge(:agent => self))
         rescue Exception => e
-            Log.error(["#{monicker} failed to perform command #{command}", e.message, e.backtrace])
+            Log.error(["#{monicker} failed to perform command #{args[:command]}", e.message, e.backtrace])
         end
     end
 end

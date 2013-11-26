@@ -43,4 +43,11 @@ args = words_db.decompose_command("look at self with microscope")
 Log.debug(args)
 raise unless args[:command] == :look
 raise unless args[:target] == :self
-#raise unless args[:tool] == :microscope
+raise unless args[:tool] == :microscope
+
+args = words_db.decompose_command("craft katana at anvil from sword_blade and long_handle")
+Log.debug(args)
+raise unless args[:command] == :craft
+raise unless args[:target] == :katana
+# FIXME
+#raise unless args[:components] == [:sword_blade, :long_handle]

@@ -194,8 +194,10 @@ module Composition
             container_contents(type).size > 0
         when :worn
             container_contents(type).size > 1
-        else
+        when :internal, :external
             false
+        else
+            true
         end
     end
 

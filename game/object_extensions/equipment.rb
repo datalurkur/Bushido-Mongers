@@ -65,7 +65,7 @@ module Equipment
 
     def available_grasper
         all_body_parts.select { |bp| bp.composed_of?(:grasped) }.each do |part|
-            Log.debug("Looking at #{part.monicker} for grasping")
+            Log.debug("Looking at #{part.monicker} for grasping", 6)
             return part unless part.full?(:grasped)
         end
         nil
@@ -73,7 +73,7 @@ module Equipment
 
     def available_container
         containers_in_inventory.each do |cont|
-            Log.debug("Looking at #{cont.monicker} for container")
+            Log.debug("Looking at #{cont.monicker} for container", 6)
             return cont if cont.open? && !cont.full?
         end
         nil

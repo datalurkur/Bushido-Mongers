@@ -1,27 +1,20 @@
 require './bushido'
+require './util/traps'
+require './util/cfg_reader'
+require './net/lobby_bypass_client'
 require './test/fake'
 
 Log.setup("Main", "command_test")
 
-$TestWorldFactory = FantasmTestWorldFactory
-
-require './util/traps'
-require './util/cfg_reader'
-require './net/lobby_bypass_client'
-
-Log.setup("Main", "local")
-
 # FIXME: Used as a stand-in until we have proper game_args being passed into GameCore.
-if $TestWorldFactory
-    class DefaultCore
-        private
-        def setup_world(args)
-            Log.debug("Creating world")
-            @world = $TestWorldFactory.generate(self, args)
+class DefaultCore
+    private
+    def setup_world(args)
+        Log.debug("Creating world")
+        @world = FantasmTestWorldFactory.generate(self, args)
 
-            Log.debug("Populating world with NPCs and items")
-            @world.populate
-        end
+        Log.debug("Populating world with NPCs and items")
+        @world.populate
     end
 end
 
@@ -49,7 +42,11 @@ $cmd_list = [
     "look in chest",
     "get rock",
     "look self",
-    "drop rock"
+    "drop rock",
+    "/spawn fiber",
+    "get fiber",
+    "craft thread",
+    "craft fabric"
 ]
 
 $cmd_index = 0

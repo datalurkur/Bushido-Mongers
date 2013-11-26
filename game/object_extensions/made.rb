@@ -7,11 +7,11 @@ module Made
             components = params[:components]
             quality    = params[:quality]
             creator    = nil
-            randomized = false
 
             if params[:randomize]
-                unless components
-                    randomized = true
+                if components
+                    components.each { |component| component.set_position(instance, :incidental) }
+                else
                     components = instance.get_random_components(params)
                 end
                 quality ||= Quality.random
@@ -20,17 +20,19 @@ module Made
                     raise(ArgumentError, "#{key.inspect} is a required parameter for non-random equipment.") unless params[key]
                 end
                 instance.set_creator(params[:creator].uid)
+                components.each { |component| component.set_position(instance, :incidental) }
             end
 
             unless params[:position]
-                if params[:creator].nil?
-                    Log.warning("#{instance.monicker} being created with no creator and no position")
-                end
-                if params[:creator].uses?(Equipment)
-                    params[:creator].stash(instance)
+                if params[:creator]
+                    if params[:creator].uses?(Equipment)
+                        params[:creator].stash(instance)
+                    else
+                        Log.warning("Stashing #{instance.monicker} on agent #{params[:creator].monicker} without equipment; dropping")
+                        instance.set_position(params[:creator].absolute_position, :internal)
+                    end
                 else
-                    Log.warning("Stashing #{instance.monicker} on agent #{agent.monicker} without equipment; dropping")
-                    object.set_position(self.absolute_position, :internal)
+                    Log.warning("#{instance.monicker} being created with no creator and no position")
                 end
             end
 

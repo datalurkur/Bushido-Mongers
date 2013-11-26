@@ -485,7 +485,10 @@ That is the person whose car I saw.
             end
 
             # Turn every noun into a hash. Descriptors end up with the most information.
-            nouns.map! do |noun|
+            # N.B. This explicitly doesn't replace the original array because this has
+            # caused collisions in the past (I believe the same array is present in a
+            # message getting passed elsewhere).
+            nouns = nouns.map do |noun|
                 hash = {}
                 case noun
                 when Hash

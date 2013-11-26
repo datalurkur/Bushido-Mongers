@@ -22,3 +22,8 @@ no_skill smithing {
     associated_attribute intelligence;
     attribute_scaling 0.2;
 }
+
+no_skill weaving {
+    associated_attribute intelligence;
+    attribute_scaling 0.2;
+}

@@ -10,13 +10,13 @@ module Perception
     # Explode inventory into appropriate categories.
     def explode_locations(locations)
         locations = Array(locations)
-        if i = locations.index(:all)
-            locations.insert(i, *PERCEIVABLE_LOCATIONS)
-            locations.delete(:all)
-        end
-        if i = locations.index(:inventory)
-            locations.insert(i, :grasped, :stashed, :worn)
-            locations.delete(:inventory)
+        {   :all       => PERCEIVABLE_LOCATIONS,
+            :inventory => [:grasped, :stashed, :worn]
+        }.each do |orig, replacement_list|
+            if i = locations.index(orig)
+                locations.insert(i, *replacement_list)
+                locations.delete(orig)
+            end
         end
         locations
     end
@@ -74,6 +74,7 @@ module Perception
     end
 
     # Return all the objects matching the filter at locations.
+    # Note that adjectives in the filter are currently a placeholder.
     def filter_objects(locations, filter)
         locations = explode_locations(locations)
 
@@ -100,6 +101,9 @@ module Perception
        {:type => object_type, :name => object_string, :adjectives => adjectives}
     end
 
+    # Note that this method throws exceptions when items aren't found,
+    # which may not be what you want. Consider using filter_objects paired with
+    # filter_for or Commands.filter_for_key.
     def find_object(locations = [:all], filter = {})
         locations = explode_locations(locations)
 
@@ -110,13 +114,7 @@ module Perception
 
         case potentials.size
         when 0
-            # Whether there are actually instances of this object type around
-            # changes how the command fails.
-            if filter_objects(filter_for(filter[:type])).empty?
-                raise(NoMatchError, "You can't do that to a #{filter[:type]}!")
-            else
-                raise(NoMatchError, "No #{filter[:type]} found.")
-            end
+            raise(NoMatchError, "No such #{filter[:type]} found.")
         when 1
             return potentials.first
         else

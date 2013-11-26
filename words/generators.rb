@@ -286,8 +286,8 @@ module Words
 
     def randomized_room_name(room_params = {})
         noun    = {
-                    :monicker   => [args[:type], Noun.rand(self)].rand,
-                    :adjectives => [args[:keywords], Adjective.rand(self)].rand,
+                    :monicker   => [room_params[:type], Noun.rand(self)].rand,
+                    :adjectives => [room_params[:keywords], Adjective.rand(self)].rand,
                     :of_phrase  => Noun.rand(self)
                   }
         state = State.new

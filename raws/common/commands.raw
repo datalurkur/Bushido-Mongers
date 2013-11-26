@@ -83,6 +83,13 @@ abstract command make {
 
 static make cook {}
 
+static make weave {
+    skill weaving;
+}
+static make spin {
+/*    location spinning_wheel; */
+}
+
 static make forge {
     location anvil;
     tool hammer;
@@ -93,12 +100,6 @@ static make forge {
 static make craft {
     skill crafting;
 }
-
-/*
-static make make_bow {
-    skill bowmaking;
-}
-*/
 
 static make fletch {
     skill fletching;

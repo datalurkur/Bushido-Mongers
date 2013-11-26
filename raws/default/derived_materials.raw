@@ -24,6 +24,13 @@ made fabric {
     }
 }
 
+/* FIXME: Fabric s.b. described as these depending on the components of the components.
+   How to handle this? */
+/* rarity common  */
+/* fabric linen {} */
+/* restricted to nobility */
+/* fabric silk {} */
+
 made leather {
     typical_size tiny;
 

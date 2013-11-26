@@ -2,9 +2,6 @@ require './words/structure.rb'
 
 module Words
     # Decompose a given command into pieces usable by the command.rb object-finder.
-    # TODO - Since this exclusively happens on the server-side, we will have access
-    # to adjective and noun information, and can store adjectives and pass them along
-    # to the object-finder to narrow the search.
     # parameter: A whitespace-separated list of words in string format.
     def decompose_command(entire_command)
         Log.debug(["Command text entered: #{entire_command.inspect}"], 6)

@@ -46,7 +46,7 @@ Behavior.define(:attack) do |actor|
     enemies = Behavior.enemies_in_area(actor)
     if attackee = enemies.first
         Log.debug("#{actor.monicker} is attacking #{attackee.monicker}", 5)
-        actor.do_command(:attack, {:agent => actor, :target => attackee})
+        actor.do_command(:command => :attack, :target => attackee)
         true
     else
         false
@@ -66,7 +66,7 @@ Behavior.define(:consume) do |actor|
     else
         consumable = consumables.first
         Log.warning("Oh dear, people almost certainly shouldn't eat themselves") if actor == consumable
-        actor.do_command(:consume, {:agent => actor, :target => consumable})
+        actor.do_command(:command => :consume, :target => consumable)
         true
     end
 end

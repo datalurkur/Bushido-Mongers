@@ -55,12 +55,8 @@ fiber hemp {
 /*    rarity common; */
     typical_value 4;
 }
-fiber linen {
+fiber flax {
 /*    rarity common; */
-    typical_value 4;
-}
-fiber silk {
-/* restricted to nobility */
     typical_value 4;
 }
 
