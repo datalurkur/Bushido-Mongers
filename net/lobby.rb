@@ -238,7 +238,7 @@ class Lobby
 
     def perform_action(username, params, allow_clarification=true)
         begin
-            Log.debug("Performing command #{command}", 8)
+            Log.debug("Performing command #{params[:command]}", 8)
             @game_core.protect do
                 raise(InvalidCommandError, "No character active!") unless @game_core.active_character(username)
                 character = @game_core.get_character(username)
