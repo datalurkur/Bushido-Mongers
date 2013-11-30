@@ -70,9 +70,7 @@ module Commands
 
     module Stats
         def self.stage(core, params)
-            unless params[:agent].uses?(HasAspects)
-                raise(InvalidCommandError, "No aspects!")
-            end
+            raise(InvalidCommandError, "No aspects!") unless params[:agent].uses?(Aspectual)
             # Reach into agent and pull out stat details.
             params[:list] = params[:agent].all_aspects
         end
@@ -316,7 +314,7 @@ module Commands
             attacker = params[:agent]
             defender = params[:target]
 
-            unless attacker.uses?(HasAspects)
+            unless attacker.uses?(Aspectual)
                 raise(FailedCommandError, "#{attacker.monicker} is attacking #{defender.monicker} without aspects!")
             end
 
@@ -462,7 +460,7 @@ module Commands
                 a) Return more information about that thing (or query for more information about the intention)
                 b) Link those things into a recipe and prepare to construct it
 =end
-            raise(MissingObjectExtension, "Only creatures with skill can make objects") unless params[:agent].uses?(HasAspects)
+            raise(MissingObjectExtension, "Only creatures with skill can make objects") unless params[:agent].uses?(Aspectual)
             raise(MissingProperty, "What do you want to #{params[:command]}?") unless params[:target]
             # Verify that the target is :made
             raise(NoMatchError, "#{params[:target]} cannot be made.") unless core.db.has_type?(params[:target]) && core.db.is_type?(params[:target], :made)

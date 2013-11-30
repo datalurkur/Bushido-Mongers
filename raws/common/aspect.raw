@@ -13,11 +13,11 @@ abstract aspect {
     uses aspect;
 }
 
-abstract has_aspects {
+abstract aspectual {
     has_many optional sym attributes;
     has_many optional sym skills;
 
-    uses has_aspects;
+    uses aspectual;
 
     /* random generation parameters */
 

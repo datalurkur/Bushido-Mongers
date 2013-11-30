@@ -1,6 +1,6 @@
 require './util/exceptions'
 
-module HasAspects # Aspectual?
+module Aspectual
     class << self
         def listens_for(i); [:tick]; end
 
@@ -12,7 +12,7 @@ module HasAspects # Aspectual?
         end
 
         def unpack(core, instance, raw_data)
-            raise(MissingProperty, "HasAspects data corrupted") unless raw_data[:skills] && raw_data[:attributes]
+            raise(MissingProperty, "Aspectual data corrupted") unless raw_data[:skills] && raw_data[:attributes]
             instance.set_predefined(raw_data[:attributes], raw_data[:skills])
         end
 
@@ -98,7 +98,7 @@ module HasAspects # Aspectual?
             skills[aspect_name] = aspect.uid
             aspect
         else
-            raise(UnknownType, "#{aspect} is not a defined skill or aspect")
+            raise(UnknownType, "#{aspect || 'nil'} is not a defined skill or aspect")
         end
     end
 
@@ -133,7 +133,7 @@ module HasAspects # Aspectual?
         raise(MissingProperty, "#{self.monicker} has no aspect #{aspect_name}") if aspect.nil?
         attempt_result = aspect.make_check(attributes)
 
-        if target.uses?(HasAspects) && target.uses?(Perception)
+        if target.uses?(Aspectual) && target.uses?(Perception)
             opposed_results = []
             aspect.class_info[:opposed_aspects].each do |opposed|
                 opposition = target.make_attempt(opposed, attempt_result)

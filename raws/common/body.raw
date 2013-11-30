@@ -1,6 +1,6 @@
 abstract composition body_part {}
 
-abstract composition,has_aspects body {
+abstract composition,aspectual body {
     class optional sym consumes;
     class optional proc on_consume;
     class string part_name;

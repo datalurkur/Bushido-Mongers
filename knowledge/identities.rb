@@ -6,7 +6,7 @@ IGNORED_CONNECTORS =
 	:civil,
 	:archetype,
 	:basic_attributes,
-	:has_aspects
+	:aspectual
 ]
 
 # This applies to the class as a whole; e.g. humans are an example of a biped class.
@@ -21,3 +21,17 @@ IDENTITIES =
 [
 	[:self, :have, :name, Proc.new { |odb, object| object.is_a?(BushidoObjectBase) ? object.monicker : object } ]
 ]
+
+=begin
+
+intolerable_actions
+	attacking of ally
+	taking item with owned_by=>ally
+
+if self=>name
+
+
+if sale=>completed
+	sale=>price taken from buyer
+	sale=>price given to seller
+=end

@@ -221,7 +221,7 @@ class Lobby
             when :stats
                 raise(StateError, "User #{username} has no character") unless @game_core.active_character(username)
                 character = @game_core.get_character(username)
-                raise(InvalidCommandError, "Character #{character.monicker} has no stats") unless character.uses?(HasAspects)
+                raise(InvalidCommandError, "Character #{character.monicker} has no stats") unless character.uses?(Aspectual)
                 params[:agent] = character
                 # FIXME - Allow users to request a specific subset of stats
                 params[:list] = character.all_aspects

@@ -24,7 +24,7 @@ module Perception
     # TODO - There should be some sort of cached perception check here,
     # which will be re-rolled given certain events.
     def can_perceive?(object)
-        !(object.uses?(HasAspects) && object.get_aspect(:stealth).properties[:hidden])
+        !(object.uses?(Aspectual) && object.get_aspect(:stealth).properties[:hidden])
     end
 
     def objects_in_location(location)
