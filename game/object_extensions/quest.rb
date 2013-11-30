@@ -9,28 +9,14 @@ module Quest
             raise(NotImplementedException)
         end
 
-        def listens_for(instance)
-            instance.pertinent_event_types
-        end
-
         def at_creation(instance, params)
-            # TODO - Set up failure / success triggers using the params
-            raise(NotImplementedException)
-
-            # Example:
-            # params => {
-            #   :failure_conditions => [{:type => :object_destroyed, :object => <Item>}],
-            #   :success_conditions => [{:type => :object_moved, :object => <Item>, :criteria => <Destination>}],
-            #   :rewards => [{:type => :object, :count => 100, :object => <Coin>}],
-            #   :notoriety => {:type => :good_deed, :magnitude => :minor}
-            # This quest will listen for object destruction and object movement
-
-            # When we're all done, start listening for victory / failure conditions
+            Log.debug([instance, params])
             instance.create_quest(params)
         end
 
         def at_message(instance, message)
             return unless instance.pertinent_event_types.include?(message.type)
+            Log.debug("quest checking #{message.type}")
             instance.fail_conditions.each do |condition|
                 if condition_met?(condition, message)
                     instance.fail_quest(condition)
@@ -39,14 +25,42 @@ module Quest
             end
             instance.success_conditions.each do |condition|
                 if condition_met?(condition, message)
-                    instance.succeed_quest(condition)
+                    instance.succeed_quest
                     return
                 end
             end
         end
 
         def condition_met?(condition, message)
-            raise(NotImplementedException)
+            relevant_keys = condition.keys - [:message, :condition]
+            return false if condition[:message] && (condition[:message] != message.type)
+            Log.debug(["Relevant keys", relevant_keys])
+            relevant_keys.each do |k|
+                match = case condition[k]
+                when Symbol
+                    message[k].matches(:type => condition[k]) || message[k].matches(:name => condition[k])
+                when BushidoObjectBase
+                    condition[k].uid == message.send(k).uid
+                end
+                return false unless match
+            end
+            if condition[:condition].is_a?(Proc)
+                return false unless condition[:condition].call(message)
+            end
+            return true
+        end
+
+        # Basic quest stubs here
+
+        # Basic object delivery quest
+        def object_delivery_quest(object, receiver)
+            {
+                :success_conditions => [{:message => :object_given, :target => object, :receiver => receiver}],
+                :rewards => [{:type => :object, :count => 100, :object => :coin}],
+                :failure_conditions => [{:message => :object_destroyed, :target => object}],
+                # FIXME - faction => receiver.faction
+                :penalty => {:type => :good_deed, :faction => nil, :magnitude => :minor }
+            }
         end
     end
 
@@ -54,37 +68,47 @@ module Quest
 
     # Start listening for success / fail
     def create_quest(params)
-        @fail_conditions    = params[:failure_conditions]
         @success_conditions = params[:success_conditions]
+        raise MissingProperty, "No way to finish quest!" unless @success_conditions
+        @fail_conditions    = params[:failure_conditions]
+        @rewards = params[:rewards]
+        @penalty = params[:penalty]
 
+        @state   = :created
+
+        # When we're all done, start listening for victory / failure messages/conditions
         all_conditions = (@fail_conditions + @success_conditions)
-        @pertinent_event_types = all_conditions.collect { |i| i[:type] }.uniq
-        @pertinent_event_types.each do |event_type|
-            start_listening_for(event_type)
+        @pertinent_event_types = all_conditions.collect { |i| i[:message] }.uniq
+        @pertinent_event_types.each do |message_type|
+            start_listening_for(message_type)
         end
-
-        @rewards            = params[:rewards]
-        @notoriety          = params[:notoriety]
-
-        @state              = :created
     end
 
     # Continue listening for success / fail, but blame the quest-taker for the results
-    def assign_quest
+    def add_assignee(assignee)
+        raise StateError, "Quest already #{state}!" if [:failed, :succeeded].includes?(@state)
+        Log.debug("Assigned!")
         @state = :assigned
-        raise(NotImplementedException)
+        @assignee = assignee
+        Message.dispatch(core, :quest_received, :quest => self, :receiver => @assignee)
     end
 
-    # Stop listening
-    def fail_quest(failed_condition)
+    def fail_quest(cause)
+        Log.debug("Failed!")
         @state = :failed
-        raise(NotImplementedException)
+        if @assignee
+            Message.dispatch(core, :quest_failed, :quest => self, :assignee => @assignee, :cause => cause, :penalty => @penalty)
+        end
+        stop_listening
     end
 
-    # Stop listening
-    def succeed_quest(succeeded_condition)
+    def succeed_quest
+        Log.debug("Success!")
         @state = :succeeded
-        raise(NotImplementedException)
+        if @assignee
+            Message.dispatch(core, :quest_success, :quest => self, :assignee => @assignee, :reward => @reward)
+        end
+        stop_listening
     end
 
     # Dish our rewards, add notoriety, etc

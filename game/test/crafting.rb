@@ -1,3 +1,7 @@
+# FIXME - Test recipes with missing components.
+# FIXME - Verify technique/skill is used and improved.
+# FIXME - Make errors when location isn't respected - e.g. forging while not at an anvil.
+
 require './test/fake'
 
 Log.setup("Main", "abilities")

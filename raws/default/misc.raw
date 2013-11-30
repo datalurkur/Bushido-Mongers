@@ -6,3 +6,7 @@ atomic_object,effect_source orb_of_death {
     typical_weight 10;
     native_effects delayed_death;
 }
+
+atomic_object coin {
+	typical_weight 0.1;
+}

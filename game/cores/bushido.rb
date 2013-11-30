@@ -54,7 +54,6 @@ class BushidoCore < GameCore
         end
 
         starting_skills = []
-        feral           = agent.class_info[:feral] && !player
         if player
             agent.setup_extension(Character, hash)
             # FIXME - Add starting skills from new player info
@@ -68,12 +67,6 @@ class BushidoCore < GameCore
             starting_skills = agent.class_info[:profession][:skills] if agent.class_info[:profession]
         end
         agent.setup_skill_set(starting_skills)
-
-        unless feral
-            agent.setup_extension(Equipment, hash)
-        else
-            Log.debug("Since agent is feral, no equipment will be generated", 6)
-        end
 
         agent
     end

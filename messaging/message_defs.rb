@@ -95,7 +95,7 @@ Message.define(:user_dies,     :game, [:result], "User dies")
 # Messages passed between the game lobby / game objects / lobby
 Message.define(:tick,             :tick)
 Message.define(:unit_moves,       :core, [:agent, :origin, :destination])
-Message.define(:unit_moved,       :core, [:agent, :origin, :destination]) # Draw a distinction between whether or not a unit locomoted or was moved
+Message.define(:unit_moved,       :core, [:agent, :origin, :destination]) # FIXME - Draw a distinction between whether or not a unit locomoted or was moved
 Message.define(:unit_attacks,     :core, [:attacker, :defender, :success, :result_hash])
 Message.define(:unit_acts,        :core, [:agent, :action, :location, :action_hash])
 Message.define(:unit_renamed,     :core, [:agent, :name])
@@ -107,6 +107,12 @@ Message.define(:unit_killed,      :core, [:target, :location])
 
 Message.define(:object_created,   :core, [:target, :location])
 Message.define(:object_destroyed, :core, [:target, :location])
+Message.define(:object_given,     :core, [:target, :giver, :receiver])
+
+# Quest messages
+Message.define(:quest_received,   :core, [:quest, :receiver])
+Message.define(:quest_failed,     :core, [:quest, :assignee, :cause, :consequences])
+Message.define(:quest_success,    :core, [:quest, :assignee, :consequences])
 
 # Client / Interface Messages
 # Interface Messages

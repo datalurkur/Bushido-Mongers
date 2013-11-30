@@ -46,6 +46,9 @@ static command stash {
 static command drop {
     target object;
 }
+static command give {
+    target object;
+}
 
 static command equip {
     target object;

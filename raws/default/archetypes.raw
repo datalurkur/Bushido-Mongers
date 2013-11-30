@@ -11,6 +11,5 @@ abstract archetype animal {
 abstract archetype civil {
     factions civil;
     default_behavior flee_if_threatened;
-    feral false;
-    uses conversation;
+    uses perception conversation equipment;
 }

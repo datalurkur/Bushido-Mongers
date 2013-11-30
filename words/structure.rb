@@ -140,7 +140,8 @@ module Words
                     :unit_killed      => :kill,
                     :object_destroyed => :destroy,
                     :unit_speaks      => :speak,
-                    :unit_whispers    => :whisper
+                    :unit_whispers    => :whisper,
+                    :object_given     => :give
                 }
                 verb = event_mapping[args[:event_type]]
                 Log.debug("No verb for event type #{args[:event_type].inspect}!") unless verb

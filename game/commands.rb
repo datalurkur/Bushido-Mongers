@@ -176,6 +176,23 @@ module Commands
         end
     end
 
+    module Give
+        def self.stage(core, params)
+            raise(MissingObjectExtensionError, "Must have an inventory to give!") unless params[:agent].uses?(Equipment)
+            Commands.find_object_for_key(core, params, :target, nil, [:grasped, :stashed], [:receiver])
+            params[:receiver] = params[:agent].filter_objects([:position],
+                                                      Commands.filter_for_key(core, params, :receiver).merge(:uses => Equipment)
+                                                     ).first
+            Commands.verify_params(params, [:target, :receiver])
+        end
+
+        def self.do(core, params)
+            Message.dispatch(core, :object_given, :target => params[:target], :giver => params[:agent], :receiver => params[:receiver])
+            params[:receiver].stash(params[:target])
+
+        end
+    end
+
     module Drop
         def self.stage(core, params)
             raise(MissingObjectExtensionError, "Must have an inventory to pick things up!") unless params[:agent].uses?(Equipment)
@@ -245,14 +262,12 @@ module Commands
     module Move
         def self.stage(core, params)
             raise AmbiguousCommandError.new(params[:command], [:destination]) unless params[:destination]
-            destination = params[:destination]
-
             position = params[:agent].absolute_position
             raise(NotImplementedError, "You're trapped in a #{position.monicker}!") unless Room === position
 
+            params[:direction]   = params[:destination]
             # This method raises an exception if the direction is invalid, so no need to check it
-            params[:destination] = position.get_adjacent(destination)
-            params[:direction] = destination
+            params[:destination] = position.get_adjacent(params[:destination])
         end
 
         def self.do(core, params)

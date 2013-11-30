@@ -1,2 +1,3 @@
 sleeves
 pants
+gauntlets

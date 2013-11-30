@@ -13,7 +13,7 @@ class AmbiguousCommandError < GameError
   def initialize(verb, missing_params)
     @verb           = verb
     @missing_params = missing_params
-    super()
+    super("Missing #{missing_params.inspect} from #{verb}")
   end
 end
 class FailedCommandError < GameError; end

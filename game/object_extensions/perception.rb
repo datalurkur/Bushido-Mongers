@@ -93,12 +93,8 @@ module Perception
         end
     end
 
-    def find_all_objects(object_type, object_string, locations)
-        filter_objects(locations, filter_for(object_type, object_string))
-    end
-
-    def filter_for(object_type = nil, object_string = nil, adjectives = [])
-       {:type => object_type, :name => object_string, :adjectives => adjectives}
+    def filter_for(object_type = nil, object_string = nil, adjectives = [], uses = nil)
+       {:type => object_type, :name => object_string, :adjectives => adjectives, :uses => uses}
     end
 
     # Note that this method throws exceptions when items aren't found,
@@ -114,7 +110,7 @@ module Perception
 
         case potentials.size
         when 0
-            raise(NoMatchError, "No such #{filter[:type]} found.")
+            raise(NoMatchError, "No such #{filter[:type] || filter[:name]} found.")
         when 1
             return potentials.first
         else
