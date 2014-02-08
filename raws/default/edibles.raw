@@ -1,6 +1,0 @@
-abstract consumable {}
-
-plant,consumable carrot {
-    typical_size tiny;
-    typical_weight 1;
-}

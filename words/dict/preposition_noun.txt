@@ -1,5 +1,0 @@
-# FIXME: UNUSED
-location in indoor
-location out outdoor
-location on mountain boat desert tundra pier
-material in nil

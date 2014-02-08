@@ -1,8 +1,0 @@
-Area Properties
-:pristine, :dank, :gory, :earthy, :moldy, :overgrown, :uninhabited, :destabilizing, :unsettling, :possessed, :haunted, :terrifying, :labyrinthine
-
-What's observed:
-1) based on perception
-2) how much stuff is in the area
-3) how large a thing is
-4) whether it's hidden

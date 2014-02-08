@@ -1,6 +1,0 @@
-extension_of composition container {
-    mutable_container_classes   internal external;
-
-    has bool open;
-    open false;
-}

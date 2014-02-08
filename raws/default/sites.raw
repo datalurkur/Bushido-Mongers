@@ -1,7 +1,0 @@
-made anvil {
-    typical_size small;
-    recipes {
-        technique forge;
-        components metal metal metal;
-    }
-}
