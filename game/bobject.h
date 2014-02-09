@@ -2,38 +2,49 @@
 #define BOBJECT_H
 
 #include "util/propertymap.h"
-#include "game/objectextension.h"
+#include "util/sectioneddata.h"
 
-#include <list>
+#include "game/objectextension.h"
+#include "game/bobjecttypes.h"
+
 #include <map>
+#include <list>
 
 typedef int ObjectID;
 
 class ProtoBObject {
 public:
-  list<ObjectExtension::Type> extensions;
+  ProtoBObject(BObjectType t);
+
+  virtual bool pack(void** data, unsigned int& size) const;
+  virtual bool unpack(const void* data, unsigned int size);
+
+  BObjectType type;
+  list<ExtensionType> extensions;
 };
 
 class BObject {
 public:
-  BObject(ObjectID id, const ProtoBObject& proto);
-  ~BObject();
+  BObject(BObjectType type, ObjectID id, const ProtoBObject& proto);
+  virtual ~BObject();
 
   // Extension management
-  bool addExtension(ObjectExtension::Type type);
-  bool hasExtension(ObjectExtension::Type type);
-  bool dropExtension(ObjectExtension::Type type);
+  bool addExtension(ExtensionType type);
+  bool hasExtension(ExtensionType type);
+  bool dropExtension(ExtensionType type);
 
   // Object attribute accessors
+  BObjectType getType() const;
   ObjectID getID() const;
 
   // Virtual attribute accessors
   virtual float getWeight() const = 0;
 
 private:
-  typedef map<ObjectExtension::Type, ObjectExtension*> ExtensionMap;
+  typedef map<ExtensionType, ObjectExtension*> ExtensionMap;
   ExtensionMap _extensions;
 
+  BObjectType _type;
   ObjectID _id;
 };
 

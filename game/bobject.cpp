@@ -1,8 +1,16 @@
 #include "game/bobject.h"
 #include "util/assertion.h"
 
-BObject::BObject(ObjectID id, const ProtoBObject& proto): _id(id) {
-  list<ObjectExtension::Type>::const_iterator itr;
+ProtoBObject::ProtoBObject(BObjectType t): type(t) {}
+
+bool ProtoBObject::pack(void** data, unsigned int& size) const {
+}
+
+bool ProtoBObject::unpack(const void* data, unsigned int size) {
+}
+
+BObject::BObject(BObjectType type, ObjectID id, const ProtoBObject& proto): _type(type), _id(id) {
+  list<ExtensionType>::const_iterator itr;
   for(itr = proto.extensions.begin(); itr != proto.extensions.end(); itr++) {
     addExtension(*itr);
   }
@@ -11,7 +19,7 @@ BObject::BObject(ObjectID id, const ProtoBObject& proto): _id(id) {
 BObject::~BObject() {
 }
 
-bool BObject::addExtension(ObjectExtension::Type type) {
+bool BObject::addExtension(ExtensionType type) {
   ExtensionMap::iterator itr = _extensions.find(type);
   if(itr == _extensions.end()) {
     switch(type) {
@@ -25,12 +33,12 @@ bool BObject::addExtension(ObjectExtension::Type type) {
   }
 }
 
-bool BObject::hasExtension(ObjectExtension::Type type) {
+bool BObject::hasExtension(ExtensionType type) {
   ExtensionMap::iterator itr = _extensions.find(type);
   return(itr != _extensions.end());
 }
 
-bool BObject::dropExtension(ObjectExtension::Type type) {
+bool BObject::dropExtension(ExtensionType type) {
   ExtensionMap::iterator itr = _extensions.find(type);
   if(itr == _extensions.end()) {
     return false;
@@ -41,4 +49,5 @@ bool BObject::dropExtension(ObjectExtension::Type type) {
   }
 }
 
+BObjectType BObject::getType() const { return _type; }
 ObjectID BObject::getID() const { return _id; }

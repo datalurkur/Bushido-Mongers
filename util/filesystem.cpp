@@ -3,7 +3,7 @@
 
 #include <list>
 
-unsigned int FileSystem::GetFileData(const string& filename, char **data) {
+unsigned int FileSystem::GetFileData(const string& filename, void **data) {
   FILE *file;
   unsigned int size;
 
@@ -21,15 +21,15 @@ unsigned int FileSystem::GetFileData(const string& filename, char **data) {
 
   if(!file) { return 0; }
   
-  (*data) = (char*)calloc(size, sizeof(char));
-  fread(*data, sizeof(char), size, file);
+  (*data) = malloc(size);
+  fread(*data, 1, size, file);
   
   fclose(file);
   
   return size;
 }
 
-bool FileSystem::SaveFileData(const string& filename, char* data, unsigned int size) {
+bool FileSystem::SaveFileData(const string& filename, const void* data, unsigned int size) {
   FILE *file;
 
 #if SYS_PLATFORM == PLATFORM_WIN32
@@ -39,7 +39,9 @@ bool FileSystem::SaveFileData(const string& filename, char* data, unsigned int s
 #endif
   if(!file) { return false; }
   
-  fwrite(data, sizeof(char), size, file);
+  fwrite(data, 1, size, file);
+
+  fclose(file);
   
   return true;
 }
@@ -81,4 +83,8 @@ void FileSystem::CleanFilename(const string& filename, string& cleaned) {
     }
     cleaned = (*ritr) + "/" + cleaned;
   }
+}
+
+string FileSystem::JoinFilename(const string& dir, const string& file) {
+  return dir + "/" + file;
 }

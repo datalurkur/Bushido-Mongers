@@ -1,6 +1,7 @@
 #ifndef COMPLEX_BOBJECT_H
 #define COMPLEX_BOBJECT_H
 
+/*
 #include "game/bobject.h"
 #include "game/container.h"
 
@@ -19,4 +20,5 @@ private:
   ObjectMap _components;
 };
 
+*/
 #endif

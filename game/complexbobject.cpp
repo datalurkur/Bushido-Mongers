@@ -1,6 +1,6 @@
 #include "game/complexbobject.h"
-
-ComplexBObject::ComplexBObject(ObjectID id, const ProtoComplexBObject& proto): BObject(id, proto) {
+/*
+ComplexBObject::ComplexBObject(ObjectID id, const ProtoComplexBObject& proto): BObject(ComplexBObject, id, proto) {
   #pragma message "TODO : Use the object manager here to create default components"
 }
 
@@ -17,3 +17,4 @@ float ComplexBObject::getWeight() const {
 
   return total;
 }
+*/

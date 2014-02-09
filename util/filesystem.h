@@ -19,10 +19,12 @@ public:
   template <typename T>
   static void GetDirectoryContents(const string& dir, T& files, bool includeDirectories = true);
 
-  static unsigned int GetFileData(const string& filename, char** data);
-  static bool SaveFileData(const string& filename, char* data, unsigned int size);
+  static unsigned int GetFileData(const string& filename, void** data);
+  static bool SaveFileData(const string& filename, const void* data, unsigned int size);
 
   static void CleanFilename(const string& filename, string& cleaned);
+
+  static string JoinFilename(const string& dir, const string& file);
 };
 
 template <typename T>

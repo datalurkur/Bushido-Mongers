@@ -2,9 +2,16 @@
 #define ATOMIC_BOBJECT_H
 
 #include "game/bobject.h"
+#include "game/bobjecttypes.h"
+#include "util/sectioneddata.h"
 
 class ProtoAtomicBObject: public ProtoBObject {
 public:
+  ProtoAtomicBObject();
+
+  virtual bool pack(void** data, unsigned int& size) const;
+  virtual bool unpack(const void* data, unsigned int size);
+
   float weight;
 };
 
