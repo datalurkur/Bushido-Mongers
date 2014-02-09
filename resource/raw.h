@@ -7,13 +7,12 @@
 
 using namespace std;
 
-#define MAGIC 'b' | ('R' << 8) | ('a' << 16) | ('w' << 24)
+#define MAGIC ('b' | ('R' << 8) | ('a' << 16) | ('w' << 24))
 #define VERSION 1
 
 struct RawHeader {
   int magic;
   short version;
-  unsigned int numObjects;
 };
 
 class Raw {

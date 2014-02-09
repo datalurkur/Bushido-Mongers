@@ -51,12 +51,16 @@ bool SectionedData<T>::unpack(const void* data, unsigned int size) {
     if(!ReadFromBuffer<T>(data, size, i, id)) {
       Error("Failed to read section ID");
       return false;
+    } else {
+      Debug("Unpacked section id " << id);
     }
 
     SectionSize dataSize;
     if(!ReadFromBuffer<SectionSize>(data, size, i, dataSize)) {
       Error("Failed to read size of section " << id);
       return false;
+    } else {
+      Debug("Unpacked section size " << dataSize);
     }
 
     if(size - i < dataSize) {
@@ -65,6 +69,7 @@ bool SectionedData<T>::unpack(const void* data, unsigned int size) {
     }
     if(!addSection(id, &((char*)data)[i], dataSize)) { return false; }
     i += dataSize;
+    Debug("Unpacked " << dataSize << " bytes of section data");
   }
   return true;
 }
@@ -77,6 +82,11 @@ bool SectionedData<T>::pack(void** data, unsigned int& size) {
     totalSize += itr->second.size + sizeof(T) + sizeof(SectionSize);
   }
   (*data) = malloc(totalSize);
+  if(!(*data)) {
+    Error("Failed to allocate memory");
+    return false;
+  }
+
   unsigned int offset;
   for(itr = _sections.begin(); itr != _sections.end(); itr++) {
     if(!WriteToBuffer<T>(data, size, offset, itr->first)) {

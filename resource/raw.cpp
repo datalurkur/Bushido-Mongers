@@ -9,8 +9,23 @@
 #include "game/protofactory.h"
 
 bool Raw::unpack(const void* data, unsigned int size) {
+  RawHeader header;
+  unsigned int offset = 0;
+  if(!ReadFromBuffer<RawHeader>(data, size, offset, header)) {
+    Error("Failed to read raw header");
+    return false;
+  }
+  if(header.magic != MAGIC) {
+    Error("Raw magic string does not match");
+    return false;
+  }
+  if(header.version > VERSION) {
+    Error("Version exceeds reader capability");
+    return false;
+  }
+
   SectionedData<string> sections;
-  if(!sections.unpack(data, size)) { return false; }
+  if(!sections.unpack(&((char*)data)[offset], size-offset)) { return false; }
 
   SectionedData<string>::iterator itr;
   for(itr = sections.begin(); itr != sections.end(); itr++) {
@@ -26,6 +41,10 @@ bool Raw::unpack(const void* data, unsigned int size) {
 }
 
 bool Raw::pack(void** data, unsigned int& size) {
+  RawHeader header;
+  header.magic = MAGIC;
+  header.version = VERSION;
+
   SectionedData<string> sections;
   ProtoMap::iterator itr;
   for(itr = _objectMap.begin(); itr != _objectMap.end(); itr++) {
@@ -35,7 +54,22 @@ bool Raw::pack(void** data, unsigned int& size) {
     if(!sections.addSection(itr->first, objectData, objectDataSize)) { return false; }
     free(objectData);
   }
-  if(!sections.pack(data, size)) { return false; }
+
+  void* sectionData;
+  unsigned int sectionDataSize;
+  if(!sections.pack(&sectionData, sectionDataSize)) { return false; }
+
+  size = sectionDataSize + sizeof(RawHeader);
+  (*data) = malloc(size);
+  if(!(*data)) {
+    Error("Failed to allocate memory");
+    return false;
+  }
+  memcpy(*data, &header, sizeof(RawHeader));
+  memcpy(&((char*)*data)[sizeof(RawHeader)], sectionData, sectionDataSize);
+  free(sectionData);
+
+  Debug("Packed " << size << " bytes of section data for raw");
   return true;
 }
 

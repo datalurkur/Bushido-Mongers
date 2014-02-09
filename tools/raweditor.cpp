@@ -28,7 +28,7 @@ bool getRawsList(const string& dir, list<string> &raws) {
 
 void createRaw(const string& dir) {
   string name;
-  Info("Create a raw filename: ");
+  Info("Enter a raw filename (no extension): ");
   cin >> name;
 
   Raw emptyRaw;
@@ -36,7 +36,7 @@ void createRaw(const string& dir) {
   unsigned int size;
   emptyRaw.pack(&rawData, size);
 
-  if(!FileSystem::SaveFileData(FileSystem::JoinFilename(dir, name), rawData, size)) {
+  if(!FileSystem::SaveFileData(FileSystem::JoinFilename(dir, name + ".raw"), rawData, size)) {
     Error("Failed to save raw data to " << name);
   }
 

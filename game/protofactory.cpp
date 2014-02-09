@@ -14,6 +14,10 @@ bool UnpackProto(ProtoBObject** object, const void* data, unsigned int size) {
     Error("Failed to extract proto section type");
     return false;
   }
+  if(type <= FirstType || type >= LastType) {
+    Error("Invalid proto section type " << type);
+    return false;
+  }
 
   bool ret;
   void* sectionData;

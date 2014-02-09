@@ -1,5 +1,9 @@
 #include "util/sectioneddata.h"
 
+#include <string>
+
+using namespace std;
+
 template <>
 bool SectionedData<string>::unpack(const void* data, unsigned int size) {
   unsigned int i = 0;
@@ -8,20 +12,30 @@ bool SectionedData<string>::unpack(const void* data, unsigned int size) {
     if(!ReadFromBuffer<unsigned short>(data, size, i, stringSize)) {
       Error("Failed to read section ID length");
       return false;
+    } else {
+      Debug("Unpacked section id length " << stringSize);
     }
 
-    void* charID;
-    if(!ReadFromBuffer(data, size, i, &charID, stringSize)) {
+    if(stringSize == 0) {
+      Error("Invalid section ID length");
+      return false;
+    }
+
+    void* charID = malloc(stringSize);
+    if(!ReadFromBuffer(data, size, i, charID, stringSize)) {
       Error("Failed to read section ID");
       return false;
     }
     string id((char*)charID);
+    Debug("Unpacked section id " << id);
     free(charID);
 
     SectionSize dataSize;
     if(!ReadFromBuffer<SectionSize>(data, size, i, dataSize)) {
       Error("Failed to read size of section " << id);
       return false;
+    } else {
+      Debug("Unpacked section size " << dataSize);
     }
 
     if(size - i < dataSize) {
@@ -30,18 +44,26 @@ bool SectionedData<string>::unpack(const void* data, unsigned int size) {
     }
     if(!addSection(id, &((char*)data)[i], dataSize)) { return false; }
     i += dataSize;
+    Debug("Unpacked " << dataSize << " bytes of section data");
   }
   return true;
 }
 
 template <>
 bool SectionedData<string>::pack(void** data, unsigned int& size) {
-  unsigned int totalSize = 0;
+  Debug("Packing " << _sections.size() << " string-mapped sections");
+
+  size = 0;
   SectionMap::iterator itr;
   for(itr = _sections.begin(); itr != _sections.end(); itr++) {
-    totalSize += itr->second.size + sizeof(unsigned short) + itr->first.length() + sizeof(SectionSize);
+    size += itr->second.size + sizeof(unsigned short) + itr->first.length() + sizeof(SectionSize);
   }
-  (*data) = malloc(totalSize);
+  (*data) = malloc(size);
+  if(!(*data)) {
+    Error("Failed to allocate memory");
+    return false;
+  }
+
   unsigned int offset;
   for(itr = _sections.begin(); itr != _sections.end(); itr++) {
     if(!WriteToBuffer<unsigned short>(*data, size, offset, itr->first.length())) {

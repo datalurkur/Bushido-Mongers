@@ -8,19 +8,17 @@ unsigned int FileSystem::GetFileData(const string& filename, void **data) {
   unsigned int size;
 
 #if SYS_PLATFORM == PLATFORM_WIN32
-  // For some reason, fopen is considered "unsafe" on Win32
-  // Did I mention I really hate Windows development?
   fopen_s(&file, filename.c_str(), "r");
 #else
   file = fopen(filename.c_str(), "r");
 #endif
+  if(!file) { return 0; }
+  
   // Determine the filesize
   fseek(file, 0, SEEK_END);
   size = (unsigned int)ftell(file);
   rewind(file);
 
-  if(!file) { return 0; }
-  
   (*data) = malloc(size);
   fread(*data, 1, size, file);
   

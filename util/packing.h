@@ -1,22 +1,30 @@
 #ifndef PACKING_H
 #define PACKING_H
 
+#include "util/log.h"
+
 #include <stdlib.h>
 #include <string>
 
-extern bool ReadFromBuffer(const void* buffer, unsigned int size, unsigned int& offset, void** data, unsigned int dataSize);
+extern bool ReadFromBuffer(const void* buffer, unsigned int size, unsigned int& offset, void* data, unsigned int dataSize);
 extern bool WriteToBuffer(void* buffer, unsigned int size, unsigned int& offset, const void* data, unsigned int dataSize);
 
 template <typename T>
 bool ReadFromBuffer(const void* buffer, unsigned int size, unsigned int& offset, T& value) {
-  if(size - offset < sizeof(T)) { return false; }
+  if(offset + sizeof(T) > size) {
+    Error("Attempted to read " << offset + sizeof(T) - size << " bytes past index " << offset << " in a " << size << " byte buffer");
+    return false;
+  }
   memcpy(&value, &((char*)buffer)[offset], sizeof(T));
   offset += sizeof(T);
   return true;
 }
 template <typename T>
 bool WriteToBuffer(void* buffer, unsigned int size, unsigned int& offset, const T& value) {
-  if(size - offset < sizeof(T)) { return false; }
+  if(offset + sizeof(T) > size) {
+    Error("Attempted to write " << offset + sizeof(T) - size << " bytes past index " << offset << " in a " << size << " byte buffer");
+    return false;
+  }
   memcpy(&((char*)buffer)[offset], &value, sizeof(T));
   offset += sizeof(T);
   return true;
