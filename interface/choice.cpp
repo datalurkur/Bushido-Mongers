@@ -3,11 +3,13 @@
 
 #include <iostream>
 
-Choice::Choice() {}
-  
-Choice::Choice(const vector<string>& choices): _choices(choices) {}
+Choice::Choice(): _prompt("Make a selection") {}
 
-Choice::Choice(const list<string>& choices) {
+Choice::Choice(const string& prompt): _prompt(prompt) {}
+  
+Choice::Choice(const vector<string>& choices): _prompt("Make a selection"), _choices(choices) {}
+
+Choice::Choice(const list<string>& choices): _prompt("Make a selection") {
   for(list<string>::const_iterator itr = choices.begin(); itr != choices.end(); itr++) {
     _choices.push_back(*itr);
   }
@@ -22,6 +24,7 @@ bool Choice::getSelection(int &choice, int retries) const {
   for(int i = 0; i < retries; i++) {
     printChoices();
     cin >> c;
+    Info("");
     if(c > 0 && c <= _choices.size()) {
       choice = c - 1;
       return true;
@@ -46,6 +49,7 @@ bool Choice::getChoice(string& choice, int retries) const {
 
 void Choice::printChoices() const {
   int c;
+  Info(_prompt);
   for(c = 0; c < _choices.size(); c++) {
     Info(c + 1 << ". " << _choices[c]);
   }

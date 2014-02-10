@@ -26,27 +26,57 @@ bool getRawsList(const string& dir, list<string> &raws) {
   return true;
 }
 
-void createRaw(const string& dir) {
-  string name;
-  Info("Enter a raw filename (no extension): ");
-  cin >> name;
-
-  Raw emptyRaw;
+void saveRaw(Raw& raw, const string& dir, const string& name) {
   void* rawData;
   unsigned int size;
-  emptyRaw.pack(&rawData, size);
-
-  if(!FileSystem::SaveFileData(FileSystem::JoinFilename(dir, name + ".raw"), rawData, size)) {
-    Error("Failed to save raw data to " << name);
+  if(!raw.pack(&rawData, size)) {
+    Error("Failed to pack raw data");
+    return;
   }
 
+  if(!FileSystem::SaveFileData(FileSystem::JoinFilename(dir, name), rawData, size)) {
+    Error("Failed to save raw data to " << name);
+  }
   free(rawData);
 }
 
+void createRaw(const string& dir) {
+  string name;
+  Info("Enter a raw filename (with extension): ");
+  cin >> name;
+
+  Raw emptyRaw;
+  saveRaw(emptyRaw, dir, name);
+}
+
 void addObject(Raw& raw) {
+  string objectName;
+  Info("Enter a name for the new object:");
+  cin >> objectName;
+
+  Choice objectTypeMenu("Choose an object type");
+  objectTypeMenu.addChoice("atomic");
+  //objectTypeMenu.addChoice("complex");
+
+  int choice;
+  objectTypeMenu.getSelection(choice);
+
+  ProtoBObject* object;
+  switch(choice) {
+  case 0:
+    object = (ProtoBObject*)new ProtoAtomicBObject();
+    break;
+  default:
+    Error("Invalid object type");
+  }
+
+  raw.addObject(objectName, object);
 }
 
 void editObject(Raw& raw) {
+}
+
+void cloneObject(Raw& raw) {
 }
 
 void editRaw(const string& dir, const string& name) {
@@ -63,34 +93,44 @@ void editRaw(const string& dir, const string& name) {
   raw.unpack(fileData, fileSize);
   free(fileData);
   
-  list<string> names;
-  raw.getObjectNames(names);
-
-  Choice rawMenu;
+  Choice rawMenu("Editing " + name);
   rawMenu.addChoice("List Objects");
   rawMenu.addChoice("Add Object");
   rawMenu.addChoice("Remove Object");
   rawMenu.addChoice("Edit Object");
   rawMenu.addChoice("Clone Object");
+  rawMenu.addChoice("Save Changes");
 
   int choice;
   string objectName;
   while(rawMenu.getSelection(choice)) {
     switch(choice) {
-      case 0:
-        for(list<string>::iterator itr = names.begin(); itr != names.end(); itr++) { Info(*itr); }
-        break;
+      case 0: {
+        list<string> names;
+        raw.getObjectNames(names);
+        Info("Raw contains " << names.size() << " objects");
+        for(list<string>::iterator itr = names.begin(); itr != names.end(); itr++) {
+          Info(*itr);
+        }
+      } break;
       case 1:
         addObject(raw);
         break;
       case 2:
         Info("Enter object name to remove:");
         cin >> objectName;
+        if(!raw.deleteObject(objectName)) {
+          Error("No object " << objectName << " found in raw");
+        }
         break;
       case 3:
         editObject(raw);
         break;
       case 4:
+        cloneObject(raw);
+        break;
+      case 5:
+        saveRaw(raw, dir, name);
         break;
     }
   }

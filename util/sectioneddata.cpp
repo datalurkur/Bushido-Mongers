@@ -51,36 +51,45 @@ bool SectionedData<string>::unpack(const void* data, unsigned int size) {
 
 template <>
 bool SectionedData<string>::pack(void** data, unsigned int& size) {
-  Debug("Packing " << _sections.size() << " string-mapped sections");
-
   size = 0;
   SectionMap::iterator itr;
   for(itr = _sections.begin(); itr != _sections.end(); itr++) {
-    size += itr->second.size + sizeof(unsigned short) + itr->first.length() + sizeof(SectionSize);
+    unsigned int sectionSize = itr->second.size + sizeof(unsigned short) + itr->first.length() + sizeof(SectionSize);
+    Debug("Computed " << sectionSize << " bytes required for section");
+    size += sectionSize;
   }
+  Debug("Total packed size is " << size << " bytes");
   (*data) = malloc(size);
   if(!(*data)) {
     Error("Failed to allocate memory");
     return false;
   }
 
-  unsigned int offset;
+  unsigned int offset = 0;
   for(itr = _sections.begin(); itr != _sections.end(); itr++) {
     if(!WriteToBuffer<unsigned short>(*data, size, offset, itr->first.length())) {
       Error("Failed to write section ID length");
       return false;
+    } else {
+      Debug("Wrote " << sizeof(unsigned short) << " bytes of section ID length (" << itr->first.length());
     }
     if(!WriteToBuffer(*data, size, offset, itr->first.c_str(), itr->first.length())) {
       Error("Failed to write section ID");
       return false;
+    } else {
+      Debug("Wrote " << itr->first.length() << " bytes of section ID (" << itr->first);
     }
     if(!WriteToBuffer<SectionSize>(*data, size, offset, itr->second.size)) {
       Error("Failed to write section size");
       return false;
+    } else {
+      Debug("Wrote " << sizeof(SectionSize) << " bytes of section length (" << itr->second.size);
     }
     if(!WriteToBuffer(*data, size, offset, itr->second.data, itr->second.size)) {
       Error("Failed to write section data");
       return false;
+    } else {
+      Debug("Wrote " << itr->second.size << " bytes of section data");
     }
   }
   return true;

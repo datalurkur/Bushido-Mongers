@@ -9,8 +9,8 @@ class ProtoAtomicBObject: public ProtoBObject {
 public:
   ProtoAtomicBObject();
 
-  virtual bool pack(void** data, unsigned int& size) const;
-  virtual bool unpack(const void* data, unsigned int size);
+  virtual bool pack(SectionedData<AttributeSectionType>& sections) const;
+  virtual bool unpack(const SectionedData<AttributeSectionType>& sections);
 
   float weight;
 };

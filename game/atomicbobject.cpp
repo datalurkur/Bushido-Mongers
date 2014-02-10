@@ -2,10 +2,20 @@
 
 ProtoAtomicBObject::ProtoAtomicBObject(): ProtoBObject(AtomicType) {}
 
-bool ProtoAtomicBObject::pack(void** data, unsigned int& size) const {
+bool ProtoAtomicBObject::pack(SectionedData<AttributeSectionType>& sections) const {
+  if(!ProtoBObject::pack(sections)) { return false; }
+
+  return sections.addSection<float>(WeightAttribute, weight);
 }
 
-bool ProtoAtomicBObject::unpack(const void* data, unsigned int size) {
+bool ProtoAtomicBObject::unpack(const SectionedData<AttributeSectionType>& sections) {
+  if(!ProtoBObject::unpack(sections)) { return false; }
+
+  if(!sections.getSection<float>(WeightAttribute, weight)) {
+    Error("Weight data not present");
+    return false;
+  }
+  return true;
 }
 
 AtomicBObject::AtomicBObject(ObjectID id, const ProtoAtomicBObject& proto): BObject(AtomicType, id, proto) {

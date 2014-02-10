@@ -2,24 +2,25 @@
 #define BOBJECT_TYPES_H
 
 enum BObjectType {
-  FirstType = 0,
+  FirstObjectType = 0,
   AtomicType,
   ComplexType,
-  LastType
+  LastObjectType
 };
 
-enum SectionType {
-  FirstSection = 0,
+enum ObjectSectionType {
+  FirstObjectSectionType = 0,
   TypeSection,
   AtomicData,
   ComplexData,
-  LastSection
+  LastObjectSectionType
 };
 
-enum AttributeType {
-  FirstAttribute = 0,
+enum AttributeSectionType {
+  FirstAttributeSectionType = 0,
   WeightAttribute,
-  LastAttribute
+  ExtensionData,
+  LastAttributeSectionType
 };
 
 enum ExtensionType {

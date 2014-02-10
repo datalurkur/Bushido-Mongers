@@ -16,8 +16,10 @@ class ProtoBObject {
 public:
   ProtoBObject(BObjectType t);
 
-  virtual bool pack(void** data, unsigned int& size) const;
-  virtual bool unpack(const void* data, unsigned int size);
+  //virtual bool pack(void** data, unsigned int& size) const;
+  //virtual bool unpack(const void* data, unsigned int size);
+  virtual bool pack(SectionedData<AttributeSectionType>& sections) const;
+  virtual bool unpack(const SectionedData<AttributeSectionType>& sections);
 
   BObjectType type;
   list<ExtensionType> extensions;

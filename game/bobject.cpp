@@ -3,10 +3,26 @@
 
 ProtoBObject::ProtoBObject(BObjectType t): type(t) {}
 
-bool ProtoBObject::pack(void** data, unsigned int& size) const {
+bool ProtoBObject::pack(SectionedData<AttributeSectionType>& sections) const {
+  #pragma message "TODO : Write extension data packing code"
+  void* extensionData = 0;
+  unsigned int extensionDataSize = 0;
+
+  bool ret = sections.addSection(ExtensionData, extensionData, extensionDataSize);
+  //free(extensionData);
+  return ret;
 }
 
-bool ProtoBObject::unpack(const void* data, unsigned int size) {
+bool ProtoBObject::unpack(const SectionedData<AttributeSectionType>& sections) {
+  void* extensionData;
+  unsigned int extensionDataSize;
+  if(!sections.getSection(ExtensionData, &extensionData, extensionDataSize)) {
+    Error("Extension data not present");
+    return false;
+  }
+
+  #pragma message "TODO : Write extension data unpacking code"
+  return true;
 }
 
 BObject::BObject(BObjectType type, ObjectID id, const ProtoBObject& proto): _type(type), _id(id) {

@@ -3,12 +3,15 @@
 
 #include <vector>
 #include <list>
+#include <string>
 
 using namespace std;
 
 class Choice {
 public:
   Choice();
+  Choice(const string& prompt);
+
   Choice(const vector<string>& choices);
   Choice(const list<string>& choices);
 
@@ -22,6 +25,7 @@ private:
 
 private:
   vector<string> _choices;
+  string _prompt;
 };
 
 #endif

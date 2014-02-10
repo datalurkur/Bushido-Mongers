@@ -25,13 +25,15 @@ public:
   ~SectionedData();
 
   bool addSection(T id, const void* data, unsigned int size);
-  bool getSection(T id, void** data, unsigned int& size);
+  bool getSection(T id, void** data, unsigned int& size) const;
 
   template <typename S>
   bool addSection(T id, const S& data);
 
   template <typename S>
-  bool getSection(T id, S& data);
+  bool getSection(T id, S& data) const;
+
+  void debug() const;
 
   bool unpack(const void* data, unsigned int size);
   bool pack(void** data, unsigned int& size);
@@ -42,6 +44,15 @@ public:
 private:
   SectionMap _sections;
 };
+
+template <typename T>
+void SectionedData<T>::debug() const {
+  Info("SectionedData contains " << _sections.size() << " sections");
+  typename SectionMap::const_iterator itr;
+  for(itr = _sections.begin(); itr != _sections.end(); itr++) {
+    Info("\tSection " << itr->first << " contains " << itr->second.size << " bytes");
+  }
+}
 
 template <typename T>
 bool SectionedData<T>::unpack(const void* data, unsigned int size) {
@@ -76,30 +87,37 @@ bool SectionedData<T>::unpack(const void* data, unsigned int size) {
 
 template <typename T>
 bool SectionedData<T>::pack(void** data, unsigned int& size) {
-  unsigned int totalSize = 0;
   typename SectionMap::iterator itr;
+  size = 0;
   for(itr = _sections.begin(); itr != _sections.end(); itr++) {
-    totalSize += itr->second.size + sizeof(T) + sizeof(SectionSize);
+    size += itr->second.size + sizeof(T) + sizeof(SectionSize);
   }
-  (*data) = malloc(totalSize);
+  (*data) = 0;
+  (*data) = malloc(size);
   if(!(*data)) {
     Error("Failed to allocate memory");
     return false;
   }
 
-  unsigned int offset;
+  unsigned int offset = 0;
   for(itr = _sections.begin(); itr != _sections.end(); itr++) {
-    if(!WriteToBuffer<T>(data, size, offset, itr->first)) {
+    if(!WriteToBuffer<T>(*data, size, offset, itr->first)) {
       Error("Failed to write section ID");
       return false;
+    } else {
+      Debug("Packed section ID " << itr->first);
     }
-    if(!WriteToBuffer<SectionSize>(data, size, offset, itr->second.size)) {
+    if(!WriteToBuffer<SectionSize>(*data, size, offset, itr->second.size)) {
       Error("Failed to write section size");
       return false;
+    } else {
+      Debug("Packed section size " << itr->second.size);
     }
-    if(!WriteToBuffer(data, size, offset, itr->second.data, itr->second.size)) {
+    if(!WriteToBuffer(*data, size, offset, itr->second.data, itr->second.size)) {
       Error("Failed to write section data");
       return false;
+    } else {
+      Debug("Packed " << itr->second.size << " bytes of section data");
     }
   }
   return true;
@@ -122,7 +140,12 @@ bool SectionedData<T>::addSection(T id, const void* data, unsigned int size) {
   if(itr == _sections.end()) {
     DataSection<T> section;
     section.size = size;
+    section.data = 0;
     section.data = malloc(size);
+    if(!section.data) {
+      Error("Failed to allocate memory");
+      return false;
+    }
     memcpy(section.data, data, size);
     _sections[id] = section;
     return true;
@@ -133,8 +156,8 @@ bool SectionedData<T>::addSection(T id, const void* data, unsigned int size) {
 }
 
 template <typename T>
-bool SectionedData<T>::getSection(T id, void** data, unsigned int& size) {
-  typename SectionMap::iterator itr = _sections.find(id);
+bool SectionedData<T>::getSection(T id, void** data, unsigned int& size) const {
+  typename SectionMap::const_iterator itr = _sections.find(id);
   if(itr == _sections.end()) {
     return false;
   } else {
@@ -151,7 +174,12 @@ bool SectionedData<T>::addSection(T id, const S& value) {
   if(itr == _sections.end()) {
     DataSection<T> section;
     section.size = sizeof(S);
+    section.data = 0;
     section.data = malloc(sizeof(S));
+    if(!section.data) {
+      Error("Failed to allocate memory");
+      return false;
+    }
     memcpy(section.data, &value, sizeof(S));
     _sections[id] = section;
     return true;
@@ -162,8 +190,8 @@ bool SectionedData<T>::addSection(T id, const S& value) {
 
 template <typename T>
 template <typename S>
-bool SectionedData<T>::getSection(T id, S& value) {
-  typename SectionMap::iterator itr = _sections.find(id);
+bool SectionedData<T>::getSection(T id, S& value) const {
+  typename SectionMap::const_iterator itr = _sections.find(id);
   if(itr == _sections.end()) {
     return false;
   } else {

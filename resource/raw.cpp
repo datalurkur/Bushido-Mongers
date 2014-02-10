@@ -69,7 +69,6 @@ bool Raw::pack(void** data, unsigned int& size) {
   memcpy(&((char*)*data)[sizeof(RawHeader)], sectionData, sectionDataSize);
   free(sectionData);
 
-  Debug("Packed " << size << " bytes of section data for raw");
   return true;
 }
 
