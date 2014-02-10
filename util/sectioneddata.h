@@ -36,7 +36,8 @@ public:
   void debug() const;
 
   bool unpack(const void* data, unsigned int size);
-  bool pack(void** data, unsigned int& size);
+  bool pack(void* data, unsigned int size) const;
+  unsigned int getPackedSize() const;
 
   iterator begin();
   iterator end();
@@ -86,34 +87,23 @@ bool SectionedData<T>::unpack(const void* data, unsigned int size) {
 }
 
 template <typename T>
-bool SectionedData<T>::pack(void** data, unsigned int& size) {
-  typename SectionMap::iterator itr;
-  size = 0;
-  for(itr = _sections.begin(); itr != _sections.end(); itr++) {
-    size += itr->second.size + sizeof(T) + sizeof(SectionSize);
-  }
-  (*data) = 0;
-  (*data) = malloc(size);
-  if(!(*data)) {
-    Error("Failed to allocate memory");
-    return false;
-  }
-
+bool SectionedData<T>::pack(void* data, unsigned int size) const {
+  typename SectionMap::const_iterator itr;
   unsigned int offset = 0;
   for(itr = _sections.begin(); itr != _sections.end(); itr++) {
-    if(!WriteToBuffer<T>(*data, size, offset, itr->first)) {
+    if(!WriteToBuffer<T>(data, size, offset, itr->first)) {
       Error("Failed to write section ID");
       return false;
     } else {
       Debug("Packed section ID " << itr->first);
     }
-    if(!WriteToBuffer<SectionSize>(*data, size, offset, itr->second.size)) {
+    if(!WriteToBuffer<SectionSize>(data, size, offset, itr->second.size)) {
       Error("Failed to write section size");
       return false;
     } else {
       Debug("Packed section size " << itr->second.size);
     }
-    if(!WriteToBuffer(*data, size, offset, itr->second.data, itr->second.size)) {
+    if(!WriteToBuffer(data, size, offset, itr->second.data, itr->second.size)) {
       Error("Failed to write section data");
       return false;
     } else {
@@ -121,6 +111,16 @@ bool SectionedData<T>::pack(void** data, unsigned int& size) {
     }
   }
   return true;
+}
+
+template <typename T>
+unsigned int SectionedData<T>::getPackedSize() const {
+  typename SectionMap::const_iterator itr;
+  unsigned int size = 0;
+  for(itr = _sections.begin(); itr != _sections.end(); itr++) {
+    size += itr->second.size + sizeof(T) + sizeof(SectionSize);
+  }
+  return size;
 }
 
 template <typename T>

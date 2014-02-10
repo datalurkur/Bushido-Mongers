@@ -30,6 +30,8 @@ bool WriteToBuffer(void* buffer, unsigned int size, unsigned int& offset, const 
   return true;
 }
 
+/*
+#pragma message "Non-allocating versions of these need to be written"
 template <typename T>
 bool ReadSizeEncoded(const void* buffer, unsigned int size, unsigned int& offset, void** data) {
   T objectSize;
@@ -46,5 +48,6 @@ extern bool PackSizeEncoded(void** buffer, unsigned int& size, const void* data,
   memcpy(&((char*)*buffer)[sizeof(T)], data, dataSize);
   return true;
 }
+*/
 
 #endif

@@ -50,11 +50,15 @@ bool PackProto(const ProtoBObject* object, void** data, unsigned int& size) {
   sections.addSection<BObjectType>(TypeSection, object->type);
 
   bool ret;
-  void* sectionData;
-  unsigned int sectionSize;
   SectionedData<AttributeSectionType> objectSections;
   if(!object->pack(objectSections)) { return false; }
-  if(!objectSections.pack(&sectionData, sectionSize)) { return false; }
+  unsigned int sectionSize = objectSections.getPackedSize();
+  void* sectionData = malloc(sectionSize);
+  if(!sectionData) {
+    Error("Failed to allocate memory for object section data");
+    return false;
+  }
+  if(!objectSections.pack(sectionData, sectionSize)) { return false; }
 
   switch(object->type) {
   case AtomicType:

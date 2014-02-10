@@ -40,13 +40,13 @@ bool Raw::unpack(const void* data, unsigned int size) {
   return true;
 }
 
-bool Raw::pack(void** data, unsigned int& size) {
+bool Raw::pack(void** data, unsigned int& size) const {
   RawHeader header;
   header.magic = MAGIC;
   header.version = VERSION;
 
   SectionedData<string> sections;
-  ProtoMap::iterator itr;
+  ProtoMap::const_iterator itr;
   for(itr = _objectMap.begin(); itr != _objectMap.end(); itr++) {
     void* objectData;
     unsigned int objectDataSize;
@@ -55,19 +55,20 @@ bool Raw::pack(void** data, unsigned int& size) {
     free(objectData);
   }
 
-  void* sectionData;
-  unsigned int sectionDataSize;
-  if(!sections.pack(&sectionData, sectionDataSize)) { return false; }
-
+  unsigned int sectionDataSize = sections.getPackedSize();
   size = sectionDataSize + sizeof(RawHeader);
+
   (*data) = malloc(size);
   if(!(*data)) {
-    Error("Failed to allocate memory");
+    Error("Failed to allocate memory for packed raw data");
     return false;
   }
   memcpy(*data, &header, sizeof(RawHeader));
-  memcpy(&((char*)*data)[sizeof(RawHeader)], sectionData, sectionDataSize);
-  free(sectionData);
+  if(!sections.pack(&((char*)*data)[sizeof(RawHeader)], sectionDataSize)) {
+    Error("Failed to get packed section data for raw");
+    free(*data);
+    return false;
+  }
 
   return true;
 }

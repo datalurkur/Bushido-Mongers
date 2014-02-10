@@ -21,7 +21,7 @@ public:
   ~Raw();
 
   bool unpack(const void* data, unsigned int size);
-  bool pack(void** data, unsigned int& size);
+  bool pack(void** data, unsigned int& size) const;
 
   unsigned int getNumObjects() const;
   void getObjectNames(list<string>& names) const;
