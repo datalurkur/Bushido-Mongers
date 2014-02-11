@@ -25,13 +25,16 @@ public:
   ~SectionedData();
 
   bool addSection(T id, const void* data, unsigned int size);
-  bool getSection(T id, void** data, unsigned int& size) const;
-
   template <typename S>
   bool addSection(T id, const S& data);
+  template <typename S>
+  bool addSubSections(T id, const SectionedData<S>& section);
 
+  bool getSection(T id, void** data, unsigned int& size) const;
   template <typename S>
   bool getSection(T id, S& data) const;
+  template <typename S>
+  bool getSubSections(T id, SectionedData<S>& section) const;
 
   void debug() const;
 
@@ -63,16 +66,12 @@ bool SectionedData<T>::unpack(const void* data, unsigned int size) {
     if(!ReadFromBuffer<T>(data, size, i, id)) {
       Error("Failed to read section ID");
       return false;
-    } else {
-      Debug("Unpacked section id " << id);
     }
 
     SectionSize dataSize;
     if(!ReadFromBuffer<SectionSize>(data, size, i, dataSize)) {
       Error("Failed to read size of section " << id);
       return false;
-    } else {
-      Debug("Unpacked section size " << dataSize);
     }
 
     if(size - i < dataSize) {
@@ -81,7 +80,6 @@ bool SectionedData<T>::unpack(const void* data, unsigned int size) {
     }
     if(!addSection(id, &((char*)data)[i], dataSize)) { return false; }
     i += dataSize;
-    Debug("Unpacked " << dataSize << " bytes of section data");
   }
   return true;
 }
@@ -94,20 +92,14 @@ bool SectionedData<T>::pack(void* data, unsigned int size) const {
     if(!WriteToBuffer<T>(data, size, offset, itr->first)) {
       Error("Failed to write section ID");
       return false;
-    } else {
-      Debug("Packed section ID " << itr->first);
     }
     if(!WriteToBuffer<SectionSize>(data, size, offset, itr->second.size)) {
       Error("Failed to write section size");
       return false;
-    } else {
-      Debug("Packed section size " << itr->second.size);
     }
     if(!WriteToBuffer(data, size, offset, itr->second.data, itr->second.size)) {
       Error("Failed to write section data");
       return false;
-    } else {
-      Debug("Packed " << itr->second.size << " bytes of section data");
     }
   }
   return true;
@@ -156,18 +148,6 @@ bool SectionedData<T>::addSection(T id, const void* data, unsigned int size) {
 }
 
 template <typename T>
-bool SectionedData<T>::getSection(T id, void** data, unsigned int& size) const {
-  typename SectionMap::const_iterator itr = _sections.find(id);
-  if(itr == _sections.end()) {
-    return false;
-  } else {
-    *data = itr->second.data;
-    size = itr->second.size;
-    return true;
-  }
-}
-
-template <typename T>
 template <typename S>
 bool SectionedData<T>::addSection(T id, const S& value) {
   typename SectionMap::iterator itr = _sections.find(id);
@@ -190,6 +170,35 @@ bool SectionedData<T>::addSection(T id, const S& value) {
 
 template <typename T>
 template <typename S>
+bool SectionedData<T>::addSubSections(T id, const SectionedData<S>& section) {
+  unsigned int sectionSize = section.getPackedSize();
+  void* sectionData = malloc(sectionSize);
+  if(!sectionData) { return false; }
+  if(!section.pack(sectionData, sectionSize)) {
+    free(sectionData);
+    return false;
+  }
+  DataSection<T> _section;
+  _section.size = sectionSize;
+  _section.data = sectionData;
+  _sections[id] = _section;
+  return true;
+}
+
+template <typename T>
+bool SectionedData<T>::getSection(T id, void** data, unsigned int& size) const {
+  typename SectionMap::const_iterator itr = _sections.find(id);
+  if(itr == _sections.end()) {
+    return false;
+  } else {
+    *data = itr->second.data;
+    size = itr->second.size;
+    return true;
+  }
+}
+
+template <typename T>
+template <typename S>
 bool SectionedData<T>::getSection(T id, S& value) const {
   typename SectionMap::const_iterator itr = _sections.find(id);
   if(itr == _sections.end()) {
@@ -201,6 +210,17 @@ bool SectionedData<T>::getSection(T id, S& value) const {
     }
     value = *(S*)itr->second.data;
     return true;
+  }
+}
+
+template <typename T>
+template <typename S>
+bool SectionedData<T>::getSubSections(T id, SectionedData<S>& section) const {
+  typename SectionMap::const_iterator itr = _sections.find(id);
+  if(itr == _sections.end()) {
+    return false;
+  } else {
+    return section.unpack(itr->second.data, itr->second.size);
   }
 }
 

@@ -1,15 +1,19 @@
 #include "game/protofactory.h"
 #include "game/atomicbobject.h"
+#include "game/complexbobject.h"
 #include "util/sectioneddata.h"
 
 bool UnpackProto(ProtoBObject** object, const void* data, unsigned int size) {
+  // Instantiate and unpack the section data
   SectionedData<ObjectSectionType> sections;
   if(!sections.unpack(data, size)) {
     Error("Failed to unpack section data");
     return false;
   }
+  // Debug print
   sections.debug();
 
+  // Get the object type and check it for sanity
   BObjectType type;
   if(!sections.getSection<BObjectType>(TypeSection, type)) {
     Error("Failed to extract proto section type");
@@ -20,57 +24,58 @@ bool UnpackProto(ProtoBObject** object, const void* data, unsigned int size) {
     return false;
   }
 
+  // Use the type to invoke the appropriate constructor
   bool ret;
-  void* sectionData;
-  unsigned int sectionSize;
   switch(type) {
-  case AtomicType: {
-    if(!sections.getSection(AtomicData, &sectionData, sectionSize)) {
-      Error("Atomic data section missing");
-      return false;
-    }
-    SectionedData<AttributeSectionType> sections;
-    sections.unpack(sectionData, sectionSize);
+  case AtomicType:
     (*object) = new ProtoAtomicBObject();
-    ret = (*object)->unpack(sections);
-  } break;
+    break;
+  case ComplexType:
+    (*object) = new ProtoComplexBObject();
+    break;
   default:
     Error("Proto unpacking not implemented for object type " << (*object)->type);
     return false;
   }
 
-  if(!ret) { delete (*object); }
-
-  return ret;
+  // Unpack the object data and return
+  if(!(*object)->unpack(sections)) {
+    Error("Failed to unpack object data");
+    delete (*object);
+    return false;
+  }
+  return true;
 }
 
 bool PackProto(const ProtoBObject* object, void** data, unsigned int& size) {
+  // Start the section data for the object, and add its type
   SectionedData<ObjectSectionType> sections;
-
   sections.addSection<BObjectType>(TypeSection, object->type);
 
-  bool ret;
-  SectionedData<AttributeSectionType> objectSections;
-  if(!object->pack(objectSections)) { return false; }
-  unsigned int sectionSize = objectSections.getPackedSize();
-  void* sectionData = malloc(sectionSize);
-  if(!sectionData) {
-    Error("Failed to allocate memory for object section data");
-    return false;
-  }
-  if(!objectSections.pack(sectionData, sectionSize)) { return false; }
+  // Allow the object internals to pack various data objects into the section data
+  if(!object->pack(sections)) { return false; }
 
-  switch(object->type) {
-  case AtomicType:
-    ret = sections.addSection(AtomicData, sectionData, sectionSize);
-    break;
-  default:
-    Error("Proto packing not implemented for object type " << object->type);
-    return false;
+  // Get sizes and allocate memory for the section data
+  size = sections.getPackedSize();
+  (*data) = malloc(size);
+  if(!*data) {
+    Error("Failed to allocate memory for object data");
   }
 
-  free(sectionData);
-  if(!ret) { return false; }
+  // Pack the section data and return
+  if(!sections.pack(*data, size)) {
+    free(*data);
+    return false;
+  }
+  return true;
+}
 
-  return sections.pack(data, size);
+bool UnpackExtensionProto(ProtoBObjectExtension** extension, const void* data, unsigned int size) {
+  #pragma message "TODO : Write extension unpacking code"
+  return true;
+}
+
+bool PackExtensionProto(const ProtoBObjectExtension* extension, void** data, unsigned int& size) {
+  #pragma message "TODO : Write extension packing code"
+  return true;
 }

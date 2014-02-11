@@ -1,41 +1,79 @@
 #include "game/bobject.h"
+#include "game/protofactory.h"
 #include "util/assertion.h"
 
 ProtoBObject::ProtoBObject(BObjectType t): type(t) {}
 
-bool ProtoBObject::pack(SectionedData<AttributeSectionType>& sections) const {
-  #pragma message "TODO : Write extension data packing code"
-  void* extensionData = 0;
-  unsigned int extensionDataSize = 0;
+bool ProtoBObject::pack(SectionedData<ObjectSectionType>& sections) const {
+  // Construct the base data sections
+  SectionedData<AttributeSectionType> baseSections;
+  // Since we don't currently pack any information as part of the base data, this is basically a no-op
 
-  bool ret = sections.addSection(ExtensionData, extensionData, extensionDataSize);
-  //free(extensionData);
-  return ret;
-}
+  // Add the base data
+  if(!sections.addSubSections(BaseData, baseSections)) { return false; }
 
-bool ProtoBObject::unpack(const SectionedData<AttributeSectionType>& sections) {
-  void* extensionData;
-  unsigned int extensionDataSize;
-  if(!sections.getSection(ExtensionData, &extensionData, extensionDataSize)) {
-    Error("Extension data not present");
-    return false;
+  // Construct the extension sections
+  SectionedData<ExtensionType> extensionSections;
+  ProtoExtensionMap::const_iterator itr;
+  for(itr = extensions.begin(); itr != extensions.end(); itr++) {
+    unsigned int extensionDataSize;
+    void* extensionData;
+    if(!PackExtensionProto(itr->second, &extensionData, extensionDataSize)) {
+      return false;
+    }
+    extensionSections.addSection(itr->first, extensionData, extensionDataSize);
+    free(extensionData);
   }
 
-  #pragma message "TODO : Write extension data unpacking code"
+  // Add the extension data
+  if(!sections.addSubSections(ExtensionData, extensionSections)) { return false; }
+
   return true;
 }
 
-BObject::BObject(BObjectType type, ObjectID id, const ProtoBObject& proto): _type(type), _id(id) {
-  list<ExtensionType>::const_iterator itr;
+bool ProtoBObject::unpack(const SectionedData<ObjectSectionType>& sections) {
+  // Unpack base data
+  SectionedData<AttributeSectionType> baseSections;
+  if(!sections.getSubSections(BaseData, baseSections)) {
+    Error("Failed to unpack base data");
+    return false;
+  }
+
+  // Parse base data
+  // Nothing to do here
+
+  // Unpack extension data
+  SectionedData<ExtensionType> extensionSections;
+  if(!sections.getSubSections(ExtensionData, extensionSections)) {
+    Error("Failed to unpack extension data");
+    return false;
+  }
+
+  // Parse extension data
+  SectionedData<ExtensionType>::iterator itr;
+  for(itr = extensionSections.begin(); itr != extensionSections.end(); itr++) {
+    ProtoBObjectExtension* extension;
+    if(!UnpackExtensionProto(&extension, itr->second.data, itr->second.size)) {
+      Error("Failed to unpack extension");
+      return false;
+    }
+    extensions[itr->first] = extension;
+  }
+
+  return true;
+}
+
+BObject::BObject(BObjectType type, BObjectID id, const ProtoBObject& proto): _type(type), _id(id) {
+  ProtoBObject::ProtoExtensionMap::const_iterator itr;
   for(itr = proto.extensions.begin(); itr != proto.extensions.end(); itr++) {
-    addExtension(*itr);
+    addExtension(itr->first, *itr->second);
   }
 }
 
 BObject::~BObject() {
 }
 
-bool BObject::addExtension(ExtensionType type) {
+bool BObject::addExtension(ExtensionType type, const ProtoBObjectExtension& data) {
   ExtensionMap::iterator itr = _extensions.find(type);
   if(itr == _extensions.end()) {
     switch(type) {
@@ -66,4 +104,4 @@ bool BObject::dropExtension(ExtensionType type) {
 }
 
 BObjectType BObject::getType() const { return _type; }
-ObjectID BObject::getID() const { return _id; }
+BObjectID BObject::getID() const { return _id; }

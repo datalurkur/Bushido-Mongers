@@ -12,30 +12,26 @@ bool SectionedData<string>::unpack(const void* data, unsigned int size) {
     if(!ReadFromBuffer<unsigned short>(data, size, i, stringSize)) {
       Error("Failed to read section ID length");
       return false;
-    } else {
-      Debug("Unpacked section id length " << stringSize);
     }
+    Debug("Read string size " << stringSize);
 
     if(stringSize == 0) {
       Error("Invalid section ID length");
       return false;
     }
 
-    void* charID = malloc(stringSize);
+    void* charID = calloc(stringSize+1, sizeof(char));
     if(!ReadFromBuffer(data, size, i, charID, stringSize)) {
       Error("Failed to read section ID");
       return false;
     }
     string id((char*)charID);
-    Debug("Unpacked section id " << id);
     free(charID);
 
     SectionSize dataSize;
     if(!ReadFromBuffer<SectionSize>(data, size, i, dataSize)) {
       Error("Failed to read size of section " << id);
       return false;
-    } else {
-      Debug("Unpacked section size " << dataSize);
     }
 
     if(size - i < dataSize) {
@@ -44,14 +40,12 @@ bool SectionedData<string>::unpack(const void* data, unsigned int size) {
     }
     if(!addSection(id, &((char*)data)[i], dataSize)) { return false; }
     i += dataSize;
-    Debug("Unpacked " << dataSize << " bytes of section data");
   }
   return true;
 }
 
 template <>
 bool SectionedData<string>::pack(void* data, unsigned int size) const {
-  size = 0;
   SectionMap::const_iterator itr;
 
   unsigned int offset = 0;
@@ -59,26 +53,18 @@ bool SectionedData<string>::pack(void* data, unsigned int size) const {
     if(!WriteToBuffer<unsigned short>(data, size, offset, itr->first.length())) {
       Error("Failed to write section ID length");
       return false;
-    } else {
-      Debug("Wrote " << sizeof(unsigned short) << " bytes of section ID length (" << itr->first.length());
     }
     if(!WriteToBuffer(data, size, offset, itr->first.c_str(), itr->first.length())) {
       Error("Failed to write section ID");
       return false;
-    } else {
-      Debug("Wrote " << itr->first.length() << " bytes of section ID (" << itr->first);
     }
     if(!WriteToBuffer<SectionSize>(data, size, offset, itr->second.size)) {
       Error("Failed to write section size");
       return false;
-    } else {
-      Debug("Wrote " << sizeof(SectionSize) << " bytes of section length (" << itr->second.size);
     }
     if(!WriteToBuffer(data, size, offset, itr->second.data, itr->second.size)) {
       Error("Failed to write section data");
       return false;
-    } else {
-      Debug("Wrote " << itr->second.size << " bytes of section data");
     }
   }
   return true;

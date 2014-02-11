@@ -42,8 +42,12 @@ void saveRaw(Raw& raw, const string& dir, const string& name) {
 
 void createRaw(const string& dir) {
   string name;
-  Info("Enter a raw filename (with extension): ");
+  Info("Enter a raw filename: ");
   cin >> name;
+
+  if(name.substr(name.length()-4) != ".raw") {
+    name += ".raw";
+  }
 
   Raw emptyRaw;
   saveRaw(emptyRaw, dir, name);
@@ -56,24 +60,75 @@ void addObject(Raw& raw) {
 
   Choice objectTypeMenu("Choose an object type");
   objectTypeMenu.addChoice("atomic");
-  //objectTypeMenu.addChoice("complex");
+  objectTypeMenu.addChoice("complex");
 
   int choice;
-  objectTypeMenu.getSelection(choice);
+  if(!objectTypeMenu.getSelection(choice)) { return; }
 
   ProtoBObject* object;
   switch(choice) {
   case 0:
     object = (ProtoBObject*)new ProtoAtomicBObject();
     break;
-  default:
-    Error("Invalid object type");
+  case 1:
+    object = (ProtoBObject*)new ProtoComplexBObject();
   }
 
   raw.addObject(objectName, object);
 }
 
-void editObject(Raw& raw) {
+void editAtomicBObject(const string& name, ProtoAtomicBObject* object) {
+  Info("Editing atomic object " << name);
+  Info("\tweight: " << object->weight);
+
+  Choice editMenu("Select an attribute to edit");
+  editMenu.addChoice("weight");
+
+  int choice;
+  while(editMenu.getSelection(choice)) {
+    switch(choice) {
+    case 0:
+      Info("Enter a new weight (currently " << object->weight << ")");
+      cin >> object->weight;
+      Info("Weight of " << name << " set to " << object->weight);
+      break;
+    }
+  }
+}
+
+void editComplexBObject(const string& name, ProtoComplexBObject* object) {
+  Info("Editing complex object " << name);
+
+  int choice;
+  Choice editMenu("Select an attribute to edit");
+  while(editMenu.getSelection(choice)) {
+  }
+}
+
+void editObject(Raw& raw, const string& objectName) {
+  ProtoBObject* object = raw.getObject(objectName);
+  switch(object->type) {
+  case AtomicType:
+    editAtomicBObject(objectName, (ProtoAtomicBObject*)object);
+    break;
+  case ComplexType:
+    editComplexBObject(objectName, (ProtoComplexBObject*)object);
+    break;
+  default:
+    Error("Unhandled object type " << object->type);
+    return;
+  }
+}
+
+void selectAndEditObject(Raw& raw) {
+  list<string> objectNames;
+  raw.getObjectNames(objectNames);
+  Choice objectSelectMenu(objectNames);
+
+  string selection;
+  if(!objectSelectMenu.getChoice(selection)) { return; }
+
+  editObject(raw, selection);
 }
 
 void cloneObject(Raw& raw) {
@@ -124,7 +179,7 @@ void editRaw(const string& dir, const string& name) {
         }
         break;
       case 3:
-        editObject(raw);
+        selectAndEditObject(raw);
         break;
       case 4:
         cloneObject(raw);
@@ -136,7 +191,13 @@ void editRaw(const string& dir, const string& name) {
   }
 }
 
-void selectAndEditRaw(const string& dir, const list<string>& raws) {
+void selectAndEditRaw(const string& dir) {
+  list<string> raws;
+  if(!getRawsList(dir, raws)) {
+    Error("Failed to load raws from " << dir);
+    return;
+  }
+
   Choice rawChoice(raws);
   string choice;
   if(rawChoice.getChoice(choice)) {
@@ -157,13 +218,6 @@ int main(int argc, char** argv) {
   string root = argv[1];
   Info("Searching for raws in " << root);
 
-  list<string> raws;
-  if(!getRawsList(root, raws)) {
-    Error("Failed to load raws from " << root);
-    Log::Teardown();
-    return 1;
-  }
-
   Choice defaultMenu;
   defaultMenu.addChoice("Create New Raw");
   defaultMenu.addChoice("Edit Existing Raw");
@@ -175,13 +229,9 @@ int main(int argc, char** argv) {
     switch(choice) {
     case 0:
       createRaw(root);
-      if(!getRawsList(root, raws)) {
-        Error("Failed to reload raws");
-        running = false;
-      }
       break;
     case 1:
-      selectAndEditRaw(root, raws);
+      selectAndEditRaw(root);
       break;
     }
   }

@@ -4,52 +4,53 @@
 #include "util/propertymap.h"
 #include "util/sectioneddata.h"
 
-#include "game/objectextension.h"
+#include "game/bobjectextension.h"
 #include "game/bobjecttypes.h"
 
 #include <map>
 #include <list>
 
-typedef int ObjectID;
+typedef int BObjectID;
 
 class ProtoBObject {
 public:
+  typedef map<ExtensionType, ProtoBObjectExtension*> ProtoExtensionMap;
+
+public:
   ProtoBObject(BObjectType t);
 
-  //virtual bool pack(void** data, unsigned int& size) const;
-  //virtual bool unpack(const void* data, unsigned int size);
-  virtual bool pack(SectionedData<AttributeSectionType>& sections) const;
-  virtual bool unpack(const SectionedData<AttributeSectionType>& sections);
+  virtual bool pack(SectionedData<ObjectSectionType>& sections) const;
+  virtual bool unpack(const SectionedData<ObjectSectionType>& sections);
 
   BObjectType type;
-  list<ExtensionType> extensions;
+  ProtoExtensionMap extensions;
 };
 
 class BObject {
 public:
-  BObject(BObjectType type, ObjectID id, const ProtoBObject& proto);
+  BObject(BObjectType type, BObjectID id, const ProtoBObject& proto);
   virtual ~BObject();
 
   // Extension management
-  bool addExtension(ExtensionType type);
+  bool addExtension(ExtensionType type, const ProtoBObjectExtension& data);
   bool hasExtension(ExtensionType type);
   bool dropExtension(ExtensionType type);
 
   // Object attribute accessors
   BObjectType getType() const;
-  ObjectID getID() const;
+  BObjectID getID() const;
 
   // Virtual attribute accessors
   virtual float getWeight() const = 0;
 
 private:
-  typedef map<ExtensionType, ObjectExtension*> ExtensionMap;
+  typedef map<ExtensionType, BObjectExtension*> ExtensionMap;
   ExtensionMap _extensions;
 
   BObjectType _type;
-  ObjectID _id;
+  BObjectID _id;
 };
 
-typedef map<ObjectID, BObject*> ObjectMap;
+typedef map<BObjectID, BObject*> BObjectMap;
 
 #endif

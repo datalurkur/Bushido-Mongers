@@ -12,11 +12,11 @@ public:
   Container();
   ~Container();
 
-  bool addContents(BObject* object);
-  bool removeContents(BObject* object);
+  bool addContent(BObject* object);
+  bool removeContent(BObject* object);
 
 protected:
-  ObjectMap _contents;
+  BObjectMap _contents;
 };
 
 #endif

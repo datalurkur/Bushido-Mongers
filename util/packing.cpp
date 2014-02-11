@@ -2,7 +2,7 @@
 
 bool ReadFromBuffer(const void* buffer, unsigned int size, unsigned int& offset, void* data, unsigned int dataSize) {
   if(offset + dataSize > size) {
-    Error("Attempted to read " << offset + dataSize - size << " bytes past index " << offset << " in a " << size << " byte buffer");
+    ASSERT(0, "Attempted to read " << offset + dataSize - size << " bytes past index " << offset << " in a " << size << " byte buffer");
     return false;
   }
   memcpy(data, &((char*)buffer)[offset], dataSize);
@@ -12,7 +12,7 @@ bool ReadFromBuffer(const void* buffer, unsigned int size, unsigned int& offset,
 
 bool WriteToBuffer(void* buffer, unsigned int size, unsigned int& offset, const void* data, unsigned int dataSize) {
   if(offset + dataSize > size) {
-    Error("Attempted to write " << offset + dataSize - size << " bytes past index " << offset << " in a " << size << " byte buffer");
+    ASSERT(0, "Attempted to write " << offset + dataSize - size << " bytes past index " << offset << " in a " << size << " byte buffer");
     return false;
   }
   memcpy(&((char*)buffer)[offset], data, dataSize);

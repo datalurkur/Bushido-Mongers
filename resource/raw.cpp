@@ -25,7 +25,8 @@ bool Raw::unpack(const void* data, unsigned int size) {
   }
 
   SectionedData<string> sections;
-  if(!sections.unpack(&((char*)data)[offset], size-offset)) { return false; }
+  if(!sections.unpack(&((char*)data)[offset], size - offset)) { return false; }
+  sections.debug();
 
   SectionedData<string>::iterator itr;
   for(itr = sections.begin(); itr != sections.end(); itr++) {
@@ -55,11 +56,13 @@ bool Raw::pack(void** data, unsigned int& size) const {
     free(objectData);
   }
 
+  sections.debug();
+
   unsigned int sectionDataSize = sections.getPackedSize();
   size = sectionDataSize + sizeof(RawHeader);
 
   (*data) = malloc(size);
-  if(!(*data)) {
+  if(!*data) {
     Error("Failed to allocate memory for packed raw data");
     return false;
   }
@@ -97,6 +100,7 @@ ProtoBObject* Raw::getObject(const string& name) const {
 }
 
 bool Raw::addObject(const string& name, ProtoBObject* object) {
+  Info("Adding object " << name << " to raws");
   ProtoMap::iterator itr = _objectMap.find(name);
   if(itr == _objectMap.end()) {
     _objectMap[name] = object;
