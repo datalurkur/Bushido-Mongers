@@ -1,5 +1,4 @@
 #include "game/bobject.h"
-#include "game/protofactory.h"
 #include "util/assertion.h"
 
 ProtoBObject::ProtoBObject(BObjectType t): type(t) {}
@@ -16,13 +15,9 @@ bool ProtoBObject::pack(SectionedData<ObjectSectionType>& sections) const {
   SectionedData<ExtensionType> extensionSections;
   ProtoExtensionMap::const_iterator itr;
   for(itr = extensions.begin(); itr != extensions.end(); itr++) {
-    unsigned int extensionDataSize;
-    void* extensionData;
-    if(!PackExtensionProto(itr->second, &extensionData, extensionDataSize)) {
-      return false;
-    }
-    extensionSections.addSection(itr->first, extensionData, extensionDataSize);
-    free(extensionData);
+    SectionedData<AttributeSectionType> extensionAttributes;
+    if(!itr->second->pack(extensionAttributes)) { return false; }
+    extensionSections.addSubSections(itr->first, extensionAttributes);
   }
 
   // Add the extension data
@@ -53,7 +48,17 @@ bool ProtoBObject::unpack(const SectionedData<ObjectSectionType>& sections) {
   SectionedData<ExtensionType>::iterator itr;
   for(itr = extensionSections.begin(); itr != extensionSections.end(); itr++) {
     ProtoBObjectExtension* extension;
-    if(!UnpackExtensionProto(&extension, itr->second.data, itr->second.size)) {
+    switch(itr->first) {
+    default:
+      Error("Unpacking of extension type " << itr->first << " is not supported");
+      return false;
+    }
+    SectionedData<AttributeSectionType> extensionAttributes;
+    if(!extensionAttributes.unpack(itr->second.data, itr->second.size)) {
+      Error("Failed to unpack extension");
+      return false;
+    }
+    if(!extension->unpack(extensionAttributes)) {
       Error("Failed to unpack extension");
       return false;
     }
@@ -63,9 +68,9 @@ bool ProtoBObject::unpack(const SectionedData<ObjectSectionType>& sections) {
   return true;
 }
 
-BObject::BObject(BObjectType type, BObjectID id, const ProtoBObject& proto): _type(type), _id(id) {
+BObject::BObject(BObjectType type, BObjectID id, const ProtoBObject* proto): _type(type), _id(id) {
   ProtoBObject::ProtoExtensionMap::const_iterator itr;
-  for(itr = proto.extensions.begin(); itr != proto.extensions.end(); itr++) {
+  for(itr = proto->extensions.begin(); itr != proto->extensions.end(); itr++) {
     addExtension(itr->first, *itr->second);
   }
 }

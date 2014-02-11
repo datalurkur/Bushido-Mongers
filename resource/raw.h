@@ -32,6 +32,9 @@ public:
   bool cloneObject(const string& source, const string& dest);
 
 private:
+  ProtoBObject* unpackProto(const void* data, unsigned int size);
+
+private:
   typedef map<string, ProtoBObject*> ProtoMap;
   ProtoMap _objectMap;
 };

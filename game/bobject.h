@@ -28,7 +28,7 @@ public:
 
 class BObject {
 public:
-  BObject(BObjectType type, BObjectID id, const ProtoBObject& proto);
+  BObject(BObjectType type, BObjectID id, const ProtoBObject* proto);
   virtual ~BObject();
 
   // Extension management

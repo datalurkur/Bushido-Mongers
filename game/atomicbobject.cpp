@@ -24,8 +24,8 @@ bool ProtoAtomicBObject::unpack(const SectionedData<ObjectSectionType>& sections
   return true;
 }
 
-AtomicBObject::AtomicBObject(BObjectID id, const ProtoAtomicBObject& proto): BObject(AtomicType, id, proto) {
-  _weight = proto.weight;
+AtomicBObject::AtomicBObject(BObjectID id, const ProtoAtomicBObject* proto): BObject(AtomicType, id, proto) {
+  _weight = proto->weight;
 }
 
 float AtomicBObject::getWeight() const { return _weight; }

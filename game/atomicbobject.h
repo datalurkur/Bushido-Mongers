@@ -17,7 +17,7 @@ public:
 
 class AtomicBObject : public BObject {
 public:
-  AtomicBObject(BObjectID id, const ProtoAtomicBObject& proto);
+  AtomicBObject(BObjectID id, const ProtoAtomicBObject* proto);
 
   float getWeight() const;
 

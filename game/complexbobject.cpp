@@ -22,7 +22,7 @@ bool ProtoComplexBObject::unpack(const SectionedData<ObjectSectionType>& section
   return true;
 }
 
-ComplexBObject::ComplexBObject(BObjectID id, const ProtoComplexBObject& proto): BObject(ComplexType, id, proto) {
+ComplexBObject::ComplexBObject(BObjectID id, const ProtoComplexBObject* proto): BObject(ComplexType, id, proto) {
   #pragma message "TODO : Use the object manager here to create default components"
 }
 

@@ -1,1 +1,1 @@
-g++ -I . test.cpp util/*.cpp game/*.cpp -o test
+g++ -I . test.cpp util/*.cpp game/*.cpp resource/*.cpp -o test

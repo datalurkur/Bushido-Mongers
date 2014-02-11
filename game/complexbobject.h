@@ -20,7 +20,7 @@ public:
 
 class ComplexBObject : public BObject {
 public:
-  ComplexBObject(BObjectID id, const ProtoComplexBObject& proto);
+  ComplexBObject(BObjectID id, const ProtoComplexBObject* proto);
 
   float getWeight() const;
 

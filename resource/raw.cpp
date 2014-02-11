@@ -6,7 +6,6 @@
 
 #include "game/atomicbobject.h"
 #include "game/complexbobject.h"
-#include "game/protofactory.h"
 
 bool Raw::unpack(const void* data, unsigned int size) {
   RawHeader header;
@@ -30,8 +29,8 @@ bool Raw::unpack(const void* data, unsigned int size) {
 
   SectionedData<string>::iterator itr;
   for(itr = sections.begin(); itr != sections.end(); itr++) {
-    ProtoBObject* object;
-    if(!UnpackProto(&object, itr->second.data, itr->second.size)) {
+    ProtoBObject* object = unpackProto(itr->second.data, itr->second.size);
+    if(!object) {
       Error("Failed to load object " << itr->first);
       return false;
     }
@@ -39,6 +38,50 @@ bool Raw::unpack(const void* data, unsigned int size) {
   }
 
   return true;
+}
+
+ProtoBObject* Raw::unpackProto(const void* data, unsigned int size) {
+  // Instantiate and unpack the section data
+  SectionedData<ObjectSectionType> sections;
+  if(!sections.unpack(data, size)) {
+    Error("Failed to unpack section data");
+    return 0;
+  }
+  // Debug print
+  sections.debug();
+
+  // Get the object type and check it for sanity
+  BObjectType type;
+  if(!sections.getSection<BObjectType>(TypeSection, type)) {
+    Error("Failed to extract proto section type");
+    return 0;
+  }
+  if(type <= FirstObjectType || type >= LastObjectType) {
+    Error("Invalid proto section type " << type);
+    return 0;
+  }
+
+  // Use the type to invoke the appropriate constructor
+  ProtoBObject* object;
+  switch(type) {
+  case AtomicType:
+    object = new ProtoAtomicBObject();
+    break;
+  case ComplexType:
+    object = new ProtoComplexBObject();
+    break;
+  default:
+    Error("Proto unpacking not implemented for object type " << object->type);
+    return 0;
+  }
+
+  // Unpack the object data and return
+  if(!object->unpack(sections)) {
+    Error("Failed to unpack object data");
+    delete object;
+    return 0;
+  }
+  return object;
 }
 
 bool Raw::pack(void** data, unsigned int& size) const {
@@ -49,11 +92,10 @@ bool Raw::pack(void** data, unsigned int& size) const {
   SectionedData<string> sections;
   ProtoMap::const_iterator itr;
   for(itr = _objectMap.begin(); itr != _objectMap.end(); itr++) {
-    void* objectData;
-    unsigned int objectDataSize;
-    if(!PackProto(itr->second, &objectData, objectDataSize)) { return false; }
-    if(!sections.addSection(itr->first, objectData, objectDataSize)) { return false; }
-    free(objectData);
+    SectionedData<ObjectSectionType> objectSections;
+    objectSections.addSection<BObjectType>(TypeSection, itr->second->type);
+    if(!itr->second->pack(objectSections)) { return false; }
+    if(!sections.addSubSections(itr->first, objectSections)) { return false; }
   }
 
   sections.debug();
