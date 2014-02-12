@@ -62,7 +62,7 @@ void addObject(Raw& raw) {
   objectTypeMenu.addChoice("atomic");
   objectTypeMenu.addChoice("complex");
 
-  int choice;
+  unsigned int choice;
   if(!objectTypeMenu.getSelection(choice)) { return; }
 
   ProtoBObject* object;
@@ -84,7 +84,7 @@ void editAtomicBObject(const string& name, ProtoAtomicBObject* object) {
   Choice editMenu("Select an attribute to edit");
   editMenu.addChoice("weight");
 
-  int choice;
+  unsigned int choice;
   while(editMenu.getSelection(choice)) {
     switch(choice) {
     case 0:
@@ -99,7 +99,7 @@ void editAtomicBObject(const string& name, ProtoAtomicBObject* object) {
 void editComplexBObject(const string& name, ProtoComplexBObject* object) {
   Info("Editing complex object " << name);
 
-  int choice;
+  unsigned int choice;
   Choice editMenu("Select an attribute to edit");
   while(editMenu.getSelection(choice)) {
   }
@@ -156,7 +156,7 @@ void editRaw(const string& dir, const string& name) {
   rawMenu.addChoice("Clone Object");
   rawMenu.addChoice("Save Changes");
 
-  int choice;
+  unsigned int choice;
   string objectName;
   while(rawMenu.getSelection(choice)) {
     switch(choice) {
@@ -224,7 +224,7 @@ int main(int argc, char** argv) {
 
   string currentRaw;
   bool running = true;
-  int choice;
+  unsigned int choice;
   while(running && defaultMenu.getSelection(choice)) {
     switch(choice) {
     case 0:

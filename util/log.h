@@ -25,7 +25,7 @@ public:
 
   static bool IsChannelEnabled(LogChannel channel);
 
-  static Log& GetLogStream(LogChannel channel);
+  static Log& GetLogStream();
   static void Flush();
 
   static void Setup();
@@ -59,7 +59,7 @@ Log& Log::operator<<(const T &rhs) {
 #define LogToChannel(channel, msg) \
   do { \
     if(Log::IsChannelEnabled(channel)) { \
-      Log::GetLogStream(channel) << msg << "\n"; \
+      Log::GetLogStream() << msg << "\n"; \
       Log::Flush(); \
     } \
   } while(false)

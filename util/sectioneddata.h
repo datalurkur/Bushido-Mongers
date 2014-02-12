@@ -6,7 +6,7 @@
 
 #include <map>
 
-typedef int SectionSize;
+typedef unsigned int SectionSize;
 
 template <typename T>
 struct DataSection {

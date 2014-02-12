@@ -1,6 +1,7 @@
 #include "game/atomicbobject.h"
 
 ProtoAtomicBObject::ProtoAtomicBObject(): ProtoBObject(AtomicType), weight(0) {}
+ProtoAtomicBObject::~ProtoAtomicBObject() {}
 
 bool ProtoAtomicBObject::pack(SectionedData<ObjectSectionType>& sections) const {
   if(!ProtoBObject::pack(sections)) { return false; }

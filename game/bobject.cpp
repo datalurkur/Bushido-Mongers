@@ -2,6 +2,7 @@
 #include "util/assertion.h"
 
 ProtoBObject::ProtoBObject(BObjectType t): type(t) {}
+ProtoBObject::~ProtoBObject() {}
 
 bool ProtoBObject::pack(SectionedData<ObjectSectionType>& sections) const {
   // Construct the base data sections

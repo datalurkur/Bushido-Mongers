@@ -71,7 +71,7 @@ ProtoBObject* Raw::unpackProto(const void* data, unsigned int size) {
     object = new ProtoComplexBObject();
     break;
   default:
-    Error("Proto unpacking not implemented for object type " << object->type);
+    Error("Proto unpacking not implemented for object type " << type);
     return 0;
   }
 

@@ -63,7 +63,7 @@ bool Log::IsChannelEnabled(LogChannel channel) {
   return (ChannelState & channel) != 0;
 }
 
-Log& Log::GetLogStream(LogChannel channel) {
+Log& Log::GetLogStream() {
   return *OutputStream;
 }
 

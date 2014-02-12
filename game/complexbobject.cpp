@@ -1,6 +1,7 @@
 #include "game/complexbobject.h"
 
 ProtoComplexBObject::ProtoComplexBObject(): ProtoBObject(ComplexType) {}
+ProtoComplexBObject::~ProtoComplexBObject() {}
 
 bool ProtoComplexBObject::pack(SectionedData<ObjectSectionType>& sections) const {
   if(!ProtoBObject::pack(sections)) { return false; }

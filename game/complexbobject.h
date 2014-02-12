@@ -10,6 +10,7 @@
 class ProtoComplexBObject : public ProtoBObject {
 public:
   ProtoComplexBObject();
+  virtual ~ProtoComplexBObject();
 
   virtual bool pack(SectionedData<ObjectSectionType>& sections) const;
   virtual bool unpack(const SectionedData<ObjectSectionType>& sections);

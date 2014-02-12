@@ -19,9 +19,9 @@ void Choice::addChoice(const string& choice) {
   _choices.push_back(choice);
 }
 
-bool Choice::getSelection(int &choice, int retries) const {
-  int c;
-  for(int i = 0; i < retries; i++) {
+bool Choice::getSelection(unsigned int &choice, unsigned int retries) const {
+  unsigned int c;
+  for(unsigned int i = 0; i < retries; i++) {
     printChoices();
     cin >> c;
     Info("");
@@ -37,8 +37,8 @@ bool Choice::getSelection(int &choice, int retries) const {
   return false;
 }
 
-bool Choice::getChoice(string& choice, int retries) const {
-  int index;
+bool Choice::getChoice(string& choice, unsigned int retries) const {
+  unsigned int index;
   if(getSelection(index, retries)) {
     choice = _choices[index];
     return true;
@@ -48,7 +48,7 @@ bool Choice::getChoice(string& choice, int retries) const {
 }
 
 void Choice::printChoices() const {
-  int c;
+  unsigned int c;
   Info(_prompt);
   for(c = 0; c < _choices.size(); c++) {
     Info(c + 1 << ". " << _choices[c]);

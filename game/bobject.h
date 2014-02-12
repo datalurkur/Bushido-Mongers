@@ -18,6 +18,7 @@ public:
 
 public:
   ProtoBObject(BObjectType t);
+  virtual ~ProtoBObject();
 
   virtual bool pack(SectionedData<ObjectSectionType>& sections) const;
   virtual bool unpack(const SectionedData<ObjectSectionType>& sections);
