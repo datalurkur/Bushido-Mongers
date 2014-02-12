@@ -5,7 +5,7 @@ bool ReadFromBuffer(const void* buffer, unsigned int size, unsigned int& offset,
     ASSERT(0, "Attempted to read " << offset + dataSize - size << " bytes past index " << offset << " in a " << size << " byte buffer");
     return false;
   }
-  memcpy(data, &((char*)buffer)[offset], dataSize);
+  std::memcpy(data, &((char*)buffer)[offset], dataSize);
   offset += dataSize;
   return true;
 }
@@ -15,7 +15,7 @@ bool WriteToBuffer(void* buffer, unsigned int size, unsigned int& offset, const 
     ASSERT(0, "Attempted to write " << offset + dataSize - size << " bytes past index " << offset << " in a " << size << " byte buffer");
     return false;
   }
-  memcpy(&((char*)buffer)[offset], data, dataSize);
+  std::memcpy(&((char*)buffer)[offset], data, dataSize);
   offset += dataSize;
   return true;
 }

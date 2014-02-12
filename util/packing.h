@@ -5,7 +5,7 @@
 #include "util/assertion.h"
 
 #include <stdlib.h>
-#include <string>
+#include <cstring>
 
 extern bool ReadFromBuffer(const void* buffer, unsigned int size, unsigned int& offset, void* data, unsigned int dataSize);
 extern bool WriteToBuffer(void* buffer, unsigned int size, unsigned int& offset, const void* data, unsigned int dataSize);
@@ -16,7 +16,7 @@ bool ReadFromBuffer(const void* buffer, unsigned int size, unsigned int& offset,
     ASSERT(0, "Attempted to read " << offset + sizeof(T) - size << " bytes past index " << offset << " in a " << size << " byte buffer");
     return false;
   }
-  memcpy(&value, &((char*)buffer)[offset], sizeof(T));
+  std::memcpy(&value, &((char*)buffer)[offset], sizeof(T));
   offset += sizeof(T);
   return true;
 }
@@ -26,7 +26,7 @@ bool WriteToBuffer(void* buffer, unsigned int size, unsigned int& offset, const 
     ASSERT(0, "Attempted to write " << offset + sizeof(T) - size << " bytes past index " << offset << " in a " << size << " byte buffer");
     return false;
   }
-  memcpy(&((char*)buffer)[offset], &value, sizeof(T));
+  std::memcpy(&((char*)buffer)[offset], &value, sizeof(T));
   offset += sizeof(T);
   return true;
 }
@@ -45,8 +45,8 @@ template <typename T>
 extern bool PackSizeEncoded(void** buffer, unsigned int& size, const void* data, unsigned int dataSize) {
   (*buffer) = malloc(dataSize + sizeof(T));
   if(*buffer == 0) { return false; }
-  memcpy(*buffer, &dataSize, sizeof(T));
-  memcpy(&((char*)*buffer)[sizeof(T)], data, dataSize);
+  std::memcpy(*buffer, &dataSize, sizeof(T));
+  std::memcpy(&((char*)*buffer)[sizeof(T)], data, dataSize);
   return true;
 }
 */

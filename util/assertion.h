@@ -9,7 +9,7 @@
 # define ASSERT_FUNCTION __asm { int 3 }
 #else
 # include <assert.h>
-# define ASSERT(conditional) assert(conditional)
+# define ASSERT(conditional, message) assert(conditional)
 #endif
 
 #ifndef ASSERT
