@@ -10,7 +10,7 @@ public:
   ProtoAtomicBObject();
   virtual ~ProtoAtomicBObject();
 
-  virtual bool pack(SectionedData<ObjectSectionType>& sections) const;
+  virtual void pack(SectionedData<ObjectSectionType>& sections) const;
   virtual bool unpack(const SectionedData<ObjectSectionType>& sections);
 
   float weight;

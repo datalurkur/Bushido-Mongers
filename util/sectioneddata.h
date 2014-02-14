@@ -5,6 +5,18 @@
 #include "util/log.h"
 
 #include <map>
+#include <list>
+#include <string>
+#include <new>
+
+using namespace std;
+
+class BadSectionDataException : public exception {
+  virtual const char* what() const throw() { return "Section data corrupt or invalid"; }
+};
+class DuplicateSectionException : public exception {
+  virtual const char* what() const throw() { return "Duplicate section IDs are not supported"; }
+};
 
 typedef unsigned int SectionSize;
 
@@ -24,22 +36,28 @@ public:
   SectionedData();
   ~SectionedData();
 
-  bool addSection(T id, const void* data, unsigned int size);
+  void addSection(T id, const void* data, unsigned int size);
   template <typename S>
-  bool addSection(T id, const S& data);
+  void addSection(T id, const S& data);
   template <typename S>
-  bool addSubSections(T id, const SectionedData<S>& section);
+  void addSubSections(T id, const SectionedData<S>& section);
+  template <typename S>
+  void addListSection(T id, const list<S>& list);
+  void addStringListSection(T id, const list<string>& list);
 
   bool getSection(T id, void** data, unsigned int& size) const;
   template <typename S>
   bool getSection(T id, S& data) const;
   template <typename S>
   bool getSubSections(T id, SectionedData<S>& section) const;
+  template <typename S>
+  bool getListSection(T id, list<S>& list) const;
+  bool getStringListSection(T id, list<string>& list) const;
 
   void debug() const;
 
-  bool unpack(const void* data, unsigned int size);
-  bool pack(void* data, unsigned int size) const;
+  void unpack(const void* data, unsigned int size);
+  void pack(void* data, unsigned int size) const;
   unsigned int getPackedSize() const;
 
   iterator begin();
@@ -59,50 +77,33 @@ void SectionedData<T>::debug() const {
 }
 
 template <typename T>
-bool SectionedData<T>::unpack(const void* data, unsigned int size) {
+void SectionedData<T>::unpack(const void* data, unsigned int size) {
   unsigned int i = 0;
   while(i < size) {
     T id;
-    if(!ReadFromBuffer<T>(data, size, i, id)) {
-      Error("Failed to read section ID");
-      return false;
-    }
+    ReadFromBuffer<T>(data, size, i, id);
 
     SectionSize dataSize;
-    if(!ReadFromBuffer<SectionSize>(data, size, i, dataSize)) {
-      Error("Failed to read size of section " << id);
-      return false;
-    }
+    ReadFromBuffer<SectionSize>(data, size, i, dataSize);
 
     if(size - i < dataSize) {
-      Error("Failed to read data for section " << id << " (" << dataSize << " bytes)");
-      return false;
+      throw BadSectionDataException();
     }
-    if(!addSection(id, &((char*)data)[i], dataSize)) { return false; }
+
+    addSection(id, &((char*)data)[i], dataSize);
     i += dataSize;
   }
-  return true;
 }
 
 template <typename T>
-bool SectionedData<T>::pack(void* data, unsigned int size) const {
+void SectionedData<T>::pack(void* data, unsigned int size) const {
   typename SectionMap::const_iterator itr;
   unsigned int offset = 0;
   for(itr = _sections.begin(); itr != _sections.end(); itr++) {
-    if(!WriteToBuffer<T>(data, size, offset, itr->first)) {
-      Error("Failed to write section ID");
-      return false;
-    }
-    if(!WriteToBuffer<SectionSize>(data, size, offset, itr->second.size)) {
-      Error("Failed to write section size");
-      return false;
-    }
-    if(!WriteToBuffer(data, size, offset, itr->second.data, itr->second.size)) {
-      Error("Failed to write section data");
-      return false;
-    }
+    WriteToBuffer<T>(data, size, offset, itr->first);
+    WriteToBuffer<SectionSize>(data, size, offset, itr->second.size);
+    WriteToBuffer(data, size, offset, itr->second.data, itr->second.size);
   }
-  return true;
 }
 
 template <typename T>
@@ -127,62 +128,90 @@ SectionedData<T>::~SectionedData() {
 }
 
 template <typename T>
-bool SectionedData<T>::addSection(T id, const void* data, unsigned int size) {
+void SectionedData<T>::addSection(T id, const void* data, unsigned int size) {
   typename SectionMap::iterator itr = _sections.find(id);
   if(itr == _sections.end()) {
     DataSection<T> section;
     section.size = size;
     section.data = 0;
     section.data = malloc(size);
-    if(!section.data) {
-      Error("Failed to allocate memory");
-      return false;
-    }
+    if(!section.data) { throw bad_alloc(); }
     memcpy(section.data, data, size);
     _sections[id] = section;
-    return true;
   } else {
-    Error("Can't add duplicate section " << id << ", ignoring");
-    return false;
+    throw DuplicateSectionException();
   }
 }
 
 template <typename T>
 template <typename S>
-bool SectionedData<T>::addSection(T id, const S& value) {
+void SectionedData<T>::addSection(T id, const S& value) {
   typename SectionMap::iterator itr = _sections.find(id);
   if(itr == _sections.end()) {
     DataSection<T> section;
     section.size = sizeof(S);
     section.data = 0;
     section.data = malloc(sizeof(S));
-    if(!section.data) {
-      Error("Failed to allocate memory");
-      return false;
-    }
+    if(!section.data) { throw bad_alloc(); }
     memcpy(section.data, &value, sizeof(S));
     _sections[id] = section;
-    return true;
   } else {
-    return false;
+    throw DuplicateSectionException();
   }
 }
 
 template <typename T>
 template <typename S>
-bool SectionedData<T>::addSubSections(T id, const SectionedData<S>& section) {
+void SectionedData<T>::addSubSections(T id, const SectionedData<S>& section) {
   unsigned int sectionSize = section.getPackedSize();
   void* sectionData = malloc(sectionSize);
-  if(!sectionData) { return false; }
-  if(!section.pack(sectionData, sectionSize)) {
-    free(sectionData);
-    return false;
+  if(!sectionData) { throw bad_alloc(); }
+  section.pack(sectionData, sectionSize);
+
+  DataSection<T> _section;
+  _section.size = sectionSize;
+  _section.data = sectionData;
+  _sections[id] = _section;
+}
+
+template <typename T>
+template <typename S>
+void SectionedData<T>::addListSection(T id, const list<S>& list) {
+  unsigned int sectionSize = list.size() * sizeof(S);
+  void* sectionData = malloc(sectionSize);
+  if(!sectionData) { throw bad_alloc(); }
+
+  typename std::list<S>::const_iterator itr;
+  unsigned int i;
+  for(i = 0, itr = list.begin(); itr != list.end(); i++, itr++) {
+    ((S*)sectionData)[i] = *itr;
   }
   DataSection<T> _section;
   _section.size = sectionSize;
   _section.data = sectionData;
   _sections[id] = _section;
-  return true;
+}
+
+template <typename T>
+void SectionedData<T>::addStringListSection(T id, const list<string>& list) {
+  unsigned int sectionSize = 0;
+  // I don't begin to understand why clang insists on me putting std:: here.  Do namespaces and templates not get along these days?
+  typename std::list<string>::const_iterator itr;
+  for(itr = list.begin(); itr != list.end(); itr++) {
+    sectionSize += itr->length() + sizeof(unsigned short);
+  }
+  void* sectionData = malloc(sectionSize);
+  if(!sectionData) { throw bad_alloc(); }
+
+  unsigned int offset = 0;
+  for(itr = list.begin(); itr != list.end(); itr++) {
+    WriteToBuffer<unsigned short>(sectionData, sectionSize, offset, itr->length());
+    WriteToBuffer(sectionData, sectionSize, offset, itr->c_str(), itr->length());
+  }
+  DataSection<T> _section;
+  _section.size = sectionSize;
+  _section.data = sectionData;
+  _sections[id] = _section;
 }
 
 template <typename T>
@@ -205,8 +234,7 @@ bool SectionedData<T>::getSection(T id, S& value) const {
     return false;
   } else {
     if(itr->second.size != sizeof(S)) {
-      Error("Size mismatch for section " << id);
-      return false;
+      throw BadSectionDataException();
     }
     value = *(S*)itr->second.data;
     return true;
@@ -220,8 +248,40 @@ bool SectionedData<T>::getSubSections(T id, SectionedData<S>& section) const {
   if(itr == _sections.end()) {
     return false;
   } else {
-    return section.unpack(itr->second.data, itr->second.size);
+    section.unpack(itr->second.data, itr->second.size);
+    return true;
   }
+}
+
+template <typename T>
+template <typename S>
+bool SectionedData<T>::getListSection(T id, list<S>& list) const {
+  typename SectionMap::const_iterator itr = _sections.find(id);
+  if(itr == _sections.end()) {
+    return false;
+  }
+  unsigned int numItems = itr->second.size / sizeof(S);
+  for(unsigned int i = 0; i < numItems; i++) {
+    list.push_back(((S*)itr->second.data)[i]);
+  }
+  return true;
+}
+
+template <typename T>
+bool SectionedData<T>::getStringListSection(T id, list<string>& list) const {
+  typename SectionMap::const_iterator itr = _sections.find(id);
+  if(itr == _sections.end()) {
+    return false;
+  }
+  unsigned int offset = 0;
+  while(offset < itr->second.size) {
+    unsigned short stringLength;
+    ReadFromBuffer<unsigned short>(itr->second.data, itr->second.size, offset, stringLength);
+    void* stringData = calloc(stringLength+1, sizeof(char));
+    ReadFromBuffer(itr->second.data, itr->second.size, offset, stringData, stringLength);
+    list.push_back(string((char*)stringData));
+  }
+  return true;
 }
 
 template <typename T>

@@ -4,6 +4,7 @@
 enum BObjectType {
   FirstObjectType = 0,
   AtomicType,
+  CompositeType,
   ComplexType,
   LastObjectType
 };
@@ -13,6 +14,7 @@ enum ObjectSectionType {
   TypeSection,
   BaseData,
   AtomicData,
+  CompositeData,
   ComplexData,
   ExtensionData,
   LastObjectSectionType

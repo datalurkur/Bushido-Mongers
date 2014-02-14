@@ -3,8 +3,8 @@
 ProtoComplexBObject::ProtoComplexBObject(): ProtoBObject(ComplexType) {}
 ProtoComplexBObject::~ProtoComplexBObject() {}
 
-bool ProtoComplexBObject::pack(SectionedData<ObjectSectionType>& sections) const {
-  if(!ProtoBObject::pack(sections)) { return false; }
+void ProtoComplexBObject::pack(SectionedData<ObjectSectionType>& sections) const {
+  ProtoBObject::pack(sections);
 
   SectionedData<AttributeSectionType> complexData;
   #pragma message "TODO : Pack contents data here"

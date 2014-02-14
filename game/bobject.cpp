@@ -4,27 +4,25 @@
 ProtoBObject::ProtoBObject(BObjectType t): type(t) {}
 ProtoBObject::~ProtoBObject() {}
 
-bool ProtoBObject::pack(SectionedData<ObjectSectionType>& sections) const {
+void ProtoBObject::pack(SectionedData<ObjectSectionType>& sections) const {
   // Construct the base data sections
   SectionedData<AttributeSectionType> baseSections;
   // Since we don't currently pack any information as part of the base data, this is basically a no-op
 
   // Add the base data
-  if(!sections.addSubSections(BaseData, baseSections)) { return false; }
+  sections.addSubSections(BaseData, baseSections);
 
   // Construct the extension sections
   SectionedData<ExtensionType> extensionSections;
   ProtoExtensionMap::const_iterator itr;
   for(itr = extensions.begin(); itr != extensions.end(); itr++) {
     SectionedData<AttributeSectionType> extensionAttributes;
-    if(!itr->second->pack(extensionAttributes)) { return false; }
+    itr->second->pack(extensionAttributes);
     extensionSections.addSubSections(itr->first, extensionAttributes);
   }
 
   // Add the extension data
-  if(!sections.addSubSections(ExtensionData, extensionSections)) { return false; }
-
-  return true;
+  sections.addSubSections(ExtensionData, extensionSections);
 }
 
 bool ProtoBObject::unpack(const SectionedData<ObjectSectionType>& sections) {
@@ -55,10 +53,7 @@ bool ProtoBObject::unpack(const SectionedData<ObjectSectionType>& sections) {
       return false;
     }
     SectionedData<AttributeSectionType> extensionAttributes;
-    if(!extensionAttributes.unpack(itr->second.data, itr->second.size)) {
-      Error("Failed to unpack extension");
-      return false;
-    }
+    extensionAttributes.unpack(itr->second.data, itr->second.size);
     if(!extension->unpack(extensionAttributes)) {
       Error("Failed to unpack extension");
       return false;

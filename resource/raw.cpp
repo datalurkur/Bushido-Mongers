@@ -5,15 +5,14 @@
 #include "util/sectioneddata.h"
 
 #include "game/atomicbobject.h"
+#include "game/compositebobject.h"
 #include "game/complexbobject.h"
 
 bool Raw::unpack(const void* data, unsigned int size) {
-  RawHeader header;
   unsigned int offset = 0;
-  if(!ReadFromBuffer<RawHeader>(data, size, offset, header)) {
-    Error("Failed to read raw header");
-    return false;
-  }
+  RawHeader header;
+  ReadFromBuffer<RawHeader>(data, size, offset, header);
+
   if(header.magic != MAGIC) {
     Error("Raw magic string does not match");
     return false;
@@ -24,8 +23,10 @@ bool Raw::unpack(const void* data, unsigned int size) {
   }
 
   SectionedData<string> sections;
-  if(!sections.unpack(&((char*)data)[offset], size - offset)) { return false; }
-  sections.debug();
+  sections.unpack(&((char*)data)[offset], size - offset);
+
+  // Debug print
+  //sections.debug();
 
   SectionedData<string>::iterator itr;
   for(itr = sections.begin(); itr != sections.end(); itr++) {
@@ -43,12 +44,10 @@ bool Raw::unpack(const void* data, unsigned int size) {
 ProtoBObject* Raw::unpackProto(const void* data, unsigned int size) {
   // Instantiate and unpack the section data
   SectionedData<ObjectSectionType> sections;
-  if(!sections.unpack(data, size)) {
-    Error("Failed to unpack section data");
-    return 0;
-  }
+  sections.unpack(data, size);
+
   // Debug print
-  sections.debug();
+  //sections.debug();
 
   // Get the object type and check it for sanity
   BObjectType type;
@@ -66,6 +65,9 @@ ProtoBObject* Raw::unpackProto(const void* data, unsigned int size) {
   switch(type) {
   case AtomicType:
     object = new ProtoAtomicBObject();
+    break;
+  case CompositeType:
+    object = new ProtoCompositeBObject();
     break;
   case ComplexType:
     object = new ProtoComplexBObject();
@@ -94,8 +96,8 @@ bool Raw::pack(void** data, unsigned int& size) const {
   for(itr = _objectMap.begin(); itr != _objectMap.end(); itr++) {
     SectionedData<ObjectSectionType> objectSections;
     objectSections.addSection<BObjectType>(TypeSection, itr->second->type);
-    if(!itr->second->pack(objectSections)) { return false; }
-    if(!sections.addSubSections(itr->first, objectSections)) { return false; }
+    itr->second->pack(objectSections);
+    sections.addSubSections(itr->first, objectSections);
   }
 
   sections.debug();
@@ -109,11 +111,7 @@ bool Raw::pack(void** data, unsigned int& size) const {
     return false;
   }
   memcpy(*data, &header, sizeof(RawHeader));
-  if(!sections.pack(&((char*)*data)[sizeof(RawHeader)], sectionDataSize)) {
-    Error("Failed to get packed section data for raw");
-    free(*data);
-    return false;
-  }
+  sections.pack(&((char*)*data)[sizeof(RawHeader)], sectionDataSize);
 
   return true;
 }

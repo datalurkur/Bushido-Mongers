@@ -1,5 +1,6 @@
 #include "game/bobjectmanager.h"
 #include "game/atomicbobject.h"
+#include "game/compositebobject.h"
 #include "game/complexbobject.h"
 
 #include "util/filesystem.h"
@@ -39,6 +40,8 @@ BObject* BObjectManager::createObject(const string& type) {
   switch(proto->type) {
   case AtomicType:
     return createTypedObject<AtomicBObject, ProtoAtomicBObject>(proto);
+  case CompositeType:
+    return createTypedObject<CompositeBObject, ProtoCompositeBObject>(proto);
   case ComplexType:
     return createTypedObject<ComplexBObject, ProtoComplexBObject>(proto);
   default:

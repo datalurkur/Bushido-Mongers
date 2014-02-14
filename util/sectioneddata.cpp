@@ -5,69 +5,39 @@
 using namespace std;
 
 template <>
-bool SectionedData<string>::unpack(const void* data, unsigned int size) {
+void SectionedData<string>::unpack(const void* data, unsigned int size) {
   unsigned int i = 0;
   while(i < size) {
     unsigned short stringSize;
-    if(!ReadFromBuffer<unsigned short>(data, size, i, stringSize)) {
-      Error("Failed to read section ID length");
-      return false;
-    }
-    Debug("Read string size " << stringSize);
-
-    if(stringSize == 0) {
-      Error("Invalid section ID length");
-      return false;
-    }
-
+    ReadFromBuffer<unsigned short>(data, size, i, stringSize);
     void* charID = calloc(stringSize+1, sizeof(char));
-    if(!ReadFromBuffer(data, size, i, charID, stringSize)) {
-      Error("Failed to read section ID");
-      return false;
-    }
+
+    ReadFromBuffer(data, size, i, charID, stringSize);
     string id((char*)charID);
     free(charID);
 
     SectionSize dataSize;
-    if(!ReadFromBuffer<SectionSize>(data, size, i, dataSize)) {
-      Error("Failed to read size of section " << id);
-      return false;
-    }
+    ReadFromBuffer<SectionSize>(data, size, i, dataSize);
 
     if(size - i < dataSize) {
-      Error("Failed to read data for section " << id << " (" << dataSize << " bytes)");
-      return false;
+      throw BadSectionDataException();
     }
-    if(!addSection(id, &((char*)data)[i], dataSize)) { return false; }
+    addSection(id, &((char*)data)[i], dataSize);
     i += dataSize;
   }
-  return true;
 }
 
 template <>
-bool SectionedData<string>::pack(void* data, unsigned int size) const {
+void SectionedData<string>::pack(void* data, unsigned int size) const {
   SectionMap::const_iterator itr;
 
   unsigned int offset = 0;
   for(itr = _sections.begin(); itr != _sections.end(); itr++) {
-    if(!WriteToBuffer<unsigned short>(data, size, offset, itr->first.length())) {
-      Error("Failed to write section ID length");
-      return false;
-    }
-    if(!WriteToBuffer(data, size, offset, itr->first.c_str(), itr->first.length())) {
-      Error("Failed to write section ID");
-      return false;
-    }
-    if(!WriteToBuffer<SectionSize>(data, size, offset, itr->second.size)) {
-      Error("Failed to write section size");
-      return false;
-    }
-    if(!WriteToBuffer(data, size, offset, itr->second.data, itr->second.size)) {
-      Error("Failed to write section data");
-      return false;
-    }
+    WriteToBuffer<unsigned short>(data, size, offset, itr->first.length());
+    WriteToBuffer(data, size, offset, itr->first.c_str(), itr->first.length());
+    WriteToBuffer<SectionSize>(data, size, offset, itr->second.size);
+    WriteToBuffer(data, size, offset, itr->second.data, itr->second.size);
   }
-  return true;
 }
 
 template <>

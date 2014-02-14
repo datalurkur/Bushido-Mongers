@@ -27,6 +27,8 @@ public:
   void getObjectNames(list<string>& names) const;
 
   ProtoBObject* getObject(const string& name) const;
+  void getObjectsByKeyword(list<ProtoBObject*> &objects) const;
+
   bool addObject(const string& name, ProtoBObject* object);
   bool deleteObject(const string& name);
   bool cloneObject(const string& source, const string& dest);

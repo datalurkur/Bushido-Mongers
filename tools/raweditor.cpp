@@ -1,8 +1,9 @@
 #include "util/filesystem.h"
 #include "util/log.h"
 
-#include "game/complexbobject.h"
 #include "game/atomicbobject.h"
+#include "game/compositebobject.h"
+#include "game/complexbobject.h"
 
 #include "interface/choice.h"
 
@@ -59,8 +60,9 @@ void addObject(Raw& raw) {
   cin >> objectName;
 
   Choice objectTypeMenu("Choose an object type");
-  objectTypeMenu.addChoice("atomic");
-  objectTypeMenu.addChoice("complex");
+  objectTypeMenu.addChoice("Atomic (single-material object)");
+  objectTypeMenu.addChoice("Composite (layered object)");
+  objectTypeMenu.addChoice("Complex (component objects connected in arbitrary ways)");
 
   unsigned int choice;
   if(!objectTypeMenu.getSelection(choice)) { return; }
@@ -71,7 +73,11 @@ void addObject(Raw& raw) {
     object = (ProtoBObject*)new ProtoAtomicBObject();
     break;
   case 1:
+    object = (ProtoBObject*)new ProtoCompositeBObject();
+    break;
+  case 2:
     object = (ProtoBObject*)new ProtoComplexBObject();
+    break;
   }
 
   raw.addObject(objectName, object);
@@ -96,6 +102,9 @@ void editAtomicBObject(const string& name, ProtoAtomicBObject* object) {
   }
 }
 
+void editCompositeBObject(const string& name, ProtoCompositeBObject* object) {
+}
+
 void editComplexBObject(const string& name, ProtoComplexBObject* object) {
   Info("Editing complex object " << name);
 
@@ -110,6 +119,9 @@ void editObject(Raw& raw, const string& objectName) {
   switch(object->type) {
   case AtomicType:
     editAtomicBObject(objectName, (ProtoAtomicBObject*)object);
+    break;
+  case CompositeType:
+    editCompositeBObject(objectName, (ProtoCompositeBObject*)object);
     break;
   case ComplexType:
     editComplexBObject(objectName, (ProtoComplexBObject*)object);

@@ -9,7 +9,7 @@ class ProtoBObjectExtension {
 public:
   ProtoBObjectExtension(ExtensionType t);
 
-  virtual bool pack(SectionedData<AttributeSectionType>& sections) const = 0;
+  virtual void pack(SectionedData<AttributeSectionType>& sections) const = 0;
   virtual bool unpack(const SectionedData<AttributeSectionType>& sections) = 0;
 
   ExtensionType type;

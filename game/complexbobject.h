@@ -5,28 +5,41 @@
 
 #include "game/bobject.h"
 #include "game/bobjecttypes.h"
-#include "game/container.h"
+
+#include <set>
+#include <map>
 
 class ProtoComplexBObject : public ProtoBObject {
 public:
   ProtoComplexBObject();
   virtual ~ProtoComplexBObject();
 
-  virtual bool pack(SectionedData<ObjectSectionType>& sections) const;
+  virtual void pack(SectionedData<ObjectSectionType>& sections) const;
   virtual bool unpack(const SectionedData<ObjectSectionType>& sections);
 
-  // Who knows what this is going to be
-  //list<string> components;
+  map<string,string> explicitComponents;
+  map<string,string> keywordComponents;
+  map<string,string> connections;
 };
 
 class ComplexBObject : public BObject {
+public:
+  typedef map<string, BObject*> NicknameMap;
+  typedef set<BObject*> ObjectSet;
+  typedef map<BObject*, ObjectSet> ConnectivityMap;
+
 public:
   ComplexBObject(BObjectID id, const ProtoComplexBObject* proto);
 
   float getWeight() const;
 
 private:
+  // Map by ID
   BObjectMap _components;
+  // Map by nickname
+  NicknameMap _nicknamed;
+  // Object connections
+  ConnectivityMap _connections;
 };
 
 #endif

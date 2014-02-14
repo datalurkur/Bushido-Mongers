@@ -20,7 +20,7 @@ public:
   ProtoBObject(BObjectType t);
   virtual ~ProtoBObject();
 
-  virtual bool pack(SectionedData<ObjectSectionType>& sections) const;
+  virtual void pack(SectionedData<ObjectSectionType>& sections) const;
   virtual bool unpack(const SectionedData<ObjectSectionType>& sections);
 
   BObjectType type;
@@ -52,6 +52,7 @@ private:
   BObjectID _id;
 };
 
+typedef list<BObject*> BObjectList;
 typedef map<BObjectID, BObject*> BObjectMap;
 
 #endif

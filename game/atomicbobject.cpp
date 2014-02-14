@@ -3,12 +3,12 @@
 ProtoAtomicBObject::ProtoAtomicBObject(): ProtoBObject(AtomicType), weight(0) {}
 ProtoAtomicBObject::~ProtoAtomicBObject() {}
 
-bool ProtoAtomicBObject::pack(SectionedData<ObjectSectionType>& sections) const {
-  if(!ProtoBObject::pack(sections)) { return false; }
+void ProtoAtomicBObject::pack(SectionedData<ObjectSectionType>& sections) const {
+  ProtoBObject::pack(sections);
 
   SectionedData<AttributeSectionType> atomicData;
-  if(!atomicData.addSection<float>(WeightAttribute, weight)) { return false; }
-  return sections.addSubSections(AtomicData, atomicData);
+  atomicData.addSection<float>(WeightAttribute, weight);
+  sections.addSubSections(AtomicData, atomicData);
 }
 
 bool ProtoAtomicBObject::unpack(const SectionedData<ObjectSectionType>& sections) {
