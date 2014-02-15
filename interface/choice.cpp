@@ -1,7 +1,11 @@
 #include "interface/choice.h"
+#include "interface/console.h"
 #include "util/log.h"
 
 #include <iostream>
+#include <string>
+
+using namespace std;
 
 Choice::Choice(): _prompt("Make a selection") {}
 
@@ -10,9 +14,7 @@ Choice::Choice(const string& prompt): _prompt(prompt) {}
 Choice::Choice(const vector<string>& choices): _prompt("Make a selection"), _choices(choices) {}
 
 Choice::Choice(const list<string>& choices): _prompt("Make a selection") {
-  for(list<string>::const_iterator itr = choices.begin(); itr != choices.end(); itr++) {
-    _choices.push_back(*itr);
-  }
+  for(string choice : choices) { _choices.push_back(choice); }
 }
 
 void Choice::addChoice(const string& choice) {
@@ -23,15 +25,15 @@ bool Choice::getSelection(unsigned int &choice, unsigned int retries) const {
   unsigned int c;
   for(unsigned int i = 0; i < retries; i++) {
     printChoices();
-    cin >> c;
-    Info("");
-    if(c > 0 && c <= _choices.size()) {
-      choice = c - 1;
-      return true;
-    } else if(c == _choices.size() + 1) {
+    if(!Console::GetNumericInput<unsigned int>(c) || c <= 0 || c >= _choices.size() + 1) {
+      Info("Please enter a value between 1 and " << _choices.size() + 1);
+    }
+    if(c == _choices.size() + 1) {
       return false;
     } else {
-      Info("Please enter a value between 1 and " << _choices.size() + 1);
+      choice = c - 1;
+      Info("");
+      return true;
     }
   }
   return false;

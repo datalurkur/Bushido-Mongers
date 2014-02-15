@@ -29,4 +29,8 @@ AtomicBObject::AtomicBObject(BObjectID id, const ProtoAtomicBObject* proto): BOb
   _weight = proto->weight;
 }
 
+bool AtomicBObject::atCreation(BObjectManager* manager) { return true; }
+
+void AtomicBObject::atDestruction(BObjectManager* manager) {}
+
 float AtomicBObject::getWeight() const { return _weight; }

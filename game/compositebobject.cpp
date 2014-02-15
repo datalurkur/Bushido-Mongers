@@ -1,4 +1,5 @@
 #include "game/compositebobject.h"
+#include "game/bobjectmanager.h"
 
 ProtoCompositeBObject::ProtoCompositeBObject(): ProtoBObject(CompositeType) {}
 ProtoCompositeBObject::~ProtoCompositeBObject() {}
@@ -7,7 +8,7 @@ void ProtoCompositeBObject::pack(SectionedData<ObjectSectionType>& sections) con
   ProtoBObject::pack(sections);
 
   SectionedData<AttributeSectionType> compositeData;
-  #pragma message "TODO : Pack layer data here"
+  compositeData.addStringListSection(LayersList, layers);
 
   sections.addSubSections(CompositeData, compositeData);
 }
@@ -18,25 +19,44 @@ bool ProtoCompositeBObject::unpack(const SectionedData<ObjectSectionType>& secti
   SectionedData<AttributeSectionType> compositeData;
   if(!sections.getSubSections(CompositeData, compositeData)) { return false; }
 
-  #pragma message "TODO : Parse layer data here"
+  if(!compositeData.getStringListSection(LayersList, layers)) { return false; }
 
   return true;
 }
 
-CompositeBObject::CompositeBObject(BObjectID id, const ProtoCompositeBObject* proto): BObject(CompositeType, id, proto) {
-  #pragma message "TODO : Use the object manager here to create default components"
-  #pragma message "TODO : Enforce that layers are only ever atomic types"
+CompositeBObject::CompositeBObject(BObjectID id, const ProtoCompositeBObject* proto): BObject(CompositeType, id, proto) {}
+
+bool CompositeBObject::atCreation(BObjectManager* manager) {
+  const ProtoCompositeBObject* p = (ProtoCompositeBObject*)_proto;
+  bool ret = true;
+  for(const string& layerName : p->layers) {
+    BObject* layer = manager->createObject(layerName);
+    if(layer == 0) {
+      ret = false;
+      break;
+    }
+    _layers.push_back(layer);
+  }
+
+  if(!ret) {
+    Error("Failed to create layers for composite object");
+    for(auto layer : _layers) {
+      manager->destroyObject(layer->getID());
+    }
+    return false;
+  }
+
+  return true;
+}
+
+void CompositeBObject::atDestruction(BObjectManager* manager) {
 }
 
 float CompositeBObject::getWeight() const {
   float total = 0;
 
+  for(BObject* layer : _layers) { total += layer->getWeight(); }
   #pragma message "TODO : Cache this value"
-
-  BObjectList::const_iterator itr;
-  for(itr = _layers.begin(); itr != _layers.end(); itr++) {
-    total += (*itr)->getWeight();
-  }
 
   return total;
 }

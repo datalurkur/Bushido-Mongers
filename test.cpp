@@ -8,7 +8,7 @@ int main() {
   Info("Logging set up");
 
   BObjectManager* manager = new BObjectManager("raws");
-  BObject* meatwad = manager->createObject("meatwad");
+  BObject* meatwad = manager->createObject("torso");
   if(!meatwad) {
     Error("Sadly, failed to create meatwad");
   } else {

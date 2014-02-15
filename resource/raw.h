@@ -4,6 +4,7 @@
 #include "game/bobject.h"
 
 #include <list>
+#include <set>
 
 using namespace std;
 
@@ -27,18 +28,20 @@ public:
   void getObjectNames(list<string>& names) const;
 
   ProtoBObject* getObject(const string& name) const;
-  void getObjectsByKeyword(list<ProtoBObject*> &objects) const;
+  void getObjectsByKeyword(const string& keyword, list<ProtoBObject*> &objects) const;
+  ProtoBObject* getRandomObjectByKeyword(const string& keyword) const;
 
   bool addObject(const string& name, ProtoBObject* object);
   bool deleteObject(const string& name);
-  bool cloneObject(const string& source, const string& dest);
 
 private:
   ProtoBObject* unpackProto(const void* data, unsigned int size);
 
 private:
   typedef map<string, ProtoBObject*> ProtoMap;
+  typedef map<string, set<ProtoBObject*> > KeywordMap;
   ProtoMap _objectMap;
+  KeywordMap _keywordMap;
 };
 
 #endif

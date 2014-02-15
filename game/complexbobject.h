@@ -31,6 +31,9 @@ public:
 public:
   ComplexBObject(BObjectID id, const ProtoComplexBObject* proto);
 
+  virtual bool atCreation(BObjectManager* manager);
+  virtual void atDestruction(BObjectManager* manager);
+
   float getWeight() const;
 
 private:

@@ -23,19 +23,21 @@ bool ProtoComplexBObject::unpack(const SectionedData<ObjectSectionType>& section
   return true;
 }
 
-ComplexBObject::ComplexBObject(BObjectID id, const ProtoComplexBObject* proto): BObject(ComplexType, id, proto) {
+ComplexBObject::ComplexBObject(BObjectID id, const ProtoComplexBObject* proto): BObject(ComplexType, id, proto) {}
+
+bool ComplexBObject::atCreation(BObjectManager* manager) {
   #pragma message "TODO : Use the object manager here to create default components"
+  return true;
+}
+
+void ComplexBObject::atDestruction(BObjectManager* manager) {
 }
 
 float ComplexBObject::getWeight() const {
   float total = 0;
 
+  for(auto& componentData : _components) { total += componentData.second->getWeight(); }
   #pragma message "TODO : Cache this value"
-
-  BObjectMap::const_iterator itr;
-  for(itr = _components.begin(); itr != _components.end(); itr++) {
-    total += itr->second->getWeight();
-  }
 
   return total;
 }

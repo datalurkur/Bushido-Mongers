@@ -32,20 +32,19 @@ void SectionedData<string>::pack(void* data, unsigned int size) const {
   SectionMap::const_iterator itr;
 
   unsigned int offset = 0;
-  for(itr = _sections.begin(); itr != _sections.end(); itr++) {
-    WriteToBuffer<unsigned short>(data, size, offset, itr->first.length());
-    WriteToBuffer(data, size, offset, itr->first.c_str(), itr->first.length());
-    WriteToBuffer<SectionSize>(data, size, offset, itr->second.size);
-    WriteToBuffer(data, size, offset, itr->second.data, itr->second.size);
+  for(auto& section : _sections) {
+    WriteToBuffer<unsigned short>(data, size, offset, section.first.length());
+    WriteToBuffer(data, size, offset, section.first.c_str(), section.first.length());
+    WriteToBuffer<SectionSize>(data, size, offset, section.second.size);
+    WriteToBuffer(data, size, offset, section.second.data, section.second.size);
   }
 }
 
 template <>
 unsigned int SectionedData<string>::getPackedSize() const {
   unsigned int size = 0;
-  SectionMap::const_iterator itr;
-  for(itr = _sections.begin(); itr != _sections.end(); itr++) {
-    unsigned int sectionSize = itr->second.size + sizeof(unsigned short) + itr->first.length() + sizeof(SectionSize);
+  for(auto& section : _sections) {
+    unsigned int sectionSize = section.second.size + sizeof(unsigned short) + section.first.length() + sizeof(SectionSize);
     size += sectionSize;
   }
   return size;

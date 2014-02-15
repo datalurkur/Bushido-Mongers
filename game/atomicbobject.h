@@ -20,6 +20,9 @@ class AtomicBObject : public BObject {
 public:
   AtomicBObject(BObjectID id, const ProtoAtomicBObject* proto);
 
+  virtual bool atCreation(BObjectManager* manager);
+  virtual void atDestruction(BObjectManager* manager);
+
   float getWeight() const;
 
 private:

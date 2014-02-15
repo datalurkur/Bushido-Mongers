@@ -7,18 +7,17 @@ ProtoBObject::~ProtoBObject() {}
 void ProtoBObject::pack(SectionedData<ObjectSectionType>& sections) const {
   // Construct the base data sections
   SectionedData<AttributeSectionType> baseSections;
-  // Since we don't currently pack any information as part of the base data, this is basically a no-op
+  baseSections.addStringListSection(KeywordsList, keywords);
 
   // Add the base data
   sections.addSubSections(BaseData, baseSections);
 
   // Construct the extension sections
   SectionedData<ExtensionType> extensionSections;
-  ProtoExtensionMap::const_iterator itr;
-  for(itr = extensions.begin(); itr != extensions.end(); itr++) {
+  for(auto& extensionData : extensions) {
     SectionedData<AttributeSectionType> extensionAttributes;
-    itr->second->pack(extensionAttributes);
-    extensionSections.addSubSections(itr->first, extensionAttributes);
+    extensionData.second->pack(extensionAttributes);
+    extensionSections.addSubSections(extensionData.first, extensionAttributes);
   }
 
   // Add the extension data
@@ -34,7 +33,10 @@ bool ProtoBObject::unpack(const SectionedData<ObjectSectionType>& sections) {
   }
 
   // Parse base data
-  // Nothing to do here
+  if(!baseSections.getStringListSection(KeywordsList, keywords)) {
+    Error("Failed to unpack keywords data");
+    return false;
+  }
 
   // Unpack extension data
   SectionedData<ExtensionType> extensionSections;
@@ -44,35 +46,37 @@ bool ProtoBObject::unpack(const SectionedData<ObjectSectionType>& sections) {
   }
 
   // Parse extension data
-  SectionedData<ExtensionType>::iterator itr;
-  for(itr = extensionSections.begin(); itr != extensionSections.end(); itr++) {
+  for(auto& extensionData : extensionSections) {
     ProtoBObjectExtension* extension;
-    switch(itr->first) {
+    switch(extensionData.first) {
     default:
-      Error("Unpacking of extension type " << itr->first << " is not supported");
+      Error("Unpacking of extension type " << extensionData.first << " is not supported");
       return false;
     }
     SectionedData<AttributeSectionType> extensionAttributes;
-    extensionAttributes.unpack(itr->second.data, itr->second.size);
+    extensionAttributes.unpack(extensionData.second.data, extensionData.second.size);
     if(!extension->unpack(extensionAttributes)) {
       Error("Failed to unpack extension");
       return false;
     }
-    extensions[itr->first] = extension;
+    extensions[extensionData.first] = extension;
   }
 
   return true;
 }
 
-BObject::BObject(BObjectType type, BObjectID id, const ProtoBObject* proto): _type(type), _id(id) {
-  ProtoBObject::ProtoExtensionMap::const_iterator itr;
-  for(itr = proto->extensions.begin(); itr != proto->extensions.end(); itr++) {
-    addExtension(itr->first, *itr->second);
+BObject::BObject(BObjectType type, BObjectID id, const ProtoBObject* proto):
+  _proto(proto), _type(type), _id(id), _keywords(proto->keywords) {
+  for(auto& pExt : proto->extensions) {
+    addExtension(pExt.first, *pExt.second);
   }
 }
 
 BObject::~BObject() {
 }
+
+bool BObject::atCreation(BObjectManager* manager) { return true; }
+void BObject::atDestruction(BObjectManager* manager) {}
 
 bool BObject::addExtension(ExtensionType type, const ProtoBObjectExtension& data) {
   ExtensionMap::iterator itr = _extensions.find(type);

@@ -9,7 +9,7 @@
 using namespace std;
 
 #define LOG_DEBUG   0x01
-#define LOG_INFO  0x02
+#define LOG_INFO    0x02
 #define LOG_WARNING 0x04
 #define LOG_ERROR   0x08
 
@@ -66,7 +66,7 @@ Log& Log::operator<<(const T &rhs) {
 
 
 #define Debug(msg) LogToChannel(LOG_DEBUG,   msg)
-#define Info(msg)  LogToChannel(LOG_INFO,  msg)
+#define Info(msg)  LogToChannel(LOG_INFO,    msg)
 #define Warn(msg)  LogToChannel(LOG_WARNING, msg)
 #define Error(msg) LogToChannel(LOG_ERROR,   msg)
 

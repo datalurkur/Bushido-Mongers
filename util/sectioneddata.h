@@ -70,9 +70,8 @@ private:
 template <typename T>
 void SectionedData<T>::debug() const {
   Info("SectionedData contains " << _sections.size() << " sections");
-  typename SectionMap::const_iterator itr;
-  for(itr = _sections.begin(); itr != _sections.end(); itr++) {
-    Info("\tSection " << itr->first << " contains " << itr->second.size << " bytes");
+  for(auto& section : _sections) {
+    Info("\tSection " << section.first << " contains " << section.second.size << " bytes");
   }
 }
 
@@ -97,21 +96,19 @@ void SectionedData<T>::unpack(const void* data, unsigned int size) {
 
 template <typename T>
 void SectionedData<T>::pack(void* data, unsigned int size) const {
-  typename SectionMap::const_iterator itr;
   unsigned int offset = 0;
-  for(itr = _sections.begin(); itr != _sections.end(); itr++) {
-    WriteToBuffer<T>(data, size, offset, itr->first);
-    WriteToBuffer<SectionSize>(data, size, offset, itr->second.size);
-    WriteToBuffer(data, size, offset, itr->second.data, itr->second.size);
+  for(auto& section : _sections) {
+    WriteToBuffer<T>(data, size, offset, section.first);
+    WriteToBuffer<SectionSize>(data, size, offset, section.second.size);
+    WriteToBuffer(data, size, offset, section.second.data, section.second.size);
   }
 }
 
 template <typename T>
 unsigned int SectionedData<T>::getPackedSize() const {
-  typename SectionMap::const_iterator itr;
   unsigned int size = 0;
-  for(itr = _sections.begin(); itr != _sections.end(); itr++) {
-    size += itr->second.size + sizeof(T) + sizeof(SectionSize);
+  for(auto& section : _sections) {
+    size += section.second.size + sizeof(T) + sizeof(SectionSize);
   }
   return size;
 }
@@ -121,9 +118,8 @@ SectionedData<T>::SectionedData() {}
 
 template <typename T>
 SectionedData<T>::~SectionedData() {
-  typename SectionMap::iterator itr;
-  for(itr = _sections.begin(); itr != _sections.end(); itr++) {
-    free(itr->second.data);
+  for(auto& section : _sections) {
+    free(section.second.data);
   }
 }
 
@@ -181,10 +177,10 @@ void SectionedData<T>::addListSection(T id, const list<S>& list) {
   void* sectionData = malloc(sectionSize);
   if(!sectionData) { throw bad_alloc(); }
 
-  typename std::list<S>::const_iterator itr;
-  unsigned int i;
-  for(i = 0, itr = list.begin(); itr != list.end(); i++, itr++) {
-    ((S*)sectionData)[i] = *itr;
+  unsigned int i = 0;
+  for(string& item : list) {
+    ((S*)sectionData)[i] = item;
+    i++;
   }
   DataSection<T> _section;
   _section.size = sectionSize;
@@ -196,17 +192,16 @@ template <typename T>
 void SectionedData<T>::addStringListSection(T id, const list<string>& list) {
   unsigned int sectionSize = 0;
   // I don't begin to understand why clang insists on me putting std:: here.  Do namespaces and templates not get along these days?
-  typename std::list<string>::const_iterator itr;
-  for(itr = list.begin(); itr != list.end(); itr++) {
-    sectionSize += itr->length() + sizeof(unsigned short);
+  for(string item : list) {
+    sectionSize += item.length() + sizeof(unsigned short);
   }
   void* sectionData = malloc(sectionSize);
   if(!sectionData) { throw bad_alloc(); }
 
   unsigned int offset = 0;
-  for(itr = list.begin(); itr != list.end(); itr++) {
-    WriteToBuffer<unsigned short>(sectionData, sectionSize, offset, itr->length());
-    WriteToBuffer(sectionData, sectionSize, offset, itr->c_str(), itr->length());
+  for(string item : list) {
+    WriteToBuffer<unsigned short>(sectionData, sectionSize, offset, item.length());
+    WriteToBuffer(sectionData, sectionSize, offset, item.c_str(), item.length());
   }
   DataSection<T> _section;
   _section.size = sectionSize;

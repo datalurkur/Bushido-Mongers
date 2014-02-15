@@ -2,12 +2,15 @@
 #include "util/log.h"
 
 #include "game/atomicbobject.h"
-#include "game/compositebobject.h"
-#include "game/complexbobject.h"
 
 #include "interface/choice.h"
+#include "interface/console.h"
 
 #include "resource/raw.h"
+
+#include "tools/raw_editor/complex.h"
+#include "tools/raw_editor/composite.h"
+#include "tools/raw_editor/common.h"
 
 #include <list>
 #include <fstream>
@@ -17,11 +20,10 @@ using namespace std;
 bool getRawsList(const string& dir, list<string> &raws) {
   list<string> files;
   FileSystem::GetDirectoryContents(dir, files);
-  list<string>::iterator itr;
-  for(itr = files.begin(); itr != files.end(); itr++) {
-    if(itr->length() <= 4) { continue; }
-    if(itr->substr(itr->length() - 4) == ".raw") {
-      raws.push_back(*itr);
+  for(string file : files) {
+    if(file.length() <= 4) { continue; }
+    if(file.substr(file.length() - 4) == ".raw") {
+      raws.push_back(file);
     }
   }
   return true;
@@ -44,9 +46,14 @@ void saveRaw(Raw& raw, const string& dir, const string& name) {
 void createRaw(const string& dir) {
   string name;
   Info("Enter a raw filename: ");
-  cin >> name;
+  Console::GetWordInput(name);
 
-  if(name.substr(name.length()-4) != ".raw") {
+  if(name.length() == 0) {
+    Error("Invalid file name");
+    return;
+  }
+  
+  if(name.length() <= 4 || name.substr(name.length()-4) != ".raw") {
     name += ".raw";
   }
 
@@ -57,7 +64,7 @@ void createRaw(const string& dir) {
 void addObject(Raw& raw) {
   string objectName;
   Info("Enter a name for the new object:");
-  cin >> objectName;
+  Console::GetWordInput(objectName);
 
   Choice objectTypeMenu("Choose an object type");
   objectTypeMenu.addChoice("Atomic (single-material object)");
@@ -83,34 +90,32 @@ void addObject(Raw& raw) {
   raw.addObject(objectName, object);
 }
 
+
 void editAtomicBObject(const string& name, ProtoAtomicBObject* object) {
   Info("Editing atomic object " << name);
   Info("\tweight: " << object->weight);
 
   Choice editMenu("Select an attribute to edit");
-  editMenu.addChoice("weight");
+  editMenu.addChoice("Keywords");
+  editMenu.addChoice("Weight");
 
   unsigned int choice;
   while(editMenu.getSelection(choice)) {
     switch(choice) {
     case 0:
+      editObjectKeywords(object);
+      break;
+    case 1:
       Info("Enter a new weight (currently " << object->weight << ")");
-      cin >> object->weight;
+      float newWeight;
+      if(!Console::GetNumericInput<float>(newWeight)) {
+        Error("Invalid weight value entered");
+        break;
+      }
+      object->weight = newWeight;
       Info("Weight of " << name << " set to " << object->weight);
       break;
     }
-  }
-}
-
-void editCompositeBObject(const string& name, ProtoCompositeBObject* object) {
-}
-
-void editComplexBObject(const string& name, ProtoComplexBObject* object) {
-  Info("Editing complex object " << name);
-
-  unsigned int choice;
-  Choice editMenu("Select an attribute to edit");
-  while(editMenu.getSelection(choice)) {
   }
 }
 
@@ -143,9 +148,6 @@ void selectAndEditObject(Raw& raw) {
   editObject(raw, selection);
 }
 
-void cloneObject(Raw& raw) {
-}
-
 void editRaw(const string& dir, const string& name) {
   void* fileData;
   unsigned int fileSize;
@@ -165,40 +167,34 @@ void editRaw(const string& dir, const string& name) {
   rawMenu.addChoice("Add Object");
   rawMenu.addChoice("Remove Object");
   rawMenu.addChoice("Edit Object");
-  rawMenu.addChoice("Clone Object");
   rawMenu.addChoice("Save Changes");
 
   unsigned int choice;
   string objectName;
   while(rawMenu.getSelection(choice)) {
     switch(choice) {
-      case 0: {
-        list<string> names;
-        raw.getObjectNames(names);
-        Info("Raw contains " << names.size() << " objects");
-        for(list<string>::iterator itr = names.begin(); itr != names.end(); itr++) {
-          Info(*itr);
-        }
-      } break;
-      case 1:
-        addObject(raw);
-        break;
-      case 2:
-        Info("Enter object name to remove:");
-        cin >> objectName;
-        if(!raw.deleteObject(objectName)) {
-          Error("No object " << objectName << " found in raw");
-        }
-        break;
-      case 3:
-        selectAndEditObject(raw);
-        break;
-      case 4:
-        cloneObject(raw);
-        break;
-      case 5:
-        saveRaw(raw, dir, name);
-        break;
+    case 0: {
+      list<string> names;
+      raw.getObjectNames(names);
+      Info("Raw contains " << names.size() << " objects");
+      for(string name : names) { Info(name); }
+    } break;
+    case 1:
+      addObject(raw);
+      break;
+    case 2:
+      Info("Enter object name to remove:");
+      Console::GetWordInput(objectName);
+      if(!raw.deleteObject(objectName)) {
+        Error("No object " << objectName << " found in raw");
+      }
+      break;
+    case 3:
+      selectAndEditObject(raw);
+      break;
+    case 4:
+      saveRaw(raw, dir, name);
+      break;
     }
   }
 }

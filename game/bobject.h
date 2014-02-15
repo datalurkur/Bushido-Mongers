@@ -25,12 +25,18 @@ public:
 
   BObjectType type;
   ProtoExtensionMap extensions;
+  list<string> keywords;
 };
+
+class BObjectManager;
 
 class BObject {
 public:
   BObject(BObjectType type, BObjectID id, const ProtoBObject* proto);
   virtual ~BObject();
+
+  virtual bool atCreation(BObjectManager* manager);
+  virtual void atDestruction(BObjectManager* manager);
 
   // Extension management
   bool addExtension(ExtensionType type, const ProtoBObjectExtension& data);
@@ -44,12 +50,15 @@ public:
   // Virtual attribute accessors
   virtual float getWeight() const = 0;
 
-private:
+protected:
   typedef map<ExtensionType, BObjectExtension*> ExtensionMap;
   ExtensionMap _extensions;
 
+  const ProtoBObject* _proto;
+
   BObjectType _type;
   BObjectID _id;
+  list<string> _keywords;
 };
 
 typedef list<BObject*> BObjectList;

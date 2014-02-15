@@ -4,8 +4,10 @@
 #include <string>
 #include <sstream>
 
+using namespace std;
+
 template <typename T>
-extern bool ConvertString(const string& source, T& dest) {
+bool ConvertString(const string& source, T& dest) {
   istringstream stream(source);
   return !(stream >> dest).fail();
 }

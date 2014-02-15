@@ -14,14 +14,15 @@ public:
   virtual void pack(SectionedData<ObjectSectionType>& sections) const;
   virtual bool unpack(const SectionedData<ObjectSectionType>& sections);
 
-  // Layers are defined here with an index so that explicit and generic layers can be interspersed
-  map<int,string> explicitLayers;
-  map<int,string> keywordLayers;
+  list<string> layers;
 };
 
 class CompositeBObject : public BObject {
 public:
   CompositeBObject(BObjectID id, const ProtoCompositeBObject* proto);
+
+  virtual bool atCreation(BObjectManager* manager);
+  virtual void atDestruction(BObjectManager* manager);
 
   float getWeight() const;
 

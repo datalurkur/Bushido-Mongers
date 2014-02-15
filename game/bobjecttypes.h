@@ -22,7 +22,9 @@ enum ObjectSectionType {
 
 enum AttributeSectionType {
   FirstAttributeSectionType = 0,
+  KeywordsList,
   WeightAttribute,
+  LayersList,
   LastAttributeSectionType
 };
 

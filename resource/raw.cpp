@@ -28,14 +28,13 @@ bool Raw::unpack(const void* data, unsigned int size) {
   // Debug print
   //sections.debug();
 
-  SectionedData<string>::iterator itr;
-  for(itr = sections.begin(); itr != sections.end(); itr++) {
-    ProtoBObject* object = unpackProto(itr->second.data, itr->second.size);
+  for(auto& section : sections) {
+    ProtoBObject* object = unpackProto(section.second.data, section.second.size);
     if(!object) {
-      Error("Failed to load object " << itr->first);
+      Error("Failed to load object " << section.first);
       return false;
     }
-    _objectMap[itr->first] = object;
+    _objectMap[section.first] = object;
   }
 
   return true;
@@ -92,12 +91,11 @@ bool Raw::pack(void** data, unsigned int& size) const {
   header.version = VERSION;
 
   SectionedData<string> sections;
-  ProtoMap::const_iterator itr;
-  for(itr = _objectMap.begin(); itr != _objectMap.end(); itr++) {
+  for(auto& itr : _objectMap) {
     SectionedData<ObjectSectionType> objectSections;
-    objectSections.addSection<BObjectType>(TypeSection, itr->second->type);
-    itr->second->pack(objectSections);
-    sections.addSubSections(itr->first, objectSections);
+    objectSections.addSection<BObjectType>(TypeSection, itr.second->type);
+    itr.second->pack(objectSections);
+    sections.addSubSections(itr.first, objectSections);
   }
 
   sections.debug();
@@ -119,8 +117,8 @@ bool Raw::pack(void** data, unsigned int& size) const {
 Raw::Raw() {}
 
 Raw::~Raw() {
-  for(ProtoMap::iterator itr = _objectMap.begin(); itr != _objectMap.end(); itr++) {
-    delete itr->second;
+  for(auto& itr : _objectMap) {
+    delete itr.second;
   }
   _objectMap.clear();
 }
@@ -128,8 +126,8 @@ Raw::~Raw() {
 unsigned int Raw::getNumObjects() const { return _objectMap.size(); }
 
 void Raw::getObjectNames(list<string>& names) const {
-  for(ProtoMap::const_iterator itr = _objectMap.begin(); itr != _objectMap.end(); itr++) {
-    names.push_back(itr->first);
+  for(auto& itr : _objectMap) {
+    names.push_back(itr.first);
   }
 }
 
@@ -139,11 +137,32 @@ ProtoBObject* Raw::getObject(const string& name) const {
   else { return itr->second; }
 }
 
+void Raw::getObjectsByKeyword(const string& keyword, list<ProtoBObject*> &objects) const {
+  KeywordMap::const_iterator kwItr = _keywordMap.find(keyword);
+  if(kwItr == _keywordMap.end()) { return; }
+
+  #pragma message "TODO : Consider using different data structure here to make load time longer but runtime potentially more efficient"
+  for(auto& object : kwItr->second) {
+    objects.push_back(object);
+  }
+}
+
+ProtoBObject* Raw::getRandomObjectByKeyword(const string& keyword) const {
+  KeywordMap::const_iterator kwItr = _keywordMap.find(keyword);
+  if(kwItr == _keywordMap.end()) { return 0; }
+  set<ProtoBObject*>::const_iterator itr = kwItr->second.begin();
+  advance(itr, rand() % kwItr->second.size());
+  return *itr;
+}
+
 bool Raw::addObject(const string& name, ProtoBObject* object) {
   Info("Adding object " << name << " to raws");
-  ProtoMap::iterator itr = _objectMap.find(name);
-  if(itr == _objectMap.end()) {
+  ProtoMap::iterator objectItr = _objectMap.find(name);
+  if(objectItr == _objectMap.end()) {
     _objectMap[name] = object;
+    for(auto& keyword : object->keywords) {
+      _keywordMap[keyword].insert(object);
+    }
     return true;
   } else { return false; }
 }
@@ -157,12 +176,4 @@ bool Raw::deleteObject(const string& name) {
     _objectMap.erase(itr);
     return true;
   }
-}
-
-bool Raw::cloneObject(const string& source, const string& dest) {
-  ProtoMap::iterator destItr = _objectMap.find(dest);
-  ProtoMap::iterator srcItr = _objectMap.find(source);
-  if(destItr == _objectMap.end() && srcItr != _objectMap.end()) {
-    return true;
-  } else { return false; }
 }
