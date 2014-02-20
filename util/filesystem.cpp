@@ -1,6 +1,7 @@
 #include "filesystem.h"
 #include "stringhelper.h"
 
+#include <cstdlib>
 #include <list>
 
 unsigned int FileSystem::GetFileData(const string& filename, void **data) {
