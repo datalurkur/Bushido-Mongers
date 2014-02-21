@@ -2,17 +2,19 @@
 #define BOXQUADTREE_H
 
 #include "util/quadtree.h"
+#include "util/pointquadtree.h"
 
 template <typename T, typename S>
 class BoxQuadTree : public QuadTree<T,S> {
 public:
-  BoxQuadTree(S x, S y, S maxX, S maxY, unsigned int maxDepth, const list<T>& sourceObjects, unsigned int depth = 1);
+  BoxQuadTree(S x, S y, S maxX, S maxY, unsigned int maxDepth, const list<T>& sourceObjects, unsigned int depth = 1, BoxQuadTree<T,S>* parent = 0);
 
   void getObjects(S x, S y, S maxX, S maxY, list<T>& objects);
+  void getClosestNObjects(S x, S y, unsigned int n, list<T>& objects);
 };
 
 template <typename T, typename S>
-BoxQuadTree<T,S>::BoxQuadTree(S x, S y, S maxX, S maxY, unsigned int maxDepth, const list<T>& sourceObjects, unsigned int depth): QuadTree<T,S>(x, y, maxX, maxY) {
+BoxQuadTree<T,S>::BoxQuadTree(S x, S y, S maxX, S maxY, unsigned int maxDepth, const list<T>& sourceObjects, unsigned int depth, BoxQuadTree<T,S>* parent): QuadTree<T,S>(x, y, maxX, maxY, parent) {
   if(depth == 1) {
     for(auto object : sourceObjects) {
       if(object->getX()    < this->_x ||
@@ -85,10 +87,10 @@ BoxQuadTree<T,S>::BoxQuadTree(S x, S y, S maxX, S maxY, unsigned int maxDepth, c
     }
 
     // Create the quads
-    this->_ll = new BoxQuadTree<T,S>(this->_x,    this->_y,    this->_midX, this->_midY, maxDepth, llObjects, depth + 1);
-    this->_lr = new BoxQuadTree<T,S>(this->_midX, this->_y,    this->_maxX, this->_midY, maxDepth, lrObjects, depth + 1);
-    this->_ul = new BoxQuadTree<T,S>(this->_x,    this->_midY, this->_midX, this->_maxY, maxDepth, ulObjects, depth + 1);
-    this->_ur = new BoxQuadTree<T,S>(this->_midX, this->_midY, this->_maxX, this->_maxY, maxDepth, urObjects, depth + 1);
+    this->_ll = new BoxQuadTree<T,S>(this->_x,    this->_y,    this->_midX, this->_midY, maxDepth, llObjects, depth + 1, this);
+    this->_lr = new BoxQuadTree<T,S>(this->_midX, this->_y,    this->_maxX, this->_midY, maxDepth, lrObjects, depth + 1, this);
+    this->_ul = new BoxQuadTree<T,S>(this->_x,    this->_midY, this->_midX, this->_maxY, maxDepth, ulObjects, depth + 1, this);
+    this->_ur = new BoxQuadTree<T,S>(this->_midX, this->_midY, this->_maxX, this->_maxY, maxDepth, urObjects, depth + 1, this);
 
     // Consume the remaining objects
     this->_objects = unusedObjects;
@@ -119,6 +121,37 @@ void BoxQuadTree<T,S>::getObjects(S x, S y, S maxX, S maxY, list<T>& objects) {
 
   if(this->_ur && maxX > this->_midX && maxY > this->_midY) {
     this->_ur->getObjects(x, y, maxX, maxY, objects);
+  }
+}
+
+template <typename T, typename S>
+void BoxQuadTree<T,S>::getClosestNObjects(S x, S y, unsigned int n, list<T>& objects) {
+  #pragma message "Likely we will want to include box size or use the median location for this implementation"
+  if(x < this->_midX) {
+    if(this->_ll && y < this->_midY) {
+      this->_ll->getClosestNObjects(x, y, n, objects);
+    } else if(this->_ul && y >= this->_midY) {
+      this->_ul->getClosestNObjects(x, y, n, objects);
+    }
+  } else {
+    if(this->_lr && y < this->_midY) {
+      this->_lr->getClosestNObjects(x, y, n, objects);
+    } else if(this->_ur && y >= this->_midY) {
+      this->_ur->getClosestNObjects(x, y, n, objects);
+    }
+  }
+
+  int requiredObjects = n - objects.size();
+  if(requiredObjects > 0) {
+    // Sort the objects in this node by distance to the target point
+    PointDistanceComparator<T,S> comparator(x, y);
+    this->_objects.sort(comparator);
+
+    for(auto object : this->_objects) {
+      objects.push_back(object);
+      requiredObjects--;
+      if(requiredObjects <= 0) { break; }
+    }
   }
 }
 

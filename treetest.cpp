@@ -61,6 +61,14 @@ void testPoint(int x, int y, int mX, int mY, int d, list<PointObj*>& objects, in
     for(auto obj : bounded) {
       Info("\tFound object at (" << obj->getX() << "," << obj->getY() << ")");
     }
+
+    bounded.clear();
+    int numClosest = rand() % objects.size();
+    Info("Finding closest " << numClosest << " objects to (" << bX << "," << bY << ")");
+    tree->getClosestNObjects(bX, bY, numClosest, bounded);
+    for(auto obj : bounded) {
+      Info("\t Found object at (" << obj->getX() << "," << obj->getY() << ")");
+    }
   }
   delete tree;
 }

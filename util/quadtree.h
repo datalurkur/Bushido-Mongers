@@ -42,11 +42,16 @@ protected:
 
 template <typename T, typename S>
 class QuadTree {
+protected:
+  enum Quadrant { None, LL, LR, UL, UR };
+
 public:
-  QuadTree(S x, S y, S maxX, S maxY);
+  QuadTree(S x, S y, S maxX, S maxY, QuadTree<T,S>* parent = 0);
   virtual ~QuadTree();
 
+  void getObjects(list<T>& objects);
   virtual void getObjects(S x, S y, S maxX, S maxY, list<T>& objects) = 0;
+  virtual void getClosestNObjects(S x, S y, unsigned int n, list<T>& objects) = 0;
 
 protected:
   S _x, _y, _maxX, _maxY;
@@ -58,11 +63,13 @@ protected:
   QuadTree<T,S>* _ul;
   QuadTree<T,S>* _lr;
   QuadTree<T,S>* _ur;
+
+  QuadTree<T,S>* _parent;
 };
 
 template <typename T, typename S>
-QuadTree<T,S>::QuadTree(S x, S y, S maxX, S maxY):
-  _x(x), _y(y), _maxX(maxX), _maxY(maxY), _ll(0), _ul(0), _lr(0), _ur(0) {}
+QuadTree<T,S>::QuadTree(S x, S y, S maxX, S maxY, QuadTree<T,S>* parent):
+  _x(x), _y(y), _maxX(maxX), _maxY(maxY), _ll(0), _ul(0), _lr(0), _ur(0), _parent(parent) {}
 
 template <typename T, typename S>
 QuadTree<T,S>::~QuadTree() {
@@ -70,6 +77,15 @@ QuadTree<T,S>::~QuadTree() {
   if(_ul != 0) { delete _ul; }
   if(_ur != 0) { delete _ur; }
   if(_lr != 0) { delete _lr; }
+}
+
+template <typename T, typename S>
+void QuadTree<T,S>::getObjects(list<T>& objects) {
+  if(_ll != 0) { _ll->getObjects(objects); }
+  if(_lr != 0) { _lr->getObjects(objects); }
+  if(_ul != 0) { _ul->getObjects(objects); }
+  if(_ur != 0) { _ur->getObjects(objects); }
+  objects.insert(objects.end(), _objects.begin(), _objects.end());
 }
 
 #endif
