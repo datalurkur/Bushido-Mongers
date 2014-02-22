@@ -40,7 +40,7 @@ PointQuadTree<T,S>::PointQuadTree(S x, S y, S maxX, S maxY, unsigned int maxDept
   }
   auto numObjects = sourceObjects.size();
   if(depth < maxDepth && numObjects > 0) {
-    Debug("At depth " << depth + 1);
+    //Debug("At depth " << depth + 1);
 
     // Compute the median object
     vector<S> xValues(numObjects);
@@ -56,7 +56,7 @@ PointQuadTree<T,S>::PointQuadTree(S x, S y, S maxX, S maxY, unsigned int maxDept
     nth_element(yValues.begin(), yValues.begin() + medianObject, yValues.end());
     this->_midX = xValues[medianObject];
     this->_midY = yValues[medianObject];
-    Debug("Median value of objects found to be " << this->_midX << "," << this->_midY);
+    //Debug("Median value of objects found to be " << this->_midX << "," << this->_midY);
 
     // Partition the objects
     list<T> unusedObjects;
@@ -65,21 +65,21 @@ PointQuadTree<T,S>::PointQuadTree(S x, S y, S maxX, S maxY, unsigned int maxDept
       if(object->getX() < this->_midX) {
         if(object->getY() < this->_midY) {
           // Lower-left quadrant
-          Debug("Object at (" << object->getX() << "," << object->getY() << ") pushed into lower-left quadrant");
+          //Debug("Object at (" << object->getX() << "," << object->getY() << ") pushed into lower-left quadrant");
           llObjects.push_back(object);
         } else {
           // Upper-left quadrant
-          Debug("Object at (" << object->getX() << "," << object->getY() << ") pushed into upper-left quadrant");
+          //Debug("Object at (" << object->getX() << "," << object->getY() << ") pushed into upper-left quadrant");
           ulObjects.push_back(object);
         }
       } else {
         if(object->getY() < this->_midY) {
           // Lower-right quadrant
-          Debug("Object at (" << object->getX() << "," << object->getY() << ") pushed into lower-right quadrant");
+          //Debug("Object at (" << object->getX() << "," << object->getY() << ") pushed into lower-right quadrant");
           lrObjects.push_back(object);
         } else {
           // Upper-right quadrant
-          Debug("Object at (" << object->getX() << "," << object->getY() << ") pushed into upper-right quadrant");
+          //Debug("Object at (" << object->getX() << "," << object->getY() << ") pushed into upper-right quadrant");
           urObjects.push_back(object);
         }
       }
@@ -136,19 +136,19 @@ void PointQuadTree<T,S>::getClosestNObjects(S x, S y, unsigned int n, list<T>& o
 
   switch(q) {
   case QuadTree<T,S>::Quadrant::LL:
-    Debug("Checking lower-left quadrant (" << x << " is less than " << this->_midX << " and " << y << " is less than " << this->_midY);
+    //Debug("Checking lower-left quadrant (" << x << " is less than " << this->_midX << " and " << y << " is less than " << this->_midY);
     this->_ll->getClosestNObjects(x, y, n, objects);
     break;
   case QuadTree<T,S>::Quadrant::UL:
-    Debug("Checking upper-left quadrant (" << x << " is less than " << this->_midX << " and " << y << " is greater than " << this->_midY);
+    //Debug("Checking upper-left quadrant (" << x << " is less than " << this->_midX << " and " << y << " is greater than " << this->_midY);
     this->_ul->getClosestNObjects(x, y, n, objects);
     break;
   case QuadTree<T,S>::Quadrant::LR:
-    Debug("Checking lower-right quadrant (" << x << " is greater than " << this->_midX << " and " << y << " is less than " << this->_midY);
+    //Debug("Checking lower-right quadrant (" << x << " is greater than " << this->_midX << " and " << y << " is less than " << this->_midY);
     this->_lr->getClosestNObjects(x, y, n, objects);
     break;
   case QuadTree<T,S>::Quadrant::UR:
-    Debug("Checking upper-right quadrant (" << x << " is greater than " << this->_midX << " and " << y << " is greater than " << this->_midY);
+    //Debug("Checking upper-right quadrant (" << x << " is greater than " << this->_midX << " and " << y << " is greater than " << this->_midY);
     this->_ur->getClosestNObjects(x, y, n, objects);
     break;
   default:
@@ -158,32 +158,32 @@ void PointQuadTree<T,S>::getClosestNObjects(S x, S y, unsigned int n, list<T>& o
   int requiredObjects = n - objects.size();
   if(requiredObjects <= 0) { return; }
 
-  Debug(requiredObjects << " still required to meet quota of " << n);
+  //Debug(requiredObjects << " still required to meet quota of " << n);
   list<T> candidates = this->_objects;
   if(q != QuadTree<T,S>::Quadrant::LL && this->_ll) {
-    Debug("Pulling new candidates from LL");
+    //Debug("Pulling new candidates from LL");
     this->_ll->getObjects(candidates);
   }
   if(q != QuadTree<T,S>::Quadrant::UL && this->_ul) {
-    Debug("Pulling new candidates from UL");
+    //Debug("Pulling new candidates from UL");
     this->_ul->getObjects(candidates);
   }
   if(q != QuadTree<T,S>::Quadrant::LR && this->_lr) {
-    Debug("Pulling new candidates from LR");
+    //Debug("Pulling new candidates from LR");
     this->_lr->getObjects(candidates);
   }
   if(q != QuadTree<T,S>::Quadrant::UR && this->_ur) {
-    Debug("Pulling new candidates from UR");
+    //Debug("Pulling new candidates from UR");
     this->_ur->getObjects(candidates);
   }
 
   // Sort the objects in this node by distance to the target point
   PointDistanceComparator<T,S> comparator(x, y);
   candidates.sort(comparator);
-  Debug("Found " << candidates.size() << " potential candidates");
+  //Debug("Found " << candidates.size() << " potential candidates");
 
   for(auto object : candidates) {
-    Debug("Adding sorted object at (" << object->getX() << "," << object->getY() << ")");
+    //Debug("Adding sorted object at (" << object->getX() << "," << object->getY() << ")");
     objects.push_back(object);
     requiredObjects--;
     if(requiredObjects <= 0) { break; }
