@@ -33,16 +33,8 @@ void cleanup_curses(int signal) {
   exit(signal);
 }
 
-#define ARRAY_SIZE(a) (sizeof(a) / sizeof(a[0]))
 #define KEY_REALENTER 13
 #define CTRLD   4
-
-std::array<const char *, 4> example = {
-                        "Choice 1",
-                        "Choice 2",
-                        "Choice 3",
-                        "Choice 4"
-                  };
 
 template <size_t N>
 void do_menu_no_desc(std::array<const char *, N> choices) {
@@ -61,19 +53,18 @@ void do_menu(std::array<const char *, N> choices, std::array<const char *, N> de
 
   my_items  = (ITEM **)calloc(choices.size() + 1, sizeof(ITEM *));
 
-  for(int i = 0; i < choices.size(); ++i) {
+  for(size_t i = 0; i < choices.size(); ++i) {
     my_items[i] = new_item(choices[i], descriptions[i]);
   }
   my_items[choices.size()] = (ITEM *)NULL;
 
   my_menu = new_menu((ITEM **)my_items);
-  mvprintw(LINES - 2, 0, "Hit F1 to go back");
   post_menu(my_menu);
   refresh();
 
   // menu input
   int c;
-  int selector = 0;
+  size_t selector = 0;
   while((c = getch()) != KEY_F(1)) {
     switch(c) {
       case KEY_DOWN:
@@ -106,7 +97,7 @@ void do_menu(std::array<const char *, N> choices, std::array<const char *, N> de
   }
 
   // cleanup menu
-  for(int i = 0; i < choices.size(); ++i) {
+  for(size_t i = 0; i < choices.size(); ++i) {
     free_item(my_items[i]);
   }
 
