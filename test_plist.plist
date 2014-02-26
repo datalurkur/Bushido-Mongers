@@ -1,4 +1,0 @@
-i test_int 3
-s test_string haha I am a string what even
-f pi 3.14159
-b is_this_thing_on? true
