@@ -1,4 +1,4 @@
-g++ -W -Wall -Wextra -pedantic -std=c++11 -ggdb -I ../.. *.cpp\
+clang++ -W -Wall -Wextra -pedantic -std=c++11 -ggdb -I ../.. *.cpp\
   ../../interface/choice.cpp\
   ../../resource/raw.cpp\
   ../../util/filesystem.cpp\
