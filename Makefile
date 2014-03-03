@@ -1,5 +1,5 @@
 CC = clang++
-CFLAGS = -g -Wall -Wextra --pedantic -std=c++11 -I.
+CFLAGS = -g -Wall -Wextra --pedantic -std=c++11 -stdlib=libc++ -I.
 LDFLAGS = -lncurses -lmenu
 
 SOURCES = menu.cpp curseme.cpp
@@ -24,4 +24,4 @@ worldtest: tests/world_test.cpp util/*.cpp world/*.cpp
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 clean:
-	rm -f *.o $(BINARY)
+	rm -f raw_editor_ncurses test treetest worldtest

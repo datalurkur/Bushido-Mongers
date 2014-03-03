@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <signal.h>
 
-#include <array>
 #include <cstdlib>
 
 #include <menu.h>
@@ -23,6 +22,7 @@ int main(int argc, char** argv) {
   CurseMeSetup();
 
   mvprintw(0, 0, "Make a selection");
+
   Menu menu(vector<string> { "Create New Raw", "Edit Existing Raw" });
   menu.prompt();
 
