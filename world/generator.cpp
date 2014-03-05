@@ -1,9 +1,8 @@
 #include "world/generator.h"
 #include "util/pointquadtree.h"
 
-#include <map>
+#include <vector>
 #include <set>
-#include <list>
 
 World* WorldGenerator::CloudGenerate(int size, float sparseness) {
   // Determine the number of features the world should contain
@@ -12,50 +11,111 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
   Debug("Generating " << numFeatures << " features in a " << size << "-sized world");
 
   // Generate a random point cloud
-  list<Feature* > features;
-  for(int i = 0; i < numFeatures; i++) {
+  vector<Feature* > features(numFeatures);
+  int i;
+  for(i = 0; i < numFeatures; i++) {
     int x = rand() % size,
         y = rand() % size,
         r = rand() % averageFeatureSize + (averageFeatureSize / 2);
     Debug("Created a feature at (" << x << "," << y << ") with approximate size " << r);
-    features.push_back(new Feature(x, y, r));
+    features[i] = new Feature(x, y, r);
   }
 
-  // Insert the point cloud into a quadtree structure
-  // Determine the depth of the tree based on the number of objects going into it
-  int depth = 0, counter = 1;
-  while(counter < numFeatures) {
-    depth++;
-    counter <<= 1;
-  }
-  Debug("Creating a quadtree with depth " << depth << " to accomodate features");
-  PointQuadTree<Feature*, int> tree(0, 0, size, size, depth, features);
+  // Do a *really* dumb and inefficient delaunay triangulation of the points
+  set<pair<Feature*, Feature*> > connections;
+  int triangleCount = 0,
+      permutationCount = 0;
+  int j, k;
+  for(i = 0; i < numFeatures - 2; i++) {
+    int iX = features[i]->getX(),
+        iY = features[i]->getY();
 
-  // Determine the connectivity of the points in the cloud
-  map<Feature*, set<Feature*> > connections;
-  for(auto feature : features) {
-    Debug("Finding connections for feature at (" << feature->getX() << "," << feature->getY() << ") with radius " << feature->getRadius());
-    // Set up our comparator
-    FeatureDistanceComparator comp(feature);
+    for(j = i+1; j < numFeatures - 1; j++) {
+      int jX = features[j]->getX(),
+          jY = features[j]->getY();
+      int dXA = jX - iX,
+          dYA = jY - iY;
 
-    int doubleR = 2 * feature->getRadius();
+      for(k = j+1; k < numFeatures; k++) {
+        permutationCount++;
 
-    // Get all nodes within 2 radiuses of this node
-    list<Feature* > nearbyFeatures;
-    tree.getObjects(feature->getX() - doubleR,
-                    feature->getY() - doubleR,
-                    feature->getX() + doubleR,
-                    feature->getY() + doubleR,
-                    nearbyFeatures);
+        int kX = features[k]->getX(),
+            kY = features[k]->getY();
+        int dXB = kX - jX,
+            dYB = kY - jY;
+        float mXA = (iX + jX) / 2,
+              mYA = (iY + jY) / 2,
+              mXB = (jX + kX) / 2,
+              mYB = (jY + kY) / 2;
 
-    // Sort by distance to the feature
-    nearbyFeatures.sort(comp);
+        // Compute the circle that is formed by the features at indices i, j, and k
+        float pX, pY;
+        if(dYA == 0) {
+          pX = mXA;
+          if(dXB == 0) {
+            pY = mYB;
+          } else {
+            pY = mYB + ((mXB - pX) / (dYB / dXB));
+          }
+        } else if(dYB == 0) {
+          pX = mXB;
+          if(dXA == 0) {
+            pY = mYA;
+          } else {
+            pY = mYA + ((mXA - pX) / (dYA / dXA));
+          }
+        } else if(dXA == 0) {
+          pY = mYA;
+          pX = ((dYB / dXB) * (mYB - pY)) + mXB;
+        } else if(dXB == 0) {
+          pY = mYB;
+          pX = ((dYA / dXA) * (mYA - pY)) + mXA;
+        } else {
+          float sA = (float)dYA / dXA,
+                sB = (float)dYB / dXB;
+          pX = ((sA * sB * (mYA - mYB)) - (sA * mXB) + (sB * mXA)) / (sB - sA);
+          pY = mYA - ((pX - mXA) / sA);
+        }
 
-    // For any two features whose radiuses overlap, consider them connected
-    for(auto nearby : nearbyFeatures) {
-      Debug("Feature at (" << nearby->getX() << "," << nearby->getY() << ") with approximate size " << nearby->getRadius() << " is considered connected");
+        float rX = iX - pX;
+        float rY = iY - pY;
+        float rSquared = (rX*rX) + (rY*rY);
+        Debug("Circle formed by features at " <<
+              iX << "," << iY << " " <<
+              jX << "," << jY << " " <<
+              kX << "," << kY << " is centered at " <<
+              pX << "," << pY << " with squared radius " << rSquared);
+
+        bool isDelaunay = true;
+        // Determine if any other points lie within this circle
+        for(int m = 0; m < numFeatures; m++) {
+          if(m == i || m == j || m == k) { continue; }
+          int mX = features[m]->getX();
+          int mY = features[m]->getY();
+          float dM = mX - pX;
+          float dY = mY - pY;
+          if((dM * dM) + (dY * dY) < rSquared) {
+            // Point lies within the circle, this triangle is non-delaunay
+            isDelaunay = false;
+            Debug("Feature at " << mX << "," << mY << " violates Delaunay constraints");
+            break;
+          }
+        }
+        if(isDelaunay) {
+          // This triangle is delaunay, add its edges
+          Debug("Triangle found to be delaunay");
+          connections.insert(pair<Feature*, Feature*>(features[i], features[j]));
+          connections.insert(pair<Feature*, Feature*>(features[i], features[k]));
+          connections.insert(pair<Feature*, Feature*>(features[j], features[k]));
+          triangleCount++;
+        }
+      }
     }
   }
+  Debug("Found " << triangleCount << " valid Delaunay triangles based on " << permutationCount << " possible triangles");
+
+  // Now that we have the features and their connectivity, create the areas and populate the world with them
+  #pragma message "Complete this"
 
   return 0;
 }

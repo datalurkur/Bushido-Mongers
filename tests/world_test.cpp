@@ -3,7 +3,7 @@
 
 int main() {
   Log::Setup();
-  World* world = WorldGenerator::CloudGenerate(512, 0.2);
+  World* world = WorldGenerator::CloudGenerate(512, 0.05);
   if(world) {
     delete world;
   }
