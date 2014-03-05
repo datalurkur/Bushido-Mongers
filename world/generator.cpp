@@ -1,5 +1,6 @@
 #include "world/generator.h"
 #include "util/pointquadtree.h"
+#include "util/timer.h"
 
 #include <vector>
 #include <set>
@@ -7,7 +8,7 @@
 World* WorldGenerator::CloudGenerate(int size, float sparseness) {
   // Determine the number of features the world should contain
   int numFeatures = size * sparseness / 2;
-  int averageFeatureSize = 2 / sparseness;
+  int averageFeatureSize = max(1.0f, 2 / sparseness);
   Debug("Generating " << numFeatures << " features in a " << size << "-sized world");
 
   // Generate a random point cloud
@@ -17,7 +18,7 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
     int x = rand() % size,
         y = rand() % size,
         r = rand() % averageFeatureSize + (averageFeatureSize / 2);
-    Debug("Created a feature at (" << x << "," << y << ") with approximate size " << r);
+    //Debug("Created a feature at (" << x << "," << y << ") with approximate size " << r);
     features[i] = new Feature(x, y, r);
   }
 
@@ -26,6 +27,8 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
   int triangleCount = 0,
       permutationCount = 0;
   int j, k;
+  Timer t;
+  t.start();
   for(i = 0; i < numFeatures - 2; i++) {
     int iX = features[i]->getX(),
         iY = features[i]->getY();
@@ -47,6 +50,13 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
               mYA = (iY + jY) / 2,
               mXB = (jX + kX) / 2,
               mYB = (jY + kY) / 2;
+
+        // Check for degenerate cases
+        if((dXA == 0 && dXB == 0) || (dYA == 0 && dYB == 0)) {
+          // Points are in a line
+          //Debug("Skipping degenerate case (" << iX << "," << iY << " " << jX << "," << jY << " " << kX << "," << kY << ")");
+          continue;
+        }
 
         // Compute the circle that is formed by the features at indices i, j, and k
         float pX, pY;
@@ -80,11 +90,13 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
         float rX = iX - pX;
         float rY = iY - pY;
         float rSquared = (rX*rX) + (rY*rY);
+/*
         Debug("Circle formed by features at " <<
               iX << "," << iY << " " <<
               jX << "," << jY << " " <<
               kX << "," << kY << " is centered at " <<
               pX << "," << pY << " with squared radius " << rSquared);
+*/
 
         bool isDelaunay = true;
         // Determine if any other points lie within this circle
@@ -97,25 +109,34 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
           if((dM * dM) + (dY * dY) < rSquared) {
             // Point lies within the circle, this triangle is non-delaunay
             isDelaunay = false;
-            Debug("Feature at " << mX << "," << mY << " violates Delaunay constraints");
+            //Debug("Feature at " << mX << "," << mY << " violates Delaunay constraints");
             break;
           }
         }
         if(isDelaunay) {
           // This triangle is delaunay, add its edges
-          Debug("Triangle found to be delaunay");
-          connections.insert(pair<Feature*, Feature*>(features[i], features[j]));
-          connections.insert(pair<Feature*, Feature*>(features[i], features[k]));
-          connections.insert(pair<Feature*, Feature*>(features[j], features[k]));
+          //Debug("Triangle found to be delaunay");
+          connections.insert(make_pair(features[i], features[j]));
+          connections.insert(make_pair(features[i], features[k]));
+          connections.insert(make_pair(features[j], features[i]));
+          connections.insert(make_pair(features[j], features[k]));
+          connections.insert(make_pair(features[k], features[i]));
+          connections.insert(make_pair(features[k], features[j]));
           triangleCount++;
         }
       }
     }
   }
   Debug("Found " << triangleCount << " valid Delaunay triangles based on " << permutationCount << " possible triangles");
+  t.stop();
+  t.report();
 
   // Now that we have the features and their connectivity, create the areas and populate the world with them
-  #pragma message "Complete this"
+  World* world = new World();
+  for(auto feature : features) {
+    Area* area = new Area(feature->getRadius(), feature->getRadius());
+    world->addArea(area);
+  }
 
-  return 0;
+  return world;
 }
