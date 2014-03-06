@@ -6,20 +6,31 @@
 
 class WorldGenerator {
 public:
-  static World* CloudGenerate(int size, float sparseness);
+  enum ConnectionMethod {
+    MaxDistance,
+    Centralization,
+    Random
+  };
+
+  static World* CloudGenerate(int size, float sparseness, float connectedness, ConnectionMethod connectionMethod);
 
 private:
   // No instantiation for you!
   WorldGenerator() {}
 };
 
+class Area;
+
 class Feature : public QuadTreePointObject<int> {
 public:
   Feature(int x, int y, int r): QuadTreePointObject(x, y), _r(r) {}
   int getRadius() const { return _r; }
+  void setArea(Area* a) { _area = a; }
+  Area* getArea() { return _area; }
 
 private:
   int _r;
+  Area* _area;
 };
 
 class FeatureDistanceComparator {

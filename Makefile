@@ -1,5 +1,8 @@
 CC = clang++
-CFLAGS = -g -Wall -Wextra --pedantic -std=c++11 -stdlib=libc++ -I.
+CFLAGS = -g -Wall -Wextra --pedantic -std=c++11 -I.
+ifeq ($(shell uname -s),Darwin)
+	CFLAGS += -stdlib=libc++
+endif
 LDFLAGS = -lncurses -lmenu
 
 SOURCES = menu.cpp curseme.cpp
