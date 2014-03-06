@@ -1,34 +1,55 @@
 #ifndef MENU_H
 #define MENU_H
 
-#include <string>
+#include <functional>
 #include <vector>
+#include <string>
 #include <sstream>
+#include <list>
+
+#include "curseme/curseme.h"
+#include <menu.h>
 
 using namespace std;
 
-class SizeMismatchException : public exception {
-  virtual const char* what() const throw() { return "The number of choices must match the number of descriptions"; }
-};
+/* TODO
+	* attach procs to selections.
+	* don't just blithely assume that ncurses is otherwise enabled.
+	* select key for actions.
+*/
 
 class Menu {
 public:
-  Menu(const vector<string>& choices);
-  Menu(const vector<string>& choices, const vector<string>& descriptions);
-  ~Menu();
+	Menu();
+	Menu(const string& title);
+	Menu(const list<string>& choices);
 
-  void prompt();
+	void setTitle(const string& title);
+	void addChoice(const string& choice);
+	void addChoice(const string& choice, const string& description);
+	//void addChoice(string& choice, string& description, function<int> func);
 
+	bool getSelection(unsigned int& index);
+	bool getChoice(string& choice);
+
+	void setup();
+	void teardown();
+
+	~Menu();
 private:
-  void setup();
-  void teardown();
+	// ncurses bookkeeping
+	ITEM **_items;
+	MENU  *_menu;
+	unsigned int _size;
+	bool _deployed; // ncurses items initialized? Menu is lazy.
 
-private:
-  vector<string>* _choices;
-  vector<string>* _descriptions;
+	// Flavor Text.
+	string _title;
+	vector<string> _choices;
+	vector<string> _descriptions;
 
-  MENU* _menu;
-  ITEM** _items;
+	// unused as of yet
+//	static int top_menu_size;
 };
 
 #endif

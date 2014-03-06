@@ -11,7 +11,7 @@ tools: raw_editor_ncurses
 
 tests: test treetest worldtest
 
-raw_editor_ncurses: curseme/*.cpp tools/raw_editor_ncurses/*.cpp
+raw_editor_ncurses: util/*.cpp resource/*.cpp game/*.cpp interface/*.cpp curseme/*.cpp tools/raw_editor_ncurses/*.cpp
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 test: tests/test.cpp util/*.cpp game/*.cpp resource/*.cpp
