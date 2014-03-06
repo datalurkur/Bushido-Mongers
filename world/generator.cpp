@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <set>
+#include <sstream>
 
 World* WorldGenerator::CloudGenerate(int size, float sparseness) {
   // Determine the number of features the world should contain
@@ -13,6 +14,7 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
 
   // Generate a random point cloud
   vector<Feature* > features(numFeatures);
+
   int i;
   for(i = 0; i < numFeatures; i++) {
     int x = rand() % size,
@@ -36,20 +38,20 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
     for(j = i+1; j < numFeatures - 1; j++) {
       int jX = features[j]->getX(),
           jY = features[j]->getY();
-      int dXA = jX - iX,
-          dYA = jY - iY;
+      float dXA = jX - iX,
+            dYA = jY - iY;
 
       for(k = j+1; k < numFeatures; k++) {
         permutationCount++;
 
         int kX = features[k]->getX(),
             kY = features[k]->getY();
-        int dXB = kX - jX,
-            dYB = kY - jY;
-        float mXA = (iX + jX) / 2,
-              mYA = (iY + jY) / 2,
-              mXB = (jX + kX) / 2,
-              mYB = (jY + kY) / 2;
+        float dXB = kX - jX,
+              dYB = kY - jY;
+        float mXA = (iX + jX) / 2.0f,
+              mYA = (iY + jY) / 2.0f,
+              mXB = (jX + kX) / 2.0f,
+              mYB = (jY + kY) / 2.0f;
 
         // Check for degenerate cases
         if((dXA == 0 && dXB == 0) || (dYA == 0 && dYB == 0)) {
@@ -61,6 +63,7 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
         // Compute the circle that is formed by the features at indices i, j, and k
         float pX, pY;
         if(dYA == 0) {
+          continue;
           pX = mXA;
           if(dXB == 0) {
             pY = mYB;
@@ -68,6 +71,7 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
             pY = mYB + ((mXB - pX) / (dYB / dXB));
           }
         } else if(dYB == 0) {
+          continue;
           pX = mXB;
           if(dXA == 0) {
             pY = mYA;
@@ -75,16 +79,23 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
             pY = mYA + ((mXA - pX) / (dYA / dXA));
           }
         } else if(dXA == 0) {
+          continue;
           pY = mYA;
           pX = ((dYB / dXB) * (mYB - pY)) + mXB;
         } else if(dXB == 0) {
+          continue;
           pY = mYB;
           pX = ((dYA / dXA) * (mYA - pY)) + mXA;
         } else {
-          float sA = (float)dYA / dXA,
-                sB = (float)dYB / dXB;
+          float sA = dYA / dXA,
+                sB = dYB / dXB;
           pX = ((sA * sB * (mYA - mYB)) - (sA * mXB) + (sB * mXA)) / (sB - sA);
           pY = mYA - ((pX - mXA) / sA);
+        }
+
+        if(!isfinite(pX) || !isfinite(pY)) {
+          //Debug("Points are sufficiently parallel that the circle they form exceeds floating point capacity, skipping");
+          continue;
         }
 
         float rX = iX - pX;
@@ -106,11 +117,14 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
           int mY = features[m]->getY();
           float dM = mX - pX;
           float dY = mY - pY;
-          if((dM * dM) + (dY * dY) < rSquared) {
+          float mRSquared = (dM * dM) + (dY * dY);
+          if(mRSquared < rSquared) {
             // Point lies within the circle, this triangle is non-delaunay
             isDelaunay = false;
             //Debug("Feature at " << mX << "," << mY << " violates Delaunay constraints");
             break;
+          //} else {
+            //Debug("Feature at " << mX << "," << mY << " lies outside of the circle (radius " << mRSquared << ")");
           }
         }
         if(isDelaunay) {
@@ -118,10 +132,7 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
           //Debug("Triangle found to be delaunay");
           connections.insert(make_pair(features[i], features[j]));
           connections.insert(make_pair(features[i], features[k]));
-          connections.insert(make_pair(features[j], features[i]));
           connections.insert(make_pair(features[j], features[k]));
-          connections.insert(make_pair(features[k], features[i]));
-          connections.insert(make_pair(features[k], features[j]));
           triangleCount++;
         }
       }
@@ -133,9 +144,24 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
 
   // Now that we have the features and their connectivity, create the areas and populate the world with them
   World* world = new World();
+  int counter = 0;
   for(auto feature : features) {
-    Area* area = new Area(feature->getRadius(), feature->getRadius());
+    #pragma message "Give areas real names"
+    stringstream stream;
+    stream << feature->getX() << "," << feature->getY();
+    counter++;
+    string name = stream.str();
+
+    Area* area = new Area(name, feature->getX(), feature->getY(), feature->getRadius(), feature->getRadius());
     world->addArea(area);
+    feature->setArea(area);
+  }
+
+  // Add the connections to the world
+  // Due to the way we add edges in the delaunay triangulation, it's expected for there to be quite a few redundant connections in the list
+  // The use of sets deals with this to make sure we don't wind up with duplicated connections
+  for(auto connection : connections) {
+    world->addConnection(connection.first->getArea(), connection.second->getArea());
   }
 
   return world;

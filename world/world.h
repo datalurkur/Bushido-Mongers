@@ -6,6 +6,7 @@
 #include <list>
 #include <map>
 #include <set>
+#include <string>
 
 using namespace std;
 
@@ -15,6 +16,8 @@ class World {
 public:
   World();
   ~World();
+
+  void generateGraphVizFile(const string& filename);
 
 protected:
   void addArea(Area* area);

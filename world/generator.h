@@ -13,13 +13,18 @@ private:
   WorldGenerator() {}
 };
 
+class Area;
+
 class Feature : public QuadTreePointObject<int> {
 public:
   Feature(int x, int y, int r): QuadTreePointObject(x, y), _r(r) {}
   int getRadius() const { return _r; }
+  void setArea(Area* a) { _area = a; }
+  Area* getArea() { return _area; }
 
 private:
   int _r;
+  Area* _area;
 };
 
 class FeatureDistanceComparator {
