@@ -6,11 +6,18 @@
 #include <set>
 #include <sstream>
 
-World* WorldGenerator::CloudGenerate(int size, float sparseness) {
+World* WorldGenerator::CloudGenerate(int size, float sparseness, float connectedness, ConnectionMethod connectionMethod) {
   // Determine the number of features the world should contain
-  int numFeatures = size * sparseness / 2;
-  int averageFeatureSize = max(1.0f, 2 / sparseness);
+  int numFeatures = size - (int)((size - 1) * sparseness);
+  int averageFeatureSize = max(1, (int)(size * sparseness / 2));
+  int midSize = size / 2;
+  float midSizeSquared = midSize * midSize;
+
+  float maxConnectionDistance = averageFeatureSize * connectedness; 
+  float maxConnDistSquared = maxConnectionDistance * maxConnectionDistance;
+
   Debug("Generating " << numFeatures << " features in a " << size << "-sized world");
+  Debug("Average feature size " << averageFeatureSize << " and maximum connected feature distance " << maxConnectionDistance);
 
   // Generate a random point cloud
   vector<Feature* > features(numFeatures);
@@ -123,8 +130,6 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
             isDelaunay = false;
             //Debug("Feature at " << mX << "," << mY << " violates Delaunay constraints");
             break;
-          //} else {
-            //Debug("Feature at " << mX << "," << mY << " lies outside of the circle (radius " << mRSquared << ")");
           }
         }
         if(isDelaunay) {
@@ -147,7 +152,7 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
   int counter = 0;
   for(auto feature : features) {
     #pragma message "Give areas real names"
-    stringstream stream;
+    ostringstream stream;
     stream << feature->getX() << "," << feature->getY();
     counter++;
     string name = stream.str();
@@ -161,7 +166,27 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness) {
   // Due to the way we add edges in the delaunay triangulation, it's expected for there to be quite a few redundant connections in the list
   // The use of sets deals with this to make sure we don't wind up with duplicated connections
   for(auto connection : connections) {
-    world->addConnection(connection.first->getArea(), connection.second->getArea());
+    bool valid = true;
+    switch(connectionMethod) {
+    case MaxDistance: {
+      int dX = connection.first->getX() - connection.second->getX(),
+          dY = connection.first->getY() - connection.second->getY();
+      if((dX * dX) + (dY * dY) >= maxConnDistSquared) { valid = false; }
+    } break;
+    case Centralization: {
+      int dX = (connection.first->getX() + connection.second->getX()) / 2 - midSize,
+          dY = (connection.first->getY() + connection.second->getY()) / 2 - midSize;
+      float distanceFromCenterSquared = (dX * dX) + (dY * dY);
+      float distanceRatio = (midSizeSquared - (distanceFromCenterSquared / 2)) / midSizeSquared;
+      if((float)rand() / RAND_MAX > (connectedness + distanceRatio) / 2) { valid = false; }
+    }
+    case Random:
+      if((float)rand() / RAND_MAX > connectedness) { valid = false; }
+      break;
+    }
+    if(valid) {
+      world->addConnection(connection.first->getArea(), connection.second->getArea());
+    }
   }
 
   return world;

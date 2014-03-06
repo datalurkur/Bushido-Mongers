@@ -6,7 +6,13 @@
 
 class WorldGenerator {
 public:
-  static World* CloudGenerate(int size, float sparseness);
+  enum ConnectionMethod {
+    MaxDistance,
+    Centralization,
+    Random
+  };
+
+  static World* CloudGenerate(int size, float sparseness, float connectedness, ConnectionMethod connectionMethod);
 
 private:
   // No instantiation for you!
