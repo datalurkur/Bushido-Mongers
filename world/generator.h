@@ -2,7 +2,21 @@
 #define GENERATOR_H
 
 #include "world/world.h"
-#include "util/pointquadtree.h"
+
+class Feature {
+public:
+  Feature(int x, int y, int r): _x(x), _y(y), _r(r) {}
+  int getX() const { return _x; }
+  int getY() const { return _y; }
+  int getRadius() const { return _r; }
+  void setArea(Area* a) { _area = a; }
+  Area* getArea() { return _area; }
+
+private:
+  int _x, _y;
+  int _r;
+  Area* _area;
+};
 
 class WorldGenerator {
 public:
@@ -12,42 +26,12 @@ public:
     Random
   };
 
-  static World* CloudGenerate(int size, float sparseness, float connectedness, ConnectionMethod connectionMethod);
+  static World* GenerateWorld(int size, float sparseness, float connectedness, ConnectionMethod connectionMethod);
+  static void GenerateCave(Area* area, float openness, float density);
 
 private:
   // No instantiation for you!
   WorldGenerator() {}
-};
-
-class Area;
-
-class Feature : public QuadTreePointObject<int> {
-public:
-  Feature(int x, int y, int r): QuadTreePointObject(x, y), _r(r) {}
-  int getRadius() const { return _r; }
-  void setArea(Area* a) { _area = a; }
-  Area* getArea() { return _area; }
-
-private:
-  int _r;
-  Area* _area;
-};
-
-class FeatureDistanceComparator {
-public:
-  FeatureDistanceComparator(Feature* f): _f(f) {}
-  bool operator()(const Feature* f1, const Feature* f2) const { return distance(f1) < distance(f2); }
-
-private:
-  int distance(const Feature* f) const {
-    int dX = f->getX() - _f->getX();
-    int dY = f->getY() - _f->getY();
-    int dR = f->getRadius() + _f->getRadius();
-    return (dX * dX) + (dY * dY) - (dR * dR);
-  }
-
-private:
-  Feature* _f;
 };
 
 #endif

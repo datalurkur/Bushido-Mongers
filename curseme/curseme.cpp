@@ -15,6 +15,9 @@ void CurseMeSetup() {
 
   // Don't echo input
   noecho();
+
+  // Disable cursor
+  curs_set(0);
 }
 
 void CurseMeTeardown() {
