@@ -20,7 +20,7 @@ private:
   void computeOutput();
 
 private:
-  int _x, _y, _w, _h;
+  int _w, _h;
   char** _outputData;
   int _oX, _oY, _iW, _iH;
   char** _inputData;

@@ -143,7 +143,7 @@ void WorldGenerator::GenerateCave(Area* area, float openness, float density) {
   for(int i = 0; i < area->getXSize(); i++) {
     for(int j = 0; j < area->getYSize(); j++) {
       // Just a checkerboard test to see if this works
-      if(i % 2 == 0) {
+      if(rand() % 2 == 0) {
         area->getTile(i, j).setType(Tile::Type::Ground);
       }
     }

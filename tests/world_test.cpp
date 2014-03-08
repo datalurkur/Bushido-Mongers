@@ -6,10 +6,14 @@
 #include <unistd.h>
 #include <sstream>
 
+#define ENABLE_CURSES 1
+
 using namespace std;
 
 void cleanup(int signal) {
+#ifdef ENABLE_CURSES
   CurseMeTeardown();
+#endif
   Log::Teardown();
 
   exit(signal);
@@ -17,7 +21,9 @@ void cleanup(int signal) {
 
 void setup() {
   Log::Setup();
+#ifdef ENABLE_CURSES
   CurseMeSetup();
+#endif
   signal(SIGINT, cleanup);
 }
 
@@ -33,7 +39,7 @@ int main() {
 */
 
   // Area generation test
-  Area* area = new Area("Test Area", 10, 20, 4, 4);
+  Area* area = new Area("Test Area", 10, 20, 256, 256);
   WorldGenerator::GenerateCave(area, 0.5, 0.5);
 
   // Set up our renderer to fill the whole screen

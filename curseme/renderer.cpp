@@ -6,7 +6,7 @@
 using namespace std;
 
 AsciiRenderer::AsciiRenderer(int x, int y, int w, int h):
-  _x(x+1), _y(y+1), _w(w-2), _h(h-2), _outputData(0), _oX(0), _oY(0), _iW(0), _iH(0), _inputData(0) {
+  _w(w-2), _h(h-2), _outputData(0), _oX(0), _oY(0), _iW(0), _iH(0), _inputData(0) {
   resize(_w, _h);
 
   _window = newwin(h, w, y, x);
@@ -92,8 +92,8 @@ void AsciiRenderer::resize(int w, int h) {
 
 void AsciiRenderer::computeOutput() {
   if(_inputData) {
-    for(int i = 0; i < _w && (i + _oX) < _iW; i++) {
-      for(int j = 0; j < _h && (j + _oY) < _iH; j++) {
+    for(int i = 0; i < _h && (i + _oY) < _iH; i++) {
+      for(int j = 0; j < _w && (j + _oX) < _iW; j++) {
         _outputData[i][j] = _inputData[i + _oX][j + _oY];
       }
     }
