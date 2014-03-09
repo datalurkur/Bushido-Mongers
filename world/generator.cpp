@@ -5,6 +5,7 @@
 #include <vector>
 #include <set>
 #include <sstream>
+#include <math.h>
 
 World* WorldGenerator::CloudGenerate(int size, float sparseness, float connectedness, ConnectionMethod connectionMethod) {
   // Determine the number of features the world should contain
