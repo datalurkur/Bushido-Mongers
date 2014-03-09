@@ -2,6 +2,7 @@
 #include "util/pointquadtree.h"
 #include "util/timer.h"
 #include "util/geom.h"
+#include "util/noise.h"
 
 #include <vector>
 #include <set>
@@ -140,10 +141,22 @@ World* WorldGenerator::GenerateWorld(int size, float sparseness, float connected
 }
 
 void WorldGenerator::GenerateCave(Area* area, float openness, float density) {
+  Perlin p(256);
+  double xScalar = area->getXSize() / 32,
+         yScalar = area->getYSize() / 32;
+  double cutoff = 0;
+  double centerX = (double)area->getXSize() / 2,
+         centerY = (double)area->getXSize() / 2;
+  double maxRadiusSquared = (centerX * centerX) + (centerY * centerY);
   for(int i = 0; i < area->getXSize(); i++) {
     for(int j = 0; j < area->getYSize(); j++) {
-      // Just a checkerboard test to see if this works
-      if(rand() % 2 == 0) {
+      double x = (double)i / xScalar;
+      double y = (double)j / yScalar;
+      double dI = i - centerX,
+             dJ = j - centerY;
+      double adjust = ((dI * dI) + (dJ * dJ)) / maxRadiusSquared;
+      double pValue = p.noise3(x, y, 0.5) - adjust;
+      if(pValue > cutoff) {
         area->getTile(i, j).setType(Tile::Type::Ground);
       }
     }

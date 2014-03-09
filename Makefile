@@ -23,7 +23,7 @@ test: tests/test.o util/log.o game/bobject.o game/bobjectmanager.o game/atomicbo
 treetest: tests/treetest.o util/log.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-worldtest: tests/world_test.o util/log.o world/generator.o world/world.o world/area.o util/timer.o util/filesystem.o util/geom.o world/tile.o world/area.o curseme/renderer.o curseme/curseme.o
+worldtest: tests/world_test.o util/log.o world/generator.o world/world.o world/area.o util/timer.o util/filesystem.o util/geom.o world/tile.o world/area.o curseme/renderer.o curseme/curseme.o util/noise.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 %.o : %.cpp

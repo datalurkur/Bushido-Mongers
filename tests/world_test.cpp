@@ -45,6 +45,8 @@ int main() {
   // Set up our renderer to fill the whole screen
   int maxX, maxY;
   getmaxyx(stdscr, maxY, maxX);
+  int maxXOffset = max(area->getXSize() - maxX, 0),
+      maxYOffset = max(area->getYSize() - maxY, 0);
   AsciiRenderer renderer(0, 0, maxX, maxY);
 
   ostringstream areaData;
@@ -64,10 +66,33 @@ int main() {
     }
   }
   delete area;
+  wrefresh(stdscr);
   renderer.setInputData(areaData.str().c_str(), area->getXSize(), area->getYSize());
   renderer.render();
-  while(true) {
-    sleep(1);
+
+  int ch;
+  while((ch = getch()) != KEY_F(1)) {
+    int x = renderer.getInputX(),
+        y = renderer.getInputY();
+
+    switch(ch) {
+    case KEY_LEFT:
+      renderer.setInputX(max(0, x-1));
+      renderer.render();
+      break;
+    case KEY_RIGHT:
+      renderer.setInputX(min(maxXOffset, x+1));
+      renderer.render();
+      break;
+    case KEY_UP:
+      renderer.setInputY(max(0, y-1));
+      renderer.render();
+      break;
+    case KEY_DOWN:
+      renderer.setInputY(min(maxYOffset, y+1));
+      renderer.render();
+      break;
+    }
   }
 
   cleanup(0);

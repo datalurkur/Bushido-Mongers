@@ -13,6 +13,14 @@ public:
 
   void render();
 
+  int getInputX() const;
+  int getInputY() const;
+
+  void setInputX(int oX);
+  void setInputY(int oY);
+
+  WINDOW* getWindow();
+
 private:
   void clearOutput();
   void clearInput();
