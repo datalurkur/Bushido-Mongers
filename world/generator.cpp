@@ -1,13 +1,14 @@
 #include "world/generator.h"
 #include "util/pointquadtree.h"
 #include "util/timer.h"
+#include "util/geom.h"
 
 #include <vector>
 #include <set>
 #include <sstream>
 #include <math.h>
 
-World* WorldGenerator::CloudGenerate(int size, float sparseness, float connectedness, ConnectionMethod connectionMethod) {
+World* WorldGenerator::GenerateWorld(int size, float sparseness, float connectedness, ConnectionMethod connectionMethod) {
   // Determine the number of features the world should contain
   int numFeatures = size - (int)((size - 1) * sparseness);
   int averageFeatureSize = max(1, (int)(size * sparseness / 2));
@@ -40,105 +41,53 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness, float connected
   Timer t;
   t.start();
   for(i = 0; i < numFeatures - 2; i++) {
-    int iX = features[i]->getX(),
-        iY = features[i]->getY();
-
     for(j = i+1; j < numFeatures - 1; j++) {
-      int jX = features[j]->getX(),
-          jY = features[j]->getY();
-      float dXA = jX - iX,
-            dYA = jY - iY;
-
       for(k = j+1; k < numFeatures; k++) {
         permutationCount++;
-
-        int kX = features[k]->getX(),
-            kY = features[k]->getY();
-        float dXB = kX - jX,
-              dYB = kY - jY;
-        float mXA = (iX + jX) / 2.0f,
-              mYA = (iY + jY) / 2.0f,
-              mXB = (jX + kX) / 2.0f,
-              mYB = (jY + kY) / 2.0f;
-
-        // Check for degenerate cases
-        if((dXA == 0 && dXB == 0) || (dYA == 0 && dYB == 0)) {
-          // Points are in a line
-          //Debug("Skipping degenerate case (" << iX << "," << iY << " " << jX << "," << jY << " " << kX << "," << kY << ")");
-          continue;
-        }
-
-        // Compute the circle that is formed by the features at indices i, j, and k
         float pX, pY;
-        if(dYA == 0) {
-          continue;
-          pX = mXA;
-          if(dXB == 0) {
-            pY = mYB;
-          } else {
-            pY = mYB + ((mXB - pX) / (dYB / dXB));
-          }
-        } else if(dYB == 0) {
-          continue;
-          pX = mXB;
-          if(dXA == 0) {
-            pY = mYA;
-          } else {
-            pY = mYA + ((mXA - pX) / (dYA / dXA));
-          }
-        } else if(dXA == 0) {
-          continue;
-          pY = mYA;
-          pX = ((dYB / dXB) * (mYB - pY)) + mXB;
-        } else if(dXB == 0) {
-          continue;
-          pY = mYB;
-          pX = ((dYA / dXA) * (mYA - pY)) + mXA;
-        } else {
-          float sA = dYA / dXA,
-                sB = dYB / dXB;
-          pX = ((sA * sB * (mYA - mYB)) - (sA * mXB) + (sB * mXA)) / (sB - sA);
-          pY = mYA - ((pX - mXA) / sA);
-        }
-
-        if(!isfinite(pX) || !isfinite(pY)) {
-          //Debug("Points are sufficiently parallel that the circle they form exceeds floating point capacity, skipping");
+        if(!computeCircleFromPoints(features[i]->getX(), features[i]->getY(),
+                                    features[j]->getX(), features[j]->getY(),
+                                    features[k]->getX(), features[k]->getY(),
+                                    pX, pY)) {
           continue;
         }
 
-        float rX = iX - pX;
-        float rY = iY - pY;
-        float rSquared = (rX*rX) + (rY*rY);
-/*
-        Debug("Circle formed by features at " <<
-              iX << "," << iY << " " <<
-              jX << "," << jY << " " <<
-              kX << "," << kY << " is centered at " <<
-              pX << "," << pY << " with squared radius " << rSquared);
-*/
+        float rX = features[i]->getX() - pX,
+              rY = features[i]->getY() - pY,
+              rSquared = (rX*rX) + (rY*rY);
 
         bool isDelaunay = true;
         // Determine if any other points lie within this circle
         for(int m = 0; m < numFeatures; m++) {
           if(m == i || m == j || m == k) { continue; }
-          int mX = features[m]->getX();
-          int mY = features[m]->getY();
-          float dM = mX - pX;
-          float dY = mY - pY;
+          float dM = features[m]->getX() - pX;
+          float dY = features[m]->getY() - pY;
           float mRSquared = (dM * dM) + (dY * dY);
           if(mRSquared < rSquared) {
             // Point lies within the circle, this triangle is non-delaunay
             isDelaunay = false;
-            //Debug("Feature at " << mX << "," << mY << " violates Delaunay constraints");
             break;
           }
         }
         if(isDelaunay) {
           // This triangle is delaunay, add its edges
           //Debug("Triangle found to be delaunay");
-          connections.insert(make_pair(features[i], features[j]));
-          connections.insert(make_pair(features[i], features[k]));
-          connections.insert(make_pair(features[j], features[k]));
+          // Do some sorting here to cut out redundant edges
+          if(i < j) { 
+            connections.insert(make_pair(features[i], features[j]));
+          } else {
+            connections.insert(make_pair(features[j], features[i]));
+          }
+          if(i < k) {
+            connections.insert(make_pair(features[i], features[k]));
+          } else {
+            connections.insert(make_pair(features[k], features[i]));
+          }
+          if(j < k) {
+            connections.insert(make_pair(features[j], features[k]));
+          } else {
+            connections.insert(make_pair(features[k], features[j]));
+          }
           triangleCount++;
         }
       }
@@ -164,8 +113,6 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness, float connected
   }
 
   // Add the connections to the world
-  // Due to the way we add edges in the delaunay triangulation, it's expected for there to be quite a few redundant connections in the list
-  // The use of sets deals with this to make sure we don't wind up with duplicated connections
   for(auto connection : connections) {
     bool valid = true;
     switch(connectionMethod) {
@@ -191,4 +138,15 @@ World* WorldGenerator::CloudGenerate(int size, float sparseness, float connected
   }
 
   return world;
+}
+
+void WorldGenerator::GenerateCave(Area* area, float openness, float density) {
+  for(int i = 0; i < area->getXSize(); i++) {
+    for(int j = 0; j < area->getYSize(); j++) {
+      // Just a checkerboard test to see if this works
+      if(rand() % 2 == 0) {
+        area->getTile(i, j).setType(Tile::Type::Ground);
+      }
+    }
+  }
 }

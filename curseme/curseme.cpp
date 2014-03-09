@@ -17,6 +17,9 @@ void CurseMeSetup() {
   // Don't echo input
   noecho();
 
+  // Disable cursor
+  curs_set(0);
+
   NCLog::EnableNcurses();
 }
 
