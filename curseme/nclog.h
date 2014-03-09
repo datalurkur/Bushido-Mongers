@@ -1,22 +1,24 @@
 #ifndef NCLOG_H
 #define NCLOG_H
 
+#include <curses.h>
 #include <string>
 #include <sstream>
 
-#include <curses.h>
-#include "util/log.h"
+class NCLog {
+public:
+  static void EnableNcurses();
+  static bool NcursesOn();
 
-class PrintingRingBuffer
+private:
+  static bool NcursesEnabled;
+};
 
-#undef LogToChannel
-#define LogToChannel(channel, msg) \
+#define NCLogToChannel(channel, msg) \
   do { \
-    if(Log::IsChannelEnabled(channel)) { \
-	  std::stringstream ss; \
-	  ss << msg << "\n"; \
-      mvprintw(LINES - 2, 0, "%s", ss.str().c_str()); \
-    } \
+    std::stringstream ss; \
+    ss << msg << "\n"; \
+	mvprintw(LINES-1, 0, "%s", ss.str().c_str()); \
   } while(false)
 
 #endif

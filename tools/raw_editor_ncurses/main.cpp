@@ -20,6 +20,13 @@
 #include <list>
 #include <fstream>
 
+// sleep
+#if SYS_PLATFORM == PLATFORM_WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
 using namespace std;
 
 bool getRawsList(const string& dir, list<string> &raws) {
@@ -219,12 +226,15 @@ void selectAndEditRaw(const string& dir) {
 }
 
 int main(int argc, char** argv) {
-  CurseMeSetup();
   Log::Setup();
+  NCLog::EnableNcurses();
+  CurseMeSetup();
 
   // Get the root directory to search for raws
   if(argc < 2) {
     Error("Please specify a raw directory");
+    sleep(1);
+    CurseMeTeardown();
     Log::Teardown();
     return 1;
   }
@@ -249,7 +259,8 @@ int main(int argc, char** argv) {
     }
   }
 
-  Log::Teardown();
   CurseMeTeardown();
+
+  Log::Teardown();
   return 0;
 }

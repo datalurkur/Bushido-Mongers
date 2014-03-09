@@ -1,4 +1,5 @@
 #include "curseme/curseme.h"
+#include "curseme/nclog.h"
 
 void CurseMeSetup() {
   // Init ncurses
@@ -18,6 +19,8 @@ void CurseMeSetup() {
 
   // Disable cursor
   curs_set(0);
+
+  NCLog::EnableNcurses();
 }
 
 void CurseMeTeardown() {
