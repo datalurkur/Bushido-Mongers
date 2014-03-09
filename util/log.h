@@ -5,6 +5,7 @@
 #include <fstream>
 
 #include "util/config.h"
+#include "curseme/nclog.h"
 
 using namespace std;
 
@@ -61,6 +62,9 @@ Log& Log::operator<<(const T &rhs) {
     if(Log::IsChannelEnabled(channel)) { \
       Log::GetLogStream() << msg << "\n"; \
       Log::Flush(); \
+      if(NCLog::NcursesOn()) { \
+        NCLogToChannel(channel, msg << "\n"); \
+      } \
     } \
   } while(false)
 

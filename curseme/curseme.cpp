@@ -1,4 +1,5 @@
 #include "curseme/curseme.h"
+#include "curseme/nclog.h"
 
 void CurseMeSetup() {
   // Init ncurses
@@ -15,6 +16,8 @@ void CurseMeSetup() {
 
   // Don't echo input
   noecho();
+
+  NCLog::EnableNcurses();
 }
 
 void CurseMeTeardown() {

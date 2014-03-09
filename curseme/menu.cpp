@@ -1,4 +1,5 @@
 #include "curseme/menu.h"
+#include "curseme/nclog.h"
 #include "util/log.h"
 
 #include <iostream>
@@ -26,8 +27,7 @@ Menu::Menu(vector<string>& choices, vector<string>& descriptions):
 void Menu::setTitle(const string& title) { _title = title; }
 
 void Menu::addChoice(const string& choice) {
-	_choices.push_back(choice);
-	_descriptions.push_back("");
+  addChoice(choice, "");
 }
 
 void Menu::addChoice(const string& choice, const string& description) {
@@ -92,6 +92,7 @@ void Menu::setup() {
   if(_deployed) { return; }
 
   mvprintw(0, 0, _title.c_str());
+  move(1, 0);
 
   _size  = _choices.size();
   _items = (ITEM **)calloc(_size + 1, sizeof(ITEM *));

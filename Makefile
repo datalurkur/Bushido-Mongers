@@ -17,13 +17,13 @@ tests: test treetest worldtest
 raw_editor_ncurses: util/*.cpp resource/*.cpp game/*.cpp interface/*.cpp curseme/*.cpp tools/raw_editor_ncurses/*.cpp
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-test: tests/test.cpp util/*.cpp game/*.cpp resource/*.cpp
+test: tests/test.cpp util/*.cpp game/*.cpp resource/*.cpp curseme/nclog.cpp
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-treetest: tests/treetest.cpp util/*.cpp
+treetest: tests/treetest.cpp util/*.cpp curseme/nclog.cpp
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-worldtest: tests/world_test.cpp util/*.cpp world/*.cpp
+worldtest: tests/world_test.cpp util/*.cpp world/*.cpp curseme/nclog.cpp
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 clean:
