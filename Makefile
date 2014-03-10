@@ -5,9 +5,6 @@ ifeq ($(shell uname -s),Darwin)
 endif
 LDFLAGS = -lncurses -lmenu
 
-SOURCES = menu.cpp curseme.cpp
-OBJECTS = $(SOURCES:.cpp=.o)
-
 all: tools tests
 
 tools: raw_editor_ncurses
@@ -26,6 +23,10 @@ treetest: tests/treetest.o util/log.o curseme/nclog.o
 worldtest: tests/world_test.o util/log.o world/generator.o world/world.o world/area.o util/timer.o util/filesystem.o util/geom.o world/tile.o world/area.o curseme/renderer.o curseme/curseme.o util/noise.o curseme/nclog.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
+%.o : %.cpp %.hpp
+	$(CC) $(CFLAGS) $< -c -o $@
+%.o : %.cpp %.h
+	$(CC) $(CFLAGS) $< -c -o $@
 %.o : %.cpp
 	$(CC) $(CFLAGS) $^ -c -o $@
 
