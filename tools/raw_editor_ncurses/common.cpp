@@ -1,10 +1,10 @@
-#include "tools/raw_editor/common.h"
+#include "tools/raw_editor_ncurses/common.h"
 
-#include "interface/choice.h"
+#include "curseme/menu.h"
 #include "interface/console.h"
 
 void editObjectKeywords(ProtoBObject* object) {
-  Choice keywordMenu;
+  Menu keywordMenu;
   keywordMenu.addChoice("List keywords");
   keywordMenu.addChoice("Add keyword");
   if(object->keywords.size() > 0) {
@@ -24,8 +24,8 @@ void editObjectKeywords(ProtoBObject* object) {
       object->keywords.unique();
     } break;
     case 2: {
-      Choice keywordSelect(object->keywords);
-      keywordSelect.getChoice(keyword, 3);
+      Menu keywordSelect(object->keywords);
+      keywordSelect.getChoice(keyword);
       object->keywords.remove(keyword);
     } break;
     }
