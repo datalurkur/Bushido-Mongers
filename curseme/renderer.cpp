@@ -94,8 +94,23 @@ void AsciiRenderer::computeOutput() {
   if(_inputData) {
     for(int i = 0; i < _h && (i + _oY) < _iH; i++) {
       for(int j = 0; j < _w && (j + _oX) < _iW; j++) {
-        _outputData[i][j] = _inputData[i + _oX][j + _oY];
+        _outputData[i][j] = _inputData[i + _oY][j + _oX];
       }
     }
   }
 }
+
+int AsciiRenderer::getInputX() const { return _oX; }
+int AsciiRenderer::getInputY() const { return _oY; }
+
+void AsciiRenderer::setInputX(int oX) {
+  _oX = oX;
+  computeOutput();
+}
+
+void AsciiRenderer::setInputY(int oY) {
+  _oY = oY;
+  computeOutput();
+}
+
+WINDOW* AsciiRenderer::getWindow() { return _window; }
