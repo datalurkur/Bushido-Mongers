@@ -227,7 +227,6 @@ void selectAndEditRaw(const string& dir) {
 
 int main(int argc, char** argv) {
   Log::Setup();
-  NCLog::EnableNcurses();
   CurseMeSetup();
 
   // Get the root directory to search for raws

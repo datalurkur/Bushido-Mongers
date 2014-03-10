@@ -8,12 +8,10 @@ extern void CurseMeTeardown();
 
 class CurseMe {
 public:
-  CurseMe();
-  ~CurseMe();
-
+  static void MainScreenTurnOn();
+  static bool Enabled();
 private:
-  void setup();
-  void teardown();
+  static bool NcursesEnabled;
 };
 
 #endif

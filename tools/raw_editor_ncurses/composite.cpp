@@ -1,11 +1,11 @@
-#include "tools/raw_editor/composite.h"
-#include "tools/raw_editor/common.h"
+#include "tools/raw_editor_ncurses/composite.h"
+#include "tools/raw_editor_ncurses/common.h"
 
-#include "interface/choice.h"
+#include "curseme/menu.h"
 #include "interface/console.h"
 
 void editCompositeLayers(ProtoCompositeBObject* object) {
-  Choice layerMenu;
+  Menu layerMenu;
   layerMenu.addChoice("List Layers");
   layerMenu.addChoice("Add Layer");
   layerMenu.addChoice("Remove Layer");
@@ -25,7 +25,7 @@ void editCompositeLayers(ProtoCompositeBObject* object) {
         object->layers.push_back(layerName);
       } else {
         Info("Which layer is this layer directly on top of?");
-        Choice basePrompt(object->layers);
+        Menu basePrompt(object->layers);
         basePrompt.addChoice("(core layer)");
         string baseChoice;
         if(!basePrompt.getChoice(baseChoice)) {
@@ -50,10 +50,10 @@ void editCompositeLayers(ProtoCompositeBObject* object) {
     } break;
     case 3: {
       Info("Select the layer to move");
-      Choice layerPrompt(object->layers);
+      Menu layerPrompt(object->layers);
       string layerName;
       if(!layerPrompt.getChoice(layerName)) { break; }
-      Choice directionPrompt("Where should the layer be moved?");
+      Menu directionPrompt("Where should the layer be moved?");
       directionPrompt.addChoice("Closer to the surface");
       directionPrompt.addChoice("Closer to the core");
       directionPrompt.addChoice("To the surface");
@@ -104,7 +104,7 @@ void editCompositeBObject(const string& name, ProtoCompositeBObject* object) {
   Info("Editing composite object " << name);
 
   unsigned int choice;
-  Choice editMenu("Select an attribute to edit");
+  Menu editMenu("Select an attribute to edit");
   editMenu.addChoice("Keywords");
   editMenu.addChoice("Layers");
   while(editMenu.getSelection(choice)) {

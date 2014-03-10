@@ -1,14 +1,14 @@
-#include "tools/raw_editor/complex.h"
-#include "tools/raw_editor/common.h"
+#include "tools/raw_editor_ncurses/complex.h"
+#include "tools/raw_editor_ncurses/common.h"
 
-#include "interface/choice.h"
+#include "curseme/menu.h"
 #include "interface/console.h"
 
 void editComplexBObject(const string& name, ProtoComplexBObject* object) {
   Info("Editing complex object " << name);
 
   unsigned int choice;
-  Choice editMenu("Select an attribute to edit");
+  Menu editMenu("Select an attribute to edit");
   editMenu.addChoice("Keywords");
   while(editMenu.getSelection(choice)) {
     switch(choice) {

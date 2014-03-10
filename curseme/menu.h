@@ -20,35 +20,36 @@ using namespace std;
 
 class Menu {
 public:
-	Menu();
-	Menu(const string& title);
-	Menu(const list<string>& choices);
+  Menu();
+  Menu(const string& title);
+  Menu(const list<string>& choices);
 
-	void setTitle(const string& title);
-	void addChoice(const string& choice);
-	void addChoice(const string& choice, const string& description);
-	//void addChoice(string& choice, string& description, function<int> func);
+  void setTitle(const string& title);
+  void addChoice(const string& choice);
+  void addChoice(const string& choice, const string& description);
+  //void addChoice(string& choice, string& description, function<int> func);
 
-	bool getSelection(unsigned int& index);
-	bool getChoice(string& choice);
+  bool getSelection(unsigned int& index);
+  bool getChoice(string& choice);
 
-	void setup();
-	void teardown();
+  void setup();
+  void teardown();
 
-	~Menu();
+  ~Menu();
+
 private:
-	// ncurses bookkeeping
-	ITEM **_items;
-	MENU  *_menu;
-	unsigned int _size;
-	bool _deployed; // ncurses items initialized? Menu is lazy.
+  // ncurses bookkeeping
+  ITEM **_items;
+  MENU  *_menu;
+  unsigned int _size;
+  bool _deployed; // ncurses items initialized? Menu is lazy.
 
-	// Flavor Text.
-	string _title;
-	vector<string> _choices;
-	vector<string> _descriptions;
+  // Flavor Text.
+  string _title;
+  vector<string> _choices;
+  vector<string> _descriptions;
 
-	// unused as of yet
+  // unused as of yet
 //	static int top_menu_size;
 };
 
