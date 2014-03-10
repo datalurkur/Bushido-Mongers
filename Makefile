@@ -14,7 +14,7 @@ tools: raw_editor_ncurses
 
 tests: test treetest worldtest
 
-raw_editor_ncurses: curseme/menu.o curseme/curseme.o util/log.o tools/raw_editor_ncurses/main.o
+raw_editor_ncurses: curseme/menu.o curseme/curseme.o util/filesystem.o util/log.o util/packing.o tools/raw_editor_ncurses/main.o tools/raw_editor_ncurses/complex.o tools/raw_editor_ncurses/composite.o tools/raw_editor_ncurses/common.o game/bobject.o game/bobjectmanager.o game/atomicbobject.o game/complexbobject.o game/compositebobject.o resource/raw.o interface/console.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 test: tests/test.o util/log.o game/bobject.o game/bobjectmanager.o game/atomicbobject.o game/complexbobject.o util/sectioneddata.o util/packing.o resource/raw.o util/filesystem.o game/compositebobject.o
