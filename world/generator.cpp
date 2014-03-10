@@ -143,9 +143,9 @@ World* WorldGenerator::GenerateWorld(int size, float sparseness, float connected
 
 void WorldGenerator::GenerateCave(Area* area, float openness, float density) {
   Perlin p(256);
-  double xScalar = area->getXSize() / 32,
-         yScalar = area->getYSize() / 32;
-  double cutoff = 0;
+  double xScalar = (double)area->getXSize() / (32 * density),
+         yScalar = (double)area->getYSize() / (32 * density);
+  double cutoff = 0.5 - openness;
   double centerX = (double)area->getXSize() / 2,
          centerY = (double)area->getXSize() / 2;
   double maxRadiusSquared = (centerX * centerX) + (centerY * centerY);

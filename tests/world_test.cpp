@@ -39,7 +39,8 @@ int main() {
 */
 
   // Area generation test
-  Area* area = new Area("Test Area", 10, 20, 256, 256);
+  int area_size = 128;
+  Area* area = new Area("Test Area", 10, 20, area_size, area_size);
   WorldGenerator::GenerateCave(area, 0.5, 0.5);
 
   // Set up our renderer to fill the whole screen
@@ -65,9 +66,9 @@ int main() {
       }
     }
   }
-  delete area;
   wrefresh(stdscr);
   renderer.setInputData(areaData.str().c_str(), area->getXSize(), area->getYSize());
+  delete area;
   renderer.render();
 
   int ch;
