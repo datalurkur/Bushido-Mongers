@@ -1,6 +1,8 @@
 #include "curseme/curseme.h"
 #include "curseme/nclog.h"
 
+bool CurseMe::NcursesEnabled = false;
+
 void CurseMeSetup() {
   // Init ncurses
   initscr();
@@ -20,9 +22,17 @@ void CurseMeSetup() {
   // Disable cursor
   curs_set(0);
 
-  NCLog::EnableNcurses();
+  CurseMe::MainScreenTurnOn();
 }
 
 void CurseMeTeardown() {
   endwin();
+}
+
+void CurseMe::MainScreenTurnOn() {
+  CurseMe::NcursesEnabled = true;
+}
+
+bool CurseMe::Enabled() {
+  return CurseMe::NcursesEnabled;
 }
