@@ -3,49 +3,45 @@
 
 using namespace std;
 
-bool computeCircleFromPoints(float x0, float y0, float x1, float y1, float x2, float y2, float& pX, float& pY) {
-  float dXA = x1 - x0,
-        dYA = y1 - y0,
-        dXB = x2 - x1,
-        dYB = y2 - y1,
-        mXA = (x0 + x1) / 2.0f,
-        mYA = (y0 + y1) / 2.0f,
-        mXB = (x1 + x2) / 2.0f,
-        mYB = (y1 + y2) / 2.0f;
+bool computeCircleFromPoints(const Vec2& p0, const Vec2& p1, const Vec2& p2, Vec2& c) {
+  Vec2 dA = p1 - p0,
+       dB = p2 - p1,
+       mA = (p0 + p1) / 2.0f,
+       mB = (p1 + p2) / 2.0f;
 
   // Check for degenerate cases
-  if((dXA == 0 && dXB == 0) || (dYA == 0 && dYB == 0)) {
+  if((dA.x == 0 && dB.x == 0) || (dA.y == 0 && dB.y == 0)) {
     return false;
   }
 
-  if(dYA == 0) {
-    pX = mXA;
-    if(dXB == 0) {
-      pY = mYB;
+  if(dA.y == 0) {
+    c.x = mA.x;
+    if(dB.x == 0) {
+      c.y = mB.y;
     } else {
-      pY = mYB + ((mXB - pX) / (dYB / dXB));
+      c.y = mB.y + ((mB.x - c.x) / (dB.y / dB.x));
     }
-  } else if(dYB == 0) {
-    pX = mXB;
-    if(dXA == 0) {
-      pY = mYA;
+  } else if(dB.y == 0) {
+    c.x = mB.x;
+    if(dA.x == 0) {
+      c.y = mA.y;
     } else {
-      pY = mYA + ((mXA - pX) / (dYA / dXA));
+      c.y = mA.y + ((mA.x - c.x) / (dA.y / dA.x));
     }
-  } else if(dXA == 0) {
-    pY = mYA;
-    pX = ((dYB / dXB) * (mYB - pY)) + mXB;
-  } else if(dXB == 0) {
-    pY = mYB;
-    pX = ((dYA / dXA) * (mYA - pY)) + mXA;
+  } else if(dA.x == 0) {
+    c.y = mA.y;
+    c.x = ((dB.y / dB.x) * (mB.y - c.y)) + mB.x;
+  } else if(dB.x == 0) {
+    c.y = mB.y;
+    c.x = ((dA.y / dA.x) * (mA.y - c.y)) + mA.x;
   } else {
-    float sA = dYA / dXA,
-          sB = dYB / dXB;
-    pX = ((sA * sB * (mYA - mYB)) - (sA * mXB) + (sB * mXA)) / (sB - sA);
-    pY = mYA - ((pX - mXA) / sA);
+    float sA = dA.y / dA.x,
+          sB = dB.y / dB.x;
+    c.x = ((sA * sB * (mA.y - mB.y)) - (sA * mB.x) + (sB * mA.x)) / (sB - sA);
+    c.y = mA.y - ((c.x - mA.x) / sA);
   }
 
-  if(!isfinite(pX) || !isfinite(pY)) {
+  if(!isfinite(c.x) || !isfinite(c.y)) {
     return false;
   }
 

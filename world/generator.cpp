@@ -45,25 +45,20 @@ World* WorldGenerator::GenerateWorld(int size, float sparseness, float connected
     for(j = i+1; j < numFeatures - 1; j++) {
       for(k = j+1; k < numFeatures; k++) {
         permutationCount++;
-        float pX, pY;
-        if(!computeCircleFromPoints(features[i]->getX(), features[i]->getY(),
-                                    features[j]->getX(), features[j]->getY(),
-                                    features[k]->getX(), features[k]->getY(),
-                                    pX, pY)) {
+        Vec2 p;
+        if(!computeCircleFromPoints(features[i]->getPos(), features[j]->getPos(), features[k]->getPos(), p)) {
           continue;
         }
 
-        float rX = features[i]->getX() - pX,
-              rY = features[i]->getY() - pY,
-              rSquared = (rX*rX) + (rY*rY);
+        Vec2 r = features[i]->getPos() - p;
+        float rSquared = r.magnitudeSquared();
 
         bool isDelaunay = true;
         // Determine if any other points lie within this circle
         for(int m = 0; m < numFeatures; m++) {
           if(m == i || m == j || m == k) { continue; }
-          float dM = features[m]->getX() - pX;
-          float dY = features[m]->getY() - pY;
-          float mRSquared = (dM * dM) + (dY * dY);
+          Vec2 d = features[m]->getPos() - p;
+          float mRSquared = d.magnitudeSquared();
           if(mRSquared < rSquared) {
             // Point lies within the circle, this triangle is non-delaunay
             isDelaunay = false;
@@ -104,11 +99,11 @@ World* WorldGenerator::GenerateWorld(int size, float sparseness, float connected
   for(auto feature : features) {
     #pragma message "Give areas real names"
     ostringstream stream;
-    stream << feature->getX() << "," << feature->getY();
+    stream << feature->getPos().x << "," << feature->getPos().y;
     counter++;
     string name = stream.str();
 
-    Area* area = new Area(name, feature->getX(), feature->getY(), feature->getRadius(), feature->getRadius());
+    Area* area = new Area(name, feature->getPos(), Vec2(feature->getRadius(), feature->getRadius()));
     world->addArea(area);
     feature->setArea(area);
   }
@@ -118,15 +113,12 @@ World* WorldGenerator::GenerateWorld(int size, float sparseness, float connected
     bool valid = true;
     switch(connectionMethod) {
     case MaxDistance: {
-      int dX = connection.first->getX() - connection.second->getX(),
-          dY = connection.first->getY() - connection.second->getY();
-      if((dX * dX) + (dY * dY) >= maxConnDistSquared) { valid = false; }
+      Vec2 d = connection.first->getPos() - connection.second->getPos();
+      if(d.magnitudeSquared() >= maxConnDistSquared) { valid = false; }
     } break;
     case Centralization: {
-      int dX = (connection.first->getX() + connection.second->getX()) / 2 - midSize,
-          dY = (connection.first->getY() + connection.second->getY()) / 2 - midSize;
-      float distanceFromCenterSquared = (dX * dX) + (dY * dY);
-      float distanceRatio = (midSizeSquared - (distanceFromCenterSquared / 2)) / midSizeSquared;
+      Vec2 d = connection.first->getPos() - connection.second->getPos();
+      float distanceRatio = (midSizeSquared - (d.magnitudeSquared() / 2)) / midSizeSquared;
       if((float)rand() / RAND_MAX > (connectedness + distanceRatio) / 2) { valid = false; }
     }
     case Random:
@@ -141,25 +133,34 @@ World* WorldGenerator::GenerateWorld(int size, float sparseness, float connected
   return world;
 }
 
+void WorldGenerator::PlaceAreaTransitions(Area* area) {
+  for(Area* connection : area->getConnections()) {
+    // Determine the unit vector that points in the direction of the connected area
+    
+  }
+}
+
 void WorldGenerator::GenerateCave(Area* area, float openness, float density) {
   Perlin p(256);
-  double xScalar = (double)area->getXSize() / (32 * density),
-         yScalar = (double)area->getYSize() / (32 * density);
+  Vec2 scalar = area->getSize() / (32 * density);
   double cutoff = 0.5 - openness;
-  double centerX = (double)area->getXSize() / 2,
-         centerY = (double)area->getXSize() / 2;
-  double maxRadiusSquared = (centerX * centerX) + (centerY * centerY);
-  for(int i = 0; i < area->getXSize(); i++) {
-    for(int j = 0; j < area->getYSize(); j++) {
-      double x = (double)i / xScalar;
-      double y = (double)j / yScalar;
-      double dI = i - centerX,
-             dJ = j - centerY;
-      double adjust = ((dI * dI) + (dJ * dJ)) / maxRadiusSquared;
-      double pValue = p.noise3(x, y, 0.5) - adjust;
+  Vec2 center = area->getSize() / 2.0f;
+  double maxRadiusSquared = center.magnitudeSquared();
+  const Vec2& areaSize = area->getSize();
+
+  for(int i = 0; i < areaSize.x; i++) {
+    for(int j = 0; j < areaSize.y; j++) {
+      Vec2 coords(i, j);
+      Vec2 nCoords = coords / scalar;
+      Vec2 offset = coords - center;
+      float adjust = offset.magnitudeSquared() / maxRadiusSquared;
+      double pValue = p.noise3(nCoords.x, nCoords.y, 0.5) - adjust;
       if(pValue > cutoff) {
-        area->getTile(i, j).setType(Tile::Type::Ground);
+        area->getTile(coords).setType(Tile::Type::Ground);
       }
     }
   }
+}
+
+void WorldGenerator::GenerateHallways(Area* area, float density) {
 }

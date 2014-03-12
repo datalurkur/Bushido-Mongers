@@ -17,7 +17,7 @@ void World::generateGraphVizFile(const string& filename) {
   ostringstream stream;
   stream << "strict graph WorldMap {\n\tnode [shape=point];\n";
   for(auto area : _areas) {
-    stream << "\tnode [pos=\"" << area->getXPos() << "," << area->getYPos() << "!\"] \"" << area->getName() << "\";\n";
+    stream << "\tnode [pos=\"" << area->getPos().x << "," << area->getPos().y << "!\"] \"" << area->getName() << "\";\n";
   }
   for(auto connectionSet : _connections) {
     for(auto connection : connectionSet.second) {

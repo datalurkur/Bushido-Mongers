@@ -2,6 +2,7 @@
 #define AREA_H
 
 #include "world/tile.h"
+#include "util/vector.h"
 
 #include <string>
 #include <vector>
@@ -14,24 +15,24 @@ class Area {
   friend class World;
 
 public:
-  Area(const string& name, int xPos, int yPos, int xSize, int ySize);
+  Area(const string& name, const Vec2& pos, const Vec2& size);
   ~Area();
 
   const string& getName() const;
 
-  int getXPos() const;
-  int getYPos() const;
-  int getXSize() const;
-  int getYSize() const;
+  const Vec2& getPos() const;
+  const Vec2& getSize() const;
 
   Tile& getTile(int x, int y);
+  Tile& getTile(const Vec2& pos);
 
 protected:
   void addConnection(Area *o);
+  const set<Area*>& getConnections() const;
 
 private:
   string _name;
-  int _xPos, _yPos, _xSize, _ySize;
+  Vec2 _pos, _size;
   set<Area*> _connections;
 
   vector<Tile> _tiles;

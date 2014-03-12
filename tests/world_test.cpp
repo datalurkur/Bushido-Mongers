@@ -40,19 +40,19 @@ int main() {
 
   // Area generation test
   int area_size = 128;
-  Area* area = new Area("Test Area", 10, 20, area_size, area_size);
-  WorldGenerator::GenerateCave(area, 0.5, 0.5);
+  Area* area = new Area("Test Area", Vec2(10, 20), Vec2(area_size, area_size));
+  WorldGenerator::GenerateCave(area, 0.5, 1.0);
 
   // Set up our renderer to fill the whole screen
   int maxX, maxY;
   getmaxyx(stdscr, maxY, maxX);
-  int maxXOffset = max(area->getXSize() - maxX, 0),
-      maxYOffset = max(area->getYSize() - maxY, 0);
+  int maxXOffset = max((int)area->getSize().x - maxX, 0),
+      maxYOffset = max((int)area->getSize().y - maxY, 0);
   AsciiRenderer renderer(0, 0, maxX, maxY);
 
   ostringstream areaData;
-  for(int j = 0; j < area->getYSize(); j++) {
-    for(int i = 0; i < area->getXSize(); i++) {
+  for(int j = 0; j < area->getSize().y; j++) {
+    for(int i = 0; i < area->getSize().x; i++) {
       switch(area->getTile(i, j).getType()) {
       case Tile::Type::Wall:
         areaData << "X";
@@ -67,7 +67,7 @@ int main() {
     }
   }
   wrefresh(stdscr);
-  renderer.setInputData(areaData.str().c_str(), area->getXSize(), area->getYSize());
+  renderer.setInputData(areaData.str().c_str(), area->getSize().x, area->getSize().y);
   delete area;
   renderer.render();
 
