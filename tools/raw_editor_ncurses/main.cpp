@@ -75,7 +75,7 @@ void createRaw(const string& dir) {
 
 void addObject(Raw& raw) {
   string objectName;
-  Info("Enter a name for the new object:");
+  Info("Enter a name for the new object: ");
   Console::GetWordInput(objectName);
 
   Menu  objectTypeMenu("Choose an object type");
@@ -221,6 +221,7 @@ void selectAndEditRaw(const string& dir) {
   Menu rawChoice(raws);
   string choice;
   if(rawChoice.getChoice(choice)) {
+    rawChoice.teardown();
     editRaw(dir, choice);
   }
 }
@@ -248,6 +249,7 @@ int main(int argc, char** argv) {
   bool running = true;
   unsigned int choice;
   while(running && defaultMenu.getSelection(choice)) {
+    defaultMenu.teardown();
     switch(choice) {
     case 0:
       createRaw(root);

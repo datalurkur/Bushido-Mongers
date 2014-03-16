@@ -41,6 +41,7 @@ private:
   // ncurses bookkeeping
   ITEM **_items;
   MENU  *_menu;
+
   unsigned int _size;
   bool _deployed; // ncurses items initialized? Menu is lazy.
 

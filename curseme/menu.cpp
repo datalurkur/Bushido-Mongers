@@ -17,6 +17,8 @@ Menu::Menu(const string& title): _deployed(false), _title(title) {}
 
 Menu::Menu(const list<string>& choices): _deployed(false), _title("Make a selection") {
   for(string choice : choices) { _choices.push_back(choice); }
+  setup();
+  menu_opts_off(_menu, O_SHOWDESC);
 }
 
 /*
@@ -43,7 +45,7 @@ bool Menu::getSelection(unsigned int& index) {
   int c;
   index = 0;
 
-  while((c = getch()) != KEY_F(1)) {
+  while((c = wgetch(menu_win(_menu))) != KEY_F(1)) {
     switch(c) {
       case KEY_DOWN:
         if(index < _size - 1) {
@@ -91,8 +93,7 @@ bool Menu::getChoice(string& choice) {
 void Menu::setup() {
   if(_deployed) { return; }
 
-  mvprintw(0, 0, _title.c_str());
-  move(1, 0);
+  // Create the items and the menu
 
   _size  = _choices.size();
   _items = (ITEM **)calloc(_size + 1, sizeof(ITEM *));
@@ -107,21 +108,52 @@ void Menu::setup() {
   _items[_size] = (ITEM *)NULL;
 
   _menu = new_menu((ITEM **)_items);
+
+  // Create the accompanying window
+
+  WINDOW* _win = newwin(10, 40, 4, 4);
+  keypad(_win, TRUE);
+
+  /* Set main window and sub window */
+  set_menu_win(_menu, _win);
+  set_menu_sub(_menu, derwin(_win, 6, 38, 3, 1));
+
+  /* Set menu mark to the string " * " */
+  set_menu_mark(_menu, " * ");
+
+  // Print a border around the main window and print a title
+
+  box(_win, 0, 0);
+
+  mvwprintw(_win, 1, 2, _title.c_str());
+  mvwaddch(_win, 2, 0, ACS_LTEE);
+  mvwhline(_win, 2, 1, ACS_HLINE, 38);
+  mvwaddch(_win, 2, 39, ACS_RTEE);
+
   post_menu(_menu);
-  refresh();
+  wrefresh(_win);
 
   _deployed = true;
 }
 
 void Menu::teardown() {
+  unpost_menu(_menu);
+
   // cleanup menu
   for(size_t i = 0; i < _size; ++i) {
     free_item(_items[i]);
   }
 
-  free_menu(_menu);  
+  free_menu(_menu);
+
+  delwin(menu_win(_menu));
+  delwin(menu_sub(_menu));
+
+  refresh();
+
+  _deployed = false;
 }
 
 Menu::~Menu() {
-
+  teardown();
 }
