@@ -16,17 +16,26 @@ void CurseMeSetup() {
   // Consume input one character at a time (don't wait for newlines)
   cbreak();
 
-  // Don't echo input
-  noecho();
-
-  // Disable cursor
-  curs_set(0);
+  CurseMe::Cursor(false);
 
   CurseMe::MainScreenTurnOn();
 }
 
 void CurseMeTeardown() {
   endwin();
+}
+
+void CurseMe::Cursor(bool state) {
+  if(state) {
+    echo();
+    // enable cursor
+    curs_set(1);
+  } else {
+    // don't echo input
+    noecho();
+    // disable cursor
+    curs_set(0);
+  }
 }
 
 void CurseMe::MainScreenTurnOn() {

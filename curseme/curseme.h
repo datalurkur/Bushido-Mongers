@@ -10,6 +10,7 @@ class CurseMe {
 public:
   static void MainScreenTurnOn();
   static bool Enabled();
+  static void Cursor(bool state);
 private:
   static bool NcursesEnabled;
 };
