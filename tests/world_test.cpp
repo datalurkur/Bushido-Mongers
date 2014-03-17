@@ -2,6 +2,7 @@
 #include "world/generator.h"
 #include "util/log.h"
 
+#include <cstring>
 #include <signal.h>
 #include <unistd.h>
 #include <sstream>
@@ -10,18 +11,30 @@
 
 using namespace std;
 
+Area* m_area = 0;
+char* groupData = 0;
+
 void cleanup(int signal) {
-#ifdef ENABLE_CURSES
+#if ENABLE_CURSES == 1
   CurseMeTeardown();
 #endif
   Log::Teardown();
+
+  if(m_area != 0) {
+    delete m_area;
+    m_area = 0;
+  }
+  if(groupData != 0) {
+    free(groupData);
+    groupData = 0;
+  }
 
   exit(signal);
 }
 
 void setup() {
-  Log::Setup();
-#ifdef ENABLE_CURSES
+  Log::Setup("stdout");
+#if ENABLE_CURSES == 1
   CurseMeSetup();
 #endif
   signal(SIGINT, cleanup);
@@ -40,20 +53,43 @@ int main() {
 
   // Area generation test
   int area_size = 128;
-  Area* area = new Area("Test Area", Vec2(10, 20), Vec2(area_size, area_size));
-  WorldGenerator::GenerateCave(area, 0.5, 1.0);
+  m_area = new Area("Test Area", Vec2(10, 20), Vec2(area_size, area_size));
+  const Vec2& areaSize = m_area->getSize();
+  WorldGenerator::GenerateCave(m_area, 0.5, 1.0);
 
+  map<int, set<Vec2>> grouped;
+  WorldGenerator::ParseAreas(m_area, grouped);
+
+#if ENABLE_CURSES == 1
   // Set up our renderer to fill the whole screen
   int maxX, maxY;
   getmaxyx(stdscr, maxY, maxX);
-  int maxXOffset = max((int)area->getSize().x - maxX, 0),
-      maxYOffset = max((int)area->getSize().y - maxY, 0);
+  int maxXOffset = max((int)areaSize.x - maxX, 0),
+      maxYOffset = max((int)areaSize.y - maxY, 0);
   AsciiRenderer renderer(0, 0, maxX, maxY);
 
+  groupData = (char*)malloc(areaSize.x * areaSize.y * sizeof(char));
+  memset(groupData, '.', areaSize.x * areaSize.y);
+  int groupCounter = -1;
+  int maxGroupCounter = '~' - 'A';
+  for(auto group : grouped) {
+    groupCounter++;
+    if(groupCounter > maxGroupCounter) { groupCounter -= maxGroupCounter; }
+    char rep = 'A' + groupCounter;
+    Debug("Using " << rep << " to represent group " << groupCounter);
+    for(auto member : group.second) {
+      if(member.x >= areaSize.x || member.y >= areaSize.y || member.x < 0 || member.y < 0) {
+        Error("Member outside area bounds");
+        continue;
+      }
+      groupData[(int)member.y * (int)areaSize.x + (int)member.x] = rep;
+    }
+  }
+
   ostringstream areaData;
-  for(int j = 0; j < area->getSize().y; j++) {
-    for(int i = 0; i < area->getSize().x; i++) {
-      switch(area->getTile(i, j).getType()) {
+  for(int j = 0; j < areaSize.y; j++) {
+    for(int i = 0; i < areaSize.x; i++) {
+      switch(m_area->getTile(i, j).getType()) {
       case Tile::Type::Wall:
         areaData << "X";
         break;
@@ -67,8 +103,8 @@ int main() {
     }
   }
   wrefresh(stdscr);
-  renderer.setInputData(areaData.str().c_str(), area->getSize().x, area->getSize().y);
-  delete area;
+  renderer.setInputData(areaData.str().c_str(), areaSize.x, areaSize.y);
+  //renderer.setInputData(groupData, areaSize.x, areaSize.y);
   renderer.render();
 
   int ch;
@@ -93,8 +129,17 @@ int main() {
       renderer.setInputY(min(maxYOffset, y+1));
       renderer.render();
       break;
+    case 'a':
+      renderer.setInputData(groupData, areaSize.x, areaSize.y);
+      renderer.render();
+      break;
+    case 's':
+      renderer.setInputData(areaData.str().c_str(), areaSize.x, areaSize.y);
+      renderer.render();
+      break;
     }
   }
+#endif
 
   cleanup(0);
 }

@@ -4,13 +4,12 @@
 Log* Log::OutputStream = 0;
 LogChannel Log::ChannelState = 0;
 
-Log::Log(): _cleanupStream(false), _outputStream(&std::cout), _logFile(0) {
-#if SYS_PLATFORM == PLATFORM_WIN32
+Log::Log(): _cleanupStream(false), _outputStream(&std::cout), _logFile(0) { }
+
+Log::Log(const string& logfile): _cleanupStream(true) {
   _logFile = new filebuf;
-  _logFile->open("stdout", ios::out);
+  _logFile->open(logfile.c_str(), ios::out);
   _outputStream = new std::ostream(_logFile);
-  _cleanupStream = true;
-#endif
 }
 
 Log::~Log() {
@@ -30,7 +29,18 @@ Log::~Log() {
 
 void Log::Setup() {
   if(!OutputStream) {
+#if SYS_PLATFORM == PLATFORM_WIN32
+    OutputStream = new Log("stdout");
+#else
     OutputStream = new Log();
+#endif
+  }
+  EnableAllChannels();
+}
+
+void Log::Setup(const string& logfile) {
+  if(!OutputStream) {
+    OutputStream = new Log(logfile);
   }
   EnableAllChannels();
 }

@@ -95,5 +95,9 @@ template <typename T>
 VectorBase<T> operator/(const VectorBase<T>& lhs, T rhs) {
   return VectorBase<T>(lhs.x / rhs, lhs.y / rhs);
 }
+template <typename T>
+bool operator<(const VectorBase<T>& lhs, const VectorBase<T>& rhs) {
+  return (lhs.x < rhs.x || (lhs.x == rhs.x && (lhs.y < rhs.y)));
+}
 
 #endif
