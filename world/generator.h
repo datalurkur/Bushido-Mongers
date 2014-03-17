@@ -32,6 +32,9 @@ public:
   static void GenerateCave(Area* area, float openness, float density);
   static void GenerateHallways(Area* area, float density);
 
+//private:
+  static void ParseAreas(Area* area, map<int, set<Vec2> >& grouped);
+
 private:
   // No instantiation for you!
   WorldGenerator() {}

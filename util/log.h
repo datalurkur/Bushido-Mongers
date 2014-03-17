@@ -31,10 +31,12 @@ public:
   static void Flush();
 
   static void Setup();
+  static void Setup(const string& logfile);
   static void Teardown();
 
 public:
   Log();
+  Log(const string& logfile);
   virtual ~Log();
   
   void flush();
@@ -57,6 +59,8 @@ Log& Log::operator<<(const T &rhs) {
   (*_outputStream) << rhs;
   return *this;
 }
+
+#pragma message "Find a way to intelligently disable standard logging when it logs to stdout and curses is enabled"
 
 #define LogToChannel(channel, msg) \
   do { \

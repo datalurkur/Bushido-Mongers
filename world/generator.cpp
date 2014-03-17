@@ -160,7 +160,95 @@ void WorldGenerator::GenerateCave(Area* area, float openness, float density) {
       }
     }
   }
+
+/*
+  map<int, set<Vec2>> grouped;
+  ParseAreas(area, grouped);
+*/
 }
 
 void WorldGenerator::GenerateHallways(Area* area, float density) {
+}
+
+void WorldGenerator::ParseAreas(Area* area, map<int, set<Vec2> >& grouped) {
+  const Vec2& areaSize = area->getSize();
+  int* groups = (int*)calloc(areaSize.x * areaSize.y, sizeof(int));
+
+#define GROUP(i,j) groups[((i) * (int)areaSize.y) + (j)]
+
+  int groupCount = 1;
+  int i, j;
+  for(i = 0; i < areaSize.x; i++) {
+    for(j = 0; j < areaSize.y; j++) {
+      //Debug("Inspecting tile at " << i << "," << j);
+      if(area->getTile(i, j).getType() == Tile::Type::Wall) {
+        //Debug("Tile is a wall, skipping");
+        GROUP(i, j) = -1;
+        continue;
+      }
+
+      int temp;
+      list<int> adjacentGroups;
+
+#define PUSH_GROUP(i,j) \
+  do { \
+    temp = GROUP(i,j); \
+    if(temp > 0) { \
+      adjacentGroups.push_back(temp); \
+    } \
+  } while(false)
+
+      if(i > 0) {
+        PUSH_GROUP(i - 1, j);
+      }
+      if(i < (areaSize.x - 1)) {
+        PUSH_GROUP(i + 1, j);
+      }
+      if(j > 0) {
+        PUSH_GROUP(i, j - 1);
+      }
+      if(j < (areaSize.y - 1)) {
+        PUSH_GROUP(i, j + 1);
+      }
+
+#undef PUSH_GROUP
+
+      if(adjacentGroups.size() == 0) {
+        int newGroup = groupCount++;
+        //Debug("No groups adjacent, starting group " << newGroup);
+        // This node is not surrounded by any existing groups, create a new one
+        GROUP(i, j) = newGroup;
+        grouped.insert(make_pair(newGroup, set<Vec2> { Vec2(i, j) }));
+        continue;
+      }
+
+      // This algorithm could probably use some tuning
+      adjacentGroups.unique();
+      auto itr = adjacentGroups.begin();
+      int lowestGroup = *(itr++);
+      //Debug("There are " << adjacentGroups.size() << " unique groups adjacent, with group " << lowestGroup << " being the lowest.");
+
+      // Add this node to the lowest group
+      GROUP(i, j) = lowestGroup;
+      grouped[lowestGroup].insert(Vec2(i, j));
+      //Debug("Group " << lowestGroup << " now contains " << grouped[lowestGroup].size() << " nodes");
+
+      // Merge any groups that this node joins
+      for(; itr != adjacentGroups.end(); itr++) {
+        //Debug("Merging group " << *itr << " with " << lowestGroup);
+        int debugCounter = 0;
+        for(auto subNode : grouped[*itr]) {
+          GROUP((int)subNode.x, (int)subNode.y) = lowestGroup;
+          debugCounter++;
+        }
+        //Debug(debugCounter << " nodes merged");
+        grouped[lowestGroup].insert(grouped[*itr].begin(), grouped[*itr].end());
+        grouped.erase(*itr);
+      }
+    }
+  }
+
+#undef GROUP
+
+  free(groups);
 }
