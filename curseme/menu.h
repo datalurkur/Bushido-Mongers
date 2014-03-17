@@ -35,6 +35,8 @@ public:
   void setup();
   void teardown();
 
+  void refresh_windows();
+
   ~Menu();
 
 private:
@@ -43,15 +45,12 @@ private:
   MENU  *_menu;
 
   unsigned int _size;
-  bool _deployed; // ncurses items initialized? Menu is lazy.
+  bool _deployed;
 
   // Flavor Text.
   string _title;
   vector<string> _choices;
   vector<string> _descriptions;
-
-  // unused as of yet
-//	static int top_menu_size;
 };
 
 #endif

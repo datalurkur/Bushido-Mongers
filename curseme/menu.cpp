@@ -41,6 +41,7 @@ void Menu::addChoice(const string& choice, const string& description) {
 bool Menu::getSelection(unsigned int& index) {
   // draw the menu if it's not already drawn
   if(!_deployed) { setup(); }
+
   // menu input
   int c;
   index = 0;
@@ -55,7 +56,8 @@ bool Menu::getSelection(unsigned int& index) {
           menu_driver(_menu, REQ_FIRST_ITEM);
           index = 0;
         }
-        mvprintw(LINES - 5, 0, "Hovering on option %d", index);
+        mvprintw(LINES - 5, 2, "Hovering on option %u", index);
+        refresh_windows();
         break;
       case KEY_UP:
         if(index == 0) {
@@ -65,15 +67,18 @@ bool Menu::getSelection(unsigned int& index) {
           menu_driver(_menu, REQ_UP_ITEM);
           index--;
         }
-        mvprintw(LINES - 5, 0, "Hovering on option %d", index);
+        mvprintw(LINES - 5, 2, "Hovering on option %u", index);
+        refresh_windows();
         break;
       case KEY_LLVM_ENTER:
       case KEY_REALENTER:
-        mvprintw(LINES - 4, 0, "You've selected option %d", index);
+        mvprintw(LINES - 4, 2, "You've selected option %u", index);
+        refresh_windows();
         return true;
         break;
       default:
-        mvprintw(LINES - 4, 0, "Character pressed is = %3d Hopefully it can be printed as '%c'", c, c);
+        mvprintw(LINES - 4, 2, "Character pressed is = %3d Hopefully it can be printed as '%c'", c, c);
+        refresh_windows();
         break;
     }
   }
@@ -92,6 +97,7 @@ bool Menu::getChoice(string& choice) {
 
 void Menu::setup() {
   if(_deployed) { return; }
+  _deployed = true;
 
   // Create the items and the menu
 
@@ -111,8 +117,9 @@ void Menu::setup() {
 
   // Create the accompanying window
 
-  WINDOW* _win = newwin(10, 40, 4, 4);
+  WINDOW* _win = subwin(stdscr, 10, 40, 4, 4);
   keypad(_win, TRUE);
+  syncok(_win, TRUE);
 
   /* Set main window and sub window */
   set_menu_win(_menu, _win);
@@ -121,7 +128,7 @@ void Menu::setup() {
   /* Set menu mark to the string " * " */
   set_menu_mark(_menu, " * ");
 
-  // Print a border around the main window and print a title
+  // Print a border around the main window and print the title
 
   box(_win, 0, 0);
 
@@ -131,27 +138,33 @@ void Menu::setup() {
   mvwaddch(_win, 2, 39, ACS_RTEE);
 
   post_menu(_menu);
-  wrefresh(_win);
-
-  _deployed = true;
+  refresh_windows();
 }
 
 void Menu::teardown() {
   unpost_menu(_menu);
+  wclear(menu_win(_menu));
+
+  refresh_windows();
 
   // cleanup menu
+  free_menu(_menu);
+
   for(size_t i = 0; i < _size; ++i) {
     free_item(_items[i]);
   }
 
-  free_menu(_menu);
-
-  delwin(menu_win(_menu));
   delwin(menu_sub(_menu));
-
-  refresh();
+  delwin(menu_win(_menu));
 
   _deployed = false;
+}
+
+void Menu::refresh_windows() {
+  if(_deployed) {
+    wrefresh(menu_win(_menu));
+    wrefresh(stdscr);
+  }
 }
 
 Menu::~Menu() {

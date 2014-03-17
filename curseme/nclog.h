@@ -8,8 +8,8 @@
 #define NCLogToChannel(channel, msg) \
   do { \
     std::stringstream ss; \
-    ss << msg << "\n"; \
-    mvprintw(LINES - 1, 0, "%s", ss.str().c_str()); \
+    ss << msg; \
+    mvprintw(LINES - 1, 2, "%s", ss.str().c_str()); \
   } while(false)
 
 #endif
