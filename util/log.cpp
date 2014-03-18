@@ -72,16 +72,12 @@ Log& Log::GetLogStream() {
   return *OutputStream;
 }
 
-void Log::ToggleStdout() {
-  if(stdout_flag) {
-    stdout_flag = false;
-  } else {
-    stdout_flag = true;
-  }
+void Log::EnableStdout() {
+  stdout_flag = true;
 }
 
-bool Log::stdoutEnabled() {
-  return stdout_flag;
+void Log::DisableStdout() {
+  stdout_flag = false;
 }
 
 void Log::Flush() {

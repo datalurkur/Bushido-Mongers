@@ -38,8 +38,8 @@ public:
   Log(const string& logfile = "bm.log");
   virtual ~Log();
 
-  static void ToggleStdout();
-  static bool stdoutEnabled();
+  static void EnableStdout();
+  static void DisableStdout();
 
   void flush();
 

@@ -23,11 +23,11 @@ void CurseMeSetup() {
 
   CurseMe::MainScreenTurnOn();
 
-  Log::ToggleStdout();
+  Log::DisableStdout();
 }
 
 void CurseMeTeardown() {
-  Log::ToggleStdout();
+  Log::EnableStdout();
 
   endwin();
 }
