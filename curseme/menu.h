@@ -35,7 +35,7 @@ public:
   void setup();
   void teardown();
 
-  void refresh_windows();
+  void refresh_window();
 
   ~Menu();
 

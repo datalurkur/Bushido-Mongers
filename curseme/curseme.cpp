@@ -1,5 +1,8 @@
 #include "curseme/curseme.h"
-#include "curseme/nclog.h"
+#include "util/log.h"
+
+#include <string>
+#include <sstream>
 
 bool CurseMe::NcursesEnabled = false;
 
@@ -19,9 +22,13 @@ void CurseMeSetup() {
   CurseMe::Cursor(false);
 
   CurseMe::MainScreenTurnOn();
+
+  Log::ToggleStdout();
 }
 
 void CurseMeTeardown() {
+  Log::ToggleStdout();
+
   endwin();
 }
 

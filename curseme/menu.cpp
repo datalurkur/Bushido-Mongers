@@ -1,5 +1,4 @@
 #include "curseme/menu.h"
-#include "curseme/nclog.h"
 #include "util/log.h"
 
 #include <iostream>
@@ -57,7 +56,7 @@ bool Menu::getSelection(unsigned int& index) {
           index = 0;
         }
         mvprintw(LINES - 5, 2, "Hovering on option %u", index);
-        refresh_windows();
+        refresh_window();
         break;
       case KEY_UP:
         if(index == 0) {
@@ -68,17 +67,17 @@ bool Menu::getSelection(unsigned int& index) {
           index--;
         }
         mvprintw(LINES - 5, 2, "Hovering on option %u", index);
-        refresh_windows();
+        refresh_window();
         break;
       case KEY_LLVM_ENTER:
       case KEY_REALENTER:
         mvprintw(LINES - 4, 2, "You've selected option %u", index);
-        refresh_windows();
+        refresh_window();
         return true;
         break;
       default:
         mvprintw(LINES - 4, 2, "Character pressed is = %3d Hopefully it can be printed as '%c'", c, c);
-        refresh_windows();
+        refresh_window();
         break;
     }
   }
@@ -138,14 +137,14 @@ void Menu::setup() {
   mvwaddch(_win, 2, 39, ACS_RTEE);
 
   post_menu(_menu);
-  refresh_windows();
+  refresh_window();
 }
 
 void Menu::teardown() {
   unpost_menu(_menu);
   wclear(menu_win(_menu));
 
-  refresh_windows();
+  refresh_window();
 
   // cleanup menu
   free_menu(_menu);
@@ -160,7 +159,7 @@ void Menu::teardown() {
   _deployed = false;
 }
 
-void Menu::refresh_windows() {
+void Menu::refresh_window() {
   if(_deployed) {
     wrefresh(menu_win(_menu));
     wrefresh(stdscr);

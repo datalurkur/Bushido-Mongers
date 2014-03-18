@@ -3,8 +3,7 @@
 
 Log* Log::OutputStream = 0;
 LogChannel Log::ChannelState = 0;
-
-Log::Log(): _cleanupStream(false), _outputStream(&std::cout), _logFile(0) { }
+bool Log::stdout_flag = true;
 
 Log::Log(const string& logfile): _cleanupStream(true) {
   _logFile = new filebuf;
@@ -29,11 +28,7 @@ Log::~Log() {
 
 void Log::Setup() {
   if(!OutputStream) {
-#if SYS_PLATFORM == PLATFORM_WIN32
-    OutputStream = new Log("stdout");
-#else
     OutputStream = new Log();
-#endif
   }
   EnableAllChannels();
 }
@@ -77,10 +72,25 @@ Log& Log::GetLogStream() {
   return *OutputStream;
 }
 
+void Log::ToggleStdout() {
+  if(stdout_flag) {
+    stdout_flag = false;
+  } else {
+    stdout_flag = true;
+  }
+}
+
+bool Log::stdoutEnabled() {
+  return stdout_flag;
+}
+
 void Log::Flush() {
   OutputStream->flush();
 }
 
 void Log::flush() {
   _outputStream->flush();
+  if(stdout_flag) {
+    std::cout.flush();
+  }
 }

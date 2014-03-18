@@ -9,9 +9,8 @@
 #include "resource/raw.h"
 
 #include "curseme/curseme.h"
+#include "curseme/input.h"
 #include "curseme/menu.h"
-#include "curseme/nclog.h"
-
 
 #include "tools/raw_editor_ncurses/complex.h"
 #include "tools/raw_editor_ncurses/composite.h"
@@ -58,7 +57,7 @@ void saveRaw(Raw& raw, const string& dir, const string& name) {
 void createRaw(const string& dir) {
   string name;
   Info("Enter a raw filename: ");
-  Console::GetWordInput(name);
+  Input::GetWord(name);
 
   if(name.length() == 0) {
     Error("Invalid file name");
@@ -76,7 +75,7 @@ void createRaw(const string& dir) {
 void addObject(Raw& raw) {
   string objectName;
   Info("Enter a name for the new object: ");
-  Console::GetWordInput(objectName);
+  Input::GetWord(objectName);
 
   Menu  objectTypeMenu("Choose an object type");
   objectTypeMenu.addChoice("Atomic (single-material object)");
@@ -113,6 +112,7 @@ void editAtomicBObject(const string& name, ProtoAtomicBObject* object) {
 
   unsigned int choice;
   while(editMenu.getSelection(choice)) {
+    editMenu.teardown();
     switch(choice) {
     case 0:
       editObjectKeywords(object);
@@ -120,7 +120,7 @@ void editAtomicBObject(const string& name, ProtoAtomicBObject* object) {
     case 1:
       Info("Enter a new weight (currently " << object->weight << ")");
       float newWeight;
-      if(!Console::GetNumericInput<float>(newWeight)) {
+      if(!Input::GetNumber<float>(newWeight)) {
         Error("Invalid weight value entered");
         break;
       }
@@ -196,7 +196,7 @@ void editRaw(const string& dir, const string& name) {
       break;
     case 2:
       Info("Enter object name to remove:");
-      Console::GetWordInput(objectName);
+      Input::GetWord(objectName);
       if(!raw.deleteObject(objectName)) {
         Error("No object " << objectName << " found in raw");
       }
@@ -229,6 +229,7 @@ void selectAndEditRaw(const string& dir) {
 int main(int argc, char** argv) {
   Log::Setup();
   CurseMeSetup();
+  mvprintw(LINES - 6, 2, "Welcome to the raw editor");
 
   // Get the root directory to search for raws
   if(argc < 2) {

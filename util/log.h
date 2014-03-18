@@ -3,10 +3,10 @@
 
 #include <iostream>
 #include <fstream>
+#include <sstream>
 
 #include "util/config.h"
 #include "curseme/curseme.h"
-#include "curseme/nclog.h"
 
 using namespace std;
 
@@ -35,10 +35,12 @@ public:
   static void Teardown();
 
 public:
-  Log();
-  Log(const string& logfile);
+  Log(const string& logfile = "bm.log");
   virtual ~Log();
-  
+
+  static void ToggleStdout();
+  static bool stdoutEnabled();
+
   void flush();
 
   template <typename T>
@@ -47,6 +49,7 @@ public:
 private:
   static Log *OutputStream;
   static LogChannel ChannelState;
+  static bool stdout_flag;
 
 private:
   bool _cleanupStream;
@@ -57,6 +60,11 @@ private:
 template <typename T>
 Log& Log::operator<<(const T &rhs) {
   (*_outputStream) << rhs;
+
+  if(stdout_flag) {
+    std::cout << rhs;
+  }
+
   return *this;
 }
 
@@ -68,7 +76,7 @@ Log& Log::operator<<(const T &rhs) {
       Log::GetLogStream() << msg << "\n"; \
       Log::Flush(); \
       if(CurseMe::Enabled()) { \
-        NCLogToChannel(channel, msg << "\n"); \
+        NCLogToChannel(channel, msg); \
       } \
     } \
   } while(false)
