@@ -242,7 +242,7 @@ int main(int argc, char** argv) {
   string root = argv[1];
   Info("Searching for raws in " << root);
 
-  Menu defaultMenu;
+  Menu defaultMenu("Main Menu");
   defaultMenu.addChoice("Create New Raw");
   defaultMenu.addChoice("Edit Existing Raw");
 

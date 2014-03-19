@@ -1,4 +1,5 @@
 #include "curseme/menu.h"
+#include "curseme/window.h"
 #include "util/log.h"
 
 #include <iostream>
@@ -116,25 +117,15 @@ void Menu::setup() {
 
   // Create the accompanying window
 
-  WINDOW* _win = subwin(stdscr, 10, 40, 4, 4);
-  keypad(_win, TRUE);
-  syncok(_win, TRUE);
+  // FIXME: NO MAGIC NUMBERS
+  _tb = new TitleBox(subwin(stdscr, 10, 40, 4, 4), _title);
 
   /* Set main window and sub window */
-  set_menu_win(_menu, _win);
-  set_menu_sub(_menu, derwin(_win, 6, 38, 3, 1));
+  set_menu_win(_menu, _tb->outer_window());
+  set_menu_sub(_menu, _tb->window());
 
   /* Set menu mark to the string " * " */
   set_menu_mark(_menu, " * ");
-
-  // Print a border around the main window and print the title
-
-  box(_win, 0, 0);
-
-  mvwprintw(_win, 1, 2, _title.c_str());
-  mvwaddch(_win, 2, 0, ACS_LTEE);
-  mvwhline(_win, 2, 1, ACS_HLINE, 38);
-  mvwaddch(_win, 2, 39, ACS_RTEE);
 
   post_menu(_menu);
   refresh_window();
@@ -153,8 +144,7 @@ void Menu::teardown() {
     free_item(_items[i]);
   }
 
-  delwin(menu_sub(_menu));
-  delwin(menu_win(_menu));
+  delete _tb;
 
   _deployed = false;
 }

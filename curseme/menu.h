@@ -7,8 +7,10 @@
 #include <sstream>
 #include <list>
 
-#include "curseme/curseme.h"
 #include <menu.h>
+
+#include "curseme/curseme.h"
+#include "curseme/window.h"
 
 using namespace std;
 
@@ -43,6 +45,7 @@ private:
   // ncurses bookkeeping
   ITEM **_items;
   MENU  *_menu;
+  TitleBox* _tb; // hangs onto the windows.
 
   unsigned int _size;
   bool _deployed;

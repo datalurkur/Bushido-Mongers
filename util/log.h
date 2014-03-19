@@ -7,6 +7,7 @@
 
 #include "util/config.h"
 #include "curseme/curseme.h"
+#include "curseme/curselog.h"
 
 using namespace std;
 
@@ -67,8 +68,6 @@ Log& Log::operator<<(const T &rhs) {
 
   return *this;
 }
-
-#pragma message "Find a way to intelligently disable standard logging when it logs to stdout and curses is enabled"
 
 #define LogToChannel(channel, msg) \
   do { \

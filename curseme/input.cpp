@@ -1,3 +1,4 @@
+#include <curses.h>
 #include "curseme/input.h"
 #include "curseme/curseme.h"
 
@@ -10,15 +11,11 @@ void Input::GetWord(string& word) {
 }
 
 string Input::GetString() {
-  if(CurseMe::Enabled()) {
-    refresh();
-    CurseMe::Cursor(true);
-  }
+  refresh();
+  CurseMe::Cursor(true);
 
   char input[256];
-//  char[256] input;
   getnstr(input, 255);
 
-  string str = string(input);
-  return str;
+  return string(input);
 }
