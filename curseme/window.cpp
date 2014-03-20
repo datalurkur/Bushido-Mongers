@@ -47,8 +47,13 @@ void TitleBox::setup(string title) {
 }
 
 void TitleBox::teardown() {
+  wclear(_outer->window());
   delete _outer;
   delete _inner;
+}
+
+TitleBox::~TitleBox() {
+  teardown();
 }
 
 WINDOW* TitleBox::window() {

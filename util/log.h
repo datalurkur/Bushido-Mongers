@@ -80,7 +80,6 @@ Log& Log::operator<<(const T &rhs) {
     } \
   } while(false)
 
-
 #define Debug(msg) LogToChannel(LOG_DEBUG,   msg)
 #define Info(msg)  LogToChannel(LOG_INFO,    msg)
 #define Warn(msg)  LogToChannel(LOG_WARNING, msg)

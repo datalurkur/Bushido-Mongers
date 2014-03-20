@@ -35,6 +35,8 @@ public:
 	void setup(string title);
   void teardown();
 
+  ~TitleBox();
+
   WINDOW* window();
   WINDOW* outer_window();
 

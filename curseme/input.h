@@ -12,19 +12,16 @@ using namespace std;
 class Input {
 public:
   template <typename T>
-  static bool GetNumber(T& value);
-  static void GetWord(string& word);
+  static bool GetNumber(const string& title, T& value);
+  static void GetWord(const string& title, string& word);
 
 private:
-  static string GetString();
-
-  // Ensure this object can't be constructed
-  Input();
+  static string GetString(const string& title);
 };
 
 template <typename T>
-bool Input::GetNumber(T& value) {
-  string buffer = GetString();
+bool Input::GetNumber(const string& title, T& value) {
+  string buffer = GetString(title);
   return ConvertString<T>(buffer, value);
 }
 

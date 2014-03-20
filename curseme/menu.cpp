@@ -56,7 +56,6 @@ bool Menu::getSelection(unsigned int& index) {
           menu_driver(_menu, REQ_FIRST_ITEM);
           index = 0;
         }
-        mvprintw(LINES - 5, 2, "Hovering on option %u", index);
         refresh_window();
         break;
       case KEY_UP:
@@ -67,12 +66,10 @@ bool Menu::getSelection(unsigned int& index) {
           menu_driver(_menu, REQ_UP_ITEM);
           index--;
         }
-        mvprintw(LINES - 5, 2, "Hovering on option %u", index);
         refresh_window();
         break;
       case KEY_LLVM_ENTER:
       case KEY_REALENTER:
-        mvprintw(LINES - 4, 2, "You've selected option %u", index);
         refresh_window();
         return true;
         break;

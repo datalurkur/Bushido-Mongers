@@ -50,7 +50,6 @@ private:
   unsigned int _size;
   bool _deployed;
 
-  // Flavor Text.
   string _title;
   vector<string> _choices;
   vector<string> _descriptions;
