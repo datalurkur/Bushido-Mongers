@@ -14,6 +14,7 @@ public:
 
 private:
   BObjectManager* _objectManager;
+  World* _world;
 };
 
 #endif
