@@ -17,8 +17,6 @@ Menu::Menu(const string& title): _deployed(false), _title(title) {}
 
 Menu::Menu(const list<string>& choices): _deployed(false), _title("Make a selection") {
   for(string choice : choices) { _choices.push_back(choice); }
-  setup();
-  menu_opts_off(_menu, O_SHOWDESC);
 }
 
 /*
@@ -68,9 +66,16 @@ bool Menu::getSelection(unsigned int& index) {
         }
         refresh_window();
         break;
+      case KEY_NPAGE:
+        menu_driver(_menu, REQ_SCR_DPAGE);
+        refresh_window();
+        break;
+      case KEY_PPAGE:
+        menu_driver(_menu, REQ_SCR_UPAGE);
+        refresh_window();
+        break;
       case KEY_LLVM_ENTER:
       case KEY_REALENTER:
-        refresh_window();
         return true;
         break;
       default:
@@ -112,17 +117,33 @@ void Menu::setup() {
 
   _menu = new_menu((ITEM **)_items);
 
-  // Create the accompanying window
+  if(_descriptions.size() == 0) {
+    menu_opts_off(_menu, O_SHOWDESC);
+  }
 
-  // FIXME: NO MAGIC NUMBERS
-  _tb = new TitleBox(subwin(stdscr, 10, 40, 4, 4), _title);
+  // Set menu mark to the string " * "
+  set_menu_mark(_menu, " * ");
+
+  // Create the accompanying window
+  unsigned long width_needed = 0;
+  unsigned long mark_size = string(menu_mark(_menu)).length();
+
+  for(string choice : _choices) {
+    if(choice.length() + mark_size > width_needed) {
+      width_needed = choice.length() + mark_size;
+    }
+  }
+  if(_title.length() + 1 > width_needed) {
+    width_needed = _title.length() + 1;
+  }
+
+  const string title = _title;
+
+  _tb = TitleBox::from_parent(stdscr, _choices.size(), width_needed, 4, 4, title);
 
   /* Set main window and sub window */
   set_menu_win(_menu, _tb->outer_window());
   set_menu_sub(_menu, _tb->window());
-
-  /* Set menu mark to the string " * " */
-  set_menu_mark(_menu, " * ");
 
   post_menu(_menu);
   refresh_window();

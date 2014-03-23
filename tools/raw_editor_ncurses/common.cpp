@@ -1,10 +1,10 @@
 #include "tools/raw_editor_ncurses/common.h"
 
 #include "curseme/menu.h"
-#include "interface/console.h"
+#include "curseme/input.h"
 
 void editObjectKeywords(ProtoBObject* object) {
-  Menu keywordMenu;
+  Menu keywordMenu("Edit Keywords");
   keywordMenu.addChoice("List keywords");
   keywordMenu.addChoice("Add keyword");
   if(object->keywords.size() > 0) {
@@ -18,8 +18,7 @@ void editObjectKeywords(ProtoBObject* object) {
       for(string kw : object->keywords) { Info(kw); }
       break;
     case 1: {
-      Info("Enter the keyword to add:");
-      Console::GetWordInput(keyword);
+      Input::GetWord("Enter the new keyword:", keyword);
       object->keywords.push_back(keyword);
       object->keywords.unique();
     } break;

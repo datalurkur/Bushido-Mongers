@@ -12,9 +12,8 @@ void Input::GetWord(const string& title, string& word) {
 }
 
 string Input::GetString(const string& title) {
-  // FIXME: NO MAGIC NUMBERS
-  TitleBox tb = TitleBox(subwin(stdscr, 5, 40, 4, 4), title);
-  wmove(tb.window(), 0, 0);
+  TitleBox* tb = TitleBox::from_parent(stdscr, 1, 40, 4, 4, title);
+  wmove(tb->window(), 0, 0);
   refresh();
 
   CurseMe::Cursor(true);
@@ -22,7 +21,7 @@ string Input::GetString(const string& title) {
   getnstr(input, 255);
   CurseMe::Cursor(false);
 
-  tb.teardown();
+  delete tb;
   refresh();
 
   return string(input);

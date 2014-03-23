@@ -2,8 +2,6 @@
 #include <curses.h>
 #include "curseme/window.h"
 
-Window* Window::StdScr = new Window(stdscr);
-
 Window::Window(WINDOW* win): _win(win) {
   setup();
   //Window::Register();
@@ -14,7 +12,7 @@ void Window::setup() {
   syncok(_win, TRUE);
 }
 
-WINDOW* Window::window() {
+WINDOW* Window::window() const {
   return _win;
 }
 
@@ -26,17 +24,23 @@ Window::~Window() {
   teardown();
 }
 
-TitleBox::TitleBox(WINDOW* outer, string title): _outer(new Window(outer)) {
+
+TitleBox* TitleBox::from_parent(WINDOW* parent, int subwin_nlines, int subwin_ncols, int y, int x, const string& title) {
+  return new TitleBox(subwin(parent, subwin_nlines + LinePadding, subwin_ncols + ColPadding, y, x), title);
+}
+
+TitleBox::TitleBox(WINDOW* outer, const string& title): _outer(new Window(outer)) {
   setup(title);
 }
 
 // Print a border around the main window and print the title.
-void TitleBox::setup(string title) {
+void TitleBox::setup(const string& title) {
   int maxy, maxx;
   WINDOW* outer = _outer->window();
   getmaxyx(outer, maxy, maxx);
 
-  _inner = new Window(derwin(outer, 6, maxx - 2, 3, 1));
+  // 4 == top line, title, title line, bottom line. 2 == left line, right line.
+  _inner = new Window(derwin(outer, maxy - LinePadding, maxx - ColPadding, 3, 1));
 
   box(outer, 0, 0);
 
@@ -56,10 +60,10 @@ TitleBox::~TitleBox() {
   teardown();
 }
 
-WINDOW* TitleBox::window() {
+WINDOW* TitleBox::window() const {
   return _inner->window();
 }
 
-WINDOW* TitleBox::outer_window() {
+WINDOW* TitleBox::outer_window() const {
   return _outer->window();
 }

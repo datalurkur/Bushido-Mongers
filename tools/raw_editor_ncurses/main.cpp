@@ -100,7 +100,6 @@ void addObject(Raw& raw) {
   raw.addObject(objectName, object);
 }
 
-
 void editAtomicBObject(const string& name, ProtoAtomicBObject* object) {
   Info("Editing atomic object " << name);
   Info("\tweight: " << object->weight);
@@ -113,21 +112,21 @@ void editAtomicBObject(const string& name, ProtoAtomicBObject* object) {
   while(editMenu.getSelection(choice)) {
     editMenu.teardown();
     switch(choice) {
-    case 0:
-      editObjectKeywords(object);
-      break;
-    case 1:
-//      Info("Enter a new weight (currently " << object->weight << ")");
-      float newWeight;
-      stringstream prompt;
-      prompt << "Enter a new weight (currently " << object->weight << ")";
-      if(!Input::GetNumber<float>(prompt.str(), newWeight)) {
-        Error("Invalid weight value entered");
+      case 0:
+        editObjectKeywords(object);
         break;
-      }
-      object->weight = newWeight;
-      Info("Weight of " << name << " set to " << object->weight);
-      break;
+      case 1:
+  //      Info("Enter a new weight (currently " << object->weight << ")");
+        float newWeight;
+        stringstream prompt;
+        prompt << "Enter a new weight (currently " << object->weight << ")";
+        if(!Input::GetNumber<float>(prompt.str(), newWeight)) {
+          Error("Invalid weight value entered");
+          break;
+        }
+        object->weight = newWeight;
+        Info("Weight of " << name << " set to " << object->weight);
+        break;
     }
   }
 }
@@ -135,18 +134,18 @@ void editAtomicBObject(const string& name, ProtoAtomicBObject* object) {
 void editObject(Raw& raw, const string& objectName) {
   ProtoBObject* object = raw.getObject(objectName);
   switch(object->type) {
-  case AtomicType:
-    editAtomicBObject(objectName, (ProtoAtomicBObject*)object);
-    break;
-  case CompositeType:
-    editCompositeBObject(objectName, (ProtoCompositeBObject*)object);
-    break;
-  case ComplexType:
-    editComplexBObject(objectName, (ProtoComplexBObject*)object);
-    break;
-  default:
-    Error("Unhandled object type " << object->type);
-    return;
+    case AtomicType:
+      editAtomicBObject(objectName, (ProtoAtomicBObject*)object);
+      break;
+    case CompositeType:
+      editCompositeBObject(objectName, (ProtoCompositeBObject*)object);
+      break;
+    case ComplexType:
+      editComplexBObject(objectName, (ProtoComplexBObject*)object);
+      break;
+    default:
+      Error("Unhandled object type " << object->type);
+      return;
   }
 }
 
@@ -175,12 +174,8 @@ void editRaw(const string& dir, const string& name) {
   raw.unpack(fileData, fileSize);
   free(fileData);
   
-  Menu rawMenu("Editing " + name);
-  rawMenu.addChoice("List Objects");
-  rawMenu.addChoice("Add Object");
-  rawMenu.addChoice("Remove Object");
-  rawMenu.addChoice("Edit Object");
-  rawMenu.addChoice("Save Changes");
+  Menu rawMenu(list<string>({"List Objects", "Add Object", "Remove Object", "Edit Object", "Save Changes"}));
+  rawMenu.setTitle("Editing " + name);
 
   unsigned int choice;
   string objectName;
@@ -219,6 +214,8 @@ void selectAndEditRaw(const string& dir) {
   }
 
   Menu rawChoice(raws);
+  rawChoice.setTitle("Select raw");
+
   string choice;
   if(rawChoice.getChoice(choice)) {
     rawChoice.teardown();
