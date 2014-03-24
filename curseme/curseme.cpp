@@ -24,6 +24,7 @@ void CurseMeSetup() {
   CurseMe::MainScreenTurnOn();
 
   Log::DisableStdout();
+  CurseLog::Setup();
 }
 
 void CurseMeTeardown() {

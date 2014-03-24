@@ -5,6 +5,8 @@
 #include <iostream>
 #include <string>
 
+// whut.
+#define KEY_LLDBENTER 10
 #define KEY_REALENTER 13
 #define CTRLD   4
 
@@ -47,6 +49,7 @@ bool Menu::getSelection(unsigned int& index) {
   index = 0;
 
   while((c = wgetch(menu_win(_menu))) != KEY_F(1)) {
+//    Info("Character pressed: " << c << " (char: " << ((char)c) << ")");
     switch(c) {
       case KEY_DOWN:
         if(index < _size - 1) {
@@ -76,11 +79,11 @@ bool Menu::getSelection(unsigned int& index) {
         menu_driver(_menu, REQ_SCR_UPAGE);
         refresh_window();
         break;
+      case KEY_LLDBENTER:
       case KEY_REALENTER:
         return true;
         break;
       default:
-        mvprintw(LINES - 4, 2, "Character pressed is = %3d Hopefully it can be printed as '%c'", c, c);
         refresh_window();
         break;
     }

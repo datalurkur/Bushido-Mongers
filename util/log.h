@@ -72,10 +72,12 @@ Log& Log::operator<<(const T &rhs) {
 #define LogToChannel(channel, msg) \
   do { \
     if(Log::IsChannelEnabled(channel)) { \
-      Log::GetLogStream() << msg << "\n"; \
+     Log::GetLogStream() << msg << "\n"; \
       Log::Flush(); \
       if(CurseMe::Enabled()) { \
-        NCLogToChannel(channel, msg); \
+        std::stringstream ss; \
+        ss << msg; \
+        CurseLog::WriteToChannel(channel, ss.str()); \
       } \
     } \
   } while(false)

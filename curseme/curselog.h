@@ -2,7 +2,8 @@
 #define CURSELOG_H
 
 #include <curses.h>
-#include <sstream>
+#include <unordered_map>
+#include "curseme/window.h"
 
 using namespace std;
 
@@ -10,14 +11,13 @@ typedef char LogChannel;
 
 class CurseLog {
 public:
-  static void WriteToChannel(LogChannel channel, string str);
-};
+  static void Setup();
+  static void Teardown();
 
-#define NCLogToChannel(channel, msg) \
-  do { \
-    std::stringstream ss; \
-    ss << msg; \
-    CurseLog::WriteToChannel(channel, ss.str()); \
-  } while(false)
+  static void WriteToChannel(LogChannel channel, string str);
+
+private:
+  static unordered_map<LogChannel, TitleBox*> boxes;
+};
 
 #endif
