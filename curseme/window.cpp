@@ -30,7 +30,6 @@ void Window::teardown() {
 
 
 TitleBox* TitleBox::from_parent(WINDOW* parent, int subwin_nlines, int subwin_ncols, int y, int x, const string& title) {
-  Info("drawing title_box at " << (subwin_nlines + LinePadding) << " " << (subwin_ncols + ColPadding) << " " << y << " " << x);
   return new TitleBox(subwin(parent, subwin_nlines + LinePadding, subwin_ncols + ColPadding, y, x), title);
 }
 
@@ -50,7 +49,6 @@ void TitleBox::setup(const string& title) {
   wclear(outer);
   getmaxyx(outer, maxy, maxx);
 
-  Info("drawing inner window at " << (maxy - LinePadding) << " " << (maxx - ColPadding) << " " << 3 << " " << 1);
   _inner = new Window(derwin(outer, maxy - LinePadding, maxx - ColPadding, 3, 1));
 
   box(outer, 0, 0);
@@ -62,9 +60,6 @@ void TitleBox::setup(const string& title) {
 }
 
 void TitleBox::teardown() {
-  int maxy, maxx;
-  getmaxyx(_outer->window(), maxy, maxx);
-  Info("tearing down titlebox of size " << maxy << " " << maxx);
   wclear(_outer->window());
   delete _outer;
   delete _inner;
@@ -82,4 +77,17 @@ WINDOW* TitleBox::window() const {
 
 WINDOW* TitleBox::outer_window() const {
   return _outer->window();
+}
+
+void TitleBox::LogPlacement() {
+  int y, x;
+  getbegyx(_outer->window(), y, x);
+  Info("outer window abs " << y << " " << x);
+  getmaxyx(_outer->window(), y, x);
+  Info("outer window max " << y << " " << x);
+
+  getbegyx(_inner->window(), y, x);
+  Info("inner window abs " << y << " " << x);
+  getmaxyx(_inner->window(), y, x);
+  Info("inner window max " << y << " " << x);
 }

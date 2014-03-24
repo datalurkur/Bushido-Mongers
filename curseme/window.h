@@ -31,8 +31,8 @@ class TitleBox {
 public:
   static TitleBox* from_parent(WINDOW* parent, int subwin_nlines, int subwin_ncols, int y, int x, const string& title);
 
-	TitleBox(WINDOW* outer, const string& title);
 public:
+  TitleBox(WINDOW* outer, const string& title);
   ~TitleBox();
 
 public:
@@ -44,7 +44,9 @@ public:
   WINDOW* window() const;
   WINDOW* outer_window() const;
 
-public:
+private:
+  void LogPlacement();
+
   static const int LinePadding = 4; // top line, title, title line, bottom line.
   static const int ColPadding  = 2; // left column of box, right column of box.
 
