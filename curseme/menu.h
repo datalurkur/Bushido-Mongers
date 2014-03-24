@@ -15,9 +15,10 @@
 using namespace std;
 
 /* TODO
-	* attach procs to selections.
-	* don't just blithely assume that ncurses is otherwise enabled.
-	* select key for actions.
+  * attach procs to selections.
+  * don't just blithely assume that ncurses is otherwise enabled.
+  * select key for actions.
+  * fix choice/description mismatch? or don't use descriptions at all for now.
 */
 
 class Menu {
@@ -25,6 +26,7 @@ public:
   Menu();
   Menu(const string& title);
   Menu(const list<string>& choices);
+  Menu(const vector<string>& choices);
 
   void setTitle(const string& title);
   void addChoice(const string& choice);

@@ -76,7 +76,7 @@ void addObject(Raw& raw) {
   string objectName;
   Input::GetWord("Enter a name for the new object: ", objectName);
 
-  Menu  objectTypeMenu("Choose an object type");
+  Menu objectTypeMenu("Choose an object type");
   objectTypeMenu.addChoice("Atomic (single-material object)");
   objectTypeMenu.addChoice("Composite (layered object)");
   objectTypeMenu.addChoice("Complex (component objects connected in arbitrary ways)");
@@ -101,10 +101,9 @@ void addObject(Raw& raw) {
 }
 
 void editAtomicBObject(const string& name, ProtoAtomicBObject* object) {
-  Info("Editing atomic object " << name);
-  Info("\tweight: " << object->weight);
-
-  Menu editMenu("Select an attribute to edit");
+  stringstream title;
+  title << "Editing atomic object " << name << " (weight " << object->weight << ")";
+  Menu editMenu(title.str());
   editMenu.addChoice("Keywords");
   editMenu.addChoice("Weight");
 
@@ -173,19 +172,28 @@ void editRaw(const string& dir, const string& name) {
   Raw raw;
   raw.unpack(fileData, fileSize);
   free(fileData);
-  
+
   Menu rawMenu(list<string>({"List Objects", "Add Object", "Remove Object", "Edit Object", "Save Changes"}));
   rawMenu.setTitle("Editing " + name);
 
   unsigned int choice;
   string objectName;
   while(rawMenu.getSelection(choice)) {
+    rawMenu.teardown();
+
     switch(choice) {
     case 0: {
+
       list<string> names;
       raw.getObjectNames(names);
-      Info("Raw contains " << names.size() << " objects");
-      for(string name : names) { Info(name); }
+
+      stringstream title;
+      title << "Raw contains " << names.size() << " object" << ((names.size() == 1)? "" : "s");
+
+      Menu displayMenu(names);
+      displayMenu.setTitle(title.str());
+      displayMenu.getSelection(choice);
+      displayMenu.teardown();
     } break;
     case 1:
       addObject(raw);
@@ -203,6 +211,7 @@ void editRaw(const string& dir, const string& name) {
       saveRaw(raw, dir, name);
       break;
     }
+    rawMenu.setup();
   }
 }
 
@@ -226,7 +235,12 @@ void selectAndEditRaw(const string& dir) {
 int main(int argc, char** argv) {
   Log::Setup();
   CurseMeSetup();
+
+  string root = argv[1];
+
   mvprintw(0, 0, "Welcome to the raw editor");
+  mvprintw(1, 0, "Hit <F1> to go back");
+  mvprintw(2, 0, ("Searching for raws in " + root).c_str());
 
   // Get the root directory to search for raws
   if(argc < 2) {
@@ -236,17 +250,14 @@ int main(int argc, char** argv) {
     Log::Teardown();
     return 1;
   }
-  string root = argv[1];
-  Info("Searching for raws in " << root);
 
   Menu defaultMenu("Main Menu");
   defaultMenu.addChoice("Create New Raw");
   defaultMenu.addChoice("Edit Existing Raw");
 
   string currentRaw;
-  bool running = true;
   unsigned int choice;
-  while(running && defaultMenu.getSelection(choice)) {
+  while(defaultMenu.getSelection(choice)) {
     defaultMenu.teardown();
     switch(choice) {
     case 0:
@@ -257,6 +268,7 @@ int main(int argc, char** argv) {
       break;
     }
   }
+  defaultMenu.teardown();
 
   CurseMeTeardown();
 

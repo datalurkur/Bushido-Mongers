@@ -19,6 +19,8 @@ public:
   WINDOW* window() const;
   void refresh();
 
+  static Window* StdScr;
+
 private:
   WINDOW* _win;
 };
@@ -31,10 +33,13 @@ public:
 
 	TitleBox(WINDOW* outer, const string& title);
 public:
+  ~TitleBox();
+
+public:
 	void setup(const string& title);
   void teardown();
 
-  ~TitleBox();
+  void refresh();
 
   WINDOW* window() const;
   WINDOW* outer_window() const;

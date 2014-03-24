@@ -5,7 +5,6 @@
 #include <iostream>
 #include <string>
 
-#define KEY_LLVM_ENTER 10
 #define KEY_REALENTER 13
 #define CTRLD   4
 
@@ -16,6 +15,9 @@ Menu::Menu(const string& title): _deployed(false), _title(title) {}
 //Menu::Menu(const vector<string>& choices): _deployed(false), _choices(choices), _title("Make a selection") {
 
 Menu::Menu(const list<string>& choices): _deployed(false), _title("Make a selection") {
+  for(string choice : choices) { _choices.push_back(choice); }
+}
+Menu::Menu(const vector<string>& choices): _deployed(false), _title("Make a selection") {
   for(string choice : choices) { _choices.push_back(choice); }
 }
 
@@ -74,7 +76,6 @@ bool Menu::getSelection(unsigned int& index) {
         menu_driver(_menu, REQ_SCR_UPAGE);
         refresh_window();
         break;
-      case KEY_LLVM_ENTER:
       case KEY_REALENTER:
         return true;
         break;
@@ -103,7 +104,14 @@ void Menu::setup() {
 
   // Create the items and the menu
 
+  if(_choices.size() == 0) {
+    // menu.h doesn't like zero-sized menus, so fake it.
+    // this permanently adds a <nil> item. If you don't
+    // like it you shouldn't deploy an empty menu...
+    _choices.push_back("<nil>");
+  }
   _size  = _choices.size();
+
   _items = (ITEM **)calloc(_size + 1, sizeof(ITEM *));
 
   for(size_t i = 0; i < _size; ++i) {
@@ -138,8 +146,7 @@ void Menu::setup() {
   }
 
   const string title = _title;
-
-  _tb = TitleBox::from_parent(stdscr, _choices.size(), width_needed, 4, 4, title);
+  _tb = TitleBox::from_parent(stdscr, _size, width_needed, 4, 4, title);
 
   /* Set main window and sub window */
   set_menu_win(_menu, _tb->outer_window());
@@ -150,21 +157,23 @@ void Menu::setup() {
 }
 
 void Menu::teardown() {
-  unpost_menu(_menu);
-  wclear(menu_win(_menu));
+  if(_deployed) {
+    unpost_menu(_menu);
+    wclear(menu_win(_menu));
 
-  refresh_window();
+    refresh_window();
 
-  // cleanup menu
-  free_menu(_menu);
+    // cleanup menu
+    free_menu(_menu);
 
-  for(size_t i = 0; i < _size; ++i) {
-    free_item(_items[i]);
+    for(size_t i = 0; i < _size; ++i) {
+      free_item(_items[i]);
+    }
+
+    delete _tb;
+
+    _deployed = false;
   }
-
-  delete _tb;
-
-  _deployed = false;
 }
 
 void Menu::refresh_window() {

@@ -5,10 +5,8 @@
 #include "interface/console.h"
 
 void editComplexBObject(const string& name, ProtoComplexBObject* object) {
-  Info("Editing complex object " << name);
-
   unsigned int choice;
-  Menu editMenu("Select an attribute to edit");
+  Menu editMenu("Select an attribute of complex object " + name + " to edit");
   editMenu.addChoice("Keywords");
   while(editMenu.getSelection(choice)) {
     switch(choice) {

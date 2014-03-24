@@ -4,29 +4,43 @@
 #include "curseme/input.h"
 
 void editObjectKeywords(ProtoBObject* object) {
-  Menu keywordMenu("Edit Keywords");
-  keywordMenu.addChoice("List keywords");
-  keywordMenu.addChoice("Add keyword");
-  if(object->keywords.size() > 0) {
-    keywordMenu.addChoice("Remove keyword");
-  }
+  vector<string> choices;
+  choices.push_back("Add Keyword");
+  for(string kw : object->keywords) { choices.push_back(kw); }
+
+  Menu keywordMenu(choices);
+  keywordMenu.setTitle("Add or Remove Keywords");
+
   unsigned int choice;
   string keyword;
   while(keywordMenu.getSelection(choice)) {
     switch(choice) {
-    case 0:
-      for(string kw : object->keywords) { Info(kw); }
-      break;
-    case 1: {
+    case 0: {
       Input::GetWord("Enter the new keyword:", keyword);
       object->keywords.push_back(keyword);
       object->keywords.unique();
     } break;
-    case 2: {
-      Menu keywordSelect(object->keywords);
-      keywordSelect.getChoice(keyword);
-      object->keywords.remove(keyword);
-    } break;
-    }
-  }
+    default:
+      keyword = choices[choice - 1];
+
+      keywordMenu.teardown();
+
+      Menu EditRemoveMenu(keyword);
+      EditRemoveMenu.addChoice("Edit");
+      EditRemoveMenu.addChoice("Remove");
+
+      while(EditRemoveMenu.getSelection(choice)) {
+        switch(choice) {
+        case 0:
+        case 1:
+          object->keywords.remove(keyword);
+          break;
+        }
+      }
+
+      EditRemoveMenu.teardown();
+
+      keywordMenu.setup();
+    } // finish outer switch
+  } // finish outer while
 }
