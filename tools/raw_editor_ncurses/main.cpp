@@ -109,13 +109,11 @@ void editAtomicBObject(const string& name, ProtoAtomicBObject* object) {
 
   unsigned int choice;
   while(editMenu.getSelection(choice)) {
-    editMenu.teardown();
     switch(choice) {
       case 0:
         editObjectKeywords(object);
         break;
       case 1:
-  //      Info("Enter a new weight (currently " << object->weight << ")");
         float newWeight;
         stringstream prompt;
         prompt << "Enter a new weight (currently " << object->weight << ")";
@@ -222,6 +220,7 @@ void selectAndEditRaw(const string& dir) {
     return;
   }
 
+  Info(raws.front());
   Menu rawChoice(raws);
   rawChoice.setTitle("Select raw");
 

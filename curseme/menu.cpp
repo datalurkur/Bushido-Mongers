@@ -10,17 +10,17 @@
 #define KEY_REALENTER 13
 #define CTRLD   4
 
-Menu::Menu(): _deployed(false), _title("Make a selection") {}
+Menu::Menu(): _title("Make a selection") {}
 
-Menu::Menu(const string& title): _deployed(false), _title(title) {}
+Menu::Menu(const string& title): _title(title) {}
 
 //Menu::Menu(const vector<string>& choices): _deployed(false), _choices(choices), _title("Make a selection") {
 
-Menu::Menu(const list<string>& choices): _deployed(false), _title("Make a selection") {
-  for(string choice : choices) { _choices.push_back(choice); }
+Menu::Menu(const list<string>& choices): _title("Make a selection") {
+  for(string choice : choices) { addChoice(choice, ""); }
 }
-Menu::Menu(const vector<string>& choices): _deployed(false), _title("Make a selection") {
-  for(string choice : choices) { _choices.push_back(choice); }
+Menu::Menu(const vector<string>& choices): _title("Make a selection") {
+  for(string choice : choices) { addChoice(choice, ""); }
 }
 
 /*
@@ -38,18 +38,20 @@ void Menu::addChoice(const string& choice, const string& description) {
 	_choices.push_back(choice);
 	_descriptions.push_back(description);
 }
-//void Menu::addChoice(string& choice, string& description, function<int> func) {}
+
+//void Menu::addChoice(string& choice, string& description, function<this int> func) {}
 
 bool Menu::getSelection(unsigned int& index) {
   // draw the menu if it's not already drawn
   if(!_deployed) { setup(); }
+
+  UIStack::push(this);
 
   // menu input
   int c;
   index = 0;
 
   while((c = wgetch(menu_win(_menu))) != KEY_F(1)) {
-//    Info("Character pressed: " << c << " (char: " << ((char)c) << ")");
     switch(c) {
       case KEY_DOWN:
         if(index < _size - 1) {
@@ -81,13 +83,17 @@ bool Menu::getSelection(unsigned int& index) {
         break;
       case KEY_LLDBENTER:
       case KEY_REALENTER:
+        UIStack::pop();
         return true;
         break;
       default:
+        Info("Character pressed: " << c << " (char: " << ((char)c) << ")");
         refresh_window();
         break;
     }
   }
+
+  UIStack::pop();
   return false;
 }
 
@@ -149,7 +155,7 @@ void Menu::setup() {
   }
 
   const string title = _title;
-  _tb = TitleBox::from_parent(stdscr, _size, width_needed, 4, 4, title);
+  _tb = new TitleBox(stdscr, _size, width_needed, 4, 4, title);
 
   /* Set main window and sub window */
   set_menu_win(_menu, _tb->outer_window());

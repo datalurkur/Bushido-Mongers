@@ -23,8 +23,6 @@ void editObjectKeywords(ProtoBObject* object) {
     default:
       keyword = choices[choice - 1];
 
-      keywordMenu.teardown();
-
       Menu EditRemoveMenu(keyword);
       EditRemoveMenu.addChoice("Edit");
       EditRemoveMenu.addChoice("Remove");
@@ -37,10 +35,6 @@ void editObjectKeywords(ProtoBObject* object) {
           break;
         }
       }
-
-      EditRemoveMenu.teardown();
-
-      keywordMenu.setup();
     } // finish outer switch
   } // finish outer while
 }

@@ -11,6 +11,7 @@
 
 #include "curseme/curseme.h"
 #include "curseme/window.h"
+#include "curseme/uistack.h"
 
 using namespace std;
 
@@ -21,7 +22,7 @@ using namespace std;
   * fix choice/description mismatch? or don't use descriptions at all for now.
 */
 
-class Menu {
+class Menu : public UIE {
 public:
   Menu();
   Menu(const string& title);
@@ -50,7 +51,6 @@ private:
   TitleBox* _tb; // hangs onto the windows.
 
   unsigned int _size;
-  bool _deployed;
 
   string _title;
   vector<string> _choices;

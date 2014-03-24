@@ -2,6 +2,8 @@
 #define WINDOW_H
 
 #include <curses.h>
+#include <string>
+#include "curseme/uistack.h"
 
 using namespace std;
 
@@ -27,16 +29,13 @@ private:
 
 
 // contains a window and subwindow in a box. the user has full reign in the subwindow.
-class TitleBox {
+class TitleBox : public UIE {
 public:
-  static TitleBox* from_parent(WINDOW* parent, int subwin_nlines, int subwin_ncols, int y, int x, const string& title);
-
-public:
-  TitleBox(WINDOW* outer, const string& title);
+  TitleBox(WINDOW* parent, int subwin_nlines, int subwin_ncols, int y, int x, const string& title);
   ~TitleBox();
 
 public:
-	void setup(const string& title);
+	void setup();
   void teardown();
 
   void refresh();
@@ -51,8 +50,16 @@ private:
   static const int ColPadding  = 2; // left column of box, right column of box.
 
 private:
+  WINDOW* _parent;
   Window* _inner;
 	Window* _outer;
+
+  int _subwin_nlines;
+  int _subwin_ncols;
+  int _y;
+  int _x;
+
+  string _title;
 };
 
 #endif

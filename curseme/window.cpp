@@ -29,12 +29,9 @@ void Window::teardown() {
 }
 
 
-TitleBox* TitleBox::from_parent(WINDOW* parent, int subwin_nlines, int subwin_ncols, int y, int x, const string& title) {
-  return new TitleBox(subwin(parent, subwin_nlines + LinePadding, subwin_ncols + ColPadding, y, x), title);
-}
-
-TitleBox::TitleBox(WINDOW* outer, const string& title): _outer(new Window(outer)) {
-  setup(title);
+TitleBox::TitleBox(WINDOW* parent, int subwin_nlines, int subwin_ncols, int y, int x, const string& title):
+    _parent(parent), _subwin_nlines(subwin_nlines), _subwin_ncols(subwin_ncols), _y(y), _x(x), _title(title) {
+  setup();
 }
 
 TitleBox::~TitleBox() {
@@ -43,26 +40,34 @@ TitleBox::~TitleBox() {
 
 // prerequisite: _outer is defined already
 // Print a border around the main window and print the title.
-void TitleBox::setup(const string& title) {
-  int maxy, maxx;
+void TitleBox::setup() {
+  if(_deployed) { return; }
+  _deployed = true;
+
+  _outer = new Window(subwin(_parent, _subwin_nlines + LinePadding, _subwin_ncols + ColPadding, _y, _x));
   WINDOW* outer = _outer->window();
+
+  _inner = new Window(derwin(outer, _subwin_nlines, _subwin_ncols, 3, 1));
+
   wclear(outer);
-  getmaxyx(outer, maxy, maxx);
-
-  _inner = new Window(derwin(outer, maxy - LinePadding, maxx - ColPadding, 3, 1));
-
   box(outer, 0, 0);
 
-  mvwprintw(outer, 1, 2, title.c_str()); // Feel free to make this centered.
+  int maxy, maxx;
+  getmaxyx(outer, maxy, maxx);
+
+  mvwprintw(outer, 1, 2, _title.c_str()); // Feel free to make this centered.
   mvwaddch(outer, 2, 0, ACS_LTEE);
   mvwhline(outer, 2, 1, ACS_HLINE, maxx - 2);
   mvwaddch(outer, 2, maxx - 1, ACS_RTEE);
 }
 
 void TitleBox::teardown() {
-  wclear(_outer->window());
-  delete _outer;
-  delete _inner;
+  if(_deployed) {
+    wclear(_outer->window());
+    delete _outer;
+    delete _inner;
+    _deployed = false;
+  }
 }
 
 void TitleBox::refresh() {
