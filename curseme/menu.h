@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <list>
+#include <unordered_map>
 
 #include <menu.h>
 
@@ -31,10 +32,16 @@ public:
   Menu(const vector<string>& choices);
 
   void setTitle(const string& title);
+
   void addChoice(const string& choice);
   void addChoice(const string& choice, const string& description);
-  //void addChoice(string& choice, string& description, function<int> func);
 
+  void addChoice(const string& choice, function<void()> func);
+  void addChoice(const string& choice, const string& description, function<void()> func);
+  void setDefaultAction(function<void(string)> func);
+  bool actOnChoice(const string& choice);
+
+  unsigned int listen();
   bool getSelection(unsigned int& index);
   bool getChoice(string& choice);
 
@@ -56,6 +63,9 @@ private:
   string _title;
   vector<string> _choices;
   vector<string> _descriptions;
+
+  unordered_map<string, function<void()> > _functions;
+  function<void(string)> _def_fun;
 };
 
 #endif

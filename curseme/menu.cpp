@@ -46,16 +46,38 @@ void Menu::addChoice(const string& choice, const string& description) {
   _descriptions.push_back(description);
 }
 
-//void Menu::addChoice(string& choice, string& description, function<this int> func) {}
+//template <typename T>
+void Menu::addChoice(const string& choice, function<void()> func) {
+  addChoice(choice, "", func);
+}
 
-bool Menu::getSelection(unsigned int& index) {
-  if(!_deployed) { setup(); }
+void Menu::addChoice(const string& choice, const string& description, function<void()> func) {
+  _choices.push_back(choice);
+  _descriptions.push_back(description);
 
+  _functions[choice] = func;
+}
+
+void Menu::setDefaultAction(function<void(string)> func) {
+  _def_fun = func;
+}
+
+bool Menu::actOnChoice(const string& choice) {
+  if(_functions[choice]) {
+    _functions[choice]();
+    return true;
+  } else if(_def_fun) {
+    _def_fun(choice);
+    return true;
+  }
+  return false;
+}
+
+unsigned int Menu::listen() {
   UIStack::push(this);
 
-  // menu input
   int c;
-  index = 0;
+  unsigned int index = 0;
   while((c = wgetch(menu_win(_menu))) != KEY_F(1)) {
     switch(c) {
       case KEY_DOWN:
@@ -88,7 +110,9 @@ bool Menu::getSelection(unsigned int& index) {
         break;
       case KEY_LLDBENTER:
       case KEY_REALENTER:
-        return true;
+        if(!actOnChoice(_choices[index])) {
+          return index; // handle the case outside of Menu
+        }
         break;
       default:
         Info("Character pressed: " << c << " (char: " << ((char)c) << ")");
@@ -98,7 +122,17 @@ bool Menu::getSelection(unsigned int& index) {
   }
 
   UIStack::pop();
-  return false;
+  return ~0;
+}
+
+bool Menu::getSelection(unsigned int& index) {
+  index = listen();
+  Debug(~0);
+  if(index == ~0) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 bool Menu::getChoice(string& choice) {

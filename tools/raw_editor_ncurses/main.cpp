@@ -216,14 +216,13 @@ void selectAndEditRaw(const string& dir) {
     return;
   }
 
-  Info(raws.front());
   Menu rawChoice(raws);
   rawChoice.setTitle("Select raw");
+  rawChoice.setDefaultAction( [dir](string raw) {
+    editRaw(dir, raw);
+  });
 
-  string choice;
-  if(rawChoice.getChoice(choice)) {
-    editRaw(dir, choice);
-  }
+  rawChoice.listen();
 }
 
 int main(int argc, char** argv) {
@@ -243,21 +242,15 @@ int main(int argc, char** argv) {
   mvprintw(2, 0, ("Searching for raws in " + root).c_str());
 
   Menu defaultMenu("Main Menu");
-  defaultMenu.addChoice("Create New Raw");
-  defaultMenu.addChoice("Edit Existing Raw");
 
-  string currentRaw;
-  unsigned int choice;
-  while(defaultMenu.getSelection(choice)) {
-    switch(choice) {
-    case 0:
-      createRaw(root);
-      break;
-    case 1:
-      selectAndEditRaw(root);
-      break;
-    }
-  }
+  defaultMenu.addChoice("Create New Raw", [root]() {
+    createRaw(root);
+  });
+  defaultMenu.addChoice("Edit Existing Raw", [root]() {
+    selectAndEditRaw(root);
+  });
+
+  defaultMenu.listen();
 
   CurseMeTeardown();
   Log::Teardown();
