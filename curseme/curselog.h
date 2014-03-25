@@ -18,6 +18,7 @@ public:
 
 private:
   static unordered_map<LogChannel, TitleBox*> boxes;
+  static bool Deployed;
 };
 
 #endif
