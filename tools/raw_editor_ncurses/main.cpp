@@ -257,7 +257,6 @@ int main(int argc, char** argv) {
   string currentRaw;
   unsigned int choice;
   while(defaultMenu.getSelection(choice)) {
-    defaultMenu.teardown();
     switch(choice) {
     case 0:
       createRaw(root);
@@ -267,7 +266,6 @@ int main(int argc, char** argv) {
       break;
     }
   }
-  defaultMenu.teardown();
 
   CurseMeTeardown();
 
