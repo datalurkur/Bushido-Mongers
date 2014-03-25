@@ -19,7 +19,8 @@ using namespace std;
   * attach procs to selections.
   * don't just blithely assume that ncurses is otherwise enabled.
   * select key for actions.
-  * fix choice/description mismatch? or don't use descriptions at all for now.
+  * fix choice/description mismatch? or don't use descriptions at all for now. - use pairs.
+  * remember the placement from the last run, fer christ's sake.
 */
 
 class Menu : public UIE {

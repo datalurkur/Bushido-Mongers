@@ -235,24 +235,22 @@ int main(int argc, char** argv) {
   Log::Setup();
   CurseMeSetup();
 
-  string root = argv[1];
+  // Get the root directory to search for raws
+  string root;
+  if(argc < 2) {
+    Input::GetWord("Please specify a raw directory", root);
+  } else {
+    root = argv[1];
+  }
 
   mvprintw(0, 0, "Welcome to the raw editor");
   mvprintw(1, 0, "Hit <F1> to go back");
   mvprintw(2, 0, ("Searching for raws in " + root).c_str());
 
-  // Get the root directory to search for raws
-  if(argc < 2) {
-    Error("Please specify a raw directory");
-    sleep(1);
-    CurseMeTeardown();
-    Log::Teardown();
-    return 1;
-  }
-
   Menu defaultMenu("Main Menu");
   defaultMenu.addChoice("Create New Raw");
   defaultMenu.addChoice("Edit Existing Raw");
+  defaultMenu.addChoice("Popup");
 
   string currentRaw;
   unsigned int choice;
@@ -263,6 +261,9 @@ int main(int argc, char** argv) {
       break;
     case 1:
       selectAndEditRaw(root);
+      break;
+    case 2:
+      Popup("I am the poppy popular patriarcal prurient popup");
       break;
     }
   }

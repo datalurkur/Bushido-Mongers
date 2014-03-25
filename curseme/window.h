@@ -3,11 +3,12 @@
 
 #include <curses.h>
 #include <string>
+#include <sstream>
 #include "curseme/uistack.h"
 
 using namespace std;
 
-class Window {
+class Window : public UIE {
 public:
   Window(WINDOW* win);
 
@@ -39,6 +40,7 @@ public:
   void teardown();
 
   void refresh();
+  void clear();
 
   WINDOW* window() const;
   WINDOW* outer_window() const;
@@ -61,5 +63,17 @@ private:
 
   string _title;
 };
+
+class PopupRec {
+public:
+  PopupRec(const string& message);
+};
+
+#define Popup(msg) \
+do { \
+  stringstream ss; \
+  ss << msg; \
+  PopupRec(ss.str()); \
+} while(0);
 
 #endif

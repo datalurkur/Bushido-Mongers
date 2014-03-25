@@ -28,21 +28,27 @@ Menu::Menu(vector<string>& choices, vector<string>& descriptions):
 	_choices(choices), _descriptions(descriptions) {}
 */
 
-void Menu::setTitle(const string& title) { _title = title; }
+void Menu::setTitle(const string& title) {
+  _title = title;
+  if(_deployed) {
+    teardown();
+    setup();
+  }
+}
 
 void Menu::addChoice(const string& choice) {
   addChoice(choice, "");
 }
 
 void Menu::addChoice(const string& choice, const string& description) {
-	_choices.push_back(choice);
-	_descriptions.push_back(description);
+  //_choices.push_back(str_pair(choice, description));
+  _choices.push_back(choice);
+  _descriptions.push_back(description);
 }
 
 //void Menu::addChoice(string& choice, string& description, function<this int> func) {}
 
 bool Menu::getSelection(unsigned int& index) {
-  // draw the menu if it's not already drawn
   if(!_deployed) { setup(); }
 
   UIStack::push(this);
@@ -50,7 +56,6 @@ bool Menu::getSelection(unsigned int& index) {
   // menu input
   int c;
   index = 0;
-
   while((c = wgetch(menu_win(_menu))) != KEY_F(1)) {
     switch(c) {
       case KEY_DOWN:
@@ -83,7 +88,6 @@ bool Menu::getSelection(unsigned int& index) {
         break;
       case KEY_LLDBENTER:
       case KEY_REALENTER:
-        UIStack::pop();
         return true;
         break;
       default:
@@ -110,6 +114,8 @@ bool Menu::getChoice(string& choice) {
 void Menu::setup() {
   if(_deployed) { return; }
   _deployed = true;
+
+  Info("Deploying Menu " << _title);
 
   // Create the items and the menu
 
@@ -154,8 +160,9 @@ void Menu::setup() {
     width_needed = _title.length() + 1;
   }
 
-  const string title = _title;
-  _tb = new TitleBox(stdscr, _size, width_needed, 4, 4, title);
+  //const string title = _title;
+  _tb = new TitleBox(stdscr, _size, width_needed, 4, 4, _title);
+  _tb->setup();
 
   /* Set main window and sub window */
   set_menu_win(_menu, _tb->outer_window());
@@ -167,6 +174,8 @@ void Menu::setup() {
 
 void Menu::teardown() {
   if(_deployed) {
+    Info("Tearing down Menu " << _title);
+
     unpost_menu(_menu);
     wclear(menu_win(_menu));
 
