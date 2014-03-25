@@ -8,6 +8,7 @@ void editComplexBObject(const string& name, ProtoComplexBObject* object) {
   unsigned int choice;
   Menu editMenu("Select an attribute of complex object " + name + " to edit");
   editMenu.addChoice("Keywords");
+
   while(editMenu.getSelection(choice)) {
     switch(choice) {
     case 0:

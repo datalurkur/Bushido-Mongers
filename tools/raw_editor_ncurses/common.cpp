@@ -15,26 +15,19 @@ void editObjectKeywords(ProtoBObject* object) {
   string keyword;
   while(keywordMenu.getSelection(choice)) {
     switch(choice) {
-    case 0: {
+    case 0:
       Input::GetWord("Enter the new keyword:", keyword);
+      keywordMenu.addChoice(keyword);
       object->keywords.push_back(keyword);
       object->keywords.unique();
-    } break;
+    break;
     default:
-      keyword = choices[choice - 1];
+      object->keywords.remove(choices[choice - 1]);
 
-      Menu EditRemoveMenu(keyword);
-      EditRemoveMenu.addChoice("Edit");
-      EditRemoveMenu.addChoice("Remove");
-
-      while(EditRemoveMenu.getSelection(choice)) {
-        switch(choice) {
-        case 0:
-        case 1:
-          object->keywords.remove(keyword);
-          break;
-        }
-      }
+      choices.erase(choices.begin() + choice - 1);
+      keywordMenu = Menu(choices);
+      keywordMenu.setTitle("Add or Remove Keywords");
+      break;
     } // finish outer switch
   } // finish outer while
 }

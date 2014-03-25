@@ -60,7 +60,7 @@ void createRaw(const string& dir) {
   Input::GetWord("Enter a raw filename: ", name);
 
   if(name.length() == 0) {
-    Error("Invalid file name");
+    Popup("Invalid file name");
     return;
   }
 
@@ -177,8 +177,6 @@ void editRaw(const string& dir, const string& name) {
   unsigned int choice;
   string objectName;
   while(rawMenu.getSelection(choice)) {
-    rawMenu.teardown();
-
     switch(choice) {
     case 0: {
 
@@ -191,7 +189,6 @@ void editRaw(const string& dir, const string& name) {
       Menu displayMenu(names);
       displayMenu.setTitle(title.str());
       displayMenu.getSelection(choice);
-      displayMenu.teardown();
     } break;
     case 1:
       addObject(raw);
@@ -209,7 +206,6 @@ void editRaw(const string& dir, const string& name) {
       saveRaw(raw, dir, name);
       break;
     }
-    rawMenu.setup();
   }
 }
 
@@ -226,7 +222,6 @@ void selectAndEditRaw(const string& dir) {
 
   string choice;
   if(rawChoice.getChoice(choice)) {
-    rawChoice.teardown();
     editRaw(dir, choice);
   }
 }
@@ -250,7 +245,6 @@ int main(int argc, char** argv) {
   Menu defaultMenu("Main Menu");
   defaultMenu.addChoice("Create New Raw");
   defaultMenu.addChoice("Edit Existing Raw");
-  defaultMenu.addChoice("Popup");
 
   string currentRaw;
   unsigned int choice;
@@ -262,14 +256,10 @@ int main(int argc, char** argv) {
     case 1:
       selectAndEditRaw(root);
       break;
-    case 2:
-      Popup("I am the poppy popular patriarcal prurient popup");
-      break;
     }
   }
 
   CurseMeTeardown();
-
   Log::Teardown();
   return 0;
 }

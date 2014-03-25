@@ -20,7 +20,7 @@ void CurseLog::Setup() {
 
 void CurseLog::WriteToChannel(char channel, string str) {
   if(Deployed) {
-    CurseLog::boxes[channel]->clear();
+    CurseLog::boxes[channel]->refresh();
     WINDOW* window = CurseLog::boxes[channel]->window();
     mvwprintw(window, 0, 0, str.c_str());
     wrefresh(window);
