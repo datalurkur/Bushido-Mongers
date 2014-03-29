@@ -29,10 +29,10 @@ public:
   typedef map<BObject*, ObjectSet> ConnectivityMap;
 
 public:
-  ComplexBObject(BObjectID id, const ProtoComplexBObject* proto);
+  ComplexBObject(BObjectManager* manager, BObjectID id, const ProtoComplexBObject* proto);
 
-  virtual bool atCreation(BObjectManager* manager);
-  virtual void atDestruction(BObjectManager* manager);
+  virtual bool atCreation();
+  virtual bool atDestruction();
 
   float getWeight() const;
 

@@ -1,4 +1,5 @@
 #include "game/bobject.h"
+#include "game/bobjectcontainer.h"
 #include "util/assertion.h"
 
 ProtoBObject::ProtoBObject(BObjectType t): type(t) {}
@@ -65,18 +66,23 @@ bool ProtoBObject::unpack(const SectionedData<ObjectSectionType>& sections) {
   return true;
 }
 
-BObject::BObject(BObjectType type, BObjectID id, const ProtoBObject* proto):
-  _proto(proto), _type(type), _id(id), _keywords(proto->keywords) {
+BObject::BObject(BObjectManager* manager, BObjectType type, BObjectID id, const ProtoBObject* proto):
+  _manager(manager), _proto(proto), _type(type), _id(id), _keywords(proto->keywords) {
   for(auto& pExt : proto->extensions) {
     addExtension(pExt.first, *pExt.second);
   }
 }
 
 BObject::~BObject() {
+  setLocation(0);
 }
 
-bool BObject::atCreation(BObjectManager* manager) { return true; }
-void BObject::atDestruction(BObjectManager* manager) {}
+bool BObject::atCreation() {
+  return true;
+}
+bool BObject::atDestruction() {
+  return true;
+}
 
 bool BObject::addExtension(ExtensionType type, const ProtoBObjectExtension& data) {
   ExtensionMap::iterator itr = _extensions.find(type);
@@ -110,3 +116,17 @@ bool BObject::dropExtension(ExtensionType type) {
 
 BObjectType BObject::getType() const { return _type; }
 BObjectID BObject::getID() const { return _id; }
+
+void BObject::setLocation(BObjectContainer* location) {
+  if(_location) {
+    _location->removeObject(_id);
+  }
+  if(location) {
+    location->addObject(_id);
+  }
+  _location = location;
+}
+
+BObjectContainer* BObject::getLocation() const {
+  return _location;
+}

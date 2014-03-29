@@ -2,6 +2,7 @@
 #define GAMECORE_H
 
 #include "game/bobjectmanager.h"
+#include "world/world.h"
 
 #include <string>
 

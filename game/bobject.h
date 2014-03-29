@@ -29,14 +29,15 @@ public:
 };
 
 class BObjectManager;
+class BObjectContainer;
 
 class BObject {
 public:
-  BObject(BObjectType type, BObjectID id, const ProtoBObject* proto);
+  BObject(BObjectManager* manager, BObjectType type, BObjectID id, const ProtoBObject* proto);
   virtual ~BObject();
 
-  virtual bool atCreation(BObjectManager* manager);
-  virtual void atDestruction(BObjectManager* manager);
+  virtual bool atCreation();
+  virtual bool atDestruction();
 
   // Extension management
   bool addExtension(ExtensionType type, const ProtoBObjectExtension& data);
@@ -50,7 +51,13 @@ public:
   // Virtual attribute accessors
   virtual float getWeight() const = 0;
 
+  // Location management
+  void setLocation(BObjectContainer* location);
+  BObjectContainer* getLocation() const;
+
 protected:
+  BObjectManager* _manager;
+
   typedef map<ExtensionType, BObjectExtension*> ExtensionMap;
   ExtensionMap _extensions;
 
@@ -59,6 +66,8 @@ protected:
   BObjectType _type;
   BObjectID _id;
   list<string> _keywords;
+
+  BObjectContainer* _location;
 };
 
 typedef list<BObject*> BObjectList;

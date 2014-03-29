@@ -25,12 +25,17 @@ bool ProtoAtomicBObject::unpack(const SectionedData<ObjectSectionType>& sections
   return true;
 }
 
-AtomicBObject::AtomicBObject(BObjectID id, const ProtoAtomicBObject* proto): BObject(AtomicType, id, proto) {
+AtomicBObject::AtomicBObject(BObjectManager* manager, BObjectID id, const ProtoAtomicBObject* proto): BObject(manager, AtomicType, id, proto) {
   _weight = proto->weight;
 }
 
-bool AtomicBObject::atCreation(BObjectManager* manager) { return true; }
-
-void AtomicBObject::atDestruction(BObjectManager* manager) {}
+bool AtomicBObject::atCreation() {
+  if(!BObject::atCreation()) { return false; }
+  return true;
+}
+bool AtomicBObject::atDestruction() {
+  if(!BObject::atDestruction()) { return false; }
+  return true;
+}
 
 float AtomicBObject::getWeight() const { return _weight; }
