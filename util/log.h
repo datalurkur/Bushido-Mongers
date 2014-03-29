@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <mutex>
 
 #include "util/config.h"
 #include "curseme/curseme.h"
@@ -51,6 +52,8 @@ private:
   static Log *OutputStream;
   static LogChannel ChannelState;
   static bool stdout_flag;
+
+  static mutex Mutex;
 
 private:
   bool _cleanupStream;

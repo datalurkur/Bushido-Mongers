@@ -46,18 +46,18 @@ World* WorldGenerator::GenerateWorld(int size, float sparseness, float connected
       for(k = j+1; k < numFeatures; k++) {
         permutationCount++;
         Vec2 p;
-        if(!computeCircleFromPoints(features[i]->getPos(), features[j]->getPos(), features[k]->getPos(), p)) {
+        if(!computeCircleFromPoints(features[i]->pos, features[j]->pos, features[k]->pos, p)) {
           continue;
         }
 
-        Vec2 r = features[i]->getPos() - p;
+        Vec2 r = features[i]->pos - p;
         float rSquared = r.magnitudeSquared();
 
         bool isDelaunay = true;
         // Determine if any other points lie within this circle
         for(int m = 0; m < numFeatures; m++) {
           if(m == i || m == j || m == k) { continue; }
-          Vec2 d = features[m]->getPos() - p;
+          Vec2 d = features[m]->pos - p;
           float mRSquared = d.magnitudeSquared();
           if(mRSquared < rSquared) {
             // Point lies within the circle, this triangle is non-delaunay
@@ -99,13 +99,13 @@ World* WorldGenerator::GenerateWorld(int size, float sparseness, float connected
   for(auto feature : features) {
     #pragma message "Give areas real names"
     ostringstream stream;
-    stream << feature->getPos().x << "," << feature->getPos().y;
+    stream << feature->pos.x << "," << feature->pos.y;
     counter++;
     string name = stream.str();
 
-    Area* area = new Area(name, feature->getPos(), Vec2(feature->getRadius(), feature->getRadius()));
+    Area* area = new Area(name, feature->pos, Vec2(feature->radius, feature->radius));
     world->addArea(area);
-    feature->setArea(area);
+    feature->area = area;
   }
 
   // Add the connections to the world
@@ -113,11 +113,11 @@ World* WorldGenerator::GenerateWorld(int size, float sparseness, float connected
     bool valid = true;
     switch(connectionMethod) {
     case MaxDistance: {
-      Vec2 d = connection.first->getPos() - connection.second->getPos();
+      Vec2 d = connection.first->pos - connection.second->pos;
       if(d.magnitudeSquared() >= maxConnDistSquared) { valid = false; }
     } break;
     case Centralization: {
-      Vec2 d = connection.first->getPos() - connection.second->getPos();
+      Vec2 d = connection.first->pos - connection.second->pos;
       float distanceRatio = (midSizeSquared - (d.magnitudeSquared() / 2)) / midSizeSquared;
       if((float)rand() / RAND_MAX > (connectedness + distanceRatio) / 2) { valid = false; }
     }
@@ -126,7 +126,7 @@ World* WorldGenerator::GenerateWorld(int size, float sparseness, float connected
       break;
     }
     if(valid) {
-      world->addConnection(connection.first->getArea(), connection.second->getArea());
+      world->addConnection(connection.first->area, connection.second->area);
     }
   }
 

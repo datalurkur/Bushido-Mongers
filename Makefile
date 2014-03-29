@@ -3,7 +3,7 @@ CFLAGS = -g -Wall -Wextra --pedantic -std=c++11 -I.
 ifeq ($(shell uname -s),Darwin)
 	CFLAGS += -stdlib=libc++
 endif
-LDFLAGS = -lncurses -lmenu
+LDFLAGS = -lncurses -lmenu -lpthread
 
 all: tools tests server
 
@@ -11,12 +11,8 @@ tools: raw_editor_ncurses
 
 tests: test treetest worldtest sockettest
 
-server: curseme/menu.o curseme/curseme.o curseme/input.o curseme/window.o curseme/uistack.o curseme/curselog.o\
-        util/log.o util/filesystem.o util/packing.o\
-        interface/console.o\
-        game/bobject.o game/complexbobject.o game/compositebobject.o game/atomicbobject.o game/bobjectcontainer.o game/bobjectmanager.o game/core.o\
-        resource/raw.o\
-        server.o
+server: curseme/menu.o curseme/curseme.o curseme/input.o curseme/window.o curseme/uistack.o curseme/curselog.o util/log.o util/filesystem.o util/packing.o util/timer.o util/noise.o util/geom.o interface/console.o game/bobject.o game/complexbobject.o game/compositebobject.o game/atomicbobject.o game/bobjectcontainer.o game/bobjectmanager.o game/core.o resource/raw.o world/generator.o world/world.o world/area.o world/tile.o server.o
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 raw_editor: curseme/menu.o curseme/curseme.o curseme/input.o util/log.o tools/raw_editor/main.o resource/raw.o game/bobject.o game/complexbobject.o game/atomicbobject.o game/compositebobject.o util/filesystem.o tools/raw_editor/common.o tools/raw_editor/complex.o tools/raw_editor/composite.o interface/choice.o interface/console.o util/packing.o game/bobjectmanager.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
