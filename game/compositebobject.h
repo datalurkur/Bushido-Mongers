@@ -19,10 +19,10 @@ public:
 
 class CompositeBObject : public BObject {
 public:
-  CompositeBObject(BObjectID id, const ProtoCompositeBObject* proto);
+  CompositeBObject(BObjectManager* manager, BObjectID id, const ProtoCompositeBObject* proto);
 
-  virtual bool atCreation(BObjectManager* manager);
-  virtual void atDestruction(BObjectManager* manager);
+  virtual bool atCreation();
+  virtual bool atDestruction();
 
   float getWeight() const;
 

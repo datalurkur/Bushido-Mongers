@@ -5,7 +5,7 @@
 
 #include "util/filesystem.h"
 
-BObjectManager::BObjectManager(const string& rawSet) {
+BObjectManager::BObjectManager(const string& rawSet): _objectCount(0) {
   _raws = new Raw();
   list<string> raws;
   FileSystem::GetDirectoryContentsRecursive(rawSet, raws);
@@ -27,6 +27,10 @@ BObjectManager::BObjectManager(const string& rawSet) {
 
 BObjectManager::~BObjectManager() {
   delete _raws;
+  for(auto idObjectPair : _objectMap) {
+    delete idObjectPair.second;
+  }
+  _objectMap.clear();
 }
 
 BObject* BObjectManager::createObject(const string& type) {
@@ -40,7 +44,7 @@ BObject* BObjectManager::createObject(const string& type) {
       return 0;
     }
   }
-  
+
   switch(proto->type) {
   case AtomicType:
     return createTypedObject<AtomicBObject, ProtoAtomicBObject>(proto);
@@ -60,7 +64,18 @@ void BObjectManager::destroyObject(BObjectID id) {
     Error("Object " << id << " not found");
     return;
   }
-  itr->second->atDestruction(this);
+  if(!itr->second->atDestruction()) {
+    Error("Object " << id << " failed to tear down properly");
+  }
   delete itr->second;
   _objectMap.erase(itr);
+}
+
+BObject* BObjectManager::getObject(BObjectID id) {
+  BObjectMap::iterator itr = _objectMap.find(id);
+  if(itr == _objectMap.end()) {
+    Error("Object " << id << " not found");
+    return 0;
+  }
+  return itr->second;
 }

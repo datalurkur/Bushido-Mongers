@@ -1,7 +1,9 @@
 #ifndef TILE_H
 #define TILE_H
 
-class Tile {
+#include "game/bobjectcontainer.h"
+
+class Tile: public BObjectContainer {
 public:
   enum Type {
     Wall,

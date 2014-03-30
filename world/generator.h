@@ -4,19 +4,13 @@
 #include "world/world.h"
 #include "util/vector.h"
 
-class Feature {
-public:
-  Feature(int x, int y, int r): _pos(Vec2(x, y)), _r(r) {}
-  Feature(Vec2 pos, int r): _pos(pos), _r(r) {}
-  const Vec2& getPos() const { return _pos; }
-  int getRadius() const { return _r; }
-  void setArea(Area* a) { _area = a; }
-  Area* getArea() { return _area; }
+struct Feature {
+  Feature(int x, int y, int r): pos(Vec2(x, y)), radius(r) {}
+  Feature(Vec2 pos, int r): pos(pos), radius(r) {}
 
-private:
-  Vec2 _pos;
-  int _r;
-  Area* _area;
+  Vec2 pos;
+  int radius;
+  Area* area;
 };
 
 class WorldGenerator {

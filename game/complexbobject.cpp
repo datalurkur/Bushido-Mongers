@@ -23,14 +23,17 @@ bool ProtoComplexBObject::unpack(const SectionedData<ObjectSectionType>& section
   return true;
 }
 
-ComplexBObject::ComplexBObject(BObjectID id, const ProtoComplexBObject* proto): BObject(ComplexType, id, proto) {}
+ComplexBObject::ComplexBObject(BObjectManager* manager, BObjectID id, const ProtoComplexBObject* proto): BObject(manager, ComplexType, id, proto) {}
 
-bool ComplexBObject::atCreation(BObjectManager* manager) {
+bool ComplexBObject::atCreation() {
+  if(!BObject::atCreation()) { return false; }
   #pragma message "TODO : Use the object manager here to create default components"
   return true;
 }
 
-void ComplexBObject::atDestruction(BObjectManager* manager) {
+bool ComplexBObject::atDestruction() {
+  if(!BObject::atDestruction()) { return false; }
+  return true;
 }
 
 float ComplexBObject::getWeight() const {

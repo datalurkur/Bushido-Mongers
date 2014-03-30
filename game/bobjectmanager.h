@@ -12,6 +12,8 @@ public:
   BObject* createObject(const string& type);
   void destroyObject(BObjectID id);
 
+  BObject* getObject(BObjectID id);
+
 private:
   template <typename T, typename S>
   BObject* createTypedObject(const ProtoBObject* proto);
@@ -25,12 +27,13 @@ private:
 
 template <typename T, typename S>
 BObject* BObjectManager::createTypedObject(const ProtoBObject* proto) {
-  BObjectID nextID = _objectCount++;
-  BObject* newObject = (BObject*) new T(nextID, (S*)proto);
+  BObjectID nextID = ++_objectCount;
+  BObject* newObject = (BObject*) new T(this, nextID, (S*)proto);
   _objectMap[nextID] = newObject;
 
-  if(!newObject->atCreation(this)) {
+  if(!newObject->atCreation()) {
     delete newObject;
+    _objectMap.erase(nextID);
     return 0;
   } else {
     return newObject;
