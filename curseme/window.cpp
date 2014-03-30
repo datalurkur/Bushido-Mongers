@@ -40,8 +40,8 @@ TitleBox::~TitleBox() {
 // Print a border around the main window and print the title.
 void TitleBox::setup() {
   if(_deployed) { return; }
+  Info("Setting up TitleBox " << _title);
   _deployed = true;
-  Info("Setting up TB " << _title);
 
   _outer = new Window(subwin(_parent, _subwin_nlines + LinePadding, _subwin_ncols + ColPadding, _y, _x));
   WINDOW* outer = _outer->window();
@@ -62,11 +62,13 @@ void TitleBox::setup() {
 
 void TitleBox::teardown() {
   if(_deployed) {
-    Info("Tearing down TB " << _title);
+    Info("Tearing down TitleBox " << _title);
+    _deployed = false;
+
     wclear(_outer->window());
+
     delete _outer;
     delete _inner;
-    _deployed = false;
   }
 }
 

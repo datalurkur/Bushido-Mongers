@@ -38,8 +38,15 @@ public:
 
   void addChoice(const string& choice, function<void()> func);
   void addChoice(const string& choice, const string& description, function<void()> func);
+
+  void removeChoice(const string& choice);
+
+  //void addChoices(const list<string>& choices, function<void()> func);
+
   void setDefaultAction(function<void(string)> func);
   bool actOnChoice(const string& choice);
+
+  void setEndOnSelection(bool val);
 
   unsigned int listen();
   bool getSelection(unsigned int& index);
@@ -58,6 +65,7 @@ private:
   MENU  *_menu;
   TitleBox* _tb; // hangs onto the windows.
 
+  unsigned int _index;
   unsigned int _size;
 
   string _title;
@@ -66,6 +74,8 @@ private:
 
   unordered_map<string, function<void()> > _functions;
   function<void(string)> _def_fun;
+
+  bool _end_on_selection;
 };
 
 #endif
