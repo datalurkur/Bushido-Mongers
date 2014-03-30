@@ -57,7 +57,7 @@ void saveRaw(Raw& raw, const string& dir, const string& name) {
 
 void createRaw(const string& dir) {
   string name;
-  Input::GetWord("Enter a raw filename: ", name);
+  Input::GetWord("Enter a raw filename:", name);
 
   // FIXME: sanitize input further
   // e.g. forcing certain characters into menus make the menu not display at all.
@@ -69,6 +69,15 @@ void createRaw(const string& dir) {
 
   if(name.length() <= 4 || name.substr(name.length()-4) != ".raw") {
     name += ".raw";
+  }
+
+  list<string> existingFiles;
+  getRawsList(dir, existingFiles);
+  for(string file : existingFiles) {
+    if(name == file) {
+      Popup("File already exists!");
+      return;
+    }
   }
 
   Raw emptyRaw;

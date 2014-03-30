@@ -12,7 +12,7 @@ bool UIE::deployed() {
 }
 
 void UIStack::push(UIE* uie) {
-  Debug("UIStack push " << uie);
+  Debug("UIStack push " << uie << " (" << (_stack.size()+1) << ")");
   if(!_stack.empty()) {
     _stack.back()->teardown();
   }
@@ -22,7 +22,7 @@ void UIStack::push(UIE* uie) {
 
 void UIStack::pop() {
   if(!_stack.empty()) {
-    Debug("UIStack pop " << _stack.back());
+    Debug("UIStack pop " << _stack.back() << " (" << (_stack.size()-1) << ")");
     UIE* uie = _stack.back();
     _stack.pop_back();
 

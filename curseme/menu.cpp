@@ -122,7 +122,6 @@ unsigned int Menu::listen() {
       case KEY_LLDBENTER:
       case KEY_REALENTER: {
         bool acted = actOnChoice(_choices[_index]);
-        Debug("acted is " << acted);
 
         if(_end_on_selection || !acted) {
           Debug("popping from " << _title << " and returning");
