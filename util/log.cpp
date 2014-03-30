@@ -3,7 +3,8 @@
 
 Log* Log::OutputStream = 0;
 LogChannel Log::ChannelState = 0;
-bool Log::stdout_flag = true;
+bool Log::Stdout_flag = true;
+mutex Log::Mutex;
 
 Log::Log(const string& logfile): _cleanupStream(true) {
   _logFile = new filebuf;
@@ -73,11 +74,11 @@ Log& Log::GetLogStream() {
 }
 
 void Log::EnableStdout() {
-  stdout_flag = true;
+  Stdout_flag = true;
 }
 
 void Log::DisableStdout() {
-  stdout_flag = false;
+  Stdout_flag = false;
 }
 
 void Log::Flush() {
@@ -86,7 +87,7 @@ void Log::Flush() {
 
 void Log::flush() {
   _outputStream->flush();
-  if(stdout_flag) {
+  if(Stdout_flag) {
     std::cout.flush();
   }
 }

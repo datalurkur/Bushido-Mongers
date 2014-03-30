@@ -36,6 +36,8 @@ public:
   static void Setup(const string& logfile);
   static void Teardown();
 
+  static mutex Mutex;
+
 public:
   Log(const string& logfile = "bm.log");
   virtual ~Log();
@@ -51,9 +53,7 @@ public:
 private:
   static Log *OutputStream;
   static LogChannel ChannelState;
-  static bool stdout_flag;
-
-  static mutex Mutex;
+  static bool Stdout_flag;
 
 private:
   bool _cleanupStream;
@@ -65,7 +65,7 @@ template <typename T>
 Log& Log::operator<<(const T &rhs) {
   (*_outputStream) << rhs;
 
-  if(stdout_flag) {
+  if(Stdout_flag) {
     std::cout << rhs;
   }
 
@@ -74,15 +74,17 @@ Log& Log::operator<<(const T &rhs) {
 
 #define LogToChannel(channel, msg) \
   do { \
+    Log::Mutex.lock(); \
     if(Log::IsChannelEnabled(channel)) { \
      Log::GetLogStream() << msg << "\n"; \
       Log::Flush(); \
       if(CurseMe::Enabled()) { \
-        std::stringstream ss; \
+        ostringstream ss; \
         ss << msg; \
         CurseLog::WriteToChannel(channel, ss.str()); \
       } \
     } \
+    Log::Mutex.unlock(); \
   } while(false)
 
 #define Debug(msg) LogToChannel(LOG_DEBUG,   msg)

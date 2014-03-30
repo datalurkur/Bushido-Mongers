@@ -73,6 +73,8 @@ bool GameCore::isRunning() const { return _isRunning; }
 
 void GameCore::innerLoop() {
   while(_isRunning) {
+    Debug("GameCore is thinking");
     sleep(1);
   }
+  Debug("GameCore is retiring");
 }
