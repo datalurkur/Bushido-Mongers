@@ -78,3 +78,41 @@ void GameCore::innerLoop() {
   }
   Debug("GameCore is retiring");
 }
+
+bool GameCore::createCharacter(PlayerID player, const string& characterType, BObjectID& characterID) {
+  auto playerInfo = _playerMap.find(player);
+  if(playerInfo != _playerMap.end()) {
+    Error("Player already has an active character");
+    return false;
+  }
+  BObject* character = _objectManager->createObject(characterType);
+  if(!character) {
+    Error("Failed to create character of type " << characterType);
+    return false;
+  }
+  characterID = character->getID();
+  return true;
+}
+
+bool GameCore::loadCharacter(PlayerID player, BObjectID& characterID) {
+  ASSERT(0, "Character loading not implemented");
+  return false;
+}
+
+bool GameCore::unloadCharacter(PlayerID player) {
+  auto playerInfo = _playerMap.find(player);
+  if(playerInfo == _playerMap.end()) {
+    Error("Cannot unload player " << player << " - no active character");
+    return false;
+  }
+  #pragma message "Store character data externally for reloading later"
+  _objectManager->destroyObject(playerInfo->second);
+  _playerMap.erase(playerInfo);
+  return true;
+}
+
+bool GameCore::isCharacterActive(PlayerID player) {
+  auto playerInfo = _playerMap.find(player);
+  if(playerInfo == _playerMap.end()) { return false; }
+  else { return true; }
+}

@@ -10,6 +10,8 @@
 
 using namespace std;
 
+typedef int PlayerID;
+
 class GameCore {
 public:
   GameCore();
@@ -23,6 +25,13 @@ public:
 
   bool isRunning() const;
 
+  // Player/character maintenance
+  bool createCharacter(PlayerID player, const string& characterType, BObjectID& characterID);
+  bool loadCharacter(PlayerID player, BObjectID& characterID);
+  bool unloadCharacter(PlayerID player);
+
+  bool isCharacterActive(PlayerID player);
+
 private:
   void innerLoop();
 
@@ -32,8 +41,8 @@ private:
 
   atomic<bool> _isRunning;
   thread _thinkThread;
-};
 
-extern void RunGame(GameCore* core);
+  map<PlayerID, BObjectID> _playerMap;
+};
 
 #endif
