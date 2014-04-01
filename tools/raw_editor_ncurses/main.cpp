@@ -57,15 +57,27 @@ void saveRaw(Raw& raw, const string& dir, const string& name) {
 
 void createRaw(const string& dir) {
   string name;
-  Input::GetWord("Enter a raw filename: ", name);
+  Input::GetWord("Enter a raw filename:", name);
 
+  // FIXME: sanitize input further
+  // e.g. forcing certain characters into menus make the menu not display at all.
+  // we probably don't want these special characters in filenames either...
   if(name.length() == 0) {
-    Error("Invalid file name");
+    Popup("Invalid file name");
     return;
   }
 
   if(name.length() <= 4 || name.substr(name.length()-4) != ".raw") {
     name += ".raw";
+  }
+
+  list<string> existingFiles;
+  getRawsList(dir, existingFiles);
+  for(string file : existingFiles) {
+    if(name == file) {
+      Popup("File already exists!");
+      return;
+    }
   }
 
   Raw emptyRaw;
@@ -75,57 +87,50 @@ void createRaw(const string& dir) {
 void addObject(Raw& raw) {
   string objectName;
   Input::GetWord("Enter a name for the new object: ", objectName);
-
-  Menu objectTypeMenu("Choose an object type");
-  objectTypeMenu.addChoice("Atomic (single-material object)");
-  objectTypeMenu.addChoice("Composite (layered object)");
-  objectTypeMenu.addChoice("Complex (component objects connected in arbitrary ways)");
-
-  unsigned int choice;
-  if(!objectTypeMenu.getSelection(choice)) { return; }
-
-  ProtoBObject* object;
-  switch(choice) {
-  case 0:
-    object = (ProtoBObject*)new ProtoAtomicBObject();
-    break;
-  case 1:
-    object = (ProtoBObject*)new ProtoCompositeBObject();
-    break;
-  case 2:
-    object = (ProtoBObject*)new ProtoComplexBObject();
-    break;
+  // FIXME: sanitize input further
+  if(objectName.length() == 0) {
+    Popup("Invalid name: too short");
+    return;
   }
 
-  raw.addObject(objectName, object);
+  Menu objectTypeMenu("Choose an object type");
+  objectTypeMenu.setEndOnSelection(true);
+
+  objectTypeMenu.addChoice("Atomic (single-material object)", [&]() {
+    raw.addObject(objectName, (ProtoBObject*)new ProtoAtomicBObject());
+  });
+  objectTypeMenu.addChoice("Composite (layered object)", [&]() {
+    raw.addObject(objectName, (ProtoBObject*)new ProtoCompositeBObject());
+  });
+  objectTypeMenu.addChoice("Complex (component objects connected in arbitrary ways)", [&]() {
+    raw.addObject(objectName, (ProtoBObject*)new ProtoCompositeBObject());
+  });
+
+  objectTypeMenu.listen();
 }
 
 void editAtomicBObject(const string& name, ProtoAtomicBObject* object) {
   stringstream title;
   title << "Editing atomic object " << name << " (weight " << object->weight << ")";
-  Menu editMenu(title.str());
-  editMenu.addChoice("Keywords");
-  editMenu.addChoice("Weight");
 
-  unsigned int choice;
-  while(editMenu.getSelection(choice)) {
-    switch(choice) {
-      case 0:
-        editObjectKeywords(object);
-        break;
-      case 1:
-        float newWeight;
-        stringstream prompt;
-        prompt << "Enter a new weight (currently " << object->weight << ")";
-        if(!Input::GetNumber<float>(prompt.str(), newWeight)) {
-          Error("Invalid weight value entered");
-          break;
-        }
-        object->weight = newWeight;
-        Info("Weight of " << name << " set to " << object->weight);
-        break;
+  Menu editMenu(title.str());
+
+  editMenu.addChoice("Keywords", [&object]() {
+    editObjectKeywords(object);
+  });
+  editMenu.addChoice("Weight", [&]() {
+    float newWeight;
+    stringstream prompt;
+    prompt << "Enter a new weight (currently " << object->weight << ")";
+    if(!Input::GetNumber<float>(prompt.str(), newWeight)) {
+      Popup("Invalid weight value entered");
+    } else {
+      object->weight = newWeight;
+      Popup("Weight of " << name << " set to " << object->weight);
     }
-  }
+  });
+
+  editMenu.listen();
 }
 
 void editObject(Raw& raw, const string& objectName) {
@@ -151,10 +156,11 @@ void selectAndEditObject(Raw& raw) {
   raw.getObjectNames(objectNames);
   Menu objectSelectMenu(objectNames);
 
-  string selection;
-  if(!objectSelectMenu.getChoice(selection)) { return; }
+  objectSelectMenu.setDefaultAction([&raw](string objectName) {
+    editObject(raw, objectName);
+  });
 
-  editObject(raw, selection);
+  objectSelectMenu.listen();
 }
 
 void editRaw(const string& dir, const string& name) {
@@ -171,106 +177,101 @@ void editRaw(const string& dir, const string& name) {
   raw.unpack(fileData, fileSize);
   free(fileData);
 
-  Menu rawMenu(list<string>({"List Objects", "Add Object", "Remove Object", "Edit Object", "Save Changes"}));
-  rawMenu.setTitle("Editing " + name);
+  Menu rawMenu("Editing " + name);
 
-  unsigned int choice;
-  string objectName;
-  while(rawMenu.getSelection(choice)) {
-    rawMenu.teardown();
+  rawMenu.addChoice("List Objects", [&raw]() {
+    list<string> names;
+    raw.getObjectNames(names);
 
-    switch(choice) {
-    case 0: {
+    stringstream title;
+    title << "Raw contains " << names.size() << " object" << ((names.size() == 1)? "" : "s");
 
-      list<string> names;
-      raw.getObjectNames(names);
+    Menu displayMenu(names);
+    displayMenu.setTitle(title.str());
+    displayMenu.listen();
+  });
 
-      stringstream title;
-      title << "Raw contains " << names.size() << " object" << ((names.size() == 1)? "" : "s");
+  rawMenu.addChoice("Add Object", [&raw]() {
+    addObject(raw);
+  });
 
-      Menu displayMenu(names);
-      displayMenu.setTitle(title.str());
-      displayMenu.getSelection(choice);
-      displayMenu.teardown();
-    } break;
-    case 1:
-      addObject(raw);
-      break;
-    case 2:
-      Input::GetWord("Enter object name to remove:", objectName);
-      if(!raw.deleteObject(objectName)) {
-        Error("No object " << objectName << " found in raw");
-      }
-      break;
-    case 3:
-      selectAndEditObject(raw);
-      break;
-    case 4:
-      saveRaw(raw, dir, name);
-      break;
+  rawMenu.addChoice("Remove Object", [&raw]() {
+    string objectName;
+    Input::GetWord("Enter object name to remove:", objectName);
+    if(!raw.deleteObject(objectName)) {
+      Popup("No object " << objectName << " found in raw");
     }
-    rawMenu.setup();
-  }
+  });
+
+  rawMenu.addChoice("Edit Object", [&raw]() {
+    if(raw.getNumObjects() != 0) { // avoid editing an undefined object
+      selectAndEditObject(raw);
+    } else {
+      Popup("No object selected!");
+    }
+  });
+
+  rawMenu.addChoice("Save Changes", [&raw, dir, name]() {
+    saveRaw(raw, dir, name);
+  });
+
+  rawMenu.listen();
 }
 
 void selectAndEditRaw(const string& dir) {
   list<string> raws;
+
   if(!getRawsList(dir, raws)) {
     Error("Failed to load raws from " << dir);
     return;
   }
 
-  Info(raws.front());
   Menu rawChoice(raws);
   rawChoice.setTitle("Select raw");
+  rawChoice.setDefaultAction([dir](string raw) {
+    editRaw(dir, raw);
+  });
 
-  string choice;
-  if(rawChoice.getChoice(choice)) {
-    rawChoice.teardown();
-    editRaw(dir, choice);
-  }
+  rawChoice.listen();
 }
 
 int main(int argc, char** argv) {
   Log::Setup();
   CurseMeSetup();
 
-  string root = argv[1];
+  // Get the root directory to search for raws
+  string root;
+  if(argc < 2) {
+    bool valid = false;
+    while(!valid) {
+      Input::GetWord("Please specify a raw directory", root);
+      // FIXME: sanitize input further
+      if(root.length() == 0) {
+        Popup("Invalid raw directory entry: too short");
+      } else {
+        valid = true;
+      }
+    }
+  } else {
+    root = argv[1];
+  }
 
   mvprintw(0, 0, "Welcome to the raw editor");
   mvprintw(1, 0, "Hit <F1> to go back");
   mvprintw(2, 0, ("Searching for raws in " + root).c_str());
 
-  // Get the root directory to search for raws
-  if(argc < 2) {
-    Error("Please specify a raw directory");
-    sleep(1);
-    CurseMeTeardown();
-    Log::Teardown();
-    return 1;
-  }
-
   Menu defaultMenu("Main Menu");
-  defaultMenu.addChoice("Create New Raw");
-  defaultMenu.addChoice("Edit Existing Raw");
 
-  string currentRaw;
-  unsigned int choice;
-  while(defaultMenu.getSelection(choice)) {
-    defaultMenu.teardown();
-    switch(choice) {
-    case 0:
-      createRaw(root);
-      break;
-    case 1:
-      selectAndEditRaw(root);
-      break;
-    }
-  }
-  defaultMenu.teardown();
+  defaultMenu.addChoice("Create New Raw", [root]() {
+    createRaw(root);
+  });
+  defaultMenu.addChoice("Edit Existing Raw", [root]() {
+    selectAndEditRaw(root);
+  });
+
+  defaultMenu.listen();
 
   CurseMeTeardown();
-
   Log::Teardown();
   return 0;
 }

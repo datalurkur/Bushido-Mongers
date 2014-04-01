@@ -2,10 +2,10 @@
 #include "tools/raw_editor_ncurses/common.h"
 
 #include "curseme/menu.h"
-#include "interface/console.h"
+#include "curseme/input.h"
 
 void editCompositeLayers(ProtoCompositeBObject* object) {
-  Menu layerMenu;
+  Menu layerMenu("Layers");
   layerMenu.addChoice("List Layers");
   layerMenu.addChoice("Add Layer");
   layerMenu.addChoice("Remove Layer");
@@ -14,43 +14,44 @@ void editCompositeLayers(ProtoCompositeBObject* object) {
   unsigned int choice;
   while(layerMenu.getSelection(choice)) {
     switch(choice) {
-    case 0:
-      for(string layerName : object->layers) { Info(layerName); }
-      break;
+    case 0: {
+      Menu layerList(object->layers);
+      layerList.setTitle("Layers");
+      layerList.getSelection(choice);
+    } break;
     case 1: {
       string layerName;
-      Info("Enter a name for the layer:");
-      Console::GetWordInput(layerName);
+      Input::GetWord("Enter a name for the layer:", layerName);
       if(object->layers.size() == 0) {
         object->layers.push_back(layerName);
       } else {
-        Info("Which layer is this layer directly on top of?");
         Menu basePrompt(object->layers);
+        basePrompt.setTitle("Which layer is this layer directly on top of?");
         basePrompt.addChoice("(core layer)");
         string baseChoice;
         if(!basePrompt.getChoice(baseChoice)) {
-          Info("Layer insertion aborted");
+          Popup("Layer insertion aborted");
           break;
         }
         if(baseChoice == "(core layer)") {
           object->layers.push_back(layerName);
-          Info("New layer " << layerName << " is the core layer");
+          Popup("New layer " << layerName << " is the core layer");
         } else {
           list<string>::iterator itr;
           for(itr = object->layers.begin(); itr != object->layers.end() && *itr != baseChoice; itr++) {}
           object->layers.insert(itr, layerName);
-          Info("New layer " << layerName << " inserted directly above layer " << *itr);
+          Popup("New layer " << layerName << " inserted directly above layer " << *itr);
         }
       }
     } break;
     case 2: {
       string layerName;
-      Console::GetWordInput(layerName);
+      Input::GetWord("Layer name to delete:", layerName);
       object->layers.remove(layerName);
     } break;
     case 3: {
-      Info("Select the layer to move");
       Menu layerPrompt(object->layers);
+      layerPrompt.setTitle("Select the layer to move");
       string layerName;
       if(!layerPrompt.getChoice(layerName)) { break; }
       Menu directionPrompt("Where should the layer be moved?");

@@ -14,6 +14,7 @@ void Input::GetWord(const string& title, string& word) {
 
 string Input::GetString(const string& title) {
   int width_needed = (int)fmin(fmax(40, title.length()), 255);
+
   TitleBox* tb = new TitleBox(stdscr, 1, width_needed, 4, 4, title);
 
   UIStack::push(tb);
@@ -29,7 +30,6 @@ string Input::GetString(const string& title) {
   CurseMe::Cursor(false);
 
   UIStack::pop();
-
   delete tb;
 
   refresh();

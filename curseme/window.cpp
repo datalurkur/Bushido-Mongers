@@ -30,9 +30,7 @@ void Window::teardown() {
 
 
 TitleBox::TitleBox(WINDOW* parent, int subwin_nlines, int subwin_ncols, int y, int x, const string& title):
-    _parent(parent), _subwin_nlines(subwin_nlines), _subwin_ncols(subwin_ncols), _y(y), _x(x), _title(title) {
-  setup();
-}
+    _parent(parent), _subwin_nlines(subwin_nlines), _subwin_ncols(subwin_ncols), _y(y), _x(x), _title(title) {}
 
 TitleBox::~TitleBox() {
   teardown();
@@ -42,6 +40,7 @@ TitleBox::~TitleBox() {
 // Print a border around the main window and print the title.
 void TitleBox::setup() {
   if(_deployed) { return; }
+  Info("Setting up TitleBox " << _title);
   _deployed = true;
 
   _outer = new Window(subwin(_parent, _subwin_nlines + LinePadding, _subwin_ncols + ColPadding, _y, _x));
@@ -63,10 +62,13 @@ void TitleBox::setup() {
 
 void TitleBox::teardown() {
   if(_deployed) {
+    Info("Tearing down TitleBox " << _title);
+    _deployed = false;
+
     wclear(_outer->window());
+
     delete _outer;
     delete _inner;
-    _deployed = false;
   }
 }
 
@@ -74,6 +76,10 @@ void TitleBox::refresh() {
   wrefresh(window());
   wrefresh(outer_window());
   wrefresh(stdscr);
+}
+
+void TitleBox::clear() {
+  wclear(window());
 }
 
 WINDOW* TitleBox::window() const {
@@ -95,4 +101,22 @@ void TitleBox::LogPlacement() {
   Info("inner window abs " << y << " " << x);
   getmaxyx(_inner->window(), y, x);
   Info("inner window max " << y << " " << x);
+}
+
+PopupRec::PopupRec(const string& message) {
+  int maxy, maxx;
+  getmaxyx(stdscr, maxy, maxx);
+
+  int topline = maxy / 2 - 1;
+  int leftx  = (maxx - message.length()) / 2;
+
+  WINDOW* window = subwin(stdscr, 3, message.length() + 2, topline, leftx);
+  box(window, 0, 0);
+
+  mvwprintw(window, 1, 1, message.c_str());
+
+  wgetch(window);
+  wclear(window);
+  delwin(window);
+  refresh();
 }

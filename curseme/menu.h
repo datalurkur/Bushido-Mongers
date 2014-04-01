@@ -6,6 +6,7 @@
 #include <string>
 #include <sstream>
 #include <list>
+#include <unordered_map>
 
 #include <menu.h>
 
@@ -19,7 +20,8 @@ using namespace std;
   * attach procs to selections.
   * don't just blithely assume that ncurses is otherwise enabled.
   * select key for actions.
-  * fix choice/description mismatch? or don't use descriptions at all for now.
+  * fix choice/description mismatch? or don't use descriptions at all for now. - use pairs.
+  * remember the placement from the last run, fer christ's sake.
 */
 
 class Menu : public UIE {
@@ -30,10 +32,23 @@ public:
   Menu(const vector<string>& choices);
 
   void setTitle(const string& title);
+
   void addChoice(const string& choice);
   void addChoice(const string& choice, const string& description);
-  //void addChoice(string& choice, string& description, function<int> func);
 
+  void addChoice(const string& choice, function<void()> func);
+  void addChoice(const string& choice, const string& description, function<void()> func);
+
+  void removeChoice(const string& choice);
+
+  //void addChoices(const list<string>& choices, function<void()> func);
+
+  void setDefaultAction(function<void(string)> func);
+  bool actOnChoice(const string& choice);
+
+  void setEndOnSelection(bool val);
+
+  unsigned int listen();
   bool getSelection(unsigned int& index);
   bool getChoice(string& choice);
 
@@ -50,11 +65,17 @@ private:
   MENU  *_menu;
   TitleBox* _tb; // hangs onto the windows.
 
+  unsigned int _index;
   unsigned int _size;
 
   string _title;
   vector<string> _choices;
   vector<string> _descriptions;
+
+  unordered_map<string, function<void()> > _functions;
+  function<void(string)> _def_fun;
+
+  bool _end_on_selection;
 };
 
 #endif

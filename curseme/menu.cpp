@@ -10,16 +10,14 @@
 #define KEY_REALENTER 13
 #define CTRLD   4
 
-Menu::Menu(): _title("Make a selection") {}
+Menu::Menu(): _index(0), _title("Make a selection"), _end_on_selection(false)  {}
 
-Menu::Menu(const string& title): _title(title) {}
+Menu::Menu(const string& title): _index(0), _title(title), _end_on_selection(false) {}
 
-//Menu::Menu(const vector<string>& choices): _deployed(false), _choices(choices), _title("Make a selection") {
-
-Menu::Menu(const list<string>& choices): _title("Make a selection") {
+Menu::Menu(const list<string>& choices): _index(0), _title("Make a selection"), _end_on_selection(false)  {
   for(string choice : choices) { addChoice(choice, ""); }
 }
-Menu::Menu(const vector<string>& choices): _title("Make a selection") {
+Menu::Menu(const vector<string>& choices): _index(0), _title("Make a selection"), _end_on_selection(false)  {
   for(string choice : choices) { addChoice(choice, ""); }
 }
 
@@ -28,51 +26,90 @@ Menu::Menu(vector<string>& choices, vector<string>& descriptions):
 	_choices(choices), _descriptions(descriptions) {}
 */
 
-void Menu::setTitle(const string& title) { _title = title; }
+void Menu::setTitle(const string& title) {
+  _title = title;
+  if(_deployed) {
+    teardown();
+    setup();
+  }
+}
 
 void Menu::addChoice(const string& choice) {
   addChoice(choice, "");
 }
 
 void Menu::addChoice(const string& choice, const string& description) {
-	_choices.push_back(choice);
-	_descriptions.push_back(description);
+  //_choices.push_back(str_pair(choice, description));
+  _choices.push_back(choice);
+  _descriptions.push_back(description);
 }
 
-//void Menu::addChoice(string& choice, string& description, function<this int> func) {}
+//template <typename T>
+void Menu::addChoice(const string& choice, function<void()> func) {
+  addChoice(choice, "", func);
+}
 
-bool Menu::getSelection(unsigned int& index) {
-  // draw the menu if it's not already drawn
-  if(!_deployed) { setup(); }
+void Menu::addChoice(const string& choice, const string& description, function<void()> func) {
+  _choices.push_back(choice);
+  _descriptions.push_back(description);
 
+  _functions[choice] = func;
+}
+
+void Menu::removeChoice(const string& choice) {
+  // FIXME
+}
+
+void Menu::setDefaultAction(function<void(string)> func) {
+  _def_fun = func;
+}
+
+bool Menu::actOnChoice(const string& choice) {
+  if(_functions[choice]) {
+    Debug("Running action for " << choice);
+    _functions[choice]();
+    return true;
+  } else if(_def_fun) {
+    Debug("Running default action for " << choice);
+    _def_fun(choice);
+    return true;
+  }
+  return false;
+}
+
+// choices without actions /always/ pop the menu from the UIStack;
+// if you want this behavior for a choice with an action, set true.
+void Menu::setEndOnSelection(bool val) {
+  _end_on_selection = val;
+}
+
+unsigned int Menu::listen() {
   UIStack::push(this);
 
-  // menu input
   int c;
-  index = 0;
-
   while((c = wgetch(menu_win(_menu))) != KEY_F(1)) {
     switch(c) {
       case KEY_DOWN:
-        if(index < _size - 1) {
+        if(_index < _size - 1) {
           menu_driver(_menu, REQ_DOWN_ITEM);
-          index++;
+          _index++;
         } else {
           menu_driver(_menu, REQ_FIRST_ITEM);
-          index = 0;
+          _index = 0;
         }
         refresh_window();
         break;
       case KEY_UP:
-        if(index == 0) {
+        if(_index == 0) {
           menu_driver(_menu, REQ_LAST_ITEM);
-          index = _size - 1;
+          _index = _size - 1;
         } else {
           menu_driver(_menu, REQ_UP_ITEM);
-          index--;
+          _index--;
         }
         refresh_window();
         break;
+        /*
       case KEY_NPAGE:
         menu_driver(_menu, REQ_SCR_DPAGE);
         refresh_window();
@@ -81,12 +118,21 @@ bool Menu::getSelection(unsigned int& index) {
         menu_driver(_menu, REQ_SCR_UPAGE);
         refresh_window();
         break;
+        */
       case KEY_LLDBENTER:
-      case KEY_REALENTER:
-        UIStack::pop();
-        return true;
+      case KEY_REALENTER: {
+        bool acted = actOnChoice(_choices[_index]);
+
+        if(_end_on_selection || !acted) {
+          Debug("popping from " << _title << " and returning");
+          UIStack::pop();
+          return _index; // handle the case outside of Menu using getSelection
+        } else {
+          // We'll be returning to this menu. Note our location for later.
+          set_current_item(_menu, _items[_index]);
+        }
         break;
-      default:
+      } default:
         Info("Character pressed: " << c << " (char: " << ((char)c) << ")");
         refresh_window();
         break;
@@ -94,7 +140,13 @@ bool Menu::getSelection(unsigned int& index) {
   }
 
   UIStack::pop();
-  return false;
+  return _size;
+}
+
+bool Menu::getSelection(unsigned int& index) {
+  index = listen();
+  Debug("selection " << index << " " << _size);
+  return (index != _size);
 }
 
 bool Menu::getChoice(string& choice) {
@@ -110,6 +162,8 @@ bool Menu::getChoice(string& choice) {
 void Menu::setup() {
   if(_deployed) { return; }
   _deployed = true;
+
+  Info("Deploying Menu " << _title);
 
   // Create the items and the menu
 
@@ -154,8 +208,9 @@ void Menu::setup() {
     width_needed = _title.length() + 1;
   }
 
-  const string title = _title;
-  _tb = new TitleBox(stdscr, _size, width_needed, 4, 4, title);
+  //const string title = _title;
+  _tb = new TitleBox(stdscr, _size, width_needed, 4, 4, _title);
+  _tb->setup();
 
   /* Set main window and sub window */
   set_menu_win(_menu, _tb->outer_window());
@@ -167,6 +222,8 @@ void Menu::setup() {
 
 void Menu::teardown() {
   if(_deployed) {
+    Info("Tearing down Menu " << _title);
+
     unpost_menu(_menu);
     wclear(menu_win(_menu));
 
