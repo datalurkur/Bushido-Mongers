@@ -1,24 +1,26 @@
 #ifndef CLIENTBASE_H
 #define CLIENTBASE_H
 
-#include "io/gameevent.h"
+#include "game/bobject.h"
 
 #include <string>
 using namespace std;
 
+struct GameEvent;
+
 class ClientBase {
 public:
-  ClientBase(const string& name);
-  ~ClientBase();
+  ClientBase();
+  virtual ~ClientBase();
 
-  virtual bool connect() = 0;
-  virtual void disconnect() = 0;
+  virtual bool connectSender() = 0;
+  virtual void disconnectSender() = 0;
   virtual void sendEvent(const GameEvent* event) = 0;
+  virtual void receiveEvent(const GameEvent* event) = 0;
 
-  void createCharacter();
-
-protected:
-  string _name;
+  void createCharacter(const string& name);
+  void loadCharacter(BObjectID id);
+  void unloadCharacter();
 };
 
 #endif

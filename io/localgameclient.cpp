@@ -1,20 +1,5 @@
 #include "io/localgameclient.h"
-#include "io/gameserver.h"
 
-LocalGameClient::LocalGameClient(GameServer* server, const string& name): ClientBase(name), _server(server) {
-}
+LocalGameClient::LocalGameClient(ServerBase* server, const string& name): LocalFrontEnd(server, name) {}
 
-LocalGameClient::~LocalGameClient() {
-}
-
-void LocalGameClient::sendEvent(const GameEvent* event) {
-  _server->clientEvent(this, event);
-}
-
-bool LocalGameClient::connect() {
-  return _server->assignClient(this, _name);
-}
-
-void LocalGameClient::disconnect() {
-  _server->removeClient(this);
-}
+LocalGameClient::~LocalGameClient() {}

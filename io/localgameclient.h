@@ -1,21 +1,15 @@
 #ifndef LOCALGAMECLIENT_H
 #define LOCALGAMECLIENT_H
 
-#include "io/clientbase.h"
+#include "io/localfrontend.h"
+#include "io/localbackend.h"
 
-class GameServer;
+class ServerBase;
 
-class LocalGameClient: public ClientBase {
+class LocalGameClient: public LocalFrontEnd, public LocalBackEnd {
 public:
-  LocalGameClient(GameServer* server, const string& name);
+  LocalGameClient(ServerBase* server, const string& name);
   ~LocalGameClient();
-
-  void sendEvent(const GameEvent* event);
-  bool connect();
-  void disconnect();
-
-private:
-  GameServer* _server;
 };
 
 #endif

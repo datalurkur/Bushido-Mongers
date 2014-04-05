@@ -2,11 +2,11 @@
 #define GAMECORE_H
 
 #include "game/bobjectmanager.h"
+#include "io/gameevent.h"
 #include "world/world.h"
+#include "util/bimap.h"
 
 #include <string>
-#include <thread>
-#include <atomic>
 
 using namespace std;
 
@@ -20,10 +20,8 @@ public:
   bool generateWorld(const string& rawSet, int size);
   bool destroyWorld();
 
-  bool start();
-  bool stop();
-
-  bool isRunning() const;
+  void update(int elapsed, list<GameEvent>& events);
+  bool isEventVisibleToPlayer(const GameEvent& event, PlayerID player);
 
   // Player/character maintenance
   bool createCharacter(PlayerID player, const string& characterType, BObjectID& characterID);
@@ -33,16 +31,10 @@ public:
   bool isCharacterActive(PlayerID player);
 
 private:
-  void innerLoop();
-
-private:
   BObjectManager* _objectManager;
   World* _world;
 
-  atomic<bool> _isRunning;
-  thread _thinkThread;
-
-  map<PlayerID, BObjectID> _playerMap;
+  BiMap<PlayerID, BObjectID> _playerMap;
 };
 
 #endif

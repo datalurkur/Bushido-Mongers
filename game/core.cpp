@@ -3,12 +3,9 @@
 
 #include <unistd.h>
 
-GameCore::GameCore(): _objectManager(0), _world(0), _isRunning(false) {}
+GameCore::GameCore(): _objectManager(0), _world(0) {}
 
 GameCore::~GameCore() {
-  if(isRunning()) {
-    stop();
-  }
   destroyWorld();
 }
 
@@ -43,40 +40,13 @@ bool GameCore::destroyWorld() {
   return true;
 }
 
-bool GameCore::start() {
-  if(_isRunning) {
-    Warn("Game is already running");
-    return false;
-  }
-
-  Info("Game is starting");
-  _thinkThread = thread(&GameCore::innerLoop, this);
-
-  _isRunning = true;
-  return _isRunning;
+void GameCore::update(int elapsed, list<GameEvent>& events) {
+  #pragma message "Any activity controlled directly by the core will go here"
 }
 
-bool GameCore::stop() {
-  if(!_isRunning) {
-    Warn("Game is not running");
-    return false;
-  }
-
-  Info("Game is stopping");
-  _isRunning = false;
-  _thinkThread.join();
-
-  return (!_isRunning);
-}
-
-bool GameCore::isRunning() const { return _isRunning; }
-
-void GameCore::innerLoop() {
-  while(_isRunning) {
-    Debug("GameCore is thinking");
-    sleep(1);
-  }
-  Debug("GameCore is retiring");
+bool GameCore::isEventVisibleToPlayer(const GameEvent& event, PlayerID player) {
+  #pragma message "Perception and area checking will go here"
+  return true;
 }
 
 bool GameCore::createCharacter(PlayerID player, const string& characterType, BObjectID& characterID) {

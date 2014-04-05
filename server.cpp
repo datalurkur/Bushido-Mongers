@@ -47,13 +47,15 @@ int main(int argc, char** argv) {
   // For now, we'll just test out local client stuff
   string clientName = "Test Client Name";
   client = new LocalGameClient(server, clientName);
-  if(!client->connect()) {
+  if(!client->connectSender()) {
     Error("Failed to connect local client to server");
     cleanup(1);
   }
 
+  #pragma message "This should be a menu..."
   Info("Client is connected and ready to issue commands");
-  client->createCharacter();
+  string characterName = "Test Character Name";
+  client->createCharacter(characterName);
 
   while(true) {
     sleep(1);

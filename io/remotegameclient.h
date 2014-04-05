@@ -20,6 +20,8 @@ public:
 
   bool connect();
   bool disconnect();
+  void toServer(const GameEvent* event);
+  void fromServer(const GameEvent* event);
 
 private:
   void protocolLoop();

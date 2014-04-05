@@ -1,11 +1,22 @@
 #include "io/clientbase.h"
+#include "io/gameevent.h"
 
-ClientBase::ClientBase(const string& name): _name(name) {}
+ClientBase::ClientBase() {}
 
 ClientBase::~ClientBase() {}
 
-void ClientBase::createCharacter() {
+void ClientBase::createCharacter(const string& name) {
   // In the future, we'll pass config data into this
-  CreateCharacterEvent event;
+  CreateCharacterEvent event(name);
+  sendEvent(&event);
+}
+
+void ClientBase::loadCharacter(BObjectID id) {
+  LoadCharacterEvent event(id);
+  sendEvent(&event);
+}
+
+void ClientBase::unloadCharacter() {
+  UnloadCharacterEvent event;
   sendEvent(&event);
 }
