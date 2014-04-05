@@ -65,7 +65,7 @@ protected:
   };
 
 protected:
-  mutex *_mutex;
+  mutex _mutex;
 
   SocketState _state;
   bool _blocking;

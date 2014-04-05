@@ -1,17 +1,22 @@
 #include "curseme/renderer.h"
 #include "util/log.h"
-#include "game/core.h"
+#include "io/gameserver.h"
+#include "io/localgameclient.h"
 
 #include <signal.h>
 #include <unistd.h>
 
 using namespace std;
 
-GameCore* core = 0;
+GameServer* server = 0;
+LocalGameClient* client = 0;
 
 void cleanup(int signal) {
-  if(core) {
-    delete core;
+  if(client) {
+    delete client;
+  }
+  if(server) {
+    delete server;
   }
 
   CurseMeTeardown();
@@ -34,15 +39,23 @@ int main(int argc, char** argv) {
     cleanup(1);
   }
 
-  core = new GameCore();
+  #pragma message "The creation of the server will eventually be controllable via config files"
+  server = new GameServer(string(argv[1]));
+  server->start();
 
-  #pragma message "Insert a menu here to allow the user to select the size of the world (small / medium / large / etc)"
-  string rawSet(argv[1]);
-  Info("Generating game using " << rawSet << " raws");
-  core->generateWorld(argv[1], 10);
+  #pragma message "Create a prompt to get client login / issue commands to the server directly"
+  // For now, we'll just test out local client stuff
+  string clientName = "Test Client Name";
+  client = new LocalGameClient(server, clientName);
+  if(!client->connect()) {
+    Error("Failed to connect local client to server");
+    cleanup(1);
+  }
 
-  core->start();
-  while(core->isRunning()) {
+  Info("Client is connected and ready to issue commands");
+  client->createCharacter();
+
+  while(true) {
     sleep(1);
   }
 

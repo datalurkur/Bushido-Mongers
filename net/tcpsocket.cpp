@@ -26,9 +26,9 @@ bool TCPSocket::connectSocket(const NetAddress &dest, unsigned short localPort) 
   if(!bindSocket(localPort)) { return false; }
 
   Info("Connecting to " << dest << " (local port " << localPort << ")");
-  _mutex->lock();
+  _mutex.lock();
   ret = connect(_socketHandle, dest.getSockAddr(), dest.getSockAddrSize());
-  _mutex->unlock();
+  _mutex.unlock();
 
   if(ret < 0) {
     int err = Socket::LastSocketError();
@@ -55,9 +55,9 @@ bool TCPSocket::isConnected() {
   int error, errorLength, ret;
 
   errorLength = sizeof(error);
-  _mutex->lock();
+  _mutex.lock();
   ret = getsockopt(_socketHandle, SOL_SOCKET, SO_ERROR, (char*)&error, (socklen_t*)&errorLength);
-  _mutex->unlock();
+  _mutex.unlock();
 
   if(ret == 0) {
     if(error == 0) { return true; }

@@ -29,11 +29,10 @@ private:
 private:
   SocketCreationListener *_acceptListener;
 
-  thread *_listenThread;
-  mutex *_listenMutex;
+  thread _listenThread;
   unsigned int _maxClients;
   
-  bool _shouldDie;
+  atomic<bool> _shouldDie;
 };
 
 #endif

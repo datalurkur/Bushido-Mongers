@@ -11,7 +11,7 @@ Packet::Packet(const Packet &other): size(0), data(0), clockStamp(0) {
   duplicate(other);
 }
 
-Packet::Packet(const NetAddress &a, const char *d, unsigned int s): addr(a), size(s) {
+Packet::Packet(const char *d, unsigned int s): size(s) {
   data = (char*)calloc(s, sizeof(char));
   memcpy(data, d, s);
   clockStamp = GetClock();
@@ -41,7 +41,6 @@ void Packet::duplicate(const Packet &other) {
     data = 0;
   }
   clockStamp = other.clockStamp;
-  addr = other.addr;
   size = other.size;
   data = (char*)calloc(size, sizeof(char));
   memcpy(data, other.data, size);

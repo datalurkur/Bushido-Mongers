@@ -1,9 +1,11 @@
 #ifndef GAME_SERVER_H
 #define GAME_SERVER_H
 
-class GameServer {
+#include "io/serverbase.h"
+
+class GameServer: public ServerBase {
 public:
-  GameServer();
+  GameServer(const string& rawSet);
   ~GameServer();
 };
 

@@ -10,11 +10,11 @@ public:
   ServerProvider(unsigned short localPort = 0);
   virtual ~ServerProvider();
 
-  bool sendPacket(const Packet &packet);
+  bool sendPacket(const NetAddress& dest, const Packet &packet);
 
   unsigned short getLocalPort();
 
-  bool onSocketCreation(const NetAddress &client, TCPSocket *socket);
+  bool onSocketCreation(const NetAddress& client, TCPSocket *socket);
 
 private:
   ListenSocket *_listenSocket;

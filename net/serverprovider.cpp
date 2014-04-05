@@ -18,11 +18,11 @@ ServerProvider::~ServerProvider() {
   }
 }
 
-bool ServerProvider::sendPacket(const Packet &packet) {
-  ConnectionBufferMap::iterator itr = _buffers.find(packet.addr);
+bool ServerProvider::sendPacket(const NetAddress& dest, const Packet &packet) {
+  ConnectionBufferMap::iterator itr = _buffers.find(dest);
 
   if(itr == _buffers.end()) {
-      Warn("Unable to send packet: unknown host " << packet.addr);
+      Warn("Unable to send packet: unknown host " << dest);
       return false;
   }
 
@@ -42,7 +42,7 @@ bool ServerProvider::onSocketCreation(const NetAddress &client, TCPSocket *socke
     _buffers.erase(itr);
   }
 
-  _buffers[client] = new TCPBuffer(client, socket);
+  _buffers[client] = new TCPBuffer(socket);
   ((TCPBuffer*)_buffers[client])->startBuffering();
   return true;
 }

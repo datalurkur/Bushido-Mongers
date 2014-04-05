@@ -2,75 +2,45 @@
 #include "util/assertion.h"
 #include "util/log.h"
 
-int InvokeInboundConnectionBufferThreadFunction(void *params) {
-  ConnectionBuffer *cBuffer = (ConnectionBuffer*)params;
-  cBuffer->doInboundBuffering();
-  return 1;
-}
-
-int InvokeOutboundConnectionBufferThreadFunction(void *params) {
-  ConnectionBuffer *cBuffer = (ConnectionBuffer*)params;
-  cBuffer->doOutboundBuffering();
-  return 1;
-}
-
 unsigned int ConnectionBuffer::DefaultMaxBufferSize = 5096;
 
 unsigned int ConnectionBuffer::DefaultMaxPacketSize = 1024;
 
 ConnectionBuffer::ConnectionBuffer():
-  _socket(0), _inboundThread(0), _outboundThread(0),
-  _packetBuffer(0), _maxBufferSize(DefaultMaxBufferSize), _maxPacketSize(DefaultMaxPacketSize),
+  _socket(0), _packetBuffer(0), _maxBufferSize(DefaultMaxBufferSize), _maxPacketSize(DefaultMaxPacketSize),
   _droppedPackets(0), _receivedPackets(0), _sentPackets(0), _inboundPackets(0), _outboundPackets(0)
 {
 }
 
 ConnectionBuffer::~ConnectionBuffer() {
-  ASSERT(!_inboundThread && !_outboundThread, "Threads still active");
+  ASSERT(!_inboundThread.joinable() && !_outboundThread.joinable(), "Threads still active");
 }
 
 void ConnectionBuffer::startBuffering() {
-  if(!_inboundThread) {
-    _inboundQueueLock  = new mutex;
-    _inboundLock = new mutex;
+  if(!_inboundThread.joinable()) {
     _inboundShouldDie = false;
 
     _packetBuffer = (char*)calloc(_maxPacketSize, sizeof(char));
-    _inboundThread = new thread(InvokeInboundConnectionBufferThreadFunction, (void*)this);
+    _inboundThread = thread(&ConnectionBuffer::doInboundBuffering, this);
   }
-  if(!_outboundThread) {
-    _outboundQueueLock = new mutex;
-    _outboundLock = new mutex;
+  if(!_outboundThread.joinable()) {
     _outboundShouldDie = false;
 
-    _outboundThread = new thread(InvokeOutboundConnectionBufferThreadFunction, (void*)this);
+    _outboundThread = thread(&ConnectionBuffer::doOutboundBuffering, this);
   }
 }
 
 void ConnectionBuffer::stopBuffering() {
-  if(_inboundThread) {
-    _inboundLock->lock();
+  if(_inboundThread.joinable()) {
     _inboundShouldDie = true;
-    _inboundLock->unlock();
-    _inboundThread->join();
-    delete _inboundThread;
-    _inboundThread = 0;
+    _inboundThread.join();
 
     free(_packetBuffer);
     _packetBuffer = 0;
-    
-    delete _inboundQueueLock;
-    delete _inboundLock;
   }
-  if(_outboundThread) {
-      _outboundLock->lock();
-      _outboundShouldDie = true;
-      _outboundLock->unlock();
-      delete _outboundThread;
-      _outboundThread = 0;
-      
-      delete _outboundQueueLock;
-      delete _outboundLock;
+  if(_outboundThread.joinable()) {
+    _outboundShouldDie = true;
+    _outboundThread.join();
   }
 }
 
@@ -84,9 +54,9 @@ unsigned int ConnectionBuffer::getMaxBufferSize() {
 
 void ConnectionBuffer::setMaxPacketSize(unsigned int maxSize) {
   _maxPacketSize = maxSize;
-  _inboundQueueLock->lock();
+  _inboundQueueLock.lock();
   _packetBuffer = (char*)realloc(_packetBuffer, _maxPacketSize*sizeof(char));
-  _inboundQueueLock->unlock();
+  _inboundQueueLock.unlock();
 }
 
 unsigned int ConnectionBuffer::getMaxPacketSize() {
@@ -96,19 +66,17 @@ unsigned int ConnectionBuffer::getMaxPacketSize() {
 bool ConnectionBuffer::providePacket(const Packet &packet) {
   bool ret;
 
-  _outboundQueueLock->lock();
+  _outboundQueueLock.lock();
   _outbound.push(packet);
   if(_outbound.size() > _maxBufferSize) {
     _outbound.pop();
-    _inboundQueueLock->lock();
     _droppedPackets++;
-    _inboundQueueLock->unlock();
     ret = false;
   } else {
     _outboundPackets++;
     ret = true;
   }
-  _outboundQueueLock->unlock();
+  _outboundQueueLock.unlock();
 
   return ret;
 }
@@ -116,7 +84,7 @@ bool ConnectionBuffer::providePacket(const Packet &packet) {
 bool ConnectionBuffer::consumePacket(Packet &packet) {
   bool ret;
 
-  _inboundQueueLock->unlock();
+  _inboundQueueLock.unlock();
   if(_inbound.empty()) { ret = false; }
   else {
     packet = _inbound.front();
@@ -124,7 +92,7 @@ bool ConnectionBuffer::consumePacket(Packet &packet) {
     _inboundPackets--;
     ret = true;
   }
-  _inboundQueueLock->unlock();
+  _inboundQueueLock.unlock();
 
   return ret;
 }
@@ -138,13 +106,9 @@ unsigned short ConnectionBuffer::getLocalPort() const {
 }
 
 void ConnectionBuffer::logStatistics() {
-  _inboundQueueLock->lock();
-  _outboundQueueLock->lock();
   Info("Inbound packets: " << _inboundPackets);
   Info("Outbound packets: " << _outboundPackets);
   Info("Dropped packets: " << _droppedPackets);
   Info("Sent packets: " << _sentPackets);
   Info("Received packets: " << _receivedPackets);
-  _outboundQueueLock->unlock();
-  _inboundQueueLock->unlock();
 }
