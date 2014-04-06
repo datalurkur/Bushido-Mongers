@@ -47,6 +47,7 @@ public:
 
   bool send(const char *data, unsigned int size, const sockaddr *addr, int addrSize);
   void recv(char *data, int &size, unsigned int maxSize, sockaddr *addr, int &addrSize);
+  void recvBlocking(char *data, int &size, unsigned int maxSize, sockaddr *addr, int &addrSize);
 
 protected:
   bool createSocket(int type, int proto = 0);

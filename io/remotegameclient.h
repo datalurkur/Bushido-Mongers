@@ -6,22 +6,8 @@
 
 class RemoteGameClient: public ClientBase {
 public:
-  enum ClientState {
-    Disconnected,
-    Waiting,
-    Ready
-  };
-
-public:
   RemoteGameClient(const NetAddress& addr, const string& name);
   ~RemoteGameClient();
-
-  ClientState getState() const;
-
-  bool connect();
-  bool disconnect();
-  void toServer(const GameEvent* event);
-  void fromServer(const GameEvent* event);
 
 private:
   void protocolLoop();

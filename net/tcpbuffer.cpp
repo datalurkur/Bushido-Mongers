@@ -54,10 +54,12 @@ void TCPBuffer::doInboundBuffering() {
 
   Debug("Entering TCPBuffer inbound packet buffering loop");
   while(!_inboundShouldDie) {
-    _inboundQueueLock.lock();
+    unique_lock<mutex> lock(_inboundQueueLock);
 
     // Get the next packet from the socket
-    getSocket()->recv(_packetBuffer, totalBufferSize, _maxBufferSize);
+    if(!getSocket()->recvBlocking(_packetBuffer, totalBufferSize, _maxBufferSize, 1)) {
+      continue;
+    }
     currentOffset = 0;
     dataBuffer = 0;
     while(currentOffset < totalBufferSize) {
@@ -78,7 +80,6 @@ void TCPBuffer::doInboundBuffering() {
 
       currentOffset += packetSize;
     }
-    _inboundQueueLock.unlock();
   }
 }
 
@@ -91,7 +92,7 @@ void TCPBuffer::doOutboundBuffering() {
 
   Debug("Entering TCPBuffer outbound packet buffering loop");
   while(!_outboundShouldDie) {
-    _outboundQueueLock.lock();
+    unique_lock<mutex> lock(_outboundQueueLock);
     if(!_outbound.empty()) {
       // Pop the next outgoing packet off the queue
       packet = _outbound.front();
@@ -105,7 +106,6 @@ void TCPBuffer::doOutboundBuffering() {
       getSocket()->send(_serializationBuffer, serializedSize);
       _sentPackets++;
     }
-    _outboundQueueLock.unlock();
   }
 }
 

@@ -7,7 +7,7 @@
 struct Packet {
   unsigned int size;
   char *data;
-  clock_t clockStamp;
+  time_t timestamp;
 
   Packet();
   Packet(const Packet &other);

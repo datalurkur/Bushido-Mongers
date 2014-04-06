@@ -2,7 +2,7 @@
 #include "util/assertion.h"
 #include "util/log.h"
 
-ListenSocket::ListenSocket(SocketCreationListener *acceptListener): Socket(true), _acceptListener(acceptListener), _shouldDie(false) {
+ListenSocket::ListenSocket(SocketCreationListener *acceptListener): Socket(false), _acceptListener(acceptListener), _shouldDie(false) {
 }
 
 ListenSocket::~ListenSocket() {
@@ -37,17 +37,27 @@ void ListenSocket::stopListening() {
     // Teardown
     closeSocket();
 
-    Info("ListenSocked closed");
+    Info("ListenSocket closed");
   }
 }
 
 void ListenSocket::doListening() {
   while(!_shouldDie) {
+    Debug("Listen socket waiting for connections");
+    int newSocketHandle;
     sockaddr_in clientAddr;
     socklen_t clientAddrLength;
-    int newSocketHandle;
     
     clientAddrLength = sizeof(clientAddr);
+    fd_set readSet;
+    FD_ZERO(&readSet);
+    FD_SET(_socketHandle, &readSet);
+    timeval timeout{1, 0};
+
+    if(select(FD_SETSIZE, &readSet, 0, 0, &timeout) <= 0) {
+      Debug("Select shows no waiting connections");
+      continue;
+    }
     newSocketHandle = accept(_socketHandle, (sockaddr*)&clientAddr, &clientAddrLength);
 
     if(newSocketHandle <= 0) {

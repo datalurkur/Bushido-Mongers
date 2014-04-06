@@ -43,7 +43,7 @@ void ServerBase::stop() {
 bool ServerBase::assignClient(ClientBase* client, const string& name) {
   #pragma message "A password should be used to validate a valid login"
 
-  _lock.lock();
+  unique_lock<mutex> lock(_lock);
   auto existingClient = _assignedClients.find(name);
   if(existingClient != _assignedClients.end()) {
     Info("Player " << name << " already associated with a client");
@@ -65,19 +65,17 @@ bool ServerBase::assignClient(ClientBase* client, const string& name) {
     Info("Player " << name << " logging back in (ID " << playerIDItr->second << ")");
   }
 
-  _lock.unlock();
   return true;
 }
 
 void ServerBase::removeClient(ClientBase* client) {
-  _lock.lock();
+  unique_lock<mutex> lock(_lock);
   _assignedClients.reverseErase(client);
   _assignedIDs.reverseErase(client);
-  _lock.unlock();
 }
 
 void ServerBase::clientEvent(ClientBase* client, const GameEvent* event) {
-  _lock.lock();
+  unique_lock<mutex> lock(_lock);
   auto playerIDItr = _assignedIDs.reverseFind(client);
   if(playerIDItr == _assignedIDs.reverseEnd()) {
     #pragma message "We should hang up on any client that does this"
@@ -121,17 +119,19 @@ void ServerBase::clientEvent(ClientBase* client, const GameEvent* event) {
     Warn("Unhandled game event type " << event->type);
     break;
   }
-  _lock.unlock();
 }
 
 void ServerBase::innerLoop() {
   clock_t last = clock();
   while(!_shouldDie) {
+    // This will get removed once the game is in full swing
+    sleep(1);
+
     Debug("...Server is thinking...");
     list<GameEvent> eventList;
     clock_t next = clock();
 
-    _lock.lock();
+    unique_lock<mutex> lock(_lock);
     _core->update(next - last, eventList);
 
     last = next;
@@ -147,8 +147,5 @@ void ServerBase::innerLoop() {
         }
       }
     }
-    _lock.unlock();
-    // This will get removed once the game is in full swing
-    sleep(1);
   }
 }

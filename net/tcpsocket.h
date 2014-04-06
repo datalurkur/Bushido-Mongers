@@ -15,6 +15,9 @@ public:
 
   bool send(const char *data, unsigned int size);
   void recv(char *data, int &size, unsigned int maxSize);
+
+  // Intended for use by nonblocking sockets that want to block until data is available (while still allowing data to be sent)
+  bool recvBlocking(char *data, int &size, unsigned int maxSize, int timeout = 3);
 };
 
 #endif

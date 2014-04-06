@@ -6,6 +6,7 @@
 #include <string>
 
 enum GameEventType {
+  ServerDisconnected,
   CreateCharacter,
   LoadCharacter,
   UnloadCharacter,
@@ -18,6 +19,11 @@ struct GameEvent {
   GameEventType type;
 
   GameEvent(GameEventType t): type(t) {}
+};
+
+// Sent to the client in the event of a disconnect
+struct ServerDisconnected: public GameEvent {
+  ServerDisconnected(): GameEvent(GameEventType::ServerDisconnected) {}
 };
 
 // Sent from client to server to create a new character

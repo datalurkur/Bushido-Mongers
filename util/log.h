@@ -74,7 +74,7 @@ Log& Log::operator<<(const T &rhs) {
 
 #define LogToChannel(channel, msg) \
   do { \
-    Log::Mutex.lock(); \
+    unique_lock<mutex> lock(Log::Mutex); \
     if(Log::IsChannelEnabled(channel)) { \
      Log::GetLogStream() << msg << "\n"; \
       Log::Flush(); \
@@ -84,7 +84,7 @@ Log& Log::operator<<(const T &rhs) {
         CurseLog::WriteToChannel(channel, ss.str()); \
       } \
     } \
-    Log::Mutex.unlock(); \
+    lock.unlock(); \
   } while(false)
 
 #define Debug(msg) LogToChannel(LOG_DEBUG,   msg)

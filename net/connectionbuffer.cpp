@@ -54,9 +54,8 @@ unsigned int ConnectionBuffer::getMaxBufferSize() {
 
 void ConnectionBuffer::setMaxPacketSize(unsigned int maxSize) {
   _maxPacketSize = maxSize;
-  _inboundQueueLock.lock();
+  unique_lock<mutex> lock(_inboundQueueLock);
   _packetBuffer = (char*)realloc(_packetBuffer, _maxPacketSize*sizeof(char));
-  _inboundQueueLock.unlock();
 }
 
 unsigned int ConnectionBuffer::getMaxPacketSize() {
@@ -64,37 +63,28 @@ unsigned int ConnectionBuffer::getMaxPacketSize() {
 }
 
 bool ConnectionBuffer::providePacket(const Packet &packet) {
-  bool ret;
-
-  _outboundQueueLock.lock();
+  unique_lock<mutex> lock(_outboundQueueLock);
   _outbound.push(packet);
   if(_outbound.size() > _maxBufferSize) {
     _outbound.pop();
     _droppedPackets++;
-    ret = false;
+    return false;
   } else {
     _outboundPackets++;
-    ret = true;
+    return true;
   }
-  _outboundQueueLock.unlock();
-
-  return ret;
 }
 
 bool ConnectionBuffer::consumePacket(Packet &packet) {
-  bool ret;
-
-  _inboundQueueLock.unlock();
-  if(_inbound.empty()) { ret = false; }
-  else {
+  unique_lock<mutex> lock(_inboundQueueLock);
+  if(_inbound.empty()) {
+    return false;
+  } else {
     packet = _inbound.front();
     _inbound.pop();
     _inboundPackets--;
-    ret = true;
+    return true;
   }
-  _inboundQueueLock.unlock();
-
-  return ret;
 }
 
 unsigned short ConnectionBuffer::getLocalPort() const {

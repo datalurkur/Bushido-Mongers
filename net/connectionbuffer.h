@@ -26,9 +26,11 @@ public:
   unsigned int getMaxPacketSize();
 
   // Returns false if the packet queue is full
-  bool providePacket(const Packet &packet);
+  bool providePacket(const Packet& packet);
   // Returns false if there are no packets to consume
-  bool consumePacket(Packet &packet);
+  bool consumePacket(Packet& packet);
+  // Blocks caller thread until a packet is available, then returns
+  void consumePacketBlocking(Packet& packet);
 
   unsigned short getLocalPort() const;
 
