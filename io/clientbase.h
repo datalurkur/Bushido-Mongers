@@ -17,15 +17,15 @@ public:
 
   virtual bool connectSender() = 0;
   virtual void disconnectSender() = 0;
-  virtual void sendEvent(const GameEvent& event) = 0;
-  virtual void receiveEvent(const GameEvent& event) = 0;
+  virtual void sendToServer(GameEvent* event) = 0;
+  virtual void sendToClient(GameEvent* event) = 0;
 
   void createCharacter(const string& name);
   void loadCharacter(BObjectID id);
   void unloadCharacter();
 
 protected:
-  void processEvent(const GameEvent& event);
+  void processEvent(GameEvent* event);
 
 protected:
   World* _world;

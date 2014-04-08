@@ -3,6 +3,7 @@
 
 #include "util/bimap.h"
 #include "game/core.h"
+#include "io/eventqueue.h"
 
 #include <thread>
 #include <atomic>
@@ -24,7 +25,7 @@ public:
   bool assignClient(ClientBase* client, const string& name);
   void removeClient(ClientBase* client);
 
-  void clientEvent(ClientBase* client, const GameEvent& event);
+  void clientEvent(ClientBase* client, GameEvent* event);
 
 private:
   void setup(const string& rawSet);

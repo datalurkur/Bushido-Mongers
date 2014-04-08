@@ -3,6 +3,7 @@
 
 #include "game/bobjectmanager.h"
 #include "io/gameevent.h"
+#include "io/eventqueue.h"
 #include "world/world.h"
 #include "util/bimap.h"
 
@@ -20,12 +21,12 @@ public:
   bool generateWorld(const string& rawSet, int size);
   bool destroyWorld();
 
-  void update(int elapsed, list<GameEvent>& events);
-  bool isEventVisibleToPlayer(const GameEvent& event, PlayerID player);
+  void update(int elapsed, EventQueue& events);
+  bool isEventVisibleToPlayer(GameEvent* event, PlayerID player);
 
   // Player/character maintenance
-  bool createCharacter(PlayerID player, const string& characterType, list<GameEvent>& events);
-  bool loadCharacter(PlayerID player, BObjectID characterID, list<GameEvent>& events);
+  bool createCharacter(PlayerID player, const string& characterType, EventQueue& events);
+  bool loadCharacter(PlayerID player, BObjectID characterID, EventQueue& events);
   bool unloadCharacter(PlayerID player);
 
   bool isCharacterActive(PlayerID player);

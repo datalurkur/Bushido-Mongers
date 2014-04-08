@@ -12,6 +12,6 @@ void LocalFrontEnd::disconnectSender() {
   _server->removeClient(this);
 }
 
-void LocalFrontEnd::sendEvent(const GameEvent& event) {
+void LocalFrontEnd::sendToServer(GameEvent* event) {
   _server->clientEvent(this, event);
 }

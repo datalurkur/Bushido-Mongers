@@ -13,23 +13,23 @@ ClientBase::~ClientBase() {
 void ClientBase::createCharacter(const string& name) {
   // In the future, we'll pass config data into this
   CreateCharacterEvent event(name);
-  sendEvent(event);
+  sendToServer(&event);
 }
 
 void ClientBase::loadCharacter(BObjectID id) {
   LoadCharacterEvent event(id);
-  sendEvent(event);
+  sendToServer(&event);
 }
 
 void ClientBase::unloadCharacter() {
   UnloadCharacterEvent event;
-  sendEvent(event);
+  sendToServer(&event);
 }
 
-void ClientBase::processEvent(const GameEvent& event) {
-  switch(event.type) {
+void ClientBase::processEvent(GameEvent* event) {
+  switch(event->type) {
     case GameEventType::AreaData: {
-      struct AreaDataEvent* e = (struct AreaDataEvent*)&event;
+      struct AreaDataEvent* e = (struct AreaDataEvent*)event;
       Debug("Received data for area " << e->name);
       if(_world->hasArea(e->name)) {
         Debug("Area data already present for " << e->name);
@@ -41,7 +41,7 @@ void ClientBase::processEvent(const GameEvent& event) {
       break;
     }
     case GameEventType::TileData: {
-      struct TileDataEvent* e = (struct TileDataEvent*)&event;
+      struct TileDataEvent* e = (struct TileDataEvent*)event;
       Debug("Received data about tile at " << e->pos);
       if(!_currentArea) {
         Error("Can't contextualize tile data with no current area set");
@@ -49,7 +49,7 @@ void ClientBase::processEvent(const GameEvent& event) {
       }
       Tile* tile = _currentArea->getTile(e->pos);
       if(!tile) {
-        tile = new Tile(e->type);
+        tile = new Tile(_currentArea, e->type);
         _currentArea->setTile(e->pos, tile);
       } else {
         tile->setType(e->type);
@@ -58,13 +58,13 @@ void ClientBase::processEvent(const GameEvent& event) {
       break;
     }
     case GameEventType::TileShrouded: {
-      struct TileShroudedEvent* e = (struct TileShroudedEvent*)&event;
+      struct TileShroudedEvent* e = (struct TileShroudedEvent*)event;
       Debug("Tile at " << e->pos << " is now shrouded");
       _currentArea->shroudTile(e->pos);
       break;
     }
     default:
-      Warn("Unhandled game event type " << event.type);
+      Warn("Unhandled game event type " << event->type);
       break;
   }
 }

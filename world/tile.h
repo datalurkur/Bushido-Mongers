@@ -11,14 +11,13 @@ public:
   };
 
 public:
-  Tile();
-  Tile(Type type);
+  Tile(Area* area);
+  Tile(Area* area, Type type);
   virtual ~Tile();
 
   void setType(Type type);
   Type getType() const;
 
-  void setArea(Area* area);
   Area* getArea() const;
 
   const IVec2* getCoordinates() const;
@@ -28,8 +27,8 @@ protected:
   void setCoordinates(const IVec2& pos);
 
 private:
-  Type _type;
   Area* _area;
+  Type _type;
   IVec2 _pos;
 };
 

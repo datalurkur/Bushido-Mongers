@@ -41,16 +41,16 @@ bool GameCore::destroyWorld() {
   return true;
 }
 
-void GameCore::update(int elapsed, list<GameEvent>& events) {
+void GameCore::update(int elapsed, EventQueue& events) {
   #pragma message "Any activity controlled directly by the core will go here"
 }
 
-bool GameCore::isEventVisibleToPlayer(const GameEvent& event, PlayerID player) {
+bool GameCore::isEventVisibleToPlayer(GameEvent* event, PlayerID player) {
   #pragma message "Perception and area checking will go here"
   return true;
 }
 
-bool GameCore::createCharacter(PlayerID player, const string& characterType, list<GameEvent>& events) {
+bool GameCore::createCharacter(PlayerID player, const string& characterType, EventQueue& events) {
   auto playerInfo = _playerMap.find(player);
   if(playerInfo != _playerMap.end()) {
     Error("Player already has an active character");
@@ -65,29 +65,37 @@ bool GameCore::createCharacter(PlayerID player, const string& characterType, lis
   // Set up a random character location
   Area* startArea = _world->getRandomArea();
   Tile* startTile = startArea->getRandomEmptyTile();
-  character->setLocation(startTile);
-
-  // Send the area information
-  events.push_back(AreaDataEvent(startArea->getName(), startArea->getPos(), startArea->getSize()));
-
-  // Send tile information
-  set<IVec2> visibleCoords;
-  const IVec2* pos = startTile->getCoordinates();
-  if(!pos) {
+  if(!startTile) {
+    Error("Failed to find a random starting location");
+    _objectManager->destroyObject(character->getID());
+    return false;
+  } else if(!startTile->getCoordinates()) {
     Error("Failed to get initial coordinates for player; likely location data has become corrupt");
     _objectManager->destroyObject(character->getID());
     return false;
   }
-  getViewFrom(player, *pos, visibleCoords);
+  character->setLocation(startTile);
+
+  // Set active character
+  _playerMap.insert(player, character->getID());
+
+  // Send the area information
+  Debug("Sending area info to " << player);
+  events.pushEvent(new AreaDataEvent(startArea->getName(), startArea->getPos(), startArea->getSize()));
+
+  // Get character location info
+  Debug("Sending visible tile info to " << player);
+  set<IVec2> visibleCoords;
+  getViewFrom(player, *startTile->getCoordinates(), visibleCoords);
   for(auto coords : visibleCoords) {
     Tile* tile = startArea->getTile(coords);
-    events.push_back(TileDataEvent(coords, tile->getType()));
+    events.pushEvent(new TileDataEvent(coords, tile->getType()));
   }
 
   return true;
 }
 
-bool GameCore::loadCharacter(PlayerID player, BObjectID characterID, list<GameEvent>& events) {
+bool GameCore::loadCharacter(PlayerID player, BObjectID characterID, EventQueue& events) {
   ASSERT(0, "Character loading not implemented");
   return false;
 }
@@ -141,11 +149,16 @@ void GameCore::getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibl
   list<IVec2> disc;
   computeRasterizedDisc(sightRadius, disc);
 
+  const IVec2& bounds = area->getSize();
   set<IVec2> visited;
   for(auto relativePoint : disc) {
     IVec2 point = relativePoint + pos;
 
     if(visited.find(point) != visited.end()) { continue; }
+
+    if(point.x < 0 || point.y < 0 || point.x >= bounds.x || point.y >= bounds.y) {
+      continue;
+    }
 
     list<IVec2> lineOfSight;
     computeRasterizedLine(pos, point, lineOfSight);
@@ -162,4 +175,5 @@ void GameCore::getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibl
       }
     }
   }
+  Info("There are " << visibleTiles.size() << " tiles visible to " << player << " from " << pos);
 }

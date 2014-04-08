@@ -11,7 +11,7 @@ tools: raw_editor_ncurses
 
 tests: treetest worldtest sockettest geomtest
 
-server: curseme/menu.o curseme/curseme.o curseme/input.o curseme/window.o curseme/uistack.o curseme/curselog.o util/log.o util/filesystem.o util/packing.o util/timer.o util/noise.o util/geom.o interface/console.o game/bobject.o game/complexbobject.o game/compositebobject.o game/atomicbobject.o game/bobjectcontainer.o game/bobjectmanager.o game/core.o resource/raw.o world/generator.o world/world.o world/area.o world/tile.o server.o io/localgameclient.o io/clientbase.o io/gameserver.o io/serverbase.o io/localfrontend.o io/localbackend.o
+server: curseme/menu.o curseme/curseme.o curseme/input.o curseme/window.o curseme/uistack.o curseme/curselog.o util/log.o util/filesystem.o util/packing.o util/timer.o util/noise.o util/geom.o interface/console.o game/bobject.o game/complexbobject.o game/compositebobject.o game/atomicbobject.o game/bobjectcontainer.o game/bobjectmanager.o game/core.o resource/raw.o world/generator.o world/world.o world/area.o world/tile.o server.o io/localgameclient.o io/clientbase.o io/gameserver.o io/serverbase.o io/localfrontend.o io/localbackend.o io/eventqueue.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 raw_editor: curseme/menu.o curseme/curseme.o curseme/input.o util/log.o tools/raw_editor/main.o resource/raw.o game/bobject.o game/complexbobject.o game/atomicbobject.o game/compositebobject.o util/filesystem.o tools/raw_editor/common.o tools/raw_editor/complex.o tools/raw_editor/composite.o interface/choice.o interface/console.o util/packing.o game/bobjectmanager.o

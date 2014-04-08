@@ -107,6 +107,11 @@ World* WorldGenerator::GenerateWorld(int size, float sparseness, float connected
     string name = stream.str();
 
     Area* area = new Area(name, feature->pos, Vec2(feature->radius, feature->radius));
+
+    #pragma message "Do interesting area type generation"
+    // For now, just generate a bunch of caves
+    GenerateCave(area, 0.5, 0.5);
+
     world->addArea(area);
     feature->area = area;
   }
@@ -159,9 +164,9 @@ void WorldGenerator::GenerateCave(Area* area, float openness, float density) {
       float adjust = offset.magnitudeSquared() / maxRadiusSquared;
       double pValue = p.noise3(nCoords.x, nCoords.y, 0.5) - adjust;
       if(pValue > cutoff) {
-        area->setTile(coords, new Tile(Tile::Type::Ground));
+        area->setTile(coords, new Tile(area, Tile::Type::Ground));
       } else {
-        area->setTile(coords, new Tile(Tile::Type::Wall));
+        area->setTile(coords, new Tile(area, Tile::Type::Wall));
       }
     }
   }

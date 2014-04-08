@@ -26,14 +26,23 @@ Tile* Area::getTile(int x, int y) { return _tiles[(x * _size.y) + y]; }
 Tile* Area::getTile(const IVec2& pos) { return _tiles[(pos.x * _size.y) + pos.y]; }
 
 Tile* Area::getRandomEmptyTile() {
+  const int maxAttempts = 100;
   Tile* ret = 0;
-  while(!ret) {
+  for(int c = 0; c < maxAttempts; c++) {
+    Info("Locating tile between 0 and " << _size);
     int x = rand() % _size.x,
         y = rand() % _size.y;
+
     ret = getTile(x,  y);
-    if(ret->getType() != Tile::Type::Ground) { ret = 0; }
+    if(!ret) {
+      Error("Found null tile at " << IVec2(x, y));
+    }
+
+    if(ret && ret->getType() != Tile::Type::Ground) { return ret; }
   }
-  return ret;
+
+  Error("Failed to find random empty tile");
+  return 0;
 }
 
 void Area::setTile(int x, int y, Tile* tile) {

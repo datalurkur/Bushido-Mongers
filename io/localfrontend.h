@@ -14,7 +14,7 @@ public:
 
   bool connectSender();
   void disconnectSender();
-  void sendEvent(const GameEvent& event);
+  void sendToServer(GameEvent* event);
 
 private:
   ServerBase* _server;
