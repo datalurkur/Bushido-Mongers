@@ -46,18 +46,21 @@ World* WorldGenerator::GenerateWorld(int size, float sparseness, float connected
       for(k = j+1; k < numFeatures; k++) {
         permutationCount++;
         Vec2 p;
-        if(!computeCircleFromPoints(features[i]->pos, features[j]->pos, features[k]->pos, p)) {
+        if(!computeCircleFromPoints(features[i]->pos,
+                                    features[j]->pos,
+                                    features[k]->pos,
+                                    p)) {
           continue;
         }
 
-        Vec2 r = features[i]->pos - p;
+        Vec2 r = (Vec2)features[i]->pos - p;
         float rSquared = r.magnitudeSquared();
 
         bool isDelaunay = true;
         // Determine if any other points lie within this circle
         for(int m = 0; m < numFeatures; m++) {
           if(m == i || m == j || m == k) { continue; }
-          Vec2 d = features[m]->pos - p;
+          Vec2 d = Vec2(features[m]->pos) - p;
           float mRSquared = d.magnitudeSquared();
           if(mRSquared < rSquared) {
             // Point lies within the circle, this triangle is non-delaunay
@@ -113,11 +116,11 @@ World* WorldGenerator::GenerateWorld(int size, float sparseness, float connected
     bool valid = true;
     switch(connectionMethod) {
     case MaxDistance: {
-      Vec2 d = connection.first->pos - connection.second->pos;
+      IVec2 d = connection.first->pos - connection.second->pos;
       if(d.magnitudeSquared() >= maxConnDistSquared) { valid = false; }
     } break;
     case Centralization: {
-      Vec2 d = connection.first->pos - connection.second->pos;
+      IVec2 d = connection.first->pos - connection.second->pos;
       float distanceRatio = (midSizeSquared - (d.magnitudeSquared() / 2)) / midSizeSquared;
       if((float)rand() / RAND_MAX > (connectedness + distanceRatio) / 2) { valid = false; }
     }
@@ -142,11 +145,11 @@ void WorldGenerator::PlaceAreaTransitions(Area* area) {
 
 void WorldGenerator::GenerateCave(Area* area, float openness, float density) {
   Perlin p(256);
-  Vec2 scalar = area->getSize() / (32 * density);
+  Vec2 scalar = (Vec2)area->getSize() / (32 * density);
   double cutoff = 0.5 - openness;
-  Vec2 center = area->getSize() / 2.0f;
+  Vec2 center = (Vec2)area->getSize() / 2.0f;
   double maxRadiusSquared = center.magnitudeSquared();
-  const Vec2& areaSize = area->getSize();
+  const Vec2& areaSize = (Vec2)area->getSize();
 
   for(int i = 0; i < areaSize.x; i++) {
     for(int j = 0; j < areaSize.y; j++) {
@@ -156,7 +159,9 @@ void WorldGenerator::GenerateCave(Area* area, float openness, float density) {
       float adjust = offset.magnitudeSquared() / maxRadiusSquared;
       double pValue = p.noise3(nCoords.x, nCoords.y, 0.5) - adjust;
       if(pValue > cutoff) {
-        area->getTile(coords).setType(Tile::Type::Ground);
+        area->setTile(coords, new Tile(Tile::Type::Ground));
+      } else {
+        area->setTile(coords, new Tile(Tile::Type::Wall));
       }
     }
   }
@@ -170,8 +175,8 @@ void WorldGenerator::GenerateCave(Area* area, float openness, float density) {
 void WorldGenerator::GenerateHallways(Area* area, float density) {
 }
 
-void WorldGenerator::ParseAreas(Area* area, map<int, set<Vec2> >& grouped) {
-  const Vec2& areaSize = area->getSize();
+void WorldGenerator::ParseAreas(Area* area, map<int, set<IVec2> >& grouped) {
+  const IVec2& areaSize = area->getSize();
   int* groups = (int*)calloc(areaSize.x * areaSize.y, sizeof(int));
 
 #define GROUP(i,j) groups[((i) * (int)areaSize.y) + (j)]
@@ -181,7 +186,7 @@ void WorldGenerator::ParseAreas(Area* area, map<int, set<Vec2> >& grouped) {
   for(i = 0; i < areaSize.x; i++) {
     for(j = 0; j < areaSize.y; j++) {
       //Debug("Inspecting tile at " << i << "," << j);
-      if(area->getTile(i, j).getType() == Tile::Type::Wall) {
+      if(area->getTile(i, j)->getType() == Tile::Type::Wall) {
         //Debug("Tile is a wall, skipping");
         GROUP(i, j) = -1;
         continue;
@@ -218,7 +223,7 @@ void WorldGenerator::ParseAreas(Area* area, map<int, set<Vec2> >& grouped) {
         //Debug("No groups adjacent, starting group " << newGroup);
         // This node is not surrounded by any existing groups, create a new one
         GROUP(i, j) = newGroup;
-        grouped.insert(make_pair(newGroup, set<Vec2> { Vec2(i, j) }));
+        grouped.insert(make_pair(newGroup, set<IVec2> { IVec2(i, j) }));
         continue;
       }
 
@@ -230,7 +235,7 @@ void WorldGenerator::ParseAreas(Area* area, map<int, set<Vec2> >& grouped) {
 
       // Add this node to the lowest group
       GROUP(i, j) = lowestGroup;
-      grouped[lowestGroup].insert(Vec2(i, j));
+      grouped[lowestGroup].insert(IVec2(i, j));
       //Debug("Group " << lowestGroup << " now contains " << grouped[lowestGroup].size() << " nodes");
 
       // Merge any groups that this node joins

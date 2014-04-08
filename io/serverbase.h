@@ -24,7 +24,7 @@ public:
   bool assignClient(ClientBase* client, const string& name);
   void removeClient(ClientBase* client);
 
-  void clientEvent(ClientBase* client, const GameEvent* event);
+  void clientEvent(ClientBase* client, const GameEvent& event);
 
 private:
   void setup(const string& rawSet);

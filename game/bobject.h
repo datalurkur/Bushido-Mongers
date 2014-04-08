@@ -12,6 +12,8 @@
 
 typedef int BObjectID;
 
+class Area;
+
 class ProtoBObject {
 public:
   typedef map<ExtensionType, ProtoBObjectExtension*> ProtoExtensionMap;

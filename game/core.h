@@ -24,11 +24,14 @@ public:
   bool isEventVisibleToPlayer(const GameEvent& event, PlayerID player);
 
   // Player/character maintenance
-  bool createCharacter(PlayerID player, const string& characterType, BObjectID& characterID);
-  bool loadCharacter(PlayerID player, BObjectID& characterID);
+  bool createCharacter(PlayerID player, const string& characterType, list<GameEvent>& events);
+  bool loadCharacter(PlayerID player, BObjectID characterID, list<GameEvent>& events);
   bool unloadCharacter(PlayerID player);
 
   bool isCharacterActive(PlayerID player);
+
+private:
+  void getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibleTiles);
 
 private:
   BObjectManager* _objectManager;

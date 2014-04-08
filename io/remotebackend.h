@@ -8,7 +8,7 @@ public:
   RemoteBackEnd();
   ~RemoteBackEnd();
 
-  void receiveEvent(const GameEvent* event);
+  void receiveEvent(const GameEvent& event);
 };
 
 #endif

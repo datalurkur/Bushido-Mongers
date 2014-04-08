@@ -2,6 +2,7 @@
 #define BOBJECT_CONTAINER_H
 
 #include "game/bobject.h"
+#include "util/vector.h"
 
 #include <set>
 
@@ -13,6 +14,9 @@ public:
   ~BObjectContainer();
 
   void setParent(BObjectContainer* parent);
+
+  virtual Area* getArea() const;
+  virtual const IVec2* getCoordinates() const;
 
 protected:
   friend class BObject;

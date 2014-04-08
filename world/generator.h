@@ -5,10 +5,10 @@
 #include "util/vector.h"
 
 struct Feature {
-  Feature(int x, int y, int r): pos(Vec2(x, y)), radius(r) {}
-  Feature(Vec2 pos, int r): pos(pos), radius(r) {}
+  Feature(int x, int y, int r): pos(IVec2(x, y)), radius(r) {}
+  Feature(IVec2 pos, int r): pos(pos), radius(r) {}
 
-  Vec2 pos;
+  IVec2 pos;
   int radius;
   Area* area;
 };
@@ -27,7 +27,7 @@ public:
   static void GenerateHallways(Area* area, float density);
 
 //private:
-  static void ParseAreas(Area* area, map<int, set<Vec2> >& grouped);
+  static void ParseAreas(Area* area, map<int, set<IVec2> >& grouped);
 
 private:
   // No instantiation for you!

@@ -2,6 +2,9 @@
 #define VECTOR_H
 
 #include <math.h>
+#include <sstream>
+
+using namespace std;
 
 template <typename T>
 class VectorBase {
@@ -10,6 +13,10 @@ public:
 
   VectorBase();
   VectorBase(const VectorBase<T>& other);
+
+  template <typename S>
+  VectorBase(const VectorBase<S>& other);
+
   VectorBase(T nx, T ny);
 
   void normalize();
@@ -17,6 +24,9 @@ public:
   void clampUpper(T u);
   T magnitude() const;
   T magnitudeSquared() const;
+
+  template <typename S>
+  operator VectorBase<S>();
 
 protected:
   bool _magnitudeCached;
@@ -30,7 +40,11 @@ template <typename T>
 VectorBase<T>::VectorBase(): x(0), y(0), _magnitudeCached(false), _cachedMagnitude(0) {}
 
 template <typename T>
-VectorBase<T>::VectorBase(const VectorBase<T>& other): x(other.x), y(other.y), _magnitudeCached(false), _cachedMagnitude(false) {}
+VectorBase<T>::VectorBase(const VectorBase<T>& other): x(other.x), y(other.y), _magnitudeCached(false), _cachedMagnitude(0) {}
+
+template <typename T>
+template <typename S>
+VectorBase<T>::VectorBase(const VectorBase<S>& other): x((T)other.x), y((T)other.y), _magnitudeCached(false), _cachedMagnitude(false) {}
 
 template <typename T>
 VectorBase<T>::VectorBase(T nx, T ny): x(nx), y(ny), _magnitudeCached(false), _cachedMagnitude(0) {}
@@ -70,6 +84,10 @@ T VectorBase<T>::magnitudeSquared() const {
   return (x * x) + (y * y);
 }
 
+template <typename T>
+template <typename S>
+VectorBase<T>::operator VectorBase<S>() { return VectorBase<S>(*this); }
+
 // Arithmetic operators
 template <typename T>
 VectorBase<T> operator+(const VectorBase<T>& lhs, const VectorBase<T>& rhs) {
@@ -95,9 +113,29 @@ template <typename T>
 VectorBase<T> operator/(const VectorBase<T>& lhs, T rhs) {
   return VectorBase<T>(lhs.x / rhs, lhs.y / rhs);
 }
+
+// Logical operators
 template <typename T>
 bool operator<(const VectorBase<T>& lhs, const VectorBase<T>& rhs) {
   return (lhs.x < rhs.x || (lhs.x == rhs.x && (lhs.y < rhs.y)));
+}
+template <typename T>
+bool operator==(const VectorBase<T>& lhs, const VectorBase<T>& rhs) {
+  return (lhs.x == rhs.x && lhs.y == rhs.y);
+}
+template <typename T>
+bool magnitudeLess(const T& lhs, const T& rhs) {
+  return lhs.magnitudeSquared() < rhs.magnitudeSquared();
+}
+template <typename T>
+bool magnitudeGreater(const T& lhs, const T& rhs) {
+  return lhs.magnitudeSquared() > rhs.magnitudeSquared();
+}
+
+template <typename T>
+ostream& operator<<(ostream& lhs, const VectorBase<T>& rhs) {
+  lhs << "{" << rhs.x << "," << rhs.y << "}";
+  return lhs;
 }
 
 #endif

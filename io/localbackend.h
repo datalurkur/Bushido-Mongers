@@ -8,7 +8,7 @@ public:
   LocalBackEnd();
   ~LocalBackEnd();
 
-  void receiveEvent(const GameEvent* event);
+  void receiveEvent(const GameEvent& event);
 };
 
 #endif

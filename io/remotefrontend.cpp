@@ -32,6 +32,6 @@ void RemoteFrontEnd::disconnectSender() {
   _tcpBuffer = 0;
 }
 
-void RemoteFrontEnd::sendEvent(const GameEvent* event) {
+void RemoteFrontEnd::sendEvent(const GameEvent& event) {
   #pragma message "Event packing and buffering will go here"
 }

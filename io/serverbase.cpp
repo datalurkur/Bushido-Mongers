@@ -74,7 +74,7 @@ void ServerBase::removeClient(ClientBase* client) {
   _assignedIDs.reverseErase(client);
 }
 
-void ServerBase::clientEvent(ClientBase* client, const GameEvent* event) {
+void ServerBase::clientEvent(ClientBase* client, const GameEvent& event) {
   unique_lock<mutex> lock(_lock);
   auto playerIDItr = _assignedIDs.reverseFind(client);
   if(playerIDItr == _assignedIDs.reverseEnd()) {
@@ -91,33 +91,35 @@ void ServerBase::clientEvent(ClientBase* client, const GameEvent* event) {
   string clientName = clientNameItr->second;
   Debug("Received client event from " << clientName << " (ID " << playerID << ")");
 
-  switch(event->type) {
-  case GameEventType::CreateCharacter:
-    Info("Creating character for " << clientName);
-    BObjectID characterID;
-    if(_core->createCharacter(playerID, "human", characterID)) {
-      Info("Created character " << characterID << " for " << clientName);
-    } else {
-      Info("Failed to create character for " << clientName);
+  list<GameEvent> resultEvents;
+  switch(event.type) {
+    case GameEventType::CreateCharacter:
+      Info("Creating character for " << clientName);
+      if(_core->createCharacter(playerID, "human", resultEvents)) {
+        Info("Created character for " << clientName);
+      } else {
+        Info("Failed to create character for " << clientName);
+      }
+      break;
+    case GameEventType::LoadCharacter: {
+      struct LoadCharacterEvent* e = (struct LoadCharacterEvent*)&event;
+      if(_core->loadCharacter(playerID, e->ID, resultEvents)) {
+        Info("Loaded character " << e->ID << " for " << clientName);
+      } else {
+        Info("Failed to load character " << e->ID << " for player " << clientName);
+      }
+      break;
     }
-    break;
-  case GameEventType::LoadCharacter:
-    if(_core->loadCharacter(playerID, ((LoadCharacterEvent*)event)->ID)) {
-      Info("Loaded character " << ((LoadCharacterEvent*)event)->ID << " for " << clientName);
-    } else {
-      Info("Failed to load character " << ((LoadCharacterEvent*)event)->ID << " for player " << clientName);
-    }
-    break;
-  case GameEventType::UnloadCharacter:
-    if(_core->unloadCharacter(playerID)) {
-      Info("Unloaded character for " << clientName);
-    } else {
-      Info("Failed to unload character for " << clientName);
-    }
-    break;
-  default:
-    Warn("Unhandled game event type " << event->type);
-    break;
+    case GameEventType::UnloadCharacter:
+      if(_core->unloadCharacter(playerID)) {
+        Info("Unloaded character for " << clientName);
+      } else {
+        Info("Failed to unload character for " << clientName);
+      }
+      break;
+    default:
+      Warn("Unhandled game event type " << event.type);
+      break;
   }
 }
 
@@ -141,7 +143,7 @@ void ServerBase::innerLoop() {
       for(auto clientInfo : _assignedIDs) {
         if(_core->isEventVisibleToPlayer(event, clientInfo.first)) {
           Debug("Sending update event to player " << clientInfo.first);
-          clientInfo.second->receiveEvent(&event);
+          clientInfo.second->receiveEvent(event);
         } else {
           Debug("Event is not visible to player " << clientInfo.first);
         }

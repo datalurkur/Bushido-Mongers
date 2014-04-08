@@ -13,6 +13,18 @@ World::~World() {
   }
 }
 
+Area* World::getArea(const string& name) const {
+  auto result = _namedAreas.find(name);
+  if(result == _namedAreas.end()) { return 0; }
+  else { return result->second; }
+}
+
+Area* World::getRandomArea() const {
+  auto itr = _areas.begin();
+  std::advance(itr, rand() % _areas.size());
+  return *itr;
+}
+
 void World::generateGraphVizFile(const string& filename) {
   ostringstream stream;
   stream << "strict graph WorldMap {\n\tnode [shape=point];\n";
@@ -31,7 +43,15 @@ void World::generateGraphVizFile(const string& filename) {
 }
 
 void World::addArea(Area* area) {
+  if(hasArea(area->getName())) {
+    Warn("Duplicate area name " << area->getName() << " added to world");
+  }
   _areas.push_back(area);
+  _namedAreas[area->getName()] = area;
+}
+
+bool World::hasArea(const string& name) {
+  return (_namedAreas.find(name) != _namedAreas.end());
 }
 
 void World::addConnection(Area* a, Area* b) {

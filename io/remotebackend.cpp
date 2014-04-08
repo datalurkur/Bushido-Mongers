@@ -4,6 +4,6 @@
 RemoteBackEnd::RemoteBackEnd() {}
 RemoteBackEnd::~RemoteBackEnd() {}
 
-void RemoteBackEnd::receiveEvent(const GameEvent* event) {
+void RemoteBackEnd::receiveEvent(const GameEvent& event) {
   #pragma message "GameEvent packing code will go here"
 }

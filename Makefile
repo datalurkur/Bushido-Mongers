@@ -9,7 +9,7 @@ all: tools tests server
 
 tools: raw_editor_ncurses
 
-tests: treetest worldtest sockettest
+tests: treetest worldtest sockettest geomtest
 
 server: curseme/menu.o curseme/curseme.o curseme/input.o curseme/window.o curseme/uistack.o curseme/curselog.o util/log.o util/filesystem.o util/packing.o util/timer.o util/noise.o util/geom.o interface/console.o game/bobject.o game/complexbobject.o game/compositebobject.o game/atomicbobject.o game/bobjectcontainer.o game/bobjectmanager.o game/core.o resource/raw.o world/generator.o world/world.o world/area.o world/tile.o server.o io/localgameclient.o io/clientbase.o io/gameserver.o io/serverbase.o io/localfrontend.o io/localbackend.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
@@ -21,6 +21,9 @@ raw_editor_ncurses: curseme/curseme.o curseme/curselog.o curseme/uistack.o curse
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 treetest: tests/treetest.o util/log.o curseme/curseme.o curseme/curselog.o
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
+geomtest: tests/geom_test.o util/log.o curseme/curselog.o util/geom.o util/filesystem.o curseme/window.o curseme/uistack.o curseme/renderer.o curseme/curseme.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 worldtest: tests/world_test.o util/log.o curseme/curselog.o world/generator.o world/world.o world/area.o util/timer.o util/filesystem.o util/geom.o world/tile.o world/area.o curseme/renderer.o curseme/curseme.o util/noise.o game/bobjectcontainer.o curseme/window.o curseme/uistack.o
@@ -37,4 +40,4 @@ sockettest: tests/socket_test.o util/log.o net/netaddress.o net/socket.o net/tcp
 	$(CC) $(CFLAGS) $^ -c -o $@
 
 clean:
-	rm -f server sockettest raw_editor_ncurses test treetest worldtest io/*.o net/*.o util/*.o world/*.o tests/*.o resource/*.o curseme/*.o tools/raw_editor_ncurses/*.o game/*.o interface/*.o *.o
+	rm -f geomtest server sockettest raw_editor_ncurses test treetest worldtest io/*.o net/*.o util/*.o world/*.o tests/*.o resource/*.o curseme/*.o tools/raw_editor_ncurses/*.o game/*.o interface/*.o *.o

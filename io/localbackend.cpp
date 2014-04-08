@@ -4,5 +4,4 @@
 LocalBackEnd::LocalBackEnd() {}
 LocalBackEnd::~LocalBackEnd() {}
 
-void LocalBackEnd::receiveEvent(const GameEvent* event) {
-}
+void LocalBackEnd::receiveEvent(const GameEvent& event) { processEvent(event); }
