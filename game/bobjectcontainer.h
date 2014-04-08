@@ -8,6 +8,8 @@
 
 using namespace std;
 
+class Area;
+
 class BObjectContainer {
 public:
   BObjectContainer();

@@ -134,14 +134,6 @@ void GameCore::getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibl
     return;
   }
 
-/*
-  const IVec2* position = location->getCoordinates();
-  if(!position) {
-    Error("Player has a location, but no assigned position; likely, the object location chain is corrupt");
-    return; 
-  }
-*/
-
   // Given the sight radius of a player, cast rays outwards to determine what tiles are visible
   // Hardcode this for now
   int sightRadius = 5;
