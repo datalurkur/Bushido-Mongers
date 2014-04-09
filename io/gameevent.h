@@ -12,9 +12,14 @@ enum GameEventType {
   CreateCharacter,
   LoadCharacter,
   UnloadCharacter,
+  CharacterReady,
+  CharacterNotReady,
   AreaData,
   TileData,
   TileShrouded,
+  MoveCharacter,
+  CharacterMoved,
+  MoveFailed,
 };
 
 struct GameEvent {
@@ -24,8 +29,8 @@ struct GameEvent {
 };
 
 // Sent to the client in the event of a disconnect
-struct ServerDisconnected: public GameEvent {
-  ServerDisconnected(): GameEvent(GameEventType::ServerDisconnected) {}
+struct ServerDisconnectedEvent: public GameEvent {
+  ServerDisconnectedEvent(): GameEvent(GameEventType::ServerDisconnected) {}
 };
 
 // Sent from client to server to create a new character
@@ -45,6 +50,18 @@ struct LoadCharacterEvent: public GameEvent {
 // Sent from client to server to unload an active character
 struct UnloadCharacterEvent: public GameEvent {
   UnloadCharacterEvent(): GameEvent(GameEventType::UnloadCharacter) {}
+};
+
+// Sent from server to indicate that a character was successfully created or loaded
+struct CharacterReadyEvent: public GameEvent {
+  BObjectID ID;
+  CharacterReadyEvent(BObjectID id): GameEvent(GameEventType::CharacterReady), ID(id) {}
+};
+
+// Sent from server to indicate that character creation / load failed
+struct CharacterNotReadyEvent: public GameEvent {
+  string reason;
+  CharacterNotReadyEvent(const string& r): GameEvent(GameEventType::CharacterNotReady), reason(r) {}
 };
 
 // Sent from server to a specific client to provide basic information about an area
@@ -72,6 +89,23 @@ struct TileShroudedEvent: public GameEvent {
   IVec2 pos;
 
   TileShroudedEvent(const IVec2& p): GameEvent(GameEventType::TileShrouded), pos(p) {}
+};
+
+// Sent from client in order to move the player's character
+struct MoveCharacterEvent: public GameEvent {
+  IVec2 dir;
+
+  MoveCharacterEvent(const IVec2& d): GameEvent(GameEventType::MoveCharacter), dir(d) {}
+};
+
+struct CharacterMovedEvent: public GameEvent {
+  CharacterMovedEvent(): GameEvent(GameEventType::CharacterMoved) {}
+};
+
+struct MoveFailedEvent: public GameEvent {
+  string reason;
+
+  MoveFailedEvent(const string& r): GameEvent(GameEventType::MoveFailed), reason(r) {}
 };
 
 #endif

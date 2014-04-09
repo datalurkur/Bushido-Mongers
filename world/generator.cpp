@@ -164,9 +164,9 @@ void WorldGenerator::GenerateCave(Area* area, float openness, float density) {
       float adjust = offset.magnitudeSquared() / maxRadiusSquared;
       double pValue = p.noise3(nCoords.x, nCoords.y, 0.5) - adjust;
       if(pValue > cutoff) {
-        area->setTile(coords, new Tile(area, Tile::Type::Ground));
+        area->setTile(coords, new Tile(area, coords, Tile::Type::Ground));
       } else {
-        area->setTile(coords, new Tile(area, Tile::Type::Wall));
+        area->setTile(coords, new Tile(area, coords, Tile::Type::Wall));
       }
     }
   }

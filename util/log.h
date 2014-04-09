@@ -76,7 +76,7 @@ Log& Log::operator<<(const T &rhs) {
   do { \
     unique_lock<mutex> lock(Log::Mutex); \
     if(Log::IsChannelEnabled(channel)) { \
-     Log::GetLogStream() << msg << "\n"; \
+     Log::GetLogStream() << "[" << __FILE__ << ":" << __LINE__ << "] " << msg << "\n"; \
       Log::Flush(); \
       if(CurseMe::Enabled()) { \
         ostringstream ss; \

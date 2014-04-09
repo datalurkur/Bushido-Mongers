@@ -28,6 +28,11 @@ public:
   template <typename S>
   operator VectorBase<S>();
 
+  VectorBase<T>& operator=(const VectorBase<T>& other);
+
+  bool operator<(const VectorBase<T>& other) const;
+  bool operator==(const VectorBase<T>& rhs) const;
+
 protected:
   bool _magnitudeCached;
   T _cachedMagnitude;
@@ -116,12 +121,12 @@ VectorBase<T> operator/(const VectorBase<T>& lhs, T rhs) {
 
 // Logical operators
 template <typename T>
-bool operator<(const VectorBase<T>& lhs, const VectorBase<T>& rhs) {
-  return (lhs.x < rhs.x || (lhs.x == rhs.x && (lhs.y < rhs.y)));
+bool VectorBase<T>::operator<(const VectorBase<T>& other) const {
+  return (x < other.x || (x == other.x && (y < other.y)));
 }
 template <typename T>
-bool operator==(const VectorBase<T>& lhs, const VectorBase<T>& rhs) {
-  return (lhs.x == rhs.x && lhs.y == rhs.y);
+bool VectorBase<T>::operator==(const VectorBase<T>& rhs) const {
+  return (x == rhs.x && y == rhs.y);
 }
 template <typename T>
 bool magnitudeLess(const T& lhs, const T& rhs) {
@@ -136,6 +141,15 @@ template <typename T>
 ostream& operator<<(ostream& lhs, const VectorBase<T>& rhs) {
   lhs << "{" << rhs.x << "," << rhs.y << "}";
   return lhs;
+}
+
+template <typename T>
+VectorBase<T>& VectorBase<T>::operator=(const VectorBase<T>& other) {
+  x = other.x;
+  y = other.y;
+  _magnitudeCached = other._magnitudeCached;
+  _cachedMagnitude = other._cachedMagnitude;
+  return *this;
 }
 
 #endif

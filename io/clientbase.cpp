@@ -26,6 +26,11 @@ void ClientBase::unloadCharacter() {
   sendToServer(&event);
 }
 
+void ClientBase::moveCharacter(const IVec2& dir) {
+  MoveCharacterEvent event(dir);
+  sendToServer(&event);
+}
+
 void ClientBase::processEvent(GameEvent* event) {
   switch(event->type) {
     case GameEventType::AreaData: {
@@ -49,7 +54,7 @@ void ClientBase::processEvent(GameEvent* event) {
       }
       Tile* tile = _currentArea->getTile(e->pos);
       if(!tile) {
-        tile = new Tile(_currentArea, e->type);
+        tile = new Tile(_currentArea, e->pos, e->type);
         _currentArea->setTile(e->pos, tile);
       } else {
         tile->setType(e->type);
@@ -63,6 +68,18 @@ void ClientBase::processEvent(GameEvent* event) {
       _currentArea->shroudTile(e->pos);
       break;
     }
+    case GameEventType::CharacterReady:
+      Debug("Character is ready");
+      break;
+    case GameEventType::CharacterNotReady:
+      Debug("Character not ready - " << ((CharacterNotReadyEvent*)event)->reason);
+      break;
+    case GameEventType::CharacterMoved:
+      Debug("Character moved");
+      break;
+    case GameEventType::MoveFailed:
+      Debug("Failed to move - " << ((MoveFailedEvent*)event)->reason);
+      break;
     default:
       Warn("Unhandled game event type " << event->type);
       break;

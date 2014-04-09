@@ -65,7 +65,7 @@ int main() {
         end(25, 20);
   list<IVec2> line;
   computeRasterizedLine(start, end, line);
-  for(c = 0; c < line.size(); c++) {
+  for(c = 0; c < (int)line.size(); c++) {
     int d = 0;
     memset(renderData, '.', plotSize * plotSize);
     for(auto point : line) {

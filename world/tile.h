@@ -11,25 +11,19 @@ public:
   };
 
 public:
-  Tile(Area* area);
-  Tile(Area* area, Type type);
+  Tile(Area* area, const IVec2& pos, Type type);
   virtual ~Tile();
 
   void setType(Type type);
   Type getType() const;
 
   Area* getArea() const;
-
-  const IVec2* getCoordinates() const;
-
-protected:
-  friend class Area;
-  void setCoordinates(const IVec2& pos);
+  const IVec2& getCoordinates() const;
 
 private:
   Area* _area;
-  Type _type;
   IVec2 _pos;
+  Type _type;
 };
 
 #endif

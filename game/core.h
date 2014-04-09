@@ -22,23 +22,29 @@ public:
   bool destroyWorld();
 
   void update(int elapsed, EventQueue& events);
-  bool isEventVisibleToPlayer(GameEvent* event, PlayerID player);
+  void processPlayerEvent(PlayerID player, GameEvent* event, EventQueue& results);
+  bool isEventVisibleToPlayer(PlayerID player, GameEvent* event);
 
   // Player/character maintenance
-  bool createCharacter(PlayerID player, const string& characterType, EventQueue& events);
-  bool loadCharacter(PlayerID player, BObjectID characterID, EventQueue& events);
-  bool unloadCharacter(PlayerID player);
+  void createCharacter(PlayerID player, const string& characterType, EventQueue& results);
+  void loadCharacter(PlayerID player, BObjectID characterID, EventQueue& results);
+  void unloadCharacter(PlayerID player, EventQueue& results);
+  void moveCharacter(PlayerID player, const IVec2& dir, EventQueue& results);
 
   bool isCharacterActive(PlayerID player);
 
 private:
   void getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibleTiles);
+  bool checkCharacterSanity(PlayerID player);
 
 private:
   BObjectManager* _objectManager;
   World* _world;
 
   BiMap<PlayerID, BObjectID> _playerMap;
+
+  map<int, list<IVec2> > _precomputedSight;
+  map<PlayerID, set<IVec2> > _previousView;
 };
 
 #endif

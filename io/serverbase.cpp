@@ -91,37 +91,9 @@ void ServerBase::clientEvent(ClientBase* client, GameEvent* event) {
   string clientName = clientNameItr->second;
   Debug("Received client event from " << clientName << " (ID " << playerID << ")");
 
-  EventQueue resultEvents;
-  switch(event->type) {
-    case GameEventType::CreateCharacter:
-      Info("Creating character for " << clientName);
-      if(_core->createCharacter(playerID, "human", resultEvents)) {
-        Info("Created character for " << clientName);
-      } else {
-        Info("Failed to create character for " << clientName);
-      }
-      break;
-    case GameEventType::LoadCharacter: {
-      struct LoadCharacterEvent* e = (struct LoadCharacterEvent*)event;
-      if(_core->loadCharacter(playerID, e->ID, resultEvents)) {
-        Info("Loaded character " << e->ID << " for " << clientName);
-      } else {
-        Info("Failed to load character " << e->ID << " for player " << clientName);
-      }
-      break;
-    }
-    case GameEventType::UnloadCharacter:
-      if(_core->unloadCharacter(playerID)) {
-        Info("Unloaded character for " << clientName);
-      } else {
-        Info("Failed to unload character for " << clientName);
-      }
-      break;
-    default:
-      Warn("Unhandled game event type " << event->type);
-      break;
-  }
-  for(auto rEvent : resultEvents) {
+  EventQueue results;
+  _core->processPlayerEvent(playerID, event, results);
+  for(auto rEvent : results) {
     client->sendToClient(rEvent);
   }
 }
@@ -144,7 +116,7 @@ void ServerBase::innerLoop() {
     #pragma message "It would be great if this didn't have to be an O(n*m) operation..."
     for(auto event : updateEvents) {
       for(auto clientInfo : _assignedIDs) {
-        if(_core->isEventVisibleToPlayer(event, clientInfo.first)) {
+        if(_core->isEventVisibleToPlayer(clientInfo.first, event)) {
           Debug("Sending update event to player " << clientInfo.first);
           clientInfo.second->sendToClient(event);
         } else {

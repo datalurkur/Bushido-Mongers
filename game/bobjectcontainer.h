@@ -13,18 +13,21 @@ class Area;
 class BObjectContainer {
 public:
   BObjectContainer();
-  ~BObjectContainer();
-
-  void setParent(BObjectContainer* parent);
+  virtual ~BObjectContainer();
 
   virtual Area* getArea() const;
-  virtual const IVec2* getCoordinates() const;
+  virtual const IVec2& getCoordinates() const;
+
+  void setParent(BObjectContainer* parent);
 
 protected:
   friend class BObject;
 
   bool addObject(BObjectID object);
   bool removeObject(BObjectID object);
+
+private:
+  void debugContents();
 
 private:
   BObjectContainer* _parent;

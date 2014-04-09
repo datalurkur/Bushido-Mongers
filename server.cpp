@@ -57,6 +57,13 @@ int main(int argc, char** argv) {
   string characterName = "Test Character Name";
   client->createCharacter(characterName);
 
+  // Test movement
+  Info("Client is attempting to move");
+  client->moveCharacter(IVec2(1, 0));
+  client->moveCharacter(IVec2(-1, 0));
+  client->moveCharacter(IVec2(0, 1));
+  client->moveCharacter(IVec2(0, -1));
+
   while(true) {
     sleep(1);
   }

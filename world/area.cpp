@@ -52,7 +52,6 @@ void Area::setTile(int x, int y, Tile* tile) {
     delete _tiles[index];
   }
   _tiles[index] = tile;
-  tile->setCoordinates(IVec2(x, y));
 }
 
 void Area::setTile(const IVec2& pos, Tile* tile) {

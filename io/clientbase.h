@@ -2,6 +2,7 @@
 #define CLIENTBASE_H
 
 #include "game/bobject.h"
+#include "util/vector.h"
 
 #include <string>
 using namespace std;
@@ -23,6 +24,7 @@ public:
   void createCharacter(const string& name);
   void loadCharacter(BObjectID id);
   void unloadCharacter();
+  void moveCharacter(const IVec2& dir);
 
 protected:
   void processEvent(GameEvent* event);
