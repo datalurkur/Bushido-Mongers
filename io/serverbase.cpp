@@ -17,7 +17,7 @@ ServerBase::~ServerBase() {
 }
 
 void ServerBase::setup(const string& rawSet) {
-  _core->generateWorld(rawSet, 10);
+  _core->generateWorld(rawSet, 100);
 }
 
 void ServerBase::start() {

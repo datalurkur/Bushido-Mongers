@@ -181,6 +181,8 @@ void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventQueue& resu
   for(auto c : newlyShrouded) {
     results.pushEvent(new TileShroudedEvent(c));
   }
+
+  _previousView[player] = move(newView);
 }
 
 bool GameCore::isCharacterActive(PlayerID player) {
