@@ -15,8 +15,11 @@ enum GameEventType {
   CharacterReady,
   CharacterNotReady,
   AreaData,
-  TileData,
+  TileVisible,
   TileShrouded,
+  GetTileData,
+  TileData,
+  DataRestricted,
   MoveCharacter,
   CharacterMoved,
   MoveFailed,
@@ -75,13 +78,47 @@ struct AreaDataEvent: public GameEvent {
     name(n), pos(p), size(s) {}
 };
 
+// Sent from client to request data about a tile
+struct GetTileDataEvent: public GameEvent {
+  IVec2 pos;
+
+  GetTileDataEvent(const IVec2& p): GameEvent(GetTileData), pos(p) {}
+};
+
 // Sent from server to a specific client to provide information about a tile within an area
 // This includes terrain type and visible contents
 struct TileDataEvent: public GameEvent {
   IVec2 pos;
-  Tile::Type type;
+  TileType type;
+  set<BObjectID> contents;
+  time_t lastChanged;
 
-  TileDataEvent(const IVec2& p, Tile::Type t): GameEvent(GameEventType::TileData), pos(p), type(t) {}
+  TileDataEvent(const Tile* tile): GameEvent(GameEventType::TileData),
+    pos(tile->getCoordinates()), type(tile->getType()), contents(tile->getContents()),
+    lastChanged(tile->lastChanged()) {
+    ASSERT(tile, "Source tile must not be null!");
+    for(auto c : tile->getContents()) {
+      Debug("Source content: " << c);
+    }
+    for(auto c : contents) {
+      Debug("Target content: " << c);
+    }
+  }
+};
+
+// Sent from server to a specific client to indicate that previous data requested was restricted
+struct DataRestrictedEvent: public GameEvent {
+  string reason;
+
+  DataRestrictedEvent(const string& r): GameEvent(DataRestricted), reason(r) {}
+};
+
+// Sned from server to a specific client to indicate that a particular tile is now visible to the player
+struct TileVisibleEvent: public GameEvent {
+  IVec2 pos;
+  time_t lastChanged;
+
+  TileVisibleEvent(const IVec2& p, time_t l): GameEvent(GameEventType::TileVisible), pos(p), lastChanged(l) {}
 };
 
 // Sent from server to a specific client to indicate that a particular tile is no longer visible to the player and should not be considered to contain current information (gray it out clientside)

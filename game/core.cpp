@@ -62,6 +62,26 @@ void GameCore::processPlayerEvent(PlayerID player, GameEvent* event, EventQueue&
     case GameEventType::MoveCharacter:
       moveCharacter(player, ((MoveCharacterEvent*)event)->dir, results);
       break;
+    case GameEventType::GetTileData: {
+      IVec2 pos = ((GetTileDataEvent*)event)->pos;
+      auto isVisible = _previousView[player].find(pos);
+      if(isVisible != _previousView[player].end()) {
+        if(!checkCharacterSanity(player)) {
+          results.pushEvent(new DataRestrictedEvent("Player state is invalid"));
+          break;
+        }
+        Area* area = _objectManager->getObject(_playerMap.lookup(player))->getLocation()->getArea();
+        const IVec2& areaSize = area->getSize();
+        if(pos.x < 0 || pos.y < 0 || pos.x >= areaSize.x || pos.y >= areaSize.y) {
+          results.pushEvent(new DataRestrictedEvent("Tile does not exist"));
+          break;
+        }
+        results.pushEvent(new TileDataEvent((Tile*)area->getTile(pos)));
+      } else {
+        results.pushEvent(new DataRestrictedEvent("Tile is not visible to player"));
+      }
+      break;
+    }
     default:
       Warn("Unhandled game event type " << event->type);
       break;
@@ -92,6 +112,7 @@ void GameCore::createCharacter(PlayerID player, const string& characterType, Eve
     _objectManager->destroyObject(character->getID());
     return;
   }
+  Debug("Character given initial location " << startTile);
   character->setLocation(startTile);
 
   // Set active character
@@ -108,8 +129,8 @@ void GameCore::createCharacter(PlayerID player, const string& characterType, Eve
   getViewFrom(player, startTile->getCoordinates(), visibleCoords);
 
   for(auto coords : visibleCoords) {
-    Tile* tile = startArea->getTile(coords);
-    results.pushEvent(new TileDataEvent(coords, tile->getType()));
+    Tile* tile = (Tile*)startArea->getTile(coords);
+    results.pushEvent(new TileVisibleEvent(coords, tile->lastChanged()));
   }
 
   // Cache visible tiles
@@ -152,12 +173,12 @@ void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventQueue& resu
   }
 
   // Check the destination tile type
-  Tile* destinationTile = area->getTile(newCoordinates);
+  Tile* destinationTile = (Tile*)area->getTile(newCoordinates);
   if(!destinationTile) {
     results.pushEvent(new MoveFailedEvent("Internal server error - destination tile is null"));
     return;
   }
-  if(destinationTile->getType() == Tile::Type::Ground) {
+  if(destinationTile->getType() == TileType::Ground) {
     results.pushEvent(new MoveFailedEvent("Movement blocked"));
     return;
   }
@@ -176,7 +197,7 @@ void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventQueue& resu
   symmetricDiff(newView, _previousView[player], newlyVisible, newlyShrouded);
 
   for(auto c : newlyVisible) {
-    results.pushEvent(new TileDataEvent(c, area->getTile(c)->getType()));
+    results.pushEvent(new TileVisibleEvent(c, area->getTile(c)->lastChanged()));
   }
   for(auto c : newlyShrouded) {
     results.pushEvent(new TileShroudedEvent(c));
@@ -247,7 +268,7 @@ void GameCore::getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibl
       }
       if(!obstructed) {
         // Eventually, this will be *much* more complex
-        obstructed = area->getTile(pointOnLine)->getType() != Tile::Type::Wall;
+        obstructed = area->getTile(pointOnLine)->getType() != TileType::Wall;
       }
     }
   }

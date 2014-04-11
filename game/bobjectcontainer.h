@@ -10,7 +10,7 @@ using namespace std;
 
 class Area;
 
-class BObjectContainer {
+class BObjectContainer: virtual public Observable {
 public:
   BObjectContainer();
   virtual ~BObjectContainer();
@@ -20,16 +20,17 @@ public:
 
   void setParent(BObjectContainer* parent);
 
+  const set<BObjectID>& getContents() const;
+
 protected:
   friend class BObject;
 
   bool addObject(BObjectID object);
   bool removeObject(BObjectID object);
 
-private:
   void debugContents();
 
-private:
+protected:
   BObjectContainer* _parent;
   set<BObjectID> _contents;
 };

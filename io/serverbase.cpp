@@ -40,10 +40,15 @@ void ServerBase::stop() {
   _loopThread.join();
 }
 
+bool ServerBase::isRunning() {
+  return _loopThread.joinable();
+}
+
 bool ServerBase::assignClient(ClientBase* client, const string& name) {
   #pragma message "A password should be used to validate a valid login"
 
   unique_lock<mutex> lock(_lock);
+
   auto existingClient = _assignedClients.find(name);
   if(existingClient != _assignedClients.end()) {
     Info("Player " << name << " already associated with a client");
@@ -76,6 +81,7 @@ void ServerBase::removeClient(ClientBase* client) {
 
 void ServerBase::clientEvent(ClientBase* client, GameEvent* event) {
   unique_lock<mutex> lock(_lock);
+
   auto playerIDItr = _assignedIDs.reverseFind(client);
   if(playerIDItr == _assignedIDs.reverseEnd()) {
     #pragma message "We should hang up on any client that does this"
@@ -93,9 +99,7 @@ void ServerBase::clientEvent(ClientBase* client, GameEvent* event) {
 
   EventQueue results;
   _core->processPlayerEvent(playerID, event, results);
-  for(auto rEvent : results) {
-    client->sendToClient(rEvent);
-  }
+  client->queueToClient(move(results));
 }
 
 void ServerBase::innerLoop() {
@@ -106,9 +110,9 @@ void ServerBase::innerLoop() {
 
     Debug("...Server is thinking...");
     EventQueue updateEvents;
-    clock_t next = clock();
 
     unique_lock<mutex> lock(_lock);
+    clock_t next = clock();
     _core->update(next - last, updateEvents);
 
     last = next;
@@ -116,9 +120,9 @@ void ServerBase::innerLoop() {
     #pragma message "It would be great if this didn't have to be an O(n*m) operation..."
     for(auto event : updateEvents) {
       for(auto clientInfo : _assignedIDs) {
-        if(_core->isEventVisibleToPlayer(clientInfo.first, event)) {
+        if(_core->isEventVisibleToPlayer(clientInfo.first, event.get())) {
           Debug("Sending update event to player " << clientInfo.first);
-          clientInfo.second->sendToClient(event);
+          clientInfo.second->queueToClient(event);
         } else {
           Debug("Event is not visible to player " << clientInfo.first);
         }

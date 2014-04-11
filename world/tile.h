@@ -1,29 +1,18 @@
 #ifndef TILE_H
 #define TILE_H
 
-#include "game/bobjectcontainer.h"
+#include "world/tilebase.h"
 
-class Tile: public BObjectContainer {
+class Tile: public TileBase {
 public:
-  enum Type {
-    Wall,
-    Ground
-  };
-
-public:
-  Tile(Area* area, const IVec2& pos, Type type);
-  virtual ~Tile();
-
-  void setType(Type type);
-  Type getType() const;
+  Tile(Area* area, const IVec2& pos, TileType type);
 
   Area* getArea() const;
   const IVec2& getCoordinates() const;
 
 private:
-  Area* _area;
   IVec2 _pos;
-  Type _type;
+  Area* _area;
 };
 
 #endif

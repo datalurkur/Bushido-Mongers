@@ -4,6 +4,7 @@
 #include "util/propertymap.h"
 #include "util/sectioneddata.h"
 
+#include "game/observable.h"
 #include "game/bobjectextension.h"
 #include "game/bobjecttypes.h"
 
@@ -31,7 +32,7 @@ public:
 class BObjectManager;
 class BObjectContainer;
 
-class BObject {
+class BObject: virtual public Observable {
 public:
   BObject(BObjectManager* manager, BObjectType type, BObjectID id, const ProtoBObject* proto);
   virtual ~BObject();

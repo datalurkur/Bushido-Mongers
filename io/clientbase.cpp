@@ -1,12 +1,18 @@
 #include "io/clientbase.h"
 #include "io/gameevent.h"
-#include "world/world.h"
+#include "world/clientworld.h"
 
-ClientBase::ClientBase(): _currentArea(0) {
-  _world = new World();
+ClientBase::ClientBase(): _done(false), _eventsReady(false) {
+  _world = new ClientWorld();
+  _eventConsumer = thread(&ClientBase::consumeEvents, this);
 }
 
 ClientBase::~ClientBase() {
+  if(_eventConsumer.joinable()) {
+    _eventsReadyCV.notify_all();
+    _done = true;
+    _eventConsumer.join();
+  }
   delete _world;
 }
 
@@ -33,41 +39,20 @@ void ClientBase::moveCharacter(const IVec2& dir) {
 
 void ClientBase::processEvent(GameEvent* event) {
   switch(event->type) {
-    case GameEventType::AreaData: {
-      struct AreaDataEvent* e = (struct AreaDataEvent*)event;
-      Debug("Received data for area " << e->name);
-      if(_world->hasArea(e->name)) {
-        Debug("Area data already present for " << e->name);
-      } else {
-        ClientArea* area = new ClientArea(e->name, e->pos, e->size);
-        _world->addArea(area);
-        _currentArea = area;
+    case AreaData:
+    case TileVisible:
+    case TileShrouded:
+    case TileData: {
+      EventQueue results;
+      _world->processWorldEvent(event, results);
+      for(auto result : results) {
+        sendToServer(result.get());
       }
       break;
     }
-    case GameEventType::TileData: {
-      struct TileDataEvent* e = (struct TileDataEvent*)event;
-      Debug("Received data about tile at " << e->pos);
-      if(!_currentArea) {
-        Error("Can't contextualize tile data with no current area set");
-        break;
-      }
-      Tile* tile = _currentArea->getTile(e->pos);
-      if(!tile) {
-        tile = new Tile(_currentArea, e->pos, e->type);
-        _currentArea->setTile(e->pos, tile);
-      } else {
-        tile->setType(e->type);
-      }
-      _currentArea->revealTile(e->pos);
+    case DataRestricted:
+      Debug("Data restricted - " << ((DataRestrictedEvent*)event)->reason);
       break;
-    }
-    case GameEventType::TileShrouded: {
-      struct TileShroudedEvent* e = (struct TileShroudedEvent*)event;
-      Debug("Tile at " << e->pos << " is now shrouded");
-      _currentArea->shroudTile(e->pos);
-      break;
-    }
     case GameEventType::CharacterReady:
       Debug("Character is ready");
       break;
@@ -83,5 +68,39 @@ void ClientBase::processEvent(GameEvent* event) {
     default:
       Warn("Unhandled game event type " << event->type);
       break;
+  }
+}
+
+//void ClientBase::queueToClient(GameEvent* event) {
+void ClientBase::queueToClient(SharedGameEvent event) {
+  Debug("Pushing event");
+  unique_lock<mutex> lock(_queueLock);
+  _clientEventQueue.pushEvent(event);
+  _eventsReady = true;
+  _eventsReadyCV.notify_all();
+  Debug("Done pushing event");
+}
+
+void ClientBase::queueToClient(EventQueue&& queue) {
+  Debug("Appending events");
+  unique_lock<mutex> lock(_queueLock);
+  _clientEventQueue.appendEvents(move(queue));
+  _eventsReady = true;
+  _eventsReadyCV.notify_all();
+  Debug("Done appending events");
+}
+
+void ClientBase::consumeEvents() {
+  while(!_done) {
+    unique_lock<mutex> lock(_queueLock);
+    while(!_eventsReady && !_done) _eventsReadyCV.wait(lock);
+
+    if(_clientEventQueue.empty()) { continue; }
+    SharedGameEvent event = _clientEventQueue.popEvent();
+    if(_clientEventQueue.empty()) {
+      _eventsReady = false;
+    }
+    lock.unlock();
+    sendToClient(event.get());
   }
 }

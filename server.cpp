@@ -12,6 +12,7 @@ GameServer* server = 0;
 LocalGameClient* client = 0;
 
 void cleanup(int signal) {
+  Info("Cleaning up");
   if(client) {
     delete client;
   }
@@ -64,7 +65,7 @@ int main(int argc, char** argv) {
   client->moveCharacter(IVec2(0, 1));
   client->moveCharacter(IVec2(0, -1));
 
-  while(true) {
+  while(server->isRunning()) {
     sleep(1);
   }
 

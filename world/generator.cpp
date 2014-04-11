@@ -142,7 +142,7 @@ World* WorldGenerator::GenerateWorld(int size, float sparseness, float connected
 }
 
 void WorldGenerator::PlaceAreaTransitions(Area* area) {
-  for(Area* connection : area->getConnections()) {
+  for(string connectedName : area->getConnections()) {
     // Determine the unit vector that points in the direction of the connected area
     
   }
@@ -164,9 +164,9 @@ void WorldGenerator::GenerateCave(Area* area, float openness, float density) {
       float adjust = offset.magnitudeSquared() / maxRadiusSquared;
       double pValue = p.noise3(nCoords.x, nCoords.y, 0.5) - adjust;
       if(pValue > cutoff) {
-        area->setTile(coords, new Tile(area, coords, Tile::Type::Ground));
+        area->setTile(coords, new Tile(area, coords, TileType::Ground));
       } else {
-        area->setTile(coords, new Tile(area, coords, Tile::Type::Wall));
+        area->setTile(coords, new Tile(area, coords, TileType::Wall));
       }
     }
   }
@@ -191,7 +191,7 @@ void WorldGenerator::ParseAreas(Area* area, map<int, set<IVec2> >& grouped) {
   for(i = 0; i < areaSize.x; i++) {
     for(j = 0; j < areaSize.y; j++) {
       //Debug("Inspecting tile at " << i << "," << j);
-      if(area->getTile(i, j)->getType() == Tile::Type::Wall) {
+      if(area->getTile(IVec2(i, j))->getType() == TileType::Wall) {
         //Debug("Tile is a wall, skipping");
         GROUP(i, j) = -1;
         continue;

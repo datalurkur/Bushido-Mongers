@@ -4,8 +4,11 @@
 #include "io/gameevent.h"
 
 #include <list>
+#include <memory>
 
 using namespace std;
+
+typedef shared_ptr<GameEvent> SharedGameEvent;
 
 // The purpose of the event list is to maintain control of game event memory
 // Since it's necessary to pass around game event pointers, rather than references
@@ -17,12 +20,22 @@ public:
   ~EventQueue();
 
   void pushEvent(GameEvent* event);
+  void pushEvent(SharedGameEvent event);
+  void appendEvents(EventQueue&& other);
 
-  list<GameEvent*>::const_iterator begin() const;
-  list<GameEvent*>::const_iterator end() const;
+  SharedGameEvent popEvent();
+
+  list<SharedGameEvent>::const_iterator begin() const;
+  list<SharedGameEvent>::const_iterator end() const;
+
+  void clear();
+  bool empty();
+
+protected:
+  list<SharedGameEvent>&& getMovableEvents();
 
 private:
-  list<GameEvent*> _events;
+  list<SharedGameEvent> _events;
 };
 
 #endif

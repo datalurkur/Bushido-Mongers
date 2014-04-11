@@ -7,7 +7,8 @@ BObjectContainer::~BObjectContainer() {
   if(_parent) {
     // Attempt to spill this container's contents into its parent container
     for(auto objectID : _contents) {
-      _parent->addObject(objectID);
+      #pragma message "This won't work because the object still thinks it's here"
+      //_parent->addObject(objectID);
     }
   }
   _contents.clear();
@@ -17,14 +18,23 @@ void BObjectContainer::setParent(BObjectContainer* parent) { _parent = parent; }
 
 bool BObjectContainer::addObject(BObjectID object) {
   Debug("Adding object " << object << " to container");
+
   auto result = _contents.insert(object);
+  if(result.second) { markChanged(); }
+
   return result.second;
 }
 
 bool BObjectContainer::removeObject(BObjectID object) {
   Debug("Removing object " << object << " from container");
-  return (_contents.erase(object) == 1);
+
+  bool ret = _contents.erase(object);
+  if(ret) { markChanged(); }
+
+  return ret;
 }
+
+const set<BObjectID>& BObjectContainer::getContents() const { return _contents; }
 
 void BObjectContainer::debugContents() {
   Debug("Container currently contains:");
