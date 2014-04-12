@@ -2,13 +2,7 @@
 #include "util/assertion.h"
 #include "util/log.h"
 
-int InvokeListenSocketLoop(void *params) {
-  ListenSocket *socket = (ListenSocket*)params;
-  socket->doListening();
-  return 1;
-}
-
-ListenSocket::ListenSocket(SocketCreationListener *acceptListener): Socket(true), _acceptListener(acceptListener), _listenThread(0), _listenMutex(0), _shouldDie(false) {
+ListenSocket::ListenSocket(SocketCreationListener *acceptListener): Socket(false), _acceptListener(acceptListener), _shouldDie(false) {
 }
 
 ListenSocket::~ListenSocket() {
@@ -16,18 +10,15 @@ ListenSocket::~ListenSocket() {
 }
 
 bool ListenSocket::startListening(unsigned short localPort) {
-  if(!_listenThread) {
+  if(!_listenThread.joinable()) {
     if(!createSocket(SOCK_STREAM, IPPROTO_TCP)) { return false; }
     if(!bindSocket(localPort)) { return false; }
 
     // Listen for connections, setting the backlog to 5
-    _mutex->lock();
     listen(_socketHandle, 5);
-    _mutex->unlock();
 
     // Start looping to accept connections
-    _listenMutex = new mutex;
-    _listenThread = new thread(InvokeListenSocketLoop, (void*)this);
+    _listenThread = thread(&ListenSocket::doListening, this);
 
     Info("Listening for connections on port " << localPort);
 
@@ -36,41 +27,37 @@ bool ListenSocket::startListening(unsigned short localPort) {
 }
 
 void ListenSocket::stopListening() {
-  if(_listenThread) {
+  if(_listenThread.joinable()) {
     // Tell the thread to die
-    _listenMutex->lock();
     _shouldDie = true;
-    _listenMutex->unlock();
     
     // Wait for the thread to die
-    _listenThread->join();
-    delete _listenThread;
-    _listenThread = 0;
+    _listenThread.join();
     
     // Teardown
-    delete _listenMutex;
-    _listenMutex = 0;
     closeSocket();
 
-    Info("ListenSocked closed");
+    Info("ListenSocket closed");
   }
 }
 
 void ListenSocket::doListening() {
-  while(true) {
+  while(!_shouldDie) {
+    Debug("Listen socket waiting for connections");
+    int newSocketHandle;
     sockaddr_in clientAddr;
     socklen_t clientAddrLength;
-    int newSocketHandle;
     
-    _listenMutex->lock();
-    if(_shouldDie) {
-        _listenMutex->unlock();
-        break;
-    } else {
-        _listenMutex->unlock();
-    }
-
     clientAddrLength = sizeof(clientAddr);
+    fd_set readSet;
+    FD_ZERO(&readSet);
+    FD_SET(_socketHandle, &readSet);
+    timeval timeout{1, 0};
+
+    if(select(FD_SETSIZE, &readSet, 0, 0, &timeout) <= 0) {
+      Debug("Select shows no waiting connections");
+      continue;
+    }
     newSocketHandle = accept(_socketHandle, (sockaddr*)&clientAddr, &clientAddrLength);
 
     if(newSocketHandle <= 0) {

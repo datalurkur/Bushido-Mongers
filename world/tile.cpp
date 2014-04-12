@@ -1,11 +1,9 @@
 #include "world/tile.h"
 #include "util/log.h"
 
-Tile::Tile(): _type(Type::Wall) {
-}
+Tile::Tile(Area* area, const IVec2& pos, TileType type): TileBase(type), _pos(pos), _area(area) {}
 
-Tile::~Tile() {}
+Area* Tile::getArea() const { return _area; }
 
-void Tile::setType(Tile::Type type) { _type = type; }
+const IVec2& Tile::getCoordinates() const { return _pos; }
 
-Tile::Type Tile::getType() const { return _type; }

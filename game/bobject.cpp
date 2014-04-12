@@ -67,7 +67,7 @@ bool ProtoBObject::unpack(const SectionedData<ObjectSectionType>& sections) {
 }
 
 BObject::BObject(BObjectManager* manager, BObjectType type, BObjectID id, const ProtoBObject* proto):
-  _manager(manager), _proto(proto), _type(type), _id(id), _keywords(proto->keywords) {
+  _manager(manager), _proto(proto), _type(type), _id(id), _keywords(proto->keywords), _location(0) {
   for(auto& pExt : proto->extensions) {
     addExtension(pExt.first, *pExt.second);
   }

@@ -53,11 +53,11 @@ int main() {
 
   // Area generation test
   int area_size = 128;
-  m_area = new Area("Test Area", Vec2(10, 20), Vec2(area_size, area_size));
-  const Vec2& areaSize = m_area->getSize();
+  m_area = new Area("Test Area", IVec2(10, 20), IVec2(area_size, area_size));
+  const IVec2& areaSize = m_area->getSize();
   WorldGenerator::GenerateCave(m_area, 0.5, 1.0);
 
-  map<int, set<Vec2>> grouped;
+  map<int, set<IVec2>> grouped;
   WorldGenerator::ParseAreas(m_area, grouped);
 
 #if ENABLE_CURSES == 1

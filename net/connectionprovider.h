@@ -5,7 +5,7 @@
 
 class ConnectionProvider {
 public:
-  virtual bool sendPacket(const Packet &packet) = 0;
+  virtual bool sendPacket(const NetAddress& dest, const Packet &packet) = 0;
   virtual bool recvPacket(Packet &packet) = 0;
 };
 

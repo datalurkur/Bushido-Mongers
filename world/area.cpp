@@ -1,26 +1,34 @@
 #include "util/log.h"
 #include "world/area.h"
 
-Area::Area(const string& name, const Vec2& pos, const Vec2& size):
-  _name(name), _pos(pos), _size(size) {
-  _tiles.resize(_size.x * _size.y);
+Area::Area(const string& name, const IVec2& pos, const IVec2& size):
+  AreaBase(name, pos, size) {}
+
+Tile* Area::getRandomEmptyTile() {
+  const int maxAttempts = 100;
+  Tile* ret = 0;
+  for(int c = 0; c < maxAttempts; c++) {
+    int x = rand() % _size.x,
+        y = rand() % _size.y;
+
+    ret = (Tile*)getTile(IVec2(x, y));
+    if(!ret) {
+      Error("Found null tile at " << IVec2(x, y));
+    }
+
+    if(ret && ret->getType() != TileType::Ground) { return ret; }
+  }
+
+  Error("Failed to find random empty tile");
+  return 0;
 }
 
-Area::~Area() {
-  _tiles.clear();
+void Area::setTile(const IVec2& pos, TileBase* tile) {
+  int index = (pos.x * _size.y) + pos.y;
+  if(_tiles[index]) {
+    Warn("Tile already exists");
+    delete _tiles[index];
+  }
+  _tiles[index] = tile;
 }
 
-const string& Area::getName() const { return _name; }
-const Vec2& Area::getPos() const { return _pos; }
-const Vec2& Area::getSize() const { return _size; }
-
-void Area::addConnection(Area *o) {
-  _connections.insert(o);
-}
-
-const set<Area*>& Area::getConnections() const {
-  return _connections;
-}
-
-Tile& Area::getTile(int x, int y) { return _tiles[(x * _size.y) + y]; }
-Tile& Area::getTile(const Vec2& pos) { return _tiles[(pos.x * _size.y) + pos.y]; }

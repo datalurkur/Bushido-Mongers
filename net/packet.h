@@ -5,14 +5,13 @@
 #include "net/netaddress.h"
 
 struct Packet {
-  NetAddress addr;
   unsigned int size;
   char *data;
-  clock_t clockStamp;
+  time_t timestamp;
 
   Packet();
   Packet(const Packet &other);
-  Packet(const NetAddress &a, const char *d, unsigned int s);
+  Packet(const char *d, unsigned int s);
   ~Packet();
 
   const Packet& operator=(const Packet &rhs);

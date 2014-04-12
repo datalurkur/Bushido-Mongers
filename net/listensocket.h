@@ -10,7 +10,7 @@
 class SocketCreationListener {
 public:
   // Returns true if the connection should be left active, false if it should be refused
-  virtual bool onSocketCreation(const NetAddress &client, TCPSocket *socket) { return false; }
+  virtual bool onSocketCreation(const NetAddress &client, TCPSocket *socket) = 0;
 };
 
 class ListenSocket: public Socket {
@@ -24,16 +24,11 @@ public:
   void doListening();
 
 private:
-  static unsigned int DefaultMaxClients;
-
-private:
   SocketCreationListener *_acceptListener;
 
-  thread *_listenThread;
-  mutex *_listenMutex;
-  unsigned int _maxClients;
+  thread _listenThread;
   
-  bool _shouldDie;
+  atomic<bool> _shouldDie;
 };
 
 #endif

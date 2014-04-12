@@ -43,16 +43,10 @@ Socket::Socket(bool blocking): _state(Uninitialized), _blocking(blocking), _sock
   if(!IsSocketLayerReady()) {
     Warn("Socket layer not yet initialized! Please call InitializeSocketLayer if you expect your sockets to send data.");
   }
-  _mutex = new mutex;
 }
 
 Socket::~Socket() {
   closeSocket();
-
-  if(_mutex) {
-    delete _mutex;
-    _mutex = 0;
-  }
 }
 
 bool Socket::createSocket(int type, int proto) {
@@ -64,7 +58,7 @@ bool Socket::createSocket(int type, int proto) {
   }
 
   // Create the socket
-  _mutex->lock();
+  unique_lock<mutex> lock(_mutex);
   _socketHandle = socket(AF_INET, type, proto);
   if(_socketHandle <= 0) {
     Error("Failed to create socket.");
@@ -72,7 +66,7 @@ bool Socket::createSocket(int type, int proto) {
   } else {
     _state = Created;
   }
-  _mutex->unlock();
+  lock.unlock();
 
   setBlockingFlag(_blocking);
 
@@ -81,7 +75,6 @@ bool Socket::createSocket(int type, int proto) {
 
 bool Socket::bindSocket(unsigned short localPort) {
   sockaddr_in addr;
-  bool ret = true;
 
   if(_state != Created) {
     if(_state == Uninitialized) {
@@ -93,19 +86,19 @@ bool Socket::bindSocket(unsigned short localPort) {
   }
 
   // Bind the socket
-  _mutex->lock();
+  unique_lock<mutex> lock(_mutex);
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = INADDR_ANY;
   addr.sin_port = htons(localPort);
-  if(bind(_socketHandle, (const sockaddr*)&addr, sizeof(sockaddr_in)) < 0) {
-    Error("Failed to bind socket to port " << localPort);
-    ret = false;
-  } else {
-    _state = Bound;
-  }
-  _mutex->unlock();
 
-  return ret;
+  // We're not using std::bind
+  if(::bind(_socketHandle, (const sockaddr*)&addr, sizeof(sockaddr_in)) < 0) {
+    Error("Failed to bind socket to port " << localPort);
+    return false;
+  }
+
+  _state = Bound;
+  return true;
 }
 
 bool Socket::setBlockingFlag(bool value) {
@@ -125,48 +118,36 @@ bool Socket::setBlockingFlag(bool value) {
 }
 
 void Socket::closeSocket() {
-  _mutex->lock();
-
+  unique_lock<mutex> lock(_mutex);
   if(_socketHandle) {
 #if SYS_PLATFORM == PLATFORM_WIN32
-    closesocket(_socketHandle);
+    ::closesocket(_socketHandle);
 #else
     close(_socketHandle);
 #endif
     _socketHandle = 0;
     _state = Uninitialized;
   }
-
-  _mutex->lock();
 }
 
 bool Socket::isOpen() {
-  bool ret;
-
-  _mutex->lock();
-  ret = (_state == Bound || _state == Listening || _state == Connecting || _state == Connected);
-  _mutex->unlock();
-
-  return ret;
+  unique_lock<mutex> lock(_mutex);
+  return (_state == Bound || _state == Listening || _state == Connecting || _state == Connected);
 }
 
 unsigned short Socket::getLocalPort() {
-  unsigned short ret;
   sockaddr_in addr;
   socklen_t addrSize = sizeof(addr);
 
   ASSERT(isOpen(), "Socket is not open");
 
-  _mutex->lock();
+  unique_lock<mutex> lock(_mutex);
   if(getsockname(_socketHandle, (sockaddr*)&addr, &addrSize) == 0 && addr.sin_family == AF_INET && sizeof(addr) == addrSize) {
-    ret = ntohs(addr.sin_port);
+    return ntohs(addr.sin_port);
   } else {
     Error("Failed to get local port for Socket");
-    ret = 0;
+    return 0;
   }
-  _mutex->unlock();
-
-  return ret;
 }
 
 bool Socket::send(const char *data, unsigned int size, const sockaddr *addr, int addrSize) {
@@ -174,9 +155,8 @@ bool Socket::send(const char *data, unsigned int size, const sockaddr *addr, int
 
   ASSERT(isOpen(), "Socket is not open");
 
-  _mutex->lock();
+  unique_lock<mutex> lock(_mutex);
   bytesSent = (int)sendto(_socketHandle, data, size, 0, addr, addrSize);
-  _mutex->unlock();
 
   if(bytesSent < 0) {
     Error("Failed to write to socket");
@@ -194,7 +174,6 @@ bool Socket::send(const char *data, unsigned int size, const sockaddr *addr, int
 void Socket::recv(char *data, int &size, unsigned int maxSize, sockaddr *addr, int &addrSize) {
   ASSERT(isOpen(), "Socket is not open");
 
-  _mutex->lock();
+  unique_lock<mutex> lock(_mutex);
   size = (int)recvfrom(_socketHandle, data, maxSize, 0, addr, (socklen_t*)&addrSize);
-  _mutex->unlock();
 }

@@ -3,17 +3,29 @@
 
 #include <cstring>
 
-TCPBuffer::TCPBuffer(const NetAddress &dest, unsigned short localPort): _serializationBuffer(0), _dest(dest) {
+TCPBuffer::TCPBuffer(unsigned short localPort): _serializationBuffer(0), _localPort(localPort) {
   _socket = new TCPSocket();
-  getSocket()->connectSocket(dest, localPort);
 }
 
-TCPBuffer::TCPBuffer(const NetAddress &dest, TCPSocket *establishedSocket): _serializationBuffer(0), _dest(dest) {
+TCPBuffer::TCPBuffer(TCPSocket *establishedSocket): _serializationBuffer(0), _localPort(0) {
   _socket = establishedSocket;
 }
 
 TCPBuffer::~TCPBuffer() {
-   if(_socket) { delete getSocket(); }
+  if(_socket) { delete getSocket(); }
+}
+
+bool TCPBuffer::isConnected() {
+  return getSocket()->isConnected();
+}
+
+bool TCPBuffer::connect(const NetAddress& dest) {
+  if(!getSocket()->isConnected()) {
+    return getSocket()->connectSocket(dest, _localPort);
+  } else {
+    Error("Already connected");
+    return false;
+  }
 }
 
 void TCPBuffer::startBuffering() {
@@ -41,19 +53,13 @@ void TCPBuffer::doInboundBuffering() {
   while(!getSocket()->isConnected()) { sleep(1); }
 
   Debug("Entering TCPBuffer inbound packet buffering loop");
-  while(true) {
-    _inboundLock->lock();
-    if(_inboundShouldDie) {
-      _inboundLock->unlock();
-      break;
-    } else {
-      _inboundLock->unlock();
-    }
-    
-    _inboundQueueLock->lock();
+  while(!_inboundShouldDie) {
+    unique_lock<mutex> lock(_inboundQueueLock);
 
     // Get the next packet from the socket
-    getSocket()->recv(_packetBuffer, totalBufferSize, _maxBufferSize);
+    if(!getSocket()->recvBlocking(_packetBuffer, totalBufferSize, _maxBufferSize, 1)) {
+      continue;
+    }
     currentOffset = 0;
     dataBuffer = 0;
     while(currentOffset < totalBufferSize) {
@@ -64,19 +70,16 @@ void TCPBuffer::doInboundBuffering() {
       _receivedPackets++;
 
       // Push the incoming packet onto the queue
-      _inbound.push(Packet(_dest, dataBuffer, dataSize));
+      _inbound.push(Packet(dataBuffer, dataSize));
       if(_inbound.size() > _maxBufferSize) {
-          _inbound.pop();
-          _outboundQueueLock->lock();
-          _droppedPackets++;
-          _outboundQueueLock->unlock();
+        _inbound.pop();
+        _droppedPackets++;
       } else {
-          _inboundPackets++;
+        _inboundPackets++;
       }
 
       currentOffset += packetSize;
     }
-    _inboundQueueLock->unlock();
   }
 }
 
@@ -88,16 +91,8 @@ void TCPBuffer::doOutboundBuffering() {
   while(!getSocket()->isConnected()) { sleep(1); }
 
   Debug("Entering TCPBuffer outbound packet buffering loop");
-  while(true) {
-    _outboundLock->lock();
-    if(_outboundShouldDie) {
-      _outboundLock->unlock();
-      break;
-    } else {
-      _outboundLock->unlock();
-    }
-    
-    _outboundQueueLock->lock();
+  while(!_outboundShouldDie) {
+    unique_lock<mutex> lock(_outboundQueueLock);
     if(!_outbound.empty()) {
       // Pop the next outgoing packet off the queue
       packet = _outbound.front();
@@ -111,7 +106,6 @@ void TCPBuffer::doOutboundBuffering() {
       getSocket()->send(_serializationBuffer, serializedSize);
       _sentPackets++;
     }
-    _outboundQueueLock->unlock();
   }
 }
 

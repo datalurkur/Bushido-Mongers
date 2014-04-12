@@ -1,3 +1,4 @@
+#include "util/log.h"
 #include "util/geom.h"
 #include <cmath>
 
@@ -46,4 +47,80 @@ bool computeCircleFromPoints(const Vec2& p0, const Vec2& p1, const Vec2& p2, Vec
   }
 
   return true;
+}
+
+void computeRasterizedCircle(int r, list<IVec2>& points) {
+  int x = r,
+      y = 0;
+
+  int error = 1 - x;
+
+  // Iterate over 1/8th of the circumference
+  while(x >= y) {
+    // Add 8 points for this iteration (one for each octant)
+    points.push_back(IVec2( x,  y));
+    points.push_back(IVec2( y,  x));
+    points.push_back(IVec2(-x,  y));
+    points.push_back(IVec2(-y,  x));
+    points.push_back(IVec2(-x, -y));
+    points.push_back(IVec2(-y, -x));
+    points.push_back(IVec2( x, -y));
+    points.push_back(IVec2( y, -x));
+
+    y++;
+    if(error < 0) {
+      error += (2 * y) + 1;
+    } else {
+      x--;
+      error += 2 * (y - x + 1);
+    }
+  }
+
+  points.sort();
+  points.unique();
+}
+
+void computeRasterizedDisc(int r, list<IVec2>& points) {
+  int rSquared = r * r;
+  for(int i = 0; i <= r; i++) {
+    int xSquared = i * i;
+    float yRange = sqrt((float)(rSquared - xSquared));
+    points.push_back(IVec2( i, 0));
+    if(i) {
+      points.push_back(IVec2(-i, 0));
+    }
+    for(int j = 1; j <= yRange; j++) {
+      points.push_back(IVec2( i,  j));
+      points.push_back(IVec2( i, -j));
+      if(i) {
+        points.push_back(IVec2(-i,  j));
+        points.push_back(IVec2(-i, -j));
+      }
+    }
+  }
+  computeRasterizedCircle(r, points);
+}
+
+void computeRasterizedLine(const IVec2& p0, const IVec2& p1, list<IVec2>& points) {
+  int dx = abs(p1.x - p0.x),
+      dy = abs(p1.y - p0.y),
+      sx = (p0.x < p1.x) ? 1 : -1,
+      sy = (p0.y < p1.y) ? 1 : -1,
+      x = p0.x,
+      y = p0.y,
+      error = dx - dy;
+
+  points.push_back(IVec2(x, y));
+  while(x != p1.x || y != p1.y) {
+    int e2 = error * 2;
+    if(e2 > -dy) {
+      error -= dy;
+      x += sx;
+    }
+    if(e2 < dx) {
+      error += dx;
+      y += sy;
+    }
+    points.push_back(IVec2(x, y));
+  }
 }

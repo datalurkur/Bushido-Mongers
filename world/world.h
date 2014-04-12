@@ -1,31 +1,19 @@
 #ifndef WORLD_H
 #define WORLD_H
 
+#include "world/worldbase.h"
 #include "world/area.h"
-
-#include <list>
-#include <map>
-#include <set>
-#include <string>
 
 using namespace std;
 
-class World {
-  friend class WorldGenerator;
-
+class World: public WorldBase {
 public:
   World();
-  ~World();
 
   void generateGraphVizFile(const string& filename);
+  Area* getRandomArea() const;
 
-protected:
-  void addArea(Area* area);
-  void addConnection(Area* a, Area* b);
-
-private:
-  list<Area*> _areas;
-  map<Area*, set<Area*> > _connections;
+  friend class WorldGenerator;
 };
 
 #endif
