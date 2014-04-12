@@ -15,13 +15,12 @@ void Input::GetWord(const string& title, string& word) {
 string Input::GetString(const string& title) {
   int width_needed = (int)fmin(fmax(40, title.length()), 255);
 
-  TitleBox* tb = new TitleBox(stdscr, 1, width_needed, 4, 4, title);
-
-  UIStack::push(tb);
+  TitleBox tb = TitleBox(stdscr, 1, width_needed, 4, 4, title);
+  tb.setup();
 
   // TODO - determine why wmove(tb->window(), 0, 0) doesn't always work (sometimes y is off-by-one)
   int y, x;
-  getbegyx(tb->window(), y, x);
+  getbegyx(tb.window(), y, x);
   wmove(stdscr, y, x);
 
   CurseMe::Cursor(true);
@@ -29,9 +28,7 @@ string Input::GetString(const string& title) {
   getnstr(input, 255);
   CurseMe::Cursor(false);
 
-  UIStack::pop();
-  delete tb;
-
+  tb.teardown();
   refresh();
 
   return string(input);

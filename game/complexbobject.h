@@ -17,9 +17,18 @@ public:
   virtual void pack(SectionedData<ObjectSectionType>& sections) const;
   virtual bool unpack(const SectionedData<ObjectSectionType>& sections);
 
+  void addComponent(const string& nickname, const string& raw_type);
+  void addConnection(const string& base, const string& connection);
+  void remConnection(const string& base, const string& connection);
+
+  void getComponents(set<string>& nicknames);
+  void getConnectionsFromComponent(const string& nickname, set<string>& connections);
+
+  string typeOfComponent(const string& nickname);
+
   map<string,string> explicitComponents;
   map<string,string> keywordComponents;
-  map<string,string> connections;
+  map<string,set<string>> connections;
 };
 
 class ComplexBObject : public BObject {

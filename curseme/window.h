@@ -4,7 +4,6 @@
 #include <curses.h>
 #include <string>
 #include <sstream>
-#include "curseme/uistack.h"
 
 using namespace std;
 

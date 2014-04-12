@@ -12,22 +12,22 @@
 
 #include "curseme/curseme.h"
 #include "curseme/window.h"
-#include "curseme/uistack.h"
 
 using namespace std;
 
 /* TODO
-  * attach procs to selections.
-  * don't just blithely assume that ncurses is otherwise enabled.
   * select key for actions.
-  * fix choice/description mismatch? or don't use descriptions at all for now. - use pairs.
-  * remember the placement from the last run, fer christ's sake.
+  * switch choice/descriptions to pairs.
 */
 
 class Menu : public UIE {
 public:
   Menu();
   Menu(const string& title);
+
+  // The function fills out the choices, and is used dynamically during menu setup.
+  Menu(const string& title, function<void(Menu*)> redraw_func);
+
   Menu(const list<string>& choices);
   Menu(const vector<string>& choices);
 
@@ -56,6 +56,7 @@ public:
   void teardown();
 
   void refresh_window();
+  void clear_choices();
 
   ~Menu();
 
@@ -76,6 +77,8 @@ private:
   function<void(string)> _def_fun;
 
   bool _end_on_selection;
+
+  function<void(Menu*)> _redraw_func;
 };
 
 #endif

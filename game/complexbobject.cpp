@@ -23,11 +23,42 @@ bool ProtoComplexBObject::unpack(const SectionedData<ObjectSectionType>& section
   return true;
 }
 
+void ProtoComplexBObject::addComponent(const string& nickname, const string& raw_type) {
+  explicitComponents[nickname] = raw_type;
+}
+
+void ProtoComplexBObject::addConnection(const string& base, const string& connection) {
+  connections[base].insert(connection);
+}
+
+void ProtoComplexBObject::remConnection(const string& base, const string& connection) {
+  connections[base].erase(connection);
+}
+
+void ProtoComplexBObject::getComponents(set<string>& nicknames) {
+  for(auto kv : explicitComponents) {
+    Debug(kv.first << kv.second);
+    nicknames.insert(kv.first);
+  }
+}
+
+void ProtoComplexBObject::getConnectionsFromComponent(const string& nickname, set<string>& nicknames) {
+  for(auto connection : connections[nickname]) {
+    nicknames.insert(connection);
+  }
+}
+
+string ProtoComplexBObject::typeOfComponent(const string& nickname) {
+  return explicitComponents[nickname];
+}
+
 ComplexBObject::ComplexBObject(BObjectManager* manager, BObjectID id, const ProtoComplexBObject* proto): BObject(manager, ComplexType, id, proto) {}
 
 bool ComplexBObject::atCreation() {
   if(!BObject::atCreation()) { return false; }
   #pragma message "TODO : Use the object manager here to create default components"
+
+  _manager;
   return true;
 }
 

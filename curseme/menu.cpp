@@ -10,14 +10,16 @@
 #define KEY_REALENTER 13
 #define CTRLD   4
 
-Menu::Menu(): _index(0), _title("Make a selection"), _end_on_selection(false)  {}
+Menu::Menu(): _index(0), _title("Make a selection"), _end_on_selection(false), _redraw_func(0)  {}
 
-Menu::Menu(const string& title): _index(0), _title(title), _end_on_selection(false) {}
+Menu::Menu(const string& title): _index(0), _title(title), _end_on_selection(false), _redraw_func(0) {}
 
-Menu::Menu(const list<string>& choices): _index(0), _title("Make a selection"), _end_on_selection(false)  {
+Menu::Menu(const string& title, function<void(Menu*)> redraw_func): _index(0), _title(title), _end_on_selection(false), _redraw_func(redraw_func) {}
+
+Menu::Menu(const list<string>& choices): _index(0), _title("Make a selection"), _end_on_selection(false), _redraw_func(0)  {
   for(string choice : choices) { addChoice(choice, ""); }
 }
-Menu::Menu(const vector<string>& choices): _index(0), _title("Make a selection"), _end_on_selection(false)  {
+Menu::Menu(const vector<string>& choices): _index(0), _title("Make a selection"), _end_on_selection(false), _redraw_func(0)  {
   for(string choice : choices) { addChoice(choice, ""); }
 }
 
@@ -77,14 +79,14 @@ bool Menu::actOnChoice(const string& choice) {
   return false;
 }
 
-// choices without actions /always/ pop the menu from the UIStack;
-// if you want this behavior for a choice with an action, set true.
+// choices without actions always teardown the menu.
+// if you want to teardown without a setup for a choice with an action, set true.
 void Menu::setEndOnSelection(bool val) {
   _end_on_selection = val;
 }
 
 unsigned int Menu::listen() {
-  UIStack::push(this);
+  setup();
 
   int c;
   while((c = wgetch(menu_win(_menu))) != KEY_F(1)) {
@@ -121,14 +123,15 @@ unsigned int Menu::listen() {
         */
       case KEY_LLDBENTER:
       case KEY_REALENTER: {
+        teardown();
         bool acted = actOnChoice(_choices[_index]);
 
         if(_end_on_selection || !acted) {
           Debug("popping from " << _title << " and returning");
-          UIStack::pop();
           return _index; // handle the case outside of Menu using getSelection
         } else {
-          // We'll be returning to this menu. Note our location for later.
+          setup();
+          // Remember the location.
           set_current_item(_menu, _items[_index]);
         }
         break;
@@ -139,7 +142,7 @@ unsigned int Menu::listen() {
     }
   }
 
-  UIStack::pop();
+  teardown();
   return _size;
 }
 
@@ -166,6 +169,11 @@ void Menu::setup() {
   Info("Deploying Menu " << _title);
 
   // Create the items and the menu
+
+  if(_redraw_func) {
+    clear_choices();
+    _redraw_func(this);
+  }
 
   if(_choices.size() == 0) {
     // menu.h doesn't like zero-sized menus, so fake it.
@@ -247,6 +255,12 @@ void Menu::refresh_window() {
     wrefresh(menu_win(_menu));
     wrefresh(stdscr);
   }
+}
+
+void Menu::clear_choices() {
+  _choices.clear();
+  _descriptions.clear();
+  _functions.clear();
 }
 
 Menu::~Menu() {
