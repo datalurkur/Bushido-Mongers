@@ -10,16 +10,16 @@
 #define KEY_REALENTER 13
 #define CTRLD   4
 
-Menu::Menu(): _index(0), _title("Make a selection"), _end_on_selection(false), _redraw_func(0)  {}
+Menu::Menu(): _index(0), _title("Make a selection"), _end_on_selection(false), _redraw_func(0), _deployed(false) {}
 
-Menu::Menu(const string& title): _index(0), _title(title), _end_on_selection(false), _redraw_func(0) {}
+Menu::Menu(const string& title): _index(0), _title(title), _end_on_selection(false), _redraw_func(0), _deployed(false) {}
 
-Menu::Menu(const string& title, function<void(Menu*)> redraw_func): _index(0), _title(title), _end_on_selection(false), _redraw_func(redraw_func) {}
+Menu::Menu(const string& title, function<void(Menu*)> redraw_func): _index(0), _title(title), _end_on_selection(false), _redraw_func(redraw_func), _deployed(false) {}
 
-Menu::Menu(const list<string>& choices): _index(0), _title("Make a selection"), _end_on_selection(false), _redraw_func(0)  {
+Menu::Menu(const list<string>& choices): _index(0), _title("Make a selection"), _end_on_selection(false), _redraw_func(0), _deployed(false) {
   for(string choice : choices) { addChoice(choice, ""); }
 }
-Menu::Menu(const vector<string>& choices): _index(0), _title("Make a selection"), _end_on_selection(false), _redraw_func(0)  {
+Menu::Menu(const vector<string>& choices): _index(0), _title("Make a selection"), _end_on_selection(false), _redraw_func(0), _deployed(false) {
   for(string choice : choices) { addChoice(choice, ""); }
 }
 

@@ -20,7 +20,7 @@ using namespace std;
   * switch choice/descriptions to pairs.
 */
 
-class Menu : public UIE {
+class Menu {
 public:
   Menu();
   Menu(const string& title);
@@ -40,8 +40,6 @@ public:
   void addChoice(const string& choice, const string& description, function<void()> func);
 
   void removeChoice(const string& choice);
-
-  //void addChoices(const list<string>& choices, function<void()> func);
 
   void setDefaultAction(function<void(string)> func);
   bool actOnChoice(const string& choice);
@@ -79,6 +77,8 @@ private:
   bool _end_on_selection;
 
   function<void(Menu*)> _redraw_func;
+
+  bool _deployed;
 };
 
 #endif

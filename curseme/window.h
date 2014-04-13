@@ -7,7 +7,7 @@
 
 using namespace std;
 
-class Window : public UIE {
+class Window {
 public:
   Window(WINDOW* win);
 
@@ -29,7 +29,7 @@ private:
 
 
 // contains a window and subwindow in a box. the user has full reign in the subwindow.
-class TitleBox : public UIE {
+class TitleBox {
 public:
   TitleBox(WINDOW* parent, int subwin_nlines, int subwin_ncols, int y, int x, const string& title);
   ~TitleBox();
@@ -61,6 +61,8 @@ private:
   int _x;
 
   string _title;
+
+  bool _deployed;
 };
 
 class PopupRec {

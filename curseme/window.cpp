@@ -30,7 +30,7 @@ void Window::teardown() {
 
 
 TitleBox::TitleBox(WINDOW* parent, int subwin_nlines, int subwin_ncols, int y, int x, const string& title):
-    _parent(parent), _subwin_nlines(subwin_nlines), _subwin_ncols(subwin_ncols), _y(y), _x(x), _title(title) {}
+    _parent(parent), _subwin_nlines(subwin_nlines), _subwin_ncols(subwin_ncols), _y(y), _x(x), _title(title), _deployed(false) {}
 
 TitleBox::~TitleBox() {
   teardown();
