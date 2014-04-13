@@ -10,23 +10,18 @@
 #define KEY_REALENTER 13
 #define CTRLD   4
 
-Menu::Menu(): _index(0), _title("Make a selection"), _end_on_selection(false), _redraw_func(0), _deployed(false) {}
+Menu::Menu(): _index(0), _title("Make a selection"), _end_on_selection(false), _redraw_func(0), _deployed(false), _empty_menu(false) {}
 
-Menu::Menu(const string& title): _index(0), _title(title), _end_on_selection(false), _redraw_func(0), _deployed(false) {}
+Menu::Menu(const string& title): _index(0), _title(title), _end_on_selection(false), _redraw_func(0), _deployed(false), _empty_menu(false) {}
 
-Menu::Menu(const string& title, function<void(Menu*)> redraw_func): _index(0), _title(title), _end_on_selection(false), _redraw_func(redraw_func), _deployed(false) {}
+Menu::Menu(const string& title, function<void(Menu*)> redraw_func): _index(0), _title(title), _end_on_selection(false), _redraw_func(redraw_func), _deployed(false), _empty_menu(false) {}
 
-Menu::Menu(const list<string>& choices): _index(0), _title("Make a selection"), _end_on_selection(false), _redraw_func(0), _deployed(false) {
-  for(string choice : choices) { addChoice(choice, ""); }
+Menu::Menu(const list<string>& choices): _index(0), _title("Make a selection"), _end_on_selection(false), _redraw_func(0), _deployed(false), _empty_menu(false) {
+  for(string choice : choices) { addChoice(make_pair(choice, "")); }
 }
-Menu::Menu(const vector<string>& choices): _index(0), _title("Make a selection"), _end_on_selection(false), _redraw_func(0), _deployed(false) {
-  for(string choice : choices) { addChoice(choice, ""); }
+Menu::Menu(const vector<string>& choices): _index(0), _title("Make a selection"), _end_on_selection(false), _redraw_func(0), _deployed(false), _empty_menu(false) {
+  for(string choice : choices) { addChoice(make_pair(choice, "")); }
 }
-
-/*
-Menu::Menu(vector<string>& choices, vector<string>& descriptions):
-	_choices(choices), _descriptions(descriptions) {}
-*/
 
 void Menu::setTitle(const string& title) {
   _title = title;
@@ -37,42 +32,38 @@ void Menu::setTitle(const string& title) {
 }
 
 void Menu::addChoice(const string& choice) {
-  addChoice(choice, "");
+  addChoice(make_pair(choice, ""));
 }
 
-void Menu::addChoice(const string& choice, const string& description) {
-  //_choices.push_back(str_pair(choice, description));
+void Menu::addChoice(const StringPair& choice) {
   _choices.push_back(choice);
-  _descriptions.push_back(description);
 }
 
-//template <typename T>
 void Menu::addChoice(const string& choice, function<void()> func) {
-  addChoice(choice, "", func);
+  addChoice(make_pair(choice, ""), func);
 }
 
-void Menu::addChoice(const string& choice, const string& description, function<void()> func) {
-  _choices.push_back(choice);
-  _descriptions.push_back(description);
+void Menu::addChoice(const StringPair& choice, function<void()> func) {
+  addChoice(choice);
 
   _functions[choice] = func;
 }
 
-void Menu::removeChoice(const string& choice) {
-  // FIXME
+void Menu::removeChoice(const StringPair& choice) {
+  _choices.erase(find(_choices.begin(), _choices.end(), choice));
 }
 
-void Menu::setDefaultAction(function<void(string)> func) {
+void Menu::setDefaultAction(function<void(StringPair)> func) {
   _def_fun = func;
 }
 
-bool Menu::actOnChoice(const string& choice) {
+bool Menu::actOnChoice(const StringPair& choice) {
   if(_functions[choice]) {
-    Debug("Running action for " << choice);
+    Debug("Running action for " << choice.first << ", " << choice.second);
     _functions[choice]();
     return true;
-  } else if(_def_fun) {
-    Debug("Running default action for " << choice);
+  } else if(!_empty_menu && _def_fun) {
+    Debug("Running default action for " << choice.first << ", " << choice.second);
     _def_fun(choice);
     return true;
   }
@@ -155,7 +146,7 @@ bool Menu::getSelection(unsigned int& index) {
 bool Menu::getChoice(string& choice) {
   unsigned int index;
   if(getSelection(index)) {
-    choice = _choices[index];
+    choice = _choices[index].first;
     return true;
   } else {
     return false;
@@ -179,26 +170,21 @@ void Menu::setup() {
     // menu.h doesn't like zero-sized menus, so fake it.
     // this permanently adds a <nil> item. If you don't
     // like it you shouldn't deploy an empty menu...
-    _choices.push_back("<nil>");
+    _empty_menu = true;
+    addChoice("<nil>"); // *hand quotes*
   }
   _size  = _choices.size();
 
   _items = (ITEM **)calloc(_size + 1, sizeof(ITEM *));
 
   for(size_t i = 0; i < _size; ++i) {
-    if(i < _descriptions.size()) {
-      _items[i] = new_item(_choices[i].c_str(), _descriptions[i].c_str());
-    } else {
-      _items[i] = new_item(_choices[i].c_str(), "");
-    }
+    _items[i] = new_item(_choices[i].first.c_str(), _choices[i].second.c_str());
   }
   _items[_size] = (ITEM *)NULL;
 
   _menu = new_menu((ITEM **)_items);
 
-  if(_descriptions.size() == 0) {
-    menu_opts_off(_menu, O_SHOWDESC);
-  }
+//  menu_opts_off(_menu, O_SHOWDESC);
 
   // Set menu mark to the string " * "
   set_menu_mark(_menu, " * ");
@@ -206,10 +192,17 @@ void Menu::setup() {
   // Create the accompanying window
   unsigned long width_needed = 0;
   unsigned long mark_size = string(menu_mark(_menu)).length();
+  unsigned long max_choice_size = 0;
 
-  for(string choice : _choices) {
-    if(choice.length() + mark_size > width_needed) {
-      width_needed = choice.length() + mark_size;
+  for(StringPair choice : _choices) {
+    if(choice.first.length() > max_choice_size) {
+      max_choice_size = choice.first.length();
+    }
+  }
+  for(StringPair choice : _choices) {
+    auto estimated_size = max_choice_size + 1 + choice.second.length() + mark_size;
+    if(estimated_size > width_needed) {
+      width_needed = estimated_size;
     }
   }
   if(_title.length() + 1 > width_needed) {
@@ -259,7 +252,6 @@ void Menu::refresh_window() {
 
 void Menu::clear_choices() {
   _choices.clear();
-  _descriptions.clear();
   _functions.clear();
 }
 

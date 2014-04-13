@@ -18,6 +18,10 @@ void editComplexBObject(const string& name, ProtoComplexBObject* object) {
     editComplexComponents(name, object);
   });
 
+  editMenu.addChoice("Connections", [&]() {
+    editComplexConnections(name, object);
+  });
+
   editMenu.listen();
 }
 
@@ -43,7 +47,7 @@ void editComplexComponents(const string& name, ProtoComplexBObject* object) {
 
       Input::GetWord("Enter component type:", type); // TODO - convert to selection from list of types
 
-      if(type.length() == 0) { // || !raws.objectNames.include?(type)
+      if(type.length() == 0) { // FIXME - || !raws.objectNames.include?(type)
         Popup("Invalid component type!");
       }
 
@@ -56,36 +60,60 @@ void editComplexComponents(const string& name, ProtoComplexBObject* object) {
       editComponents->addChoice(nickname);
     }
 
-    editComponents->setDefaultAction([&](string nickname) {
-      ostringstream oss;
-      oss << "Editing " << name << " component \"" << nickname << "\"";
-
-      Menu editComponent(oss.str());
-
-      editComponent.addChoice("Add Connection", [&]() {
-        string connection;
-        Input::GetWord("Enter nickname of part to connect to " + nickname + ":", connection);  // TODO - convert to selection from list of nicknames
-
-        if((find(nicknames.begin(), nicknames.end(), nickname)) != nicknames.end()) {
-          object->addConnection(nickname, connection);
-        } else {
-          // TODO - it makes sense to be able to create new components here
-          //        in the event the nickname doesn't exist.
-          Popup("Nickname does not exist");
-        }
-      });
-
-      set<string> connections;
-      object->getConnectionsFromComponent(nickname, connections);
-      for(auto cnx : connections) { editComponents->addChoice(cnx); }
-
-      editComponent.setDefaultAction([&](string cxn) {
-        object->remConnection(nickname, cxn);
-      });
-
-      editComponent.listen();
+    editComponents->setDefaultAction([&](StringPair nickname) {
+      object->remComponent(nickname.first);
     });
   });
 
   editComponents.listen();
+}
+
+void editComplexConnections(const string& name, ProtoComplexBObject* object) {
+  Menu editConnections("Connections of " + name, [&](Menu* editConnections) {
+    editConnections->addChoice("Add Connection", [&]() {
+      string first, second;
+
+      Input::GetWord("Enter first nickname:", first); // TODO - convert to selection from list of types
+
+      Debug(first);
+
+      if(first.length() == 0) {
+        Popup("No nickname given!");
+      }
+
+      Debug(first);
+
+      if(!object->hasComponent(first)) {
+        Popup("Nickname " + first + " does not exist");
+      }
+
+      Debug(first);
+
+      Input::GetWord("Enter second nickname:", second);
+
+      if(second.length() == 0) { // || !raws.objectNames.include?(type)
+        Popup("No nickname given!");
+      }
+
+      if(!object->hasComponent(second)) {
+        Popup("Nickname " + second + " does not exist");
+      }
+
+      object->addConnection(make_pair(first, second));
+    });
+
+    set<StringPair> connections;
+    object->getConnections(connections);
+
+    for(auto connection : connections) {
+      editConnections->addChoice(connection);
+    }
+
+    editConnections->setDefaultAction([&](StringPair choice) {
+      object->remConnection(choice);
+      editConnections->removeChoice(choice);
+    });
+  });
+
+  editConnections.listen();
 }

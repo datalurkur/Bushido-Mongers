@@ -157,8 +157,8 @@ void selectAndEditObject(Raw& raw) {
   raw.getObjectNames(objectNames);
   Menu objectSelectMenu(objectNames);
 
-  objectSelectMenu.setDefaultAction([&raw](string objectName) {
-    editObject(raw, objectName);
+  objectSelectMenu.setDefaultAction([&raw](StringPair objectName) {
+    editObject(raw, objectName.first);
   });
 
   objectSelectMenu.listen();
@@ -212,7 +212,7 @@ void editRaw(const string& dir, const string& name) {
     }
   });
 
-  rawMenu.addChoice("Save Changes", [&raw, dir, name]() {
+  rawMenu.addChoice("Save Changes", [&]() {
     saveRaw(raw, dir, name);
   });
 
@@ -229,8 +229,8 @@ void selectAndEditRaw(const string& dir) {
 
   Menu rawChoice(raws);
   rawChoice.setTitle("Select raw");
-  rawChoice.setDefaultAction([dir](string raw) {
-    editRaw(dir, raw);
+  rawChoice.setDefaultAction([dir](StringPair raw) {
+    editRaw(dir, raw.first);
   });
 
   rawChoice.listen();

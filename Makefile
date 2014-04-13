@@ -17,7 +17,7 @@ server: curseme/menu.o curseme/curseme.o curseme/input.o curseme/window.o cursem
 raw_editor: curseme/menu.o curseme/curseme.o curseme/input.o util/log.o tools/raw_editor/main.o resource/raw.o game/bobject.o game/complexbobject.o game/atomicbobject.o game/compositebobject.o util/filesystem.o tools/raw_editor/common.o tools/raw_editor/complex.o tools/raw_editor/composite.o interface/choice.o interface/console.o util/packing.o game/bobjectmanager.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-raw_editor_ncurses: curseme/curseme.o curseme/curselog.o curseme/window.o curseme/menu.o curseme/input.o util/log.o tools/raw_editor_ncurses/main.o resource/raw.o game/bobject.o game/complexbobject.o game/atomicbobject.o game/compositebobject.o util/filesystem.o tools/raw_editor_ncurses/common.o tools/raw_editor_ncurses/complex.o tools/raw_editor_ncurses/composite.o interface/choice.o interface/console.o util/packing.o game/bobjectmanager.o game/bobjectcontainer.o
+raw_editor_ncurses: curseme/curseme.o curseme/curselog.o curseme/window.o curseme/menu.o curseme/input.o util/log.o tools/raw_editor_ncurses/main.o resource/raw.o game/bobject.o game/complexbobject.o game/atomicbobject.o game/compositebobject.o util/filesystem.o tools/raw_editor_ncurses/common.o tools/raw_editor_ncurses/complex.o tools/raw_editor_ncurses/composite.o interface/choice.o interface/console.o util/packing.o game/bobjectmanager.o game/bobjectcontainer.o game/observable.o util/timestamp.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 treetest: tests/treetest.o util/log.o curseme/curseme.o curseme/curselog.o

@@ -20,10 +20,10 @@ void editObjectKeywords(ProtoBObject* object) {
 
   for(string kw : object->keywords) { keywordMenu.addChoice(kw); }
 
-  keywordMenu.setDefaultAction([&](string kw) {
+  keywordMenu.setDefaultAction([&](StringPair kw) {
     keywordMenu.removeChoice(kw);
 
-    object->keywords.remove(kw);
+    object->keywords.remove(kw.first);
   });
 
   keywordMenu.listen();

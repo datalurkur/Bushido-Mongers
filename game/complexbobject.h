@@ -6,8 +6,11 @@
 #include "game/bobject.h"
 #include "game/bobjecttypes.h"
 
+#include <utility>
 #include <set>
 #include <map>
+
+typedef pair<string, string> StringPair;
 
 class ProtoComplexBObject : public ProtoBObject {
 public:
@@ -18,17 +21,20 @@ public:
   virtual bool unpack(const SectionedData<ObjectSectionType>& sections);
 
   void addComponent(const string& nickname, const string& raw_type);
-  void addConnection(const string& base, const string& connection);
-  void remConnection(const string& base, const string& connection);
+  void remComponent(const string& nickname);
+
+  void addConnection(const StringPair& connection);
+  void remConnection(const StringPair& connection);
 
   void getComponents(set<string>& nicknames);
-  void getConnectionsFromComponent(const string& nickname, set<string>& connections);
+  void getConnections(set<StringPair>& new_connections);
+  void getConnectionsOfComponent(const string& nickname, set<string>& connections);
 
   string typeOfComponent(const string& nickname);
+  bool   hasComponent(const string& nickname);
 
-  map<string,string> explicitComponents;
-  map<string,string> keywordComponents;
-  map<string,set<string>> connections;
+  map<string,string> _components;
+  set<StringPair> _connections;
 };
 
 class ComplexBObject : public BObject {

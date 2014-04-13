@@ -20,6 +20,20 @@ using namespace std;
   * switch choice/descriptions to pairs.
 */
 
+typedef pair<string, string> StringPair;
+
+// A hash method for StringPair, so we can use it as a key-type for an unordered_map.
+namespace std
+{
+template<>
+struct hash<StringPair> {
+    size_t operator()(const StringPair &sp) const {
+        return hash<string>()(sp.first) ^ hash<string>()(sp.second);
+    }
+};
+}
+typedef unordered_map<StringPair, function<void()> > StringPairFunctionMap;
+
 class Menu {
 public:
   Menu();
@@ -34,16 +48,17 @@ public:
   void setTitle(const string& title);
 
   void addChoice(const string& choice);
-  void addChoice(const string& choice, const string& description);
+  void addChoice(const StringPair& choice);
 
   void addChoice(const string& choice, function<void()> func);
-  void addChoice(const string& choice, const string& description, function<void()> func);
+  void addChoice(const StringPair& choice, function<void()> func);
 
-  void removeChoice(const string& choice);
+  void removeChoice(const StringPair& choice);
 
-  void setDefaultAction(function<void(string)> func);
-  bool actOnChoice(const string& choice);
-
+  void setDefaultAction(function<void(StringPair)> func);
+private:
+  bool actOnChoice(const StringPair& choice);
+public:
   void setEndOnSelection(bool val);
 
   unsigned int listen();
@@ -68,17 +83,19 @@ private:
   unsigned int _size;
 
   string _title;
-  vector<string> _choices;
-  vector<string> _descriptions;
 
-  unordered_map<string, function<void()> > _functions;
-  function<void(string)> _def_fun;
+  vector<StringPair> _choices;
+
+  StringPairFunctionMap _functions;
+  function<void(StringPair)> _def_fun;
 
   bool _end_on_selection;
 
   function<void(Menu*)> _redraw_func;
 
   bool _deployed;
+
+  bool _empty_menu;
 };
 
 #endif
