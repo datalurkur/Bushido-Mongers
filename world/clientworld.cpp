@@ -20,43 +20,36 @@ void ClientWorld::processWorldEvent(GameEvent* event, EventQueue& results) {
       }
       break;
     }
-    case TileVisible: {
-      struct TileVisibleEvent* e = (struct TileVisibleEvent*)event;
-      Debug("Tile at " << e->pos << " is now visible (last modified " << e->lastChanged << ")");
-      if(!_currentArea) {
-        Error("Can't contextualize tile data with no current area set");
-        break;
-      }
-      _currentArea->revealTile(e->pos);
-
-      ClientTile* tile = (ClientTile*)_currentArea->getTile(e->pos);
-      if(!tile || tile->lastChanged() <= e->lastChanged) {
-        Debug("Fetching tile data for " << e->pos);
-        results.pushEvent(new GetTileDataEvent(e->pos));
-      } else {
-        Debug("Tile data up-to-date");
-      }
-      break;
-    }
     case TileData: {
+      if(!_currentArea) {
+        Error("Can't contextualize tile data with no current area set");
+        break;
+      }
+
       struct TileDataEvent* e = (struct TileDataEvent*)event;
-      if(!_currentArea) {
-        Error("Can't contextualize tile data with no current area set");
-        break;
+
+      // Deal with visible tiles
+      for(auto v : e->visible) {
+        Debug("Tile at " << v << " is now visible");
+        _currentArea->revealTile(v);
       }
-      Debug("Received tile data for " << e->pos);
-      ClientTile* newTile = new ClientTile(e->type, e->contents, e->lastChanged);
-      _currentArea->setTile(e->pos, newTile);
-      break;
-    }
-    case TileShrouded: {
-      struct TileShroudedEvent* e = (struct TileShroudedEvent*)event;
-      if(!_currentArea) {
-        Error("Can't contextualize tile data with no current area set");
-        break;
+
+      // Deal with shrouded tiles
+      for(auto s : e->shrouded) {
+        Debug("Tile at " << s << " is now shrouded");
+        _currentArea->shroudTile(s);
       }
-      Debug("Tile at " << e->pos << " is now shrouded");
-      _currentArea->shroudTile(e->pos);
+
+      // Deal with updated tiles
+      for(auto u : e->updated) {
+        Debug("Tile data at " << u.first << " has been updated");
+        _currentArea->revealTile(u.first);
+        _currentArea->setTile(u.first, new ClientTile(
+          u.second.type,
+          move(u.second.contents)
+        ));
+      }
+
       break;
     }
     default:

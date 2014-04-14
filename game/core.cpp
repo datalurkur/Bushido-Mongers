@@ -44,44 +44,25 @@ bool GameCore::destroyWorld() {
 
 void GameCore::update(int elapsed, EventQueue& results) {
   #pragma message "Any activity controlled directly by the core will go here"
+  // TODO - It will be worth looking into (to keep memory costs down) calling the timedmaps' cleanup functions
 }
 
 void GameCore::processPlayerEvent(PlayerID player, GameEvent* event, EventQueue& results) {
   switch(event->type) {
-    case GameEventType::CreateCharacter:
+    case CreateCharacter:
       createCharacter(player, "human", results);
       break;
-    case GameEventType::LoadCharacter: {
+    case LoadCharacter: {
       struct LoadCharacterEvent* e = (struct LoadCharacterEvent*)event;
       loadCharacter(player, e->ID, results);
       break;
     }
-    case GameEventType::UnloadCharacter:
+    case UnloadCharacter:
       unloadCharacter(player, results);
       break;
-    case GameEventType::MoveCharacter:
+    case MoveCharacter:
       moveCharacter(player, ((MoveCharacterEvent*)event)->dir, results);
       break;
-    case GameEventType::GetTileData: {
-      IVec2 pos = ((GetTileDataEvent*)event)->pos;
-      auto isVisible = _previousView[player].find(pos);
-      if(isVisible != _previousView[player].end()) {
-        if(!checkCharacterSanity(player)) {
-          results.pushEvent(new DataRestrictedEvent("Player state is invalid"));
-          break;
-        }
-        Area* area = _objectManager->getObject(_playerMap.lookup(player))->getLocation()->getArea();
-        const IVec2& areaSize = area->getSize();
-        if(pos.x < 0 || pos.y < 0 || pos.x >= areaSize.x || pos.y >= areaSize.y) {
-          results.pushEvent(new DataRestrictedEvent("Tile does not exist"));
-          break;
-        }
-        results.pushEvent(new TileDataEvent((Tile*)area->getTile(pos)));
-      } else {
-        results.pushEvent(new DataRestrictedEvent("Tile is not visible to player"));
-      }
-      break;
-    }
     default:
       Warn("Unhandled game event type " << event->type);
       break;
@@ -128,9 +109,14 @@ void GameCore::createCharacter(PlayerID player, const string& characterType, Eve
   set<IVec2> visibleCoords;
   getViewFrom(player, startTile->getCoordinates(), visibleCoords);
 
-  for(auto coords : visibleCoords) {
-    Tile* tile = (Tile*)startArea->getTile(coords);
-    results.pushEvent(new TileVisibleEvent(coords, tile->lastChanged()));
+  Debug("Visible coordinates at start:");
+  results.pushEvent(new TileDataEvent(startArea, visibleCoords));
+
+  // Update tile data cache timing for player
+  TimedMap<IVec2>* sentAt = getTileTimedMap(player);
+  time_t currentTime = Clock.getTime();
+  for(auto c : visibleCoords) {
+    sentAt->set(c, currentTime);
   }
 
   // Cache visible tiles
@@ -149,6 +135,7 @@ void GameCore::unloadCharacter(PlayerID player, EventQueue& results) {
 }
 
 void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventQueue& results) {
+  Debug("Player " << player << "'s character is moving");
   if(!checkCharacterSanity(player)) {
     results.pushEvent(new MoveFailedEvent("No active player"));
     return;
@@ -196,12 +183,24 @@ void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventQueue& resu
   set<IVec2> newlyVisible, newlyShrouded;
   symmetricDiff(newView, _previousView[player], newlyVisible, newlyShrouded);
 
+  time_t currentTime = Clock.getTime();
+
+  set<IVec2> updated;
+  TimedMap<IVec2>* sentAt = getTileTimedMap(player);
   for(auto c : newlyVisible) {
-    results.pushEvent(new TileVisibleEvent(c, area->getTile(c)->lastChanged()));
+    if(!sentAt->has(c) || (sentAt->get(c) < area->getTile(c)->lastChanged())) {
+      if(!sentAt->has(c)) {
+        Debug("Tile data at " << c << " has not yet been sent");
+      } else {
+        Debug("Tile at " << c << " was last updated at " << area->getTile(c)->lastChanged() << ", which is later than the last sent data at " << sentAt->get(c));
+      }
+      updated.insert(c);
+      sentAt->set(c, currentTime);
+    } else {
+      Debug("Tile at " << c << " was last updated at " << area->getTile(c)->lastChanged() << ", which is NEWER than the last sent data at " << sentAt->get(c));
+    }
   }
-  for(auto c : newlyShrouded) {
-    results.pushEvent(new TileShroudedEvent(c));
-  }
+  results.pushEvent(new TileDataEvent(area, newlyVisible, updated, move(newlyShrouded)));
 
   _previousView[player] = move(newView);
 }
@@ -273,4 +272,15 @@ void GameCore::getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibl
     }
   }
   Info("There are " << visibleTiles.size() << " tiles visible to " << player << " from " << pos);
+}
+
+// Set data resend timeouts to about a minute - this might need tuning later
+TimedMap<IVec2>* GameCore::getTileTimedMap(PlayerID id) {
+  auto result = _tileDataSent.insert(make_pair(id, TimedMap<IVec2>(60)));
+  return &(result.first->second);
+}
+
+TimedMap<BObjectID>* GameCore::getTileObjectMap(PlayerID id) {
+  auto result = _objectDataSent.insert(make_pair(id, TimedMap<BObjectID>(60)));
+  return &(result.first->second);
 }

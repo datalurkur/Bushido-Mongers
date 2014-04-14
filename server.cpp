@@ -60,9 +60,16 @@ int main(int argc, char** argv) {
 
   // Test movement
   Info("Client is attempting to move");
+  Info("=======================================");
   client->moveCharacter(IVec2(1, 0));
+  sleep(1);
+  Info("=======================================");
   client->moveCharacter(IVec2(-1, 0));
+  sleep(1);
+  Info("=======================================");
   client->moveCharacter(IVec2(0, 1));
+  sleep(1);
+  Info("=======================================");
   client->moveCharacter(IVec2(0, -1));
 
   while(server->isRunning()) {

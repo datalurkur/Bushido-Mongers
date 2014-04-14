@@ -6,6 +6,7 @@
 #include "io/eventqueue.h"
 #include "world/world.h"
 #include "util/bimap.h"
+#include "util/timedmap.h"
 
 #include <string>
 
@@ -37,6 +38,9 @@ private:
   void getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibleTiles);
   bool checkCharacterSanity(PlayerID player);
 
+  TimedMap<IVec2>* getTileTimedMap(PlayerID id);
+  TimedMap<BObjectID>* getTileObjectMap(PlayerID id);
+
 private:
   BObjectManager* _objectManager;
   World* _world;
@@ -45,6 +49,9 @@ private:
 
   map<int, list<IVec2> > _precomputedSight;
   map<PlayerID, set<IVec2> > _previousView;
+
+  map<PlayerID, TimedMap<IVec2> > _tileDataSent;
+  map<PlayerID, TimedMap<BObjectID> > _objectDataSent;
 };
 
 #endif

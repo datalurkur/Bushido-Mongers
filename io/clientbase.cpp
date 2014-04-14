@@ -40,8 +40,6 @@ void ClientBase::moveCharacter(const IVec2& dir) {
 void ClientBase::processEvent(GameEvent* event) {
   switch(event->type) {
     case AreaData:
-    case TileVisible:
-    case TileShrouded:
     case TileData: {
       EventQueue results;
       _world->processWorldEvent(event, results);
@@ -50,19 +48,16 @@ void ClientBase::processEvent(GameEvent* event) {
       }
       break;
     }
-    case DataRestricted:
-      Debug("Data restricted - " << ((DataRestrictedEvent*)event)->reason);
-      break;
-    case GameEventType::CharacterReady:
+    case CharacterReady:
       Debug("Character is ready");
       break;
-    case GameEventType::CharacterNotReady:
+    case CharacterNotReady:
       Debug("Character not ready - " << ((CharacterNotReadyEvent*)event)->reason);
       break;
-    case GameEventType::CharacterMoved:
+    case CharacterMoved:
       Debug("Character moved");
       break;
-    case GameEventType::MoveFailed:
+    case MoveFailed:
       Debug("Failed to move - " << ((MoveFailedEvent*)event)->reason);
       break;
     default:
@@ -73,21 +68,17 @@ void ClientBase::processEvent(GameEvent* event) {
 
 //void ClientBase::queueToClient(GameEvent* event) {
 void ClientBase::queueToClient(SharedGameEvent event) {
-  Debug("Pushing event");
   unique_lock<mutex> lock(_queueLock);
   _clientEventQueue.pushEvent(event);
   _eventsReady = true;
   _eventsReadyCV.notify_all();
-  Debug("Done pushing event");
 }
 
 void ClientBase::queueToClient(EventQueue&& queue) {
-  Debug("Appending events");
   unique_lock<mutex> lock(_queueLock);
   _clientEventQueue.appendEvents(move(queue));
   _eventsReady = true;
   _eventsReadyCV.notify_all();
-  Debug("Done appending events");
 }
 
 void ClientBase::consumeEvents() {

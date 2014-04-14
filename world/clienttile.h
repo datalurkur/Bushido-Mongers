@@ -5,7 +5,7 @@
 
 class ClientTile: public TileBase {
 public:
-  ClientTile(TileType type, set<BObjectID>& contents, time_t changed);
+  ClientTile(TileType type, set<BObjectID>&& contents);
 };
 
 #endif
