@@ -20,7 +20,7 @@ raw_editor: curseme/menu.o curseme/curseme.o curseme/input.o util/log.o tools/ra
 raw_editor_ncurses: curseme/curseme.o curseme/curselog.o curseme/window.o curseme/menu.o curseme/input.o util/log.o tools/raw_editor_ncurses/main.o resource/raw.o game/bobject.o game/complexbobject.o game/atomicbobject.o game/compositebobject.o util/filesystem.o tools/raw_editor_ncurses/common.o tools/raw_editor_ncurses/complex.o tools/raw_editor_ncurses/composite.o interface/choice.o interface/console.o util/packing.o game/bobjectmanager.o game/bobjectcontainer.o game/observable.o util/timestamp.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-treetest: tests/treetest.o util/log.o curseme/curseme.o curseme/curselog.o
+treetest: tests/treetest.o util/log.o curseme/curseme.o curseme/curselog.o curseme/window.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 geomtest: tests/geom_test.o util/log.o curseme/curselog.o util/geom.o util/filesystem.o curseme/window.o curseme/renderer.o curseme/curseme.o

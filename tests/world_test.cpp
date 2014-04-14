@@ -1,6 +1,7 @@
 #include "curseme/renderer.h"
 #include "world/generator.h"
 #include "util/log.h"
+#include "util/vector.h"
 
 #include <cstring>
 #include <signal.h>
@@ -89,11 +90,11 @@ int main() {
   ostringstream areaData;
   for(int j = 0; j < areaSize.y; j++) {
     for(int i = 0; i < areaSize.x; i++) {
-      switch(m_area->getTile(i, j).getType()) {
-      case Tile::Type::Wall:
+      switch(m_area->getTile(IVec2(i, j))->getType()) {
+      case TileType::Wall:
         areaData << "X";
         break;
-      case Tile::Type::Ground:
+      case TileType::Ground:
         areaData << ".";
         break;
       default:
