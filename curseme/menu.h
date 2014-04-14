@@ -12,40 +12,53 @@
 
 #include "curseme/curseme.h"
 #include "curseme/window.h"
-#include "curseme/uistack.h"
 
 using namespace std;
 
 /* TODO
-  * attach procs to selections.
-  * don't just blithely assume that ncurses is otherwise enabled.
   * select key for actions.
-  * fix choice/description mismatch? or don't use descriptions at all for now. - use pairs.
-  * remember the placement from the last run, fer christ's sake.
+  * switch choice/descriptions to pairs.
 */
 
-class Menu : public UIE {
+typedef pair<string, string> StringPair;
+
+// A hash method for StringPair, so we can use it as a key-type for an unordered_map.
+namespace std
+{
+template<>
+struct hash<StringPair> {
+    size_t operator()(const StringPair &sp) const {
+        return hash<string>()(sp.first) ^ hash<string>()(sp.second);
+    }
+};
+}
+typedef unordered_map<StringPair, function<void()> > StringPairFunctionMap;
+
+class Menu {
 public:
   Menu();
   Menu(const string& title);
+
+  // The function fills out the choices, and is used dynamically during menu setup.
+  Menu(const string& title, function<void(Menu*)> redraw_func);
+
   Menu(const list<string>& choices);
   Menu(const vector<string>& choices);
 
   void setTitle(const string& title);
 
   void addChoice(const string& choice);
-  void addChoice(const string& choice, const string& description);
+  void addChoice(const StringPair& choice);
 
   void addChoice(const string& choice, function<void()> func);
-  void addChoice(const string& choice, const string& description, function<void()> func);
+  void addChoice(const StringPair& choice, function<void()> func);
 
-  void removeChoice(const string& choice);
+  void removeChoice(const StringPair& choice);
 
-  //void addChoices(const list<string>& choices, function<void()> func);
-
-  void setDefaultAction(function<void(string)> func);
-  bool actOnChoice(const string& choice);
-
+  void setDefaultAction(function<void(StringPair)> func);
+private:
+  bool actOnChoice(const StringPair& choice);
+public:
   void setEndOnSelection(bool val);
 
   unsigned int listen();
@@ -56,6 +69,7 @@ public:
   void teardown();
 
   void refresh_window();
+  void clear_choices();
 
   ~Menu();
 
@@ -69,13 +83,19 @@ private:
   unsigned int _size;
 
   string _title;
-  vector<string> _choices;
-  vector<string> _descriptions;
 
-  unordered_map<string, function<void()> > _functions;
-  function<void(string)> _def_fun;
+  vector<StringPair> _choices;
+
+  StringPairFunctionMap _functions;
+  function<void(StringPair)> _def_fun;
 
   bool _end_on_selection;
+
+  function<void(Menu*)> _redraw_func;
+
+  bool _deployed;
+
+  bool _empty_menu;
 };
 
 #endif

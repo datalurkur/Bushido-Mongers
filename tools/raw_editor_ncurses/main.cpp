@@ -87,6 +87,7 @@ void createRaw(const string& dir) {
 void addObject(Raw& raw) {
   string objectName;
   Input::GetWord("Enter a name for the new object: ", objectName);
+
   // FIXME: sanitize input further
   if(objectName.length() == 0) {
     Popup("Invalid name: too short");
@@ -103,7 +104,7 @@ void addObject(Raw& raw) {
     raw.addObject(objectName, (ProtoBObject*)new ProtoCompositeBObject());
   });
   objectTypeMenu.addChoice("Complex (component objects connected in arbitrary ways)", [&]() {
-    raw.addObject(objectName, (ProtoBObject*)new ProtoCompositeBObject());
+    raw.addObject(objectName, (ProtoBObject*)new ProtoComplexBObject());
   });
 
   objectTypeMenu.listen();
@@ -156,8 +157,8 @@ void selectAndEditObject(Raw& raw) {
   raw.getObjectNames(objectNames);
   Menu objectSelectMenu(objectNames);
 
-  objectSelectMenu.setDefaultAction([&raw](string objectName) {
-    editObject(raw, objectName);
+  objectSelectMenu.setDefaultAction([&raw](StringPair objectName) {
+    editObject(raw, objectName.first);
   });
 
   objectSelectMenu.listen();
@@ -211,7 +212,7 @@ void editRaw(const string& dir, const string& name) {
     }
   });
 
-  rawMenu.addChoice("Save Changes", [&raw, dir, name]() {
+  rawMenu.addChoice("Save Changes", [&]() {
     saveRaw(raw, dir, name);
   });
 
@@ -228,8 +229,8 @@ void selectAndEditRaw(const string& dir) {
 
   Menu rawChoice(raws);
   rawChoice.setTitle("Select raw");
-  rawChoice.setDefaultAction([dir](string raw) {
-    editRaw(dir, raw);
+  rawChoice.setDefaultAction([dir](StringPair raw) {
+    editRaw(dir, raw.first);
   });
 
   rawChoice.listen();
