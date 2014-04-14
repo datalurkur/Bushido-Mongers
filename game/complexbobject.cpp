@@ -7,7 +7,20 @@ void ProtoComplexBObject::pack(SectionedData<ObjectSectionType>& sections) const
   ProtoBObject::pack(sections);
 
   SectionedData<AttributeSectionType> complexData;
-  #pragma message "TODO : Pack contents data here"
+
+  // Pack the component map
+  SectionedData<string> componentMap;
+  for(auto component : _components) {
+    componentMap.addSection(component.first, component.second.c_str(), component.second.size() + 1);
+  }
+  complexData.addSubSections(ComponentMap, componentMap);
+
+  // Pack the connection list
+  list<string> connectionList;
+  for(auto connection : _connections) {
+    connectionList.push_back(connection.first + ":" + connection.second);
+  }
+  complexData.addStringListSection(ConnectionList, connectionList);
 
   return sections.addSubSections(ComplexData, complexData);
 }
@@ -18,7 +31,23 @@ bool ProtoComplexBObject::unpack(const SectionedData<ObjectSectionType>& section
   SectionedData<AttributeSectionType> complexData;
   if(!sections.getSubSections(ComplexData, complexData)) { return false; }
 
-  #pragma message "TODO : Parse contents data here"
+  // Unpack the component map
+  SectionedData<string> componentMap;
+  if(!complexData.getSubSections(ComponentMap, componentMap)) { return false; }
+  for(auto component : componentMap) {
+    _components.insert(make_pair(component.first, string((char*)component.second.data)));
+  }
+
+  // Unpack the connection list
+  list<string> connectionList;
+  if(!complexData.getStringListSection(ConnectionList, connectionList)) { return false; }
+  for(auto connection : connectionList) {
+    stringstream stream(connection);
+    string first, second;
+    getline(stream, first, ':');
+    getline(stream, second);
+    _connections.insert(make_pair(first, second));
+  }
 
   return true;
 }
@@ -84,8 +113,6 @@ ComplexBObject::ComplexBObject(BObjectManager* manager, BObjectID id, const Prot
 bool ComplexBObject::atCreation() {
   if(!BObject::atCreation()) { return false; }
   #pragma message "TODO : Use the object manager here to create default components"
-
-  _manager;
   return true;
 }
 

@@ -25,6 +25,8 @@ enum AttributeSectionType {
   KeywordsList,
   WeightAttribute,
   LayersList,
+  ComponentMap,
+  ConnectionList,
   LastAttributeSectionType
 };
 
