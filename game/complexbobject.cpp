@@ -65,6 +65,10 @@ void ProtoComplexBObject::remComponent(const string& nickname) {
   }
 }
 
+void ProtoComplexBObject::addConnection(const string& first, const string& second) {
+  _connections.insert(make_pair(first, second));
+}
+
 void ProtoComplexBObject::addConnection(const StringPair& connection) {
   _connections.insert(connection);
 }

@@ -44,6 +44,7 @@ public:
   WINDOW* window() const;
   WINDOW* outer_window() const;
 
+  size_t text_columns();
 private:
   void LogPlacement();
 

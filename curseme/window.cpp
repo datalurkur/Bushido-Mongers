@@ -90,6 +90,10 @@ WINDOW* TitleBox::outer_window() const {
   return _outer->window();
 }
 
+size_t TitleBox::text_columns() {
+  return _subwin_ncols;
+}
+
 void TitleBox::LogPlacement() {
   int y, x;
   getbegyx(_outer->window(), y, x);
