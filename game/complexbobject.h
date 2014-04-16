@@ -23,7 +23,9 @@ public:
   void addComponent(const string& nickname, const string& raw_type);
   void remComponent(const string& nickname);
 
+  void addConnection(const string& first, const string& second);
   void addConnection(const StringPair& connection);
+
   void remConnection(const StringPair& connection);
 
   void getComponents(set<string>& nicknames);

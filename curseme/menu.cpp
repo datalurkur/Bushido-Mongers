@@ -59,11 +59,11 @@ void Menu::setDefaultAction(function<void(StringPair)> func) {
 
 bool Menu::actOnChoice(const StringPair& choice) {
   if(_functions[choice]) {
-    Debug("Running action for " << choice.first << ", " << choice.second);
+    Debug("Running action for " << choice.first << " " << choice.second);
     _functions[choice]();
     return true;
   } else if(!_empty_menu && _def_fun) {
-    Debug("Running default action for " << choice.first << ", " << choice.second);
+    Debug("Running default action for " << choice.first << " " << choice.second);
     _def_fun(choice);
     return true;
   }
