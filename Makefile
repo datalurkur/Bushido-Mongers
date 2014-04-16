@@ -26,7 +26,7 @@ treetest: tests/treetest.o util/log.o curseme/curseme.o curseme/curselog.o curse
 geomtest: tests/geom_test.o util/log.o curseme/curselog.o util/geom.o util/filesystem.o curseme/window.o curseme/renderer.o curseme/curseme.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-worldtest: tests/world_test.o util/log.o curseme/curselog.o world/generator.o world/world.o world/area.o util/timer.o util/filesystem.o util/geom.o world/tile.o world/area.o curseme/renderer.o curseme/curseme.o util/noise.o game/bobjectcontainer.o curseme/window.o
+worldtest: tests/world_test.o util/log.o curseme/curselog.o world/generator.o world/world.o world/area.o util/timer.o util/filesystem.o util/geom.o world/tile.o world/area.o curseme/renderer.o curseme/curseme.o util/noise.o game/bobjectcontainer.o curseme/window.o world/areabase.o world/tilebase.o world/worldbase.o world/clienttile.o world/clientarea.o world/clientworld.o game/observable.o util/timestamp.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 sockettest: tests/socket_test.o util/log.o net/netaddress.o net/socket.o net/tcpsocket.o net/listensocket.o net/serverprovider.o net/tcpbuffer.o net/connectionbuffer.o net/multiconnectionprovider.o net/packet.o util/timestamp.o curseme/curseme.o curseme/curselog.o curseme/window.o
