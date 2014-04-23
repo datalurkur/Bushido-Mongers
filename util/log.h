@@ -23,7 +23,7 @@ class Log {
 public:
   static void EnableAllChannels();
   static void DisableAllChannels();
- 
+
   static void EnableChannel(LogChannel channel);
   static void DisableChannel(LogChannel channel);
 

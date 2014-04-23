@@ -7,4 +7,3 @@ TileBase::~TileBase() {}
 void TileBase::setType(TileType type) { _type = type; }
 
 TileType TileBase::getType() const { return _type; }
-

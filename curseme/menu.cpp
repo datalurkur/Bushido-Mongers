@@ -122,8 +122,6 @@ unsigned int Menu::listen() {
           return _index; // handle the case outside of Menu using getSelection
         } else {
           setup();
-          // Remember the location.
-          set_current_item(_menu, _items[_index]);
         }
         break;
       } default:
@@ -209,13 +207,15 @@ void Menu::setup() {
     width_needed = _title.length() + 1;
   }
 
-  //const string title = _title;
   _tb = new TitleBox(stdscr, _size, width_needed, 4, 4, _title);
   _tb->setup();
 
   /* Set main window and sub window */
   set_menu_win(_menu, _tb->outer_window());
   set_menu_sub(_menu, _tb->window());
+
+  // and finally set the selection position before posting
+  set_current_item(_menu, _items[_index]);
 
   post_menu(_menu);
   refresh_window();

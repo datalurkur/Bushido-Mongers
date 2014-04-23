@@ -103,9 +103,9 @@ int main() {
       }
     }
   }
+
   wrefresh(stdscr);
   renderer.setInputData(areaData.str().c_str(), areaSize.x, areaSize.y);
-  //renderer.setInputData(groupData, areaSize.x, areaSize.y);
   renderer.render();
 
   int ch;

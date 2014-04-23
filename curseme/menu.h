@@ -16,8 +16,7 @@
 using namespace std;
 
 /* TODO
-  * select key for actions.
-  * switch choice/descriptions to pairs.
+  * external setting of trigger keys.
 */
 
 typedef pair<string, string> StringPair;

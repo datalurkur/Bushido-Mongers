@@ -38,11 +38,9 @@ void editComplexComponents(const string& name, ProtoComplexBObject* object) {
         Popup("No nickname given!");
       }
 
-      /*
-      if(object.nicknames.include?(nickname)) {
+      if(object->hasComponent(nickname)) {
         Popup("Nickname already exists!");
       }
-      */
 
       Input::GetWord("Enter component type:", type); // TODO - convert to selection from list of types
 

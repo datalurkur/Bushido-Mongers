@@ -21,7 +21,13 @@ void editCompositeLayers(ProtoCompositeBObject* object) {
     } break;
     case 1: {
       string layerName;
-      Input::GetWord("Enter a name for the layer:", layerName);
+      Input::GetWord("Enter the layer type:", layerName);
+
+      if(layerName.length() == 0) {
+        Popup("No layer given; aborting");
+        break;
+      }
+
       if(object->layers.size() == 0) {
         object->layers.push_back(layerName);
       } else {
@@ -47,6 +53,12 @@ void editCompositeLayers(ProtoCompositeBObject* object) {
     case 2: {
       string layerName;
       Input::GetWord("Layer name to delete:", layerName);
+
+      if(layerName.length() == 0) {
+        Popup("No layer given; aborting");
+        break;
+      }
+
       object->layers.remove(layerName);
     } break;
     case 3: {

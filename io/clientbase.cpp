@@ -17,7 +17,7 @@ ClientBase::~ClientBase() {
 }
 
 void ClientBase::createCharacter(const string& name) {
-  // In the future, we'll pass config data into this
+  // TODO - pass config data into this
   CreateCharacterEvent event(name);
   sendToServer(&event);
 }
