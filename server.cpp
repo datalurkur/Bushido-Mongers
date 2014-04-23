@@ -27,7 +27,7 @@ void cleanup(int signal) {
 }
 
 void setup() {
-  Log::Setup("stdout");
+  Log::Setup("server.log");
   CurseMeSetup();
   signal(SIGINT, cleanup);
 }
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
   setup();
 
   if(argc < 2) {
-    #pragma message "Insert a popup here explaining why we're exiting"
+    Popup("usage: server <raws directory>");
     cleanup(1);
   }
 
@@ -45,6 +45,15 @@ int main(int argc, char** argv) {
   server->start();
 
   #pragma message "Create a prompt to get client login / issue commands to the server directly"
+/*
+  Menu clientInput("Server active at server->ip():server->post()", [&](menu clientInput) {
+    clientInput.addChoice("Use Client", [&] {
+      CursesClient cc();
+      string clientName;
+      Input::GetWord("Username:", clientName);
+    }
+  }
+*/
   // For now, we'll just test out local client stuff
   string clientName = "Test Client Name";
   client = new LocalGameClient(server, clientName);
@@ -53,24 +62,29 @@ int main(int argc, char** argv) {
     cleanup(1);
   }
 
-  #pragma message "This should be a menu..."
   Info("Client is connected and ready to issue commands");
   string characterName = "Test Character Name";
   client->createCharacter(characterName);
+
+  client->draw_map();
 
   // Test movement
   Info("Client is attempting to move");
   Info("=======================================");
   client->moveCharacter(IVec2(1, 0));
+  client->draw_map();
   sleep(1);
   Info("=======================================");
   client->moveCharacter(IVec2(-1, 0));
+  client->draw_map();
   sleep(1);
   Info("=======================================");
   client->moveCharacter(IVec2(0, 1));
+  client->draw_map();
   sleep(1);
   Info("=======================================");
   client->moveCharacter(IVec2(0, -1));
+  client->draw_map();
 
   while(server->isRunning()) {
     sleep(1);

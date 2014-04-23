@@ -16,6 +16,8 @@ public:
   void disconnectSender();
   void sendToServer(GameEvent* event);
 
+  void draw_map();
+
 private:
   ServerBase* _server;
   string _name;
