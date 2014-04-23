@@ -1,9 +1,7 @@
 #include "io/clientbase.h"
 #include "io/gameevent.h"
-#include "world/clientworld.h"
 
 ClientBase::ClientBase(): _done(false), _eventsReady(false) {
-  _world = new ClientWorld();
   _eventConsumer = thread(&ClientBase::consumeEvents, this);
 }
 
@@ -13,7 +11,6 @@ ClientBase::~ClientBase() {
     _done = true;
     _eventConsumer.join();
   }
-  delete _world;
 }
 
 void ClientBase::createCharacter(const string& name) {
@@ -37,36 +34,6 @@ void ClientBase::moveCharacter(const IVec2& dir) {
   sendToServer(&event);
 }
 
-void ClientBase::processEvent(GameEvent* event) {
-  switch(event->type) {
-    case AreaData:
-    case TileData: {
-      EventQueue results;
-      _world->processWorldEvent(event, results);
-      for(auto result : results) {
-        sendToServer(result.get());
-      }
-      break;
-    }
-    case CharacterReady:
-      Debug("Character is ready");
-      break;
-    case CharacterNotReady:
-      Debug("Character not ready - " << ((CharacterNotReadyEvent*)event)->reason);
-      break;
-    case CharacterMoved:
-      Debug("Character moved");
-      break;
-    case MoveFailed:
-      Debug("Failed to move - " << ((MoveFailedEvent*)event)->reason);
-      break;
-    default:
-      Warn("Unhandled game event type " << event->type);
-      break;
-  }
-}
-
-//void ClientBase::queueToClient(GameEvent* event) {
 void ClientBase::queueToClient(SharedGameEvent event) {
   unique_lock<mutex> lock(_queueLock);
   _clientEventQueue.pushEvent(event);

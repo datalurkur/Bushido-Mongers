@@ -2,6 +2,7 @@
 #define LOCAL_BACKEND_H
 
 #include "io/clientbase.h"
+#include "world/clientworld.h"
 
 class LocalBackEnd: virtual public ClientBase {
 public:
@@ -9,6 +10,12 @@ public:
   ~LocalBackEnd();
 
   void sendToClient(GameEvent* event);
+
+private:
+  void updateMap();
+
+private:
+  ClientWorld* _world;
 };
 
 #endif

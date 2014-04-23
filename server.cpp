@@ -66,25 +66,19 @@ int main(int argc, char** argv) {
   string characterName = "Test Character Name";
   client->createCharacter(characterName);
 
-  client->draw_map();
-
   // Test movement
   Info("Client is attempting to move");
   Info("=======================================");
   client->moveCharacter(IVec2(1, 0));
-  client->draw_map();
   sleep(1);
   Info("=======================================");
   client->moveCharacter(IVec2(-1, 0));
-  client->draw_map();
   sleep(1);
   Info("=======================================");
   client->moveCharacter(IVec2(0, 1));
-  client->draw_map();
   sleep(1);
   Info("=======================================");
   client->moveCharacter(IVec2(0, -1));
-  client->draw_map();
 
   while(server->isRunning()) {
     sleep(1);

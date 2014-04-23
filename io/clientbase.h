@@ -10,8 +10,6 @@
 using namespace std;
 
 struct GameEvent;
-class ClientWorld;
-class ClientArea;
 
 class ClientBase {
 public:
@@ -22,7 +20,6 @@ public:
   virtual void disconnectSender() = 0;
   virtual void sendToServer(GameEvent* event) = 0;
 
-  //void queueToClient(GameEvent* event);
   void queueToClient(SharedGameEvent event);
   void queueToClient(EventQueue&& queue);
 
@@ -32,15 +29,12 @@ public:
   void moveCharacter(const IVec2& dir);
 
 protected:
-  void processEvent(GameEvent* event);
   virtual void sendToClient(GameEvent* event) = 0;
 
 private:
   void consumeEvents();
 
 protected:
-  ClientWorld* _world;
-
   atomic<bool> _done;
 
   bool _eventsReady;
