@@ -1,4 +1,5 @@
 #include "game/complexbobject.h"
+#include "game/bobjectmanager.h"
 
 ProtoComplexBObject::ProtoComplexBObject(): ProtoBObject(ComplexType) {}
 ProtoComplexBObject::~ProtoComplexBObject() {}
@@ -10,17 +11,21 @@ void ProtoComplexBObject::pack(SectionedData<ObjectSectionType>& sections) const
 
   // Pack the component map
   SectionedData<string> componentMap;
-  for(auto component : _components) {
+  for(auto component : components) {
     componentMap.addSection(component.first, component.second.c_str(), component.second.size() + 1);
   }
   complexData.addSubSections(ComponentMap, componentMap);
 
-  // Pack the connection list
-  list<string> connectionList;
-  for(auto connection : _connections) {
-    connectionList.push_back(connection.first + ":" + connection.second);
+  // Pack the connection map
+  SectionedData<string> connectionMap;
+  for(auto connection : connections) {
+    list<string> connectedObjects;
+    for(auto connectedObject : connection.second) {
+      connectedObjects.push_back(connectedObject);
+    }
+    connectionMap.addStringListSection(connection.first, connectedObjects);
   }
-  complexData.addStringListSection(ConnectionList, connectionList);
+  complexData.addSubSections(ConnectionMap, connectionMap);
 
   return sections.addSubSections(ComplexData, complexData);
 }
@@ -35,88 +40,94 @@ bool ProtoComplexBObject::unpack(const SectionedData<ObjectSectionType>& section
   SectionedData<string> componentMap;
   if(!complexData.getSubSections(ComponentMap, componentMap)) { return false; }
   for(auto component : componentMap) {
-    _components.insert(make_pair(component.first, string((char*)component.second.data)));
+    components.insert(make_pair(component.first, string((char*)component.second.data)));
   }
 
   // Unpack the connection list
-  list<string> connectionList;
-  if(!complexData.getStringListSection(ConnectionList, connectionList)) { return false; }
-  for(auto connection : connectionList) {
-    stringstream stream(connection);
-    string first, second;
-    getline(stream, first, ':');
-    getline(stream, second);
-    _connections.insert(make_pair(first, second));
+  SectionedData<string> connectionMap;
+  if(!complexData.getSubSections(ConnectionMap, connectionMap)) { return false; }
+  for(auto connection : connectionMap) {
+    list<string> connectionData;
+    if(!connectionMap.getStringListSection(connection.first, connectionData)) { return false; }
+
+    connections.insert(make_pair(connection.first, set<string>()));
+    for(auto connectedObject : connectionData) {
+      connections[connection.first].insert(connectedObject);
+    }
   }
 
   return true;
 }
 
 void ProtoComplexBObject::addComponent(const string& nickname, const string& raw_type) {
-  _components[nickname] = raw_type;
+  components[nickname] = raw_type;
 }
 
 void ProtoComplexBObject::remComponent(const string& nickname) {
-  _components.erase(nickname);
-  for(auto connection : _connections) {
-    if(connection.first == nickname || connection.second == nickname) {
-      _connections.erase(connection);
-    }
+  components.erase(nickname);
+  connections.erase(nickname);
+  for(auto connection : connections) {
+    connection.second.erase(nickname);
   }
+}
+
+void ProtoComplexBObject::remConnection(const string& first, const string& second) {
+  auto fItr = connections.find(first);
+  if(fItr == connections.end()) {
+    connections.insert(make_pair(first, set<string>()));
+  }
+  connections[first].insert(second);
+  auto sItr = connections.find(second);
+  if(sItr == connections.end()) {
+    connections.insert(make_pair(second, set<string>()));
+  }
+  connections[second].insert(first);
 }
 
 void ProtoComplexBObject::addConnection(const string& first, const string& second) {
-  _connections.insert(make_pair(first, second));
-}
-
-void ProtoComplexBObject::addConnection(const StringPair& connection) {
-  _connections.insert(connection);
-}
-
-void ProtoComplexBObject::remConnection(const StringPair& connection) {
-  _connections.erase(connection);
-}
-
-void ProtoComplexBObject::getComponents(set<string>& nicknames) {
-  for(auto kv : _components) {
-    nicknames.insert(kv.first);
+  auto fItr = connections.find(first),
+       sItr = connections.find(second);
+  if(fItr != connections.end()) {
+    fItr->second.erase(second);
+  }
+  if(sItr != connections.end()) {
+    sItr->second.erase(first);
   }
 }
 
-void ProtoComplexBObject::getConnections(set<StringPair>& connections) {
-  for(auto connection : _connections) {
-    connections.insert(connection);
-  }
-}
-
-void ProtoComplexBObject::getConnectionsOfComponent(const string& nickname, set<string>& nicknames) {
-  for(auto connection : _connections) {
-    if(connection.first == nickname) {
-      nicknames.insert(connection.second);
-    } else if(connection.second == nickname) {
-      nicknames.insert(connection.first);
+void ProtoComplexBObject::getUniqueConnections(set<UniqueStringPair>& results) {
+  for(auto connectionInfo : connections) {
+    for(auto connected : connectionInfo.second) {
+      results.insert(UniqueStringPair(connectionInfo.first, connected));
     }
   }
-}
-
-string ProtoComplexBObject::typeOfComponent(const string& nickname) {
-  return _components[nickname];
 }
 
 bool ProtoComplexBObject::hasComponent(const string& nickname) {
-  for(auto kv : _components) {
-    if(kv.first == nickname) {
-      return true;
-    }
-  }
-  return false;
+  auto itr = components.find(nickname);
+  return (itr != components.end());
 }
 
 ComplexBObject::ComplexBObject(BObjectManager* manager, BObjectID id, const ProtoComplexBObject* proto): BObject(manager, ComplexType, id, proto) {}
 
 bool ComplexBObject::atCreation() {
+  ProtoComplexBObject* p = (ProtoComplexBObject*)_proto;
   if(!BObject::atCreation()) { return false; }
   #pragma message "TODO : Use the object manager here to create default components"
+  for(auto componentInfo : p->components) {
+    BObject* object = _manager->createObject(componentInfo.second);
+    _components[object->getID()] = object;
+    _nicknamed[componentInfo.second] = object;
+  }
+  for(auto connectionInfo : p->connections) {
+    BObject* a = _nicknamed[connectionInfo.first];
+    auto insertResult = _connections.insert(make_pair(a, ObjectSet()));
+    auto itr = insertResult.first;
+    for(auto connected : connectionInfo.second) {
+      BObject* b = _nicknamed[connected];
+      itr->second.insert(b);
+    }
+  }
   return true;
 }
 
@@ -127,9 +138,6 @@ bool ComplexBObject::atDestruction() {
 
 float ComplexBObject::getWeight() const {
   float total = 0;
-
   for(auto& componentData : _components) { total += componentData.second->getWeight(); }
-  #pragma message "TODO : Cache this value"
-
   return total;
 }

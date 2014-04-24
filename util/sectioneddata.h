@@ -31,6 +31,7 @@ class SectionedData {
 public:
   typedef map<T, DataSection<T> > SectionMap;
   typedef typename SectionMap::iterator iterator;
+  typedef typename SectionMap::const_iterator const_iterator;
 
 public:
   SectionedData();
@@ -61,7 +62,9 @@ public:
   unsigned int getPackedSize() const;
 
   iterator begin();
+  const_iterator begin() const;
   iterator end();
+  const_iterator end() const;
 
 private:
   SectionMap _sections;
@@ -283,6 +286,12 @@ template <typename T>
 typename SectionedData<T>::iterator SectionedData<T>::begin() { return _sections.begin(); }
 
 template <typename T>
+typename SectionedData<T>::const_iterator SectionedData<T>::begin() const { return _sections.begin(); }
+
+template <typename T>
 typename SectionedData<T>::iterator SectionedData<T>::end() { return _sections.end(); }
+
+template <typename T>
+typename SectionedData<T>::const_iterator SectionedData<T>::end() const { return _sections.end(); }
 
 #endif

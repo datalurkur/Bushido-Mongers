@@ -2,6 +2,7 @@
 #define COMPLEX_BOBJECT_H
 
 #include "util/sectioneddata.h"
+#include "util/uniquestringpair.h"
 
 #include "game/bobject.h"
 #include "game/bobjecttypes.h"
@@ -9,8 +10,6 @@
 #include <utility>
 #include <set>
 #include <map>
-
-typedef pair<string, string> StringPair;
 
 class ProtoComplexBObject : public ProtoBObject {
 public:
@@ -24,19 +23,14 @@ public:
   void remComponent(const string& nickname);
 
   void addConnection(const string& first, const string& second);
-  void addConnection(const StringPair& connection);
+  void remConnection(const string& first, const string& second);
 
-  void remConnection(const StringPair& connection);
+  void getUniqueConnections(set<UniqueStringPair>& results);
 
-  void getComponents(set<string>& nicknames);
-  void getConnections(set<StringPair>& new_connections);
-  void getConnectionsOfComponent(const string& nickname, set<string>& connections);
+  bool hasComponent(const string& nickname);
 
-  string typeOfComponent(const string& nickname);
-  bool   hasComponent(const string& nickname);
-
-  map<string,string> _components;
-  set<StringPair> _connections;
+  map<string,string> components;
+  map<string,set<string> > connections;
 };
 
 class ComplexBObject : public BObject {

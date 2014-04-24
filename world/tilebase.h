@@ -1,14 +1,14 @@
 #ifndef TILE_BASE_H
 #define TILE_BASE_H
 
-#include "game/bobjectcontainer.h"
+#include "game/containerbase.h"
 
 enum TileType {
   Wall,
   Ground
 };
 
-class TileBase: public BObjectContainer {
+class TileBase: public ContainerBase {
 public:
   TileBase(TileType type);
   virtual ~TileBase();

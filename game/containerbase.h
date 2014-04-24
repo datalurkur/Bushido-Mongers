@@ -1,5 +1,5 @@
-#ifndef BOBJECT_CONTAINER_H
-#define BOBJECT_CONTAINER_H
+#ifndef CONTAINER_BASE_H
+#define CONTAINER_BASE_H
 
 #include "game/bobject.h"
 #include "util/vector.h"
@@ -10,15 +10,13 @@ using namespace std;
 
 class Area;
 
-class BObjectContainer: virtual public Observable {
+class ContainerBase: virtual public Observable {
 public:
-  BObjectContainer();
-  virtual ~BObjectContainer();
+  ContainerBase();
+  virtual ~ContainerBase();
 
-  virtual Area* getArea() const;
-  virtual const IVec2& getCoordinates() const;
-
-  void setParent(BObjectContainer* parent);
+  virtual Area* getArea() const = 0;
+  virtual const IVec2& getCoordinates() const = 0;
 
   const set<BObjectID>& getContents() const;
 
@@ -31,7 +29,6 @@ protected:
   void debugContents();
 
 protected:
-  BObjectContainer* _parent;
   set<BObjectID> _contents;
 };
 

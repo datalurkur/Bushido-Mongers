@@ -18,6 +18,8 @@ private:
   template <typename T, typename S>
   BObject* createTypedObject(const ProtoBObject* proto);
 
+  void teardownObject(BObject* object);
+
 private:
   BObjectID _objectCount;
   BObjectMap _objectMap;

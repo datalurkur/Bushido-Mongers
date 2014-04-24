@@ -6,6 +6,10 @@
 class ClientTile: public TileBase {
 public:
   ClientTile(TileType type, set<BObjectID>&& contents);
+  virtual ~ClientTile();
+
+  Area* getArea() const;
+  const IVec2& getCoordinates() const;
 };
 
 #endif

@@ -30,7 +30,7 @@ public:
 };
 
 class BObjectManager;
-class BObjectContainer;
+class ContainerBase;
 
 class BObject: virtual public Observable {
 public:
@@ -53,8 +53,8 @@ public:
   virtual float getWeight() const = 0;
 
   // Location management
-  void setLocation(BObjectContainer* location);
-  BObjectContainer* getLocation() const;
+  void setLocation(ContainerBase* location);
+  ContainerBase* getLocation() const;
 
 protected:
   BObjectManager* _manager;
@@ -68,7 +68,7 @@ protected:
   BObjectID _id;
   list<string> _keywords;
 
-  BObjectContainer* _location;
+  ContainerBase* _location;
 };
 
 typedef list<BObject*> BObjectList;

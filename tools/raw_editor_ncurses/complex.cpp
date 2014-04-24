@@ -51,10 +51,8 @@ void editComplexComponents(const string& name, ProtoComplexBObject* object) {
       object->addComponent(nickname, type);
     });
 
-    set<string> nicknames;
-    object->getComponents(nicknames);
-    for(auto nickname : nicknames) {
-      editComponents->addChoice(nickname);
+    for(auto component : object->components) {
+      editComponents->addChoice(component.first);
     }
 
     editComponents->setDefaultAction([&](StringPair nickname) {
@@ -96,18 +94,18 @@ void editComplexConnections(const string& name, ProtoComplexBObject* object) {
         Popup("Nickname " + second + " does not exist");
       }
 
-      object->addConnection(make_pair(first, second));
+      object->addConnection(first, second);
     });
 
-    set<StringPair> connections;
-    object->getConnections(connections);
+    set<UniqueStringPair> connections;
+    object->getUniqueConnections(connections);
 
     for(auto connection : connections) {
-      editConnections->addChoice(connection);
+      editConnections->addChoice(StringPair(connection.first(), connection.second()));
     }
 
     editConnections->setDefaultAction([&](StringPair choice) {
-      object->remConnection(choice);
+      object->remConnection(choice.first, choice.second);
       editConnections->removeChoice(choice);
     });
   });

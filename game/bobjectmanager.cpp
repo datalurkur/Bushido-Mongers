@@ -26,11 +26,11 @@ BObjectManager::BObjectManager(const string& rawSet): _objectCount(0) {
 }
 
 BObjectManager::~BObjectManager() {
-  delete _raws;
-  for(auto idObjectPair : _objectMap) {
-    delete idObjectPair.second;
+  for(auto itr : _objectMap) {
+    teardownObject(itr.second);
   }
   _objectMap.clear();
+  delete _raws;
 }
 
 BObject* BObjectManager::createObject(const string& type) {
@@ -64,11 +64,17 @@ void BObjectManager::destroyObject(BObjectID id) {
     Error("Object " << id << " not found");
     return;
   }
-  if(!itr->second->atDestruction()) {
-    Error("Object " << id << " failed to tear down properly");
-  }
-  delete itr->second;
+
+  teardownObject(itr->second);
+
   _objectMap.erase(itr);
+}
+
+void BObjectManager::teardownObject(BObject* object) {
+  if(!object->atDestruction()) {
+    Error("Object " << object->getID() << " failed to tear down properly");
+  }
+  delete object;
 }
 
 BObject* BObjectManager::getObject(BObjectID id) {

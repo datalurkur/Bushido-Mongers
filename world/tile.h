@@ -6,6 +6,7 @@
 class Tile: public TileBase {
 public:
   Tile(Area* area, const IVec2& pos, TileType type);
+  virtual ~Tile();
 
   Area* getArea() const;
   const IVec2& getCoordinates() const;

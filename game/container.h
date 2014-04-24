@@ -1,22 +1,16 @@
 #ifndef CONTAINER_H
 #define CONTAINER_H
 
-#include "game/bobject.h"
+#include "game/containerbase.h"
+#include "game/complexbobject.h"
 
-#include <list>
-
-using namespace std;
-
-class Container {
+class Container : public ContainerBase, public ComplexBObject {
 public:
-  Container();
-  ~Container();
+  Container(BObjectManager* manager, BObjectID id, const ProtoComplexBObject* proto);
+  virtual ~Container();
 
-  bool addContent(BObject* object);
-  bool removeContent(BObject* object);
-
-protected:
-  BObjectMap _contents;
+  Area* getArea() const;
+  const IVec2& getCoordinates() const;
 };
 
 #endif

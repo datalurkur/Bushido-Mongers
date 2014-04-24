@@ -33,11 +33,11 @@ bool GameCore::destroyWorld() {
   }
   Info("Game tearing down");
 
-  delete _world;
-  _world = 0;
-
   delete _objectManager;
   _objectManager = 0;
+
+  delete _world;
+  _world = 0;
 
   return true;
 }
@@ -220,7 +220,7 @@ bool GameCore::checkCharacterSanity(PlayerID player) {
     return false;
   }
 
-  BObjectContainer* location = playerObject->getLocation();
+  ContainerBase* location = playerObject->getLocation();
   if(!location) {
     Error("Player has no location");
     return false;

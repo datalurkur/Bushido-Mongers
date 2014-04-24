@@ -1,5 +1,5 @@
 #include "game/bobject.h"
-#include "game/bobjectcontainer.h"
+#include "game/containerbase.h"
 #include "util/assertion.h"
 
 ProtoBObject::ProtoBObject(BObjectType t): type(t) {}
@@ -117,7 +117,7 @@ bool BObject::dropExtension(ExtensionType type) {
 BObjectType BObject::getType() const { return _type; }
 BObjectID BObject::getID() const { return _id; }
 
-void BObject::setLocation(BObjectContainer* location) {
+void BObject::setLocation(ContainerBase* location) {
   if(_location) {
     _location->removeObject(_id);
   }
@@ -127,6 +127,6 @@ void BObject::setLocation(BObjectContainer* location) {
   _location = location;
 }
 
-BObjectContainer* BObject::getLocation() const {
+ContainerBase* BObject::getLocation() const {
   return _location;
 }
