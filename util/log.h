@@ -4,11 +4,10 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <set>
 #include <mutex>
 
 #include "util/config.h"
-#include "curseme/curseme.h"
-#include "curseme/curselog.h"
 
 using namespace std;
 
@@ -18,6 +17,11 @@ using namespace std;
 #define LOG_ERROR   0x08
 
 typedef char LogChannel;
+
+class LogListener {
+public:
+  virtual void logMessage(LogChannel channel, const string& message) = 0;
+};
 
 class Log {
 public:
@@ -36,14 +40,18 @@ public:
   static void Setup(const string& logfile);
   static void Teardown();
 
+  static void RegisterListener(LogListener* listener);
+  static void UnregisterListener(LogListener* listener);
+  static void SendToListeners(LogChannel channel, const string& message);
+
+  static void EnableStdout();
+  static void DisableStdout();
+
   static mutex Mutex;
 
 public:
   Log(const string& logfile = "bm.log");
   virtual ~Log();
-
-  static void EnableStdout();
-  static void DisableStdout();
 
   void flush();
 
@@ -53,7 +61,8 @@ public:
 private:
   static Log *OutputStream;
   static LogChannel ChannelState;
-  static bool Stdout_flag;
+  static bool StdoutEnabled;
+  static set<LogListener*> Listeners;
 
 private:
   bool _cleanupStream;
@@ -65,7 +74,7 @@ template <typename T>
 Log& Log::operator<<(const T &rhs) {
   (*_outputStream) << rhs;
 
-  if(Stdout_flag) {
+  if(StdoutEnabled) {
     std::cout << rhs;
   }
 
@@ -76,13 +85,11 @@ Log& Log::operator<<(const T &rhs) {
   do { \
     unique_lock<mutex> lock(Log::Mutex); \
     if(Log::IsChannelEnabled(channel)) { \
-     Log::GetLogStream() << "[" << __FILE__ << ":" << __LINE__ << "] " << msg << "\n"; \
+      Log::GetLogStream() << "[" << __FILE__ << ":" << __LINE__ << "] " << msg << "\n"; \
       Log::Flush(); \
-      if(CurseMe::Enabled()) { \
-        ostringstream ss; \
-        ss << msg; \
-        CurseLog::WriteToChannel(channel, ss.str()); \
-      } \
+      ostringstream stream; \
+      stream << msg; \
+      Log::SendToListeners(channel, stream.str()); \
     } \
     lock.unlock(); \
   } while(false)

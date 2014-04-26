@@ -3,6 +3,8 @@
 
 #include "io/clientbase.h"
 #include "world/clientworld.h"
+#include "curseme/curselog.h"
+#include "curseme/renderer.h"
 
 class RenderSource;
 
@@ -15,11 +17,18 @@ public:
 
 private:
   void changeArea();
-  void updateMap();
+  void updateMap(TileDataEvent* event);
+
+  char getTileRepresentation(TileType type);
 
 private:
   ClientWorld* _world;
   RenderSource* _mapSource;
+
+  WINDOW* _logWindow;
+  CursesLogWindow* _logPanel;
+  WINDOW* _mapWindow;
+  RenderTarget* _mapPanel;
 };
 
 #endif

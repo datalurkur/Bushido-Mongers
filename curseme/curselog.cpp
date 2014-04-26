@@ -3,33 +3,47 @@
 #include <string>
 #include <math.h>
 
-unordered_map<LogChannel, TitleBox*> CurseLog::boxes;
-bool CurseLog::Deployed = false;
-
-void CurseLog::Setup() {
-  CurseLog::boxes[LOG_DEBUG]   = new TitleBox(stdscr, 1, 40, 1, COLS - 45, "Latest Debug Line");
-  CurseLog::boxes[LOG_INFO]    = new TitleBox(stdscr, 1, 40, 7, COLS - 45, "Latest Info Line");
-  CurseLog::boxes[LOG_WARNING] = new TitleBox(stdscr, 1, 40, 13, COLS - 45, "Latest Warning Line");
-  CurseLog::boxes[LOG_ERROR]   = new TitleBox(stdscr, 1, 40, 19, COLS - 45, "Latest Error Line");
-
-  for(auto box : CurseLog::boxes) {
-    box.second->setup();
-  }
-  Deployed = true;
+CursesLogWindow::CursesLogWindow(WINDOW* window): _window(window), _historyLength(1024) {
+  Log::RegisterListener(this);
 }
 
-void CurseLog::WriteToChannel(char channel, string str) {
-  if(Deployed) {
-    CurseLog::boxes[channel]->refresh();
-    WINDOW* window = CurseLog::boxes[channel]->window();
-    size_t max_size = CurseLog::boxes[channel]->text_columns();
-    if(str.length() <= max_size) {
-      mvwprintw(window, 0, 0, str.c_str());
-      mvwprintw(window, 0, str.length(), string(max_size - str.length(),' ').c_str());
-    } else {
-      mvwprintw(window, 0, 0, str.substr(0, max_size).c_str());
-    }
-    CurseLog::boxes[channel]->text_columns();
-    wrefresh(window);
+CursesLogWindow::~CursesLogWindow() {
+  Log::UnregisterListener(this);
+}
+
+void CursesLogWindow::logMessage(LogChannel channel, const string& message) {
+  _logs.push_back(message);
+  if((int)_logs.size() > _historyLength) {
+    _logs.pop_front();
   }
+  update();
+}
+
+void CursesLogWindow::update() {
+  int w, h;
+  getmaxyx(_window, h, w);
+
+  auto itr = _logs.rbegin();
+
+  int row = h;
+  while(itr != _logs.rend() && row > 0) {
+    string nextLog = *itr++;
+    if((int)nextLog.size() < w) {
+      printLine(row--, w, nextLog.c_str());
+    } else {
+      int leftover = nextLog.size() % w;
+      int lines = nextLog.size() / w;
+      printLine(row--, w, nextLog.substr(lines * w, leftover).c_str());
+      for(int i = lines - 1; i >= 0 && row > 0; i--) {
+        printLine(row--, w, nextLog.substr(i * w, w).c_str());
+      }
+    }
+  }
+
+  wrefresh(_window);
+}
+
+void CursesLogWindow::printLine(int row, int width, const string& line) {
+  string toPrint = line + string(width - line.size(), ' ');
+  mvwprintw(_window, row, 1, toPrint.c_str());
 }

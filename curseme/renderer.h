@@ -10,12 +10,16 @@ public:
   RenderSource(const IVec2& dims);
   ~RenderSource();
 
-  void setData(int x, int y, char data, attr_t attributes);
   void getData(int x, int y, char& data, attr_t& attributes);
+  void setData(int x, int y, char data, attr_t attributes);
+  void setAttributes(int x, int y, attr_t attributes);
 
   void setData(char data, attr_t attributes);
 
   const IVec2& getDimensions() const;
+
+private:
+  bool checkBounds(int x, int y);
 
 private:
   char* _data;
@@ -25,6 +29,7 @@ private:
 
 class RenderTarget {
 public:
+  RenderTarget(WINDOW* window);
   RenderTarget(WINDOW* window, RenderSource* source);
 
   void setOffset(const IVec2& offset);

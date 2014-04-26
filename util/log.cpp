@@ -3,7 +3,8 @@
 
 Log* Log::OutputStream = 0;
 LogChannel Log::ChannelState = 0;
-bool Log::Stdout_flag = true;
+bool Log::StdoutEnabled = true;
+set<LogListener*> Log::Listeners;
 mutex Log::Mutex;
 
 Log::Log(const string& logfile): _cleanupStream(true) {
@@ -49,6 +50,20 @@ void Log::Teardown() {
   }
 }
 
+void Log::RegisterListener(LogListener* listener) {
+  Listeners.insert(listener);
+}
+
+void Log::UnregisterListener(LogListener* listener) {
+  Listeners.erase(listener);
+}
+
+void Log::SendToListeners(LogChannel channel, const string& message) {
+  for(auto listener : Listeners) {
+    listener->logMessage(channel, message);
+  }
+}
+
 void Log::EnableAllChannels() {
   ChannelState = ~0x00;
 }
@@ -74,11 +89,11 @@ Log& Log::GetLogStream() {
 }
 
 void Log::EnableStdout() {
-  Stdout_flag = true;
+  StdoutEnabled = true;
 }
 
 void Log::DisableStdout() {
-  Stdout_flag = false;
+  StdoutEnabled = false;
 }
 
 void Log::Flush() {
@@ -87,7 +102,7 @@ void Log::Flush() {
 
 void Log::flush() {
   _outputStream->flush();
-  if(Stdout_flag) {
+  if(StdoutEnabled) {
     std::cout.flush();
   }
 }

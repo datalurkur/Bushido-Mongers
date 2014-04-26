@@ -1,24 +1,29 @@
 #ifndef CURSELOG_H
 #define CURSELOG_H
 
+#include "util/log.h"
 #include <curses.h>
-#include <unordered_map>
-#include "curseme/window.h"
+#include <list>
+#include <string>
 
 using namespace std;
 
-typedef char LogChannel;
-
-class CurseLog {
+class CursesLogWindow: public LogListener {
 public:
-  static void Setup();
-  static void Teardown();
+  CursesLogWindow(WINDOW* window);
+  ~CursesLogWindow();
 
-  static void WriteToChannel(LogChannel channel, string str);
+  void logMessage(LogChannel channel, const string& message);
+  void update();
 
 private:
-  static unordered_map<LogChannel, TitleBox*> boxes;
-  static bool Deployed;
+  void printLine(int row, int width, const string& line);
+
+private:
+  WINDOW* _window;
+
+  list<string> _logs;
+  int _historyLength;
 };
 
 #endif

@@ -1,4 +1,5 @@
 #include "curseme/renderer.h"
+#include "util/log.h"
 
 #include <stdlib.h>
 #include <cstring>
@@ -17,11 +18,17 @@ RenderSource::~RenderSource() {
   delete _attributes;
 }
 void RenderSource::getData(int x, int y, char& data, attr_t& attributes) {
+  if(!checkBounds(x, y)) { return; }
   data       = _data      [y * _dims.x + x];
   attributes = _attributes[y * _dims.x + x];
 }
 void RenderSource::setData(int x, int y, char data, attr_t attributes) {
+  if(!checkBounds(x, y)) { return; }
   _data      [y * _dims.x + x] = data;
+  _attributes[y * _dims.x + x] = attributes;
+}
+void RenderSource::setAttributes(int x, int y, attr_t attributes) {
+  if(!checkBounds(x, y)) { return; }
   _attributes[y * _dims.x + x] = attributes;
 }
 void RenderSource::setData(char data, attr_t attributes) {
@@ -35,8 +42,16 @@ const IVec2& RenderSource::getDimensions() const {
   return _dims;
 }
 
-RenderTarget::RenderTarget(WINDOW* window, RenderSource* source):
-  _window(window), _source(source), _offset(0, 0) {}
+bool RenderSource::checkBounds(int x, int y) {
+  if(x < 0 || y < 0 || x >= _dims.x || y >= _dims.y) {
+    Error("Coordinates " << x << "," << y << " are outside the bounds of " << _dims);
+    return false;
+  }
+  return true;
+}
+
+RenderTarget::RenderTarget(WINDOW* window): _window(window), _source(0), _offset(0, 0) {}
+RenderTarget::RenderTarget(WINDOW* window, RenderSource* source): _window(window), _source(source), _offset(0, 0) {}
 
 void RenderTarget::setOffset(const IVec2& offset) {
   _offset = offset;
@@ -48,7 +63,17 @@ void RenderTarget::nudgeOffset(const IVec2& nudge) {
 
 void RenderTarget::render() {
   int tW, tH;
-  getmaxyx(_window, tW, tH);
+  getmaxyx(_window, tH, tW);
+
+  // If there's no render source, clear the window
+  string emptyLine(tW, ' ');
+  if(!_source) {
+    for(int i = 0; i < tH; i++) {
+      mvwprintw(_window, i+1, 1, emptyLine.c_str());
+    }
+    return;
+  }
+
   IVec2 sDims = _source->getDimensions();
 
   // Get the current window attributes and store them off for restoring later
@@ -58,7 +83,6 @@ void RenderTarget::render() {
   wattr_get(_window, &originalAttributes, &originalColor, unused);
   attr_t prevAttrs = originalAttributes;
 
-  string emptyLine(tW, ' ');
   string runStart(max(0, -_offset.x), ' ');
   string runEnd(max(0, tW - sDims.x + _offset.x), ' ');
 

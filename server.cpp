@@ -1,4 +1,4 @@
-#include "curseme/renderer.h"
+#include "curseme/window.h"
 #include "util/log.h"
 #include "io/gameserver.h"
 #include "io/localgameclient.h"
@@ -80,8 +80,10 @@ int main(int argc, char** argv) {
   Info("=======================================");
   client->moveCharacter(IVec2(0, -1));
 
+  string testString(128, 'q');
   while(server->isRunning()) {
     sleep(1);
+    Debug(testString << Vec2(0.5f, 0.7f) << testString);
   }
 
   cleanup(0);
