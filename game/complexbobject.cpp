@@ -113,7 +113,6 @@ ComplexBObject::ComplexBObject(BObjectManager* manager, BObjectID id, const Prot
 bool ComplexBObject::atCreation() {
   ProtoComplexBObject* p = (ProtoComplexBObject*)_proto;
   if(!BObject::atCreation()) { return false; }
-  #pragma message "TODO : Use the object manager here to create default components"
   for(auto componentInfo : p->components) {
     BObject* object = _manager->createObject(componentInfo.second);
     _components[object->getID()] = object;

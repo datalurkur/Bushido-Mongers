@@ -3,7 +3,8 @@
 #include "world/clientarea.h"
 #include "curseme/renderer.h"
 
-LocalBackEnd::LocalBackEnd() {
+LocalBackEnd::LocalBackEnd(): _mapSource(0) {
+  wrefresh(stdscr);
   _world = new ClientWorld();
 }
 LocalBackEnd::~LocalBackEnd() {
@@ -11,17 +12,16 @@ LocalBackEnd::~LocalBackEnd() {
 }
 
 void LocalBackEnd::sendToClient(GameEvent* event) {
+  EventQueue results;
   switch(event->type) {
     case AreaData:
-    case TileData: {
-      EventQueue results;
       _world->processWorldEvent(event, results);
-      for(auto result : results) {
-        sendToServer(result.get());
-      }
+      changeArea();
+      break;
+    case TileData:
+      _world->processWorldEvent(event, results);
       updateMap();
       break;
-    }
     case CharacterReady:
       Debug("Character is ready");
       updateMap();
@@ -39,52 +39,50 @@ void LocalBackEnd::sendToClient(GameEvent* event) {
       Warn("Unhandled game event type " << event->type);
       break;
   }
+
+  for(auto result : results) {
+    sendToServer(result.get());
+  }
+}
+
+void LocalBackEnd::changeArea() {
+  ClientArea* currentArea = _world->getCurrentArea();
+
+  #pragma message "Fix this so it displays something intelligent and useful"
+  if(!currentArea) { return; }
+
+  if(_mapSource) { delete _mapSource; }
+  _mapSource = new RenderSource(currentArea->getSize());
+
+  updateMap();
 }
 
 void LocalBackEnd::updateMap() {
-  ClientArea* area = _world->getCurrentArea();
+  ClientArea* currentArea = _world->getCurrentArea();
 
-  if(!area) {
-    Debug("Area is not yet defined; displaying nothing");
-    // TODO - Add code that displays "Awaiting data from server"
-    return;
-  }
+  #pragma message "Fix this so it displays something intelligent and useful"
+  if(!currentArea) { return; }
 
-  IVec2 areaSize = area->getSize();
-
-  int maxX, maxY;
-  // TODO - use subwindow instead of stdscr
-  getmaxyx(stdscr, maxY, maxX);
-
-  // TODO - Move this renderer out of this function and into either the local backend privates or a menu system of some kind
-  // It doesn't make sense to create a renderer here for the purpose of displaying something once - that's a lot of memory allocation and deallocation for a single render
-  AsciiRenderer renderer(0, 0, maxX, maxY);
-
-  ostringstream areaData;
+  IVec2 areaSize = currentArea->getSize();
+  #pragma message "Use a subwindow instead of stdscr"
   for(int j = 0; j < areaSize.y; j++) {
     for(int i = 0; i < areaSize.x; i++) {
-      Debug("Getting tile at [" << j << ", " << i << "]");
-      auto tile = area->getTile(IVec2(i, j));
+      auto tile = currentArea->getTile(IVec2(i, j));
       if(tile) {
         switch(tile->getType()) {
         case TileType::Wall:
-          areaData << "X";
+          _mapSource->setData(i, j, 'X', A_NORMAL);
           break;
         case TileType::Ground:
-          areaData << ".";
+          _mapSource->setData(i, j, '.', A_NORMAL);
           break;
         default:
-          areaData << "?";
+          _mapSource->setData(i, j, '?', A_NORMAL);
           break;
         }
       }
-      else { // (!tile)
-        areaData << " ";
-      }
     }
   }
-
-  wrefresh(stdscr);
-  renderer.setInputData(areaData.str().c_str(), areaSize.x, areaSize.y);
-  renderer.render();
+  RenderTarget target(stdscr, _mapSource);
+  target.render();
 }

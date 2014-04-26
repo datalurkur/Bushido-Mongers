@@ -29,6 +29,7 @@ public:
   operator VectorBase<S>();
 
   VectorBase<T>& operator=(const VectorBase<T>& other);
+  VectorBase<T>& operator+=(const VectorBase<T>& other);
 
   bool operator<(const VectorBase<T>& other) const;
   bool operator==(const VectorBase<T>& rhs) const;
@@ -149,6 +150,14 @@ VectorBase<T>& VectorBase<T>::operator=(const VectorBase<T>& other) {
   y = other.y;
   _magnitudeCached = other._magnitudeCached;
   _cachedMagnitude = other._cachedMagnitude;
+  return *this;
+}
+
+template <typename T>
+VectorBase<T>& VectorBase<T>::operator+=(const VectorBase<T>& other) {
+  x += other.x;
+  y += other.y;
+  _magnitudeCached = false;
   return *this;
 }
 

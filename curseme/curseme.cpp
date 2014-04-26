@@ -19,6 +19,9 @@ void CurseMeSetup() {
   // Consume input one character at a time (don't wait for newlines)
   cbreak();
 
+  // Color!
+  start_color();
+
   CurseMe::Cursor(false);
 
   CurseMe::MainScreenTurnOn();

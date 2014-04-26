@@ -13,7 +13,6 @@
 using namespace std;
 
 Area* m_area = 0;
-char* groupData = 0;
 
 void cleanup(int signal) {
 #if ENABLE_CURSES == 1
@@ -25,10 +24,6 @@ void cleanup(int signal) {
     delete m_area;
     m_area = 0;
   }
-  if(groupData != 0) {
-    free(groupData);
-    groupData = 0;
-  }
 
   exit(signal);
 }
@@ -37,6 +32,8 @@ void setup() {
   Log::Setup("stdout");
 #if ENABLE_CURSES == 1
   CurseMeSetup();
+  init_pair(1, COLOR_WHITE, COLOR_YELLOW);
+  init_pair(2, COLOR_GREEN, COLOR_BLACK);
 #endif
   signal(SIGINT, cleanup);
 }
@@ -63,14 +60,9 @@ int main() {
 
 #if ENABLE_CURSES == 1
   // Set up our renderer to fill the whole screen
-  int maxX, maxY;
-  getmaxyx(stdscr, maxY, maxX);
-  int maxXOffset = max((int)areaSize.x - maxX, 0),
-      maxYOffset = max((int)areaSize.y - maxY, 0);
-  AsciiRenderer renderer(0, 0, maxX, maxY);
+  RenderSource groupData(area_size, area_size);
 
-  groupData = (char*)malloc(areaSize.x * areaSize.y * sizeof(char));
-  memset(groupData, '.', areaSize.x * areaSize.y);
+  groupData.setData('.', A_NORMAL);
   int groupCounter = -1;
   int maxGroupCounter = '~' - 'A';
   for(auto group : grouped) {
@@ -83,60 +75,57 @@ int main() {
         Error("Member outside area bounds");
         continue;
       }
-      groupData[(int)member.y * (int)areaSize.x + (int)member.x] = rep;
+      groupData.setData((int)member.x, (int)member.y, rep, A_NORMAL);
     }
   }
 
-  ostringstream areaData;
+  RenderSource areaData(area_size, area_size);
   for(int j = 0; j < areaSize.y; j++) {
     for(int i = 0; i < areaSize.x; i++) {
       switch(m_area->getTile(IVec2(i, j))->getType()) {
       case TileType::Wall:
-        areaData << "X";
+        areaData.setData(i, j, 'X', COLOR_PAIR(1));
         break;
       case TileType::Ground:
-        areaData << ".";
+        areaData.setData(i, j, '.', A_DIM | COLOR_PAIR(2));
         break;
       default:
-        areaData << "?";
+        areaData.setData(i, j, '?', A_NORMAL);
         break;
       }
     }
   }
 
   wrefresh(stdscr);
-  renderer.setInputData(areaData.str().c_str(), areaSize.x, areaSize.y);
-  renderer.render();
+  RenderTarget renderTarget(stdscr, &areaData);
+  renderTarget.render();
 
   int ch;
   while((ch = getch()) != KEY_F(1)) {
-    int x = renderer.getInputX(),
-        y = renderer.getInputY();
-
     switch(ch) {
     case KEY_LEFT:
-      renderer.setInputX(max(0, x-1));
-      renderer.render();
+      renderTarget.nudgeOffset(IVec2(-1, 0));
+      renderTarget.render();
       break;
     case KEY_RIGHT:
-      renderer.setInputX(min(maxXOffset, x+1));
-      renderer.render();
+      renderTarget.nudgeOffset(IVec2(1, 0));
+      renderTarget.render();
       break;
     case KEY_UP:
-      renderer.setInputY(max(0, y-1));
-      renderer.render();
+      renderTarget.nudgeOffset(IVec2(0, 1));
+      renderTarget.render();
       break;
     case KEY_DOWN:
-      renderer.setInputY(min(maxYOffset, y+1));
-      renderer.render();
+      renderTarget.nudgeOffset(IVec2(0, -1));
+      renderTarget.render();
       break;
     case 'a':
-      renderer.setInputData(groupData, areaSize.x, areaSize.y);
-      renderer.render();
+      renderTarget.setRenderSource(&groupData);
+      renderTarget.render();
       break;
     case 's':
-      renderer.setInputData(areaData.str().c_str(), areaSize.x, areaSize.y);
-      renderer.render();
+      renderTarget.setRenderSource(&areaData);
+      renderTarget.render();
       break;
     }
   }

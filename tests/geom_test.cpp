@@ -7,15 +7,15 @@
 #include <unistd.h>
 #include <signal.h>
 
-char* renderData = 0;
+RenderSource* renderSource = 0;
 
 void cleanup(int signal) {
   CurseMeTeardown();
   Log::Teardown();
 
-  if(renderData) {
-    free(renderData);
-    renderData = 0;
+  if(renderSource) {
+    delete renderSource;
+    renderSource = 0;
   }
 
   exit(signal);
@@ -24,6 +24,7 @@ void cleanup(int signal) {
 void setup() {
   Log::Setup("stdout");
   CurseMeSetup();
+  init_pair(1, COLOR_RED, COLOR_BLACK);
   signal(SIGINT, cleanup);
 }
 
@@ -33,53 +34,52 @@ int main() {
   // Set up our renderer to fill the whole screen
   int maxX, maxY;
   getmaxyx(stdscr, maxY, maxX);
-  AsciiRenderer renderer(0, 0, maxX, maxY);
+  renderSource = new RenderSource(maxX - 2, maxY - 2);
+  RenderTarget renderTarget(stdscr, renderSource);
+  renderTarget.setOffset(IVec2(1, 1));
 
   int plotSize = 40;
-
-  renderData = (char*)malloc(plotSize * plotSize * sizeof(char));
 
   wrefresh(stdscr);
 
   IVec2 center(15, 15);
-  int numCircles = 5;
+  int numCircles = 2;
   // Perform circle generation tests
   int c;
   for(c = 0; c < numCircles; c++) {
-    int radius = 2 * c + 1;
-    memset(renderData, '.', plotSize * plotSize);
+    int radius = 4 * c + 1;
     list<IVec2> circle;
     computeRasterizedCircle(radius, circle);
+
+    renderSource->setData('.', A_NORMAL);
     for(auto rPoint : circle) {
       IVec2 point = rPoint + center;
       if(point.x < 0 || point.x >= plotSize || point.y < 0 || point.y >= plotSize) { continue; }
-      renderData[(point.y * plotSize) + point.x] = 'O';
+      renderSource->setData(point.x, point.y, 'O', A_BOLD);
     }
-    renderer.setInputData(renderData, plotSize, plotSize);
-    renderer.render();
+    renderTarget.render();
     sleep(1);
   }
 
   // Perform line generation tests
-  IVec2 start(2, 4),
-        end(25, 20);
+  IVec2 start(1, 1),
+        end(2, 4);
   list<IVec2> line;
   computeRasterizedLine(start, end, line);
   for(c = 0; c < (int)line.size(); c++) {
     int d = 0;
-    memset(renderData, '.', plotSize * plotSize);
+    renderSource->setData('.', A_NORMAL);
     for(auto point : line) {
       if(d > c) { break; }
       d++;
-      renderData[(point.y * plotSize) + point.x] = 'O';
+      renderSource->setData(point.x, point.y, 'O', A_BOLD);
     }
-    renderer.setInputData(renderData, plotSize, plotSize);
-    renderer.render();
+    renderTarget.render();
     sleep(1);
   }
 
   // Perform circle filled using lines test
-  memset(renderData, '.', plotSize * plotSize);
+  renderSource->setData('.', A_NORMAL);
   int radius = 12;
   list<IVec2> disc;
   computeRasterizedDisc(radius, disc);
@@ -132,26 +132,24 @@ int main() {
   for(auto rPoint : disc) {
     IVec2 point = rPoint + center;
     if(point.x < 0 || point.y < 0 || point.x >= plotSize || point.y >= plotSize) { continue; }
-    int index = (point.y) * plotSize + point.x;
     bool isVisible = (visible.find(point) != visible.end()),
          isObstacle = (obstacles.find(point) != obstacles.end());
     if(isVisible) {
       if(isObstacle) {
-        renderData[index] = 'X';
+        renderSource->setData(point.x, point.y, 'O', A_NORMAL);
       } else {
-        renderData[index] = 'o';
+        renderSource->setData(point.x, point.y, '_', A_NORMAL);
       }
     } else {
       if(isObstacle) {
-        renderData[index] = '@';
+        renderSource->setData(point.x, point.y, 'O', A_DIM | COLOR_PAIR(1));
       } else {
-        renderData[index] = '-';
+        renderSource->setData(point.x, point.y, '_', A_DIM | COLOR_PAIR(1));
       }
     }
   }
 
-  renderer.setInputData(renderData, plotSize, plotSize);
-  renderer.render();
+  renderTarget.render();
   sleep(5);
 
   cleanup(0);

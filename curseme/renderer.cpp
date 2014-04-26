@@ -5,112 +5,108 @@
 
 using namespace std;
 
-AsciiRenderer::AsciiRenderer(int x, int y, int w, int h):
-  _w(w-2), _h(h-2), _outputData(0), _oX(0), _oY(0), _iW(0), _iH(0), _inputData(0) {
-  resize(_w, _h);
-
-  _window = newwin(h, w, y, x);
-  box(_window, 0, 0);
+RenderSource::RenderSource(int w, int h): RenderSource(IVec2(w, h)) {}
+RenderSource::RenderSource(const IVec2& dims): _dims(dims) {
+  size_t size = _dims.x * _dims.y;
+  _data       = new char  [size];
+  _attributes = new attr_t[size];
+  setData('.', A_NORMAL);
+}
+RenderSource::~RenderSource() {
+  delete _data;
+  delete _attributes;
+}
+void RenderSource::getData(int x, int y, char& data, attr_t& attributes) {
+  data       = _data      [y * _dims.x + x];
+  attributes = _attributes[y * _dims.x + x];
+}
+void RenderSource::setData(int x, int y, char data, attr_t attributes) {
+  _data      [y * _dims.x + x] = data;
+  _attributes[y * _dims.x + x] = attributes;
+}
+void RenderSource::setData(char data, attr_t attributes) {
+  for(int i = 0; i < _dims.x; i++) {
+    for(int j = 0; j < _dims.y; j++) {
+      setData(i, j, data, attributes);
+    }
+  }
+}
+const IVec2& RenderSource::getDimensions() const {
+  return _dims;
 }
 
-AsciiRenderer::~AsciiRenderer() {
-  delwin(_window);
+RenderTarget::RenderTarget(WINDOW* window, RenderSource* source):
+  _window(window), _source(source), _offset(0, 0) {}
 
-  clearOutput();
-  clearInput();
+void RenderTarget::setOffset(const IVec2& offset) {
+  _offset = offset;
 }
 
-void AsciiRenderer::setInputData(const char** source, int w, int h) {
-  clearInput();
+void RenderTarget::nudgeOffset(const IVec2& nudge) {
+  _offset += nudge;
+}
 
-  _iW = w;
-  _iH = h;
+void RenderTarget::render() {
+  int tW, tH;
+  getmaxyx(_window, tW, tH);
+  IVec2 sDims = _source->getDimensions();
 
-  _inputData = (char**)calloc(sizeof(char*), h);
-  for(int i = 0; i < h; i++) {
-    _inputData[i] = (char*)calloc(sizeof(char), w);
-    memcpy(_inputData[i], source[i], sizeof(char) * w);
+  // Get the current window attributes and store them off for restoring later
+  void* unused = 0;
+  attr_t originalAttributes;
+  short originalColor;
+  wattr_get(_window, &originalAttributes, &originalColor, unused);
+  attr_t prevAttrs = originalAttributes;
+
+  string emptyLine(tW, ' ');
+  string runStart(max(0, -_offset.x), ' ');
+  string runEnd(max(0, tW - sDims.x + _offset.x), ' ');
+
+  int xLower = max(0, -_offset.x),
+      xUpper = min(tW, sDims.x - _offset.x);
+
+  for(int y = 0; y < tH; y++) {
+    if(y < -_offset.y || (y + _offset.y) >= sDims.y) {
+      mvwprintw(_window, y+1, 1, emptyLine.c_str());
+      continue;
+    }
+
+    // Group characters together by common attributes as we advance through the buffers
+    string run = runStart;
+
+    for(int x = xLower; x < xUpper; x++) {
+      char data;
+      attr_t attributes;
+      _source->getData(x + _offset.x, y + _offset.y, data, attributes);
+
+      if(attributes != prevAttrs) {
+        // Previous character run terminates, begin the new one
+        mvwprintw(_window, y+1, x - run.size() + 1, run.c_str());
+        run = "";
+
+        // Set the attributes for the new character run
+        prevAttrs = attributes;
+        wattrset(_window, attributes);
+      }
+
+      // Append this character to the character run
+      run += data;
+    }
+
+    // Finish up this row
+    mvwprintw(_window, y+1, tW - runEnd.size() - run.size() + 1, run.c_str());
+    wattr_set(_window, originalAttributes, originalColor, unused);
+    prevAttrs = originalAttributes;
+    if(runEnd.size() > 0) {
+      mvwprintw(_window, y+1, tW - runEnd.size() + 1, runEnd.c_str());
+    }
   }
 
-  computeOutput();
-}
-
-void AsciiRenderer::setInputData(const char* source, int w, int h) {
-  clearInput();
-  _iW = w;
-  _iH = h;
-
-  _inputData = (char**)calloc(sizeof(char*), h);
-  for(int i = 0; i < h; i++) {
-    _inputData[i] = (char*)calloc(sizeof(char), w);
-    memcpy(_inputData[i], &source[i*w], sizeof(char) * w);
-  }
-
-  computeOutput();
-}
-
-void AsciiRenderer::render() {
-  for(int i = 0; i < _h; i++) {
-    mvwprintw(_window, i+1, 1, _outputData[i]);
-  }
+  // Restore the previous attributes
+  wattr_set(_window, originalAttributes, originalColor, unused);
   wrefresh(_window);
 }
 
-void AsciiRenderer::clearOutput() {
-  if(_outputData) {
-    for(int i = 0; i < _h; i++) {
-      free(_outputData[i]);
-    }
-    free(_outputData);
-    _outputData = 0;
-  }
+void RenderTarget::setRenderSource(RenderSource* source) {
+  _source = source;
 }
-
-void AsciiRenderer::clearInput() {
-  if(_inputData) {
-    for(int i = 0; i < _iH; i++) {
-      free(_inputData[i]);
-    }
-    free(_inputData);
-    _inputData = 0;
-  }
-}
-
-void AsciiRenderer::resize(int w, int h) {
-  clearOutput();
-
-  _w = w;
-  _h = h;
-
-  _outputData = (char**)calloc(sizeof(char*), _h);
-  for(int i = 0; i < _h; i++) {
-    _outputData[i] = (char*)calloc(sizeof(char), _w);
-  }
-
-  computeOutput();
-}
-
-void AsciiRenderer::computeOutput() {
-  if(_inputData) {
-    for(int i = 0; i < _h && (i + _oY) < _iH; i++) {
-      for(int j = 0; j < _w && (j + _oX) < _iW; j++) {
-        _outputData[i][j] = _inputData[i + _oY][j + _oX];
-      }
-    }
-  }
-}
-
-int AsciiRenderer::getInputX() const { return _oX; }
-int AsciiRenderer::getInputY() const { return _oY; }
-
-void AsciiRenderer::setInputX(int oX) {
-  _oX = oX;
-  computeOutput();
-}
-
-void AsciiRenderer::setInputY(int oY) {
-  _oY = oY;
-  computeOutput();
-}
-
-WINDOW* AsciiRenderer::getWindow() { return _window; }

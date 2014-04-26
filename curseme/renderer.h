@@ -1,39 +1,43 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
+#include "util/vector.h"
 #include "curseme/curseme.h"
 
-class AsciiRenderer {
+class RenderSource {
 public:
-  AsciiRenderer(int x, int y, int w, int h);
-  ~AsciiRenderer();
+  RenderSource(int w, int h);
+  RenderSource(const IVec2& dims);
+  ~RenderSource();
 
-  void setInputData(const char** source, int w, int h);
-  void setInputData(const char* source, int w, int h);
+  void setData(int x, int y, char data, attr_t attributes);
+  void getData(int x, int y, char& data, attr_t& attributes);
+
+  void setData(char data, attr_t attributes);
+
+  const IVec2& getDimensions() const;
+
+private:
+  char* _data;
+  attr_t* _attributes;
+  IVec2 _dims;
+};
+
+class RenderTarget {
+public:
+  RenderTarget(WINDOW* window, RenderSource* source);
+
+  void setOffset(const IVec2& offset);
+  void nudgeOffset(const IVec2& nudge);
+
+  void setRenderSource(RenderSource* source);
 
   void render();
 
-  int getInputX() const;
-  int getInputY() const;
-
-  void setInputX(int oX);
-  void setInputY(int oY);
-
-  WINDOW* getWindow();
-
 private:
-  void clearOutput();
-  void clearInput();
-  void resize(int w, int h);
-  void computeOutput();
-
-private:
-  int _w, _h;
-  char** _outputData;
-  int _oX, _oY, _iW, _iH;
-  char** _inputData;
-
   WINDOW* _window;
+  RenderSource* _source;
+  IVec2 _offset;
 };
 
 #endif
