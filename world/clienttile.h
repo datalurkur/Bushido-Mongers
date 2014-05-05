@@ -10,6 +10,9 @@ public:
 
   Area* getArea() const;
   const IVec2& getCoordinates() const;
+
+private:
+  IVec2 _fakeCoordinates;
 };
 
 #endif

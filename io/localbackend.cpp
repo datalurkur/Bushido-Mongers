@@ -3,7 +3,7 @@
 #include "world/clientarea.h"
 #include "curseme/renderer.h"
 
-LocalBackEnd::LocalBackEnd(): _mapSource(0) {
+LocalBackEnd::LocalBackEnd(): _consumerShouldDie(false), _eventsReady(false), _mapSource(0) {
   wrefresh(stdscr);
 
   int w, h;
@@ -26,28 +26,63 @@ LocalBackEnd::LocalBackEnd(): _mapSource(0) {
   wrefresh(_mapWindow);
   _mapPanel = new RenderTarget(_mapWindow);
 
-  _world = new ClientWorld();
+  _eventConsumer = thread(&LocalBackEnd::consumeEvents, this);
 }
 
 LocalBackEnd::~LocalBackEnd() {
+  // Tell the event consumer that it should die and wait for it to do so
+  if(_eventConsumer.joinable()) {
+    _consumerShouldDie = true;
+    _eventsReadyCondition.notify_all();
+    _eventConsumer.join();
+  }
+
+  // Tear down the UI
   delete _mapPanel;
   delwin(_mapWindow);
 
   if(_logPanel) { delete _logPanel; }
   if(_logWindow) { delwin(_logWindow); }
-
-  delete _world;
 }
 
-void LocalBackEnd::sendToClient(GameEvent* event) {
+void LocalBackEnd::sendToClient(SharedGameEvent event) {
+  unique_lock<mutex> lock(_eventLock);
+  _events.pushEvent(event);
+  _eventsReady = true;
+  _eventsReadyCondition.notify_all();
+}
+
+void LocalBackEnd::sendToClient(EventQueue&& queue) {
+  unique_lock<mutex> lock(_eventLock);
+  _events.appendEvents(move(queue));
+  _eventsReady = true;
+  _eventsReadyCondition.notify_all();
+}
+
+void LocalBackEnd::consumeEvents() {
+  while(!_consumerShouldDie) {
+    unique_lock<mutex> lock(_eventLock);
+    while(!_eventsReady && !_consumerShouldDie) _eventsReadyCondition.wait(lock);
+
+    if(_events.empty()) { continue; }
+    SharedGameEvent event = _events.popEvent();
+    if(_events.empty()) {
+      _eventsReady = false;
+    }
+    lock.unlock();
+    consumeSingleEvent(event.get());
+  }
+}
+
+void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
   EventQueue results;
   switch(event->type) {
     case AreaData:
-      _world->processWorldEvent(event, results);
+      _world.processWorldEvent(event, results);
       changeArea();
       break;
     case TileData:
-      _world->processWorldEvent(event, results);
+      _world.processWorldEvent(event, results);
       updateMap((TileDataEvent*)event);
       break;
     case CharacterReady:
@@ -74,7 +109,7 @@ void LocalBackEnd::sendToClient(GameEvent* event) {
 }
 
 void LocalBackEnd::changeArea() {
-  ClientArea* currentArea = _world->getCurrentArea();
+  ClientArea* currentArea = _world.getCurrentArea();
 
   #pragma message "Fix this so it displays something intelligent and useful"
   if(!currentArea) { return; }
@@ -86,7 +121,7 @@ void LocalBackEnd::changeArea() {
 }
 
 void LocalBackEnd::updateMap(TileDataEvent *event) {
-  ClientArea* currentArea = _world->getCurrentArea();
+  ClientArea* currentArea = _world.getCurrentArea();
 
   #pragma message "Fix this so it displays something intelligent and useful"
   if(!currentArea) { return; }
@@ -96,7 +131,6 @@ void LocalBackEnd::updateMap(TileDataEvent *event) {
   if(!event) {
     // No tile data update, just regenerate the whole area
     IVec2 areaSize = currentArea->getSize();
-    #pragma message "Use a subwindow instead of stdscr"
     for(int j = 0; j < areaSize.y; j++) {
       for(int i = 0; i < areaSize.x; i++) {
         auto tile = currentArea->getTile(IVec2(i, j));

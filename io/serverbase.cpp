@@ -99,7 +99,7 @@ void ServerBase::clientEvent(ClientBase* client, GameEvent* event) {
 
   EventQueue results;
   _core->processPlayerEvent(playerID, event, results);
-  client->queueToClient(move(results));
+  client->sendToClient(move(results));
 }
 
 void ServerBase::innerLoop() {
@@ -122,7 +122,7 @@ void ServerBase::innerLoop() {
       for(auto clientInfo : _assignedIDs) {
         if(_core->isEventVisibleToPlayer(clientInfo.first, event.get())) {
           Debug("Sending update event to player " << clientInfo.first);
-          clientInfo.second->queueToClient(event);
+          clientInfo.second->sendToClient(event);
         } else {
           Debug("Event is not visible to player " << clientInfo.first);
         }

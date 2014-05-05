@@ -1,6 +1,6 @@
 #include "world/clienttile.h"
 
-ClientTile::ClientTile(TileType type, set<BObjectID>&& contents): TileBase(type) {
+ClientTile::ClientTile(TileType type, set<BObjectID>&& contents): TileBase(type), _fakeCoordinates(0,0) {
   _contents = move(contents);
 }
 
@@ -16,5 +16,5 @@ Area* ClientTile::getArea() const {
 
 const IVec2& ClientTile::getCoordinates() const {
   ASSERT(0, "getCoordinates not implemented client-side"); // Not implemented for client-side
-  return IVec2(0,0);
+  return _fakeCoordinates;
 }

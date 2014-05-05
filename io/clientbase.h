@@ -5,10 +5,6 @@
 #include "game/bobject.h"
 #include "util/vector.h"
 
-#include <thread>
-#include <mutex>
-#include <condition_variable>
-#include <atomic>
 #include <string>
 using namespace std;
 
@@ -22,29 +18,16 @@ public:
   virtual bool connectSender() = 0;
   virtual void disconnectSender() = 0;
   virtual void sendToServer(GameEvent* event) = 0;
-
-  void queueToClient(SharedGameEvent event);
-  void queueToClient(EventQueue&& queue);
+  virtual void sendToClient(SharedGameEvent event) = 0;
+  virtual void sendToClient(EventQueue&& queue) = 0;
 
   void createCharacter(const string& name);
   void loadCharacter(BObjectID id);
   void unloadCharacter();
   void moveCharacter(const IVec2& dir);
 
-protected:
-  virtual void sendToClient(GameEvent* event) = 0;
-
 private:
   void consumeEvents();
-
-protected:
-  atomic<bool> _done;
-
-  bool _eventsReady;
-  mutex _queueLock;
-  condition_variable _eventsReadyCV;
-  thread _eventConsumer;
-  EventQueue _clientEventQueue;
 };
 
 #endif

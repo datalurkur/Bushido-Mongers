@@ -11,7 +11,7 @@ using namespace std;
 class CursesLogWindow: public LogListener {
 public:
   CursesLogWindow(WINDOW* window);
-  ~CursesLogWindow();
+  virtual ~CursesLogWindow();
 
   void logMessage(LogChannel channel, const string& message);
   void update();

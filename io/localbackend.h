@@ -6,6 +6,13 @@
 #include "curseme/curselog.h"
 #include "curseme/renderer.h"
 
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <atomic>
+
+using namespace std;
+
 class RenderSource;
 
 class LocalBackEnd: virtual public ClientBase {
@@ -13,18 +20,33 @@ public:
   LocalBackEnd();
   ~LocalBackEnd();
 
-  void sendToClient(GameEvent* event);
+protected:
+  void sendToClient(SharedGameEvent event);
+  void sendToClient(EventQueue&& queue);
 
 private:
+  void consumeEvents();
+  void consumeSingleEvent(GameEvent* event);
+
   void changeArea();
   void updateMap(TileDataEvent* event);
 
   char getTileRepresentation(TileType type);
 
 private:
-  ClientWorld* _world;
+  // Event queueing and consumption
+  thread _eventConsumer;
+  atomic<bool> _consumerShouldDie;
+  mutex _eventLock;
+  bool _eventsReady;
+  condition_variable _eventsReadyCondition;
+  EventQueue _events;
+
+  // Local representation of the world
+  ClientWorld _world;
   RenderSource* _mapSource;
 
+  // UI
   WINDOW* _logWindow;
   CursesLogWindow* _logPanel;
   WINDOW* _mapWindow;

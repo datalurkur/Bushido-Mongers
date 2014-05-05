@@ -50,8 +50,8 @@ bool RenderSource::checkBounds(int x, int y) {
   return true;
 }
 
-RenderTarget::RenderTarget(WINDOW* window): _window(window), _source(0), _offset(0, 0) {}
-RenderTarget::RenderTarget(WINDOW* window, RenderSource* source): _window(window), _source(source), _offset(0, 0) {}
+RenderTarget::RenderTarget(WINDOW* window): _window(window), _source(0), _offset(0, 0), _windowOffset(1, 1) {}
+RenderTarget::RenderTarget(WINDOW* window, RenderSource* source): _window(window), _source(source), _offset(0, 0), _windowOffset(1, 1) {}
 
 void RenderTarget::setOffset(const IVec2& offset) {
   _offset = offset;
@@ -69,7 +69,7 @@ void RenderTarget::render() {
   string emptyLine(tW, ' ');
   if(!_source) {
     for(int i = 0; i < tH; i++) {
-      mvwprintw(_window, i+1, 1, emptyLine.c_str());
+      mvwprintw(_window, i + _windowOffset.y, _windowOffset.x, emptyLine.c_str());
     }
     return;
   }
@@ -91,7 +91,7 @@ void RenderTarget::render() {
 
   for(int y = 0; y < tH; y++) {
     if(y < -_offset.y || (y + _offset.y) >= sDims.y) {
-      mvwprintw(_window, y+1, 1, emptyLine.c_str());
+      mvwprintw(_window, y + _windowOffset.y, _windowOffset.x, emptyLine.c_str());
       continue;
     }
 
@@ -105,7 +105,7 @@ void RenderTarget::render() {
 
       if(attributes != prevAttrs) {
         // Previous character run terminates, begin the new one
-        mvwprintw(_window, y+1, x - run.size() + 1, run.c_str());
+        mvwprintw(_window, y + _windowOffset.y, x - run.size() + _windowOffset.x, run.c_str());
         run = "";
 
         // Set the attributes for the new character run
@@ -118,11 +118,11 @@ void RenderTarget::render() {
     }
 
     // Finish up this row
-    mvwprintw(_window, y+1, tW - runEnd.size() - run.size() + 1, run.c_str());
+    mvwprintw(_window, y + _windowOffset.y, tW - runEnd.size() - run.size() + _windowOffset.x, run.c_str());
     wattr_set(_window, originalAttributes, originalColor, unused);
     prevAttrs = originalAttributes;
     if(runEnd.size() > 0) {
-      mvwprintw(_window, y+1, tW - runEnd.size() + 1, runEnd.c_str());
+      mvwprintw(_window, y + _windowOffset.y, tW - runEnd.size() + _windowOffset.x, runEnd.c_str());
     }
   }
 
