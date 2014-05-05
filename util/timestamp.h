@@ -9,7 +9,7 @@
 # include <mach/mach.h>
 typedef mach_timespec_t PreciseClock;
 #else
-typedef clock_t PreciseClock;
+typedef timespec PreciseClock;
 #endif
 
 class ClockInterface {

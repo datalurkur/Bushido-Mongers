@@ -83,7 +83,6 @@ int main(int argc, char** argv) {
   string testString(128, 'q');
   while(server->isRunning()) {
     sleep(1);
-    Debug(testString << Vec2(0.5f, 0.7f) << testString);
   }
 
   cleanup(0);

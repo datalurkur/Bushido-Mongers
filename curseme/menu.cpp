@@ -3,6 +3,7 @@
 #include "util/log.h"
 
 #include <iostream>
+#include <algorithm>
 #include <string>
 
 // whut.

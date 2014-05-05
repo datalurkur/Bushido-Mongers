@@ -27,7 +27,7 @@ PreciseClock ClockInterface::getMonotonicClock() {
 #ifdef __MACH__
   clock_get_time(_clockServ, &ret);
 #else
-  clock_gettime(CLOCK_MONOTONIC, &ret);
+  clock_gettime(CLOCK_MONOTONIC, (struct timespec*)&ret);
 #endif
   return ret;
 }

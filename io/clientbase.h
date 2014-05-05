@@ -6,6 +6,9 @@
 #include "util/vector.h"
 
 #include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <atomic>
 #include <string>
 using namespace std;
 
