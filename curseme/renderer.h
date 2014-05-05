@@ -40,10 +40,12 @@ public:
   void render();
 
 private:
+  void reportSize();
+
+private:
   WINDOW* _window;
   RenderSource* _source;
   IVec2 _offset;
-  IVec2 _windowOffset;
 };
 
 #endif

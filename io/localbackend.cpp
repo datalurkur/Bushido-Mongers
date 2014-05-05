@@ -116,6 +116,7 @@ void LocalBackEnd::changeArea() {
 
   if(_mapSource) { delete _mapSource; }
   _mapSource = new RenderSource(currentArea->getSize());
+  _mapPanel->setRenderSource(_mapSource);
 
   updateMap(0);
 }
@@ -154,8 +155,7 @@ void LocalBackEnd::updateMap(TileDataEvent *event) {
       _mapSource->setAttributes(visibleTile.x, visibleTile.y, A_BOLD);
     }
   }
-  RenderTarget target(stdscr, _mapSource);
-  target.render();
+  _mapPanel->render();
 }
 
 char LocalBackEnd::getTileRepresentation(TileType type) {
