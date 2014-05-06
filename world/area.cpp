@@ -16,7 +16,7 @@ Tile* Area::getRandomEmptyTile() {
       Error("Found null tile at " << IVec2(x, y));
     }
 
-    if(ret && ret->getType() != TileType::Ground) { return ret; }
+    if(ret && ret->getType() == TileType::Ground) { return ret; }
   }
 
   Error("Failed to find random empty tile");

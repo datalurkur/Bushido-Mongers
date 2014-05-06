@@ -139,6 +139,8 @@ void LocalBackEnd::updateMap(TileDataEvent *event) {
           char tileCharacter = getTileRepresentation(tile->getType());
           attr_t tileAttributes = currentArea->isTileShrouded(IVec2(i, j)) ? A_NORMAL : A_BOLD;
           _mapSource->setData(i, j, tileCharacter, tileAttributes);
+        } else {
+          _mapSource->setData(i, j, ' ', A_NORMAL);
         }
       }
     }

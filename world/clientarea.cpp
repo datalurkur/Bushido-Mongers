@@ -14,7 +14,7 @@ void ClientArea::revealTile(const IVec2& pos) { _shrouded[(pos.x * _size.y) + po
 bool ClientArea::isTileShrouded(const IVec2& pos) { return _shrouded[(pos.x * _size.y) + pos.y]; }
 
 void ClientArea::setTile(const IVec2& pos, TileBase* tile) {
-  int index = (pos.x * _size.y) + pos.y;
+  int index = getIndexFor(pos);
   if(_tiles[index]) {
     delete _tiles[index];
   }

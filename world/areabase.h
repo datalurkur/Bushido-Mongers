@@ -24,6 +24,8 @@ public:
   virtual void setTile(const IVec2& pos, TileBase* tile) = 0;
 
 protected:
+  int getIndexFor(const IVec2& pos);
+
   void addConnection(const string& other);
   const set<string>& getConnections() const;
 

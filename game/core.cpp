@@ -165,7 +165,7 @@ void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventQueue& resu
     results.pushEvent(new MoveFailedEvent("Internal server error - destination tile is null"));
     return;
   }
-  if(destinationTile->getType() == TileType::Ground) {
+  if(destinationTile->getType() != TileType::Ground) {
     results.pushEvent(new MoveFailedEvent("Movement blocked"));
     return;
   }
@@ -267,7 +267,7 @@ void GameCore::getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibl
       }
       if(!obstructed) {
         // Eventually, this will be *much* more complex
-        obstructed = area->getTile(pointOnLine)->getType() != TileType::Wall;
+        obstructed = area->getTile(pointOnLine)->getType() == TileType::Wall;
       }
     }
   }

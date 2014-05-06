@@ -17,6 +17,10 @@ const string& AreaBase::getName() const { return _name; }
 const IVec2& AreaBase::getPos() const { return _pos; }
 const IVec2& AreaBase::getSize() const { return _size; }
 
+int AreaBase::getIndexFor(const IVec2& pos) {
+  return (pos.x * _size.y) + pos.y;
+}
+
 void AreaBase::addConnection(const string& other) {
   _connections.insert(other);
 }
@@ -25,4 +29,4 @@ const set<string>& AreaBase::getConnections() const {
   return _connections;
 }
 
-TileBase* AreaBase::getTile(const IVec2& pos) { return _tiles[(pos.x * _size.y) + pos.y]; }
+TileBase* AreaBase::getTile(const IVec2& pos) { return _tiles[getIndexFor(pos)]; }
