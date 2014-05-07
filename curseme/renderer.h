@@ -18,6 +18,8 @@ public:
 
   const IVec2& getDimensions() const;
 
+  void writeDebug(const string& filename);
+
 private:
   bool checkBounds(int x, int y);
 

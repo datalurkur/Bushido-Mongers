@@ -88,10 +88,10 @@ struct TileDataEvent: public GameEvent {
   set<IVec2> visible;
   map<IVec2, TileDatum> updated;
 
-  TileDataEvent(Area* a, const set<IVec2>& v):
+  TileDataEvent(Area* a, const set<IVec2>& u):
     GameEvent(TileData) {
-    for(auto visible : v) {
-      updated.insert(make_pair(visible, TileDatum(a->getTile(visible))));
+    for(auto tile : u) {
+      updated.insert(make_pair(tile, TileDatum(a->getTile(tile))));
     }
   }
 

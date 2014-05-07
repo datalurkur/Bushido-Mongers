@@ -4,9 +4,9 @@
 #include <string>
 #include <sstream>
 
-bool CurseMe::NcursesEnabled = false;
+bool CurseMe::Enabled = false;
 
-void CurseMeSetup() {
+void CurseMe::Setup() {
   // Init ncurses
   initscr();
 
@@ -21,15 +21,20 @@ void CurseMeSetup() {
 
   // Color!
   start_color();
+  init_pair(RED_ON_BLACK,   COLOR_RED,   COLOR_BLACK);
+  init_pair(BLUE_ON_BLACK,  COLOR_BLUE,  COLOR_BLACK);
+  init_pair(CYAN_ON_BLACK,  COLOR_CYAN,  COLOR_BLACK);
+  init_pair(GREEN_ON_BLACK, COLOR_GREEN, COLOR_BLACK);
+  init_pair(WHITE_ON_BLACK, COLOR_WHITE, COLOR_BLACK);
 
   CurseMe::Cursor(false);
 
-  CurseMe::MainScreenTurnOn();
-
   Log::DisableStdout();
+
+  Enabled = true;
 }
 
-void CurseMeTeardown() {
+void CurseMe::Teardown() {
   Log::EnableStdout();
 
   endwin();
@@ -48,10 +53,6 @@ void CurseMe::Cursor(bool state) {
   }
 }
 
-void CurseMe::MainScreenTurnOn() {
-  CurseMe::NcursesEnabled = true;
-}
-
-bool CurseMe::Enabled() {
-  return CurseMe::NcursesEnabled;
+bool CurseMe::IsEnabled() {
+  return Enabled;
 }

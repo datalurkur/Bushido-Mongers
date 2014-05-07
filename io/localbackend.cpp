@@ -3,17 +3,17 @@
 #include "world/clientarea.h"
 #include "curseme/renderer.h"
 
-LocalBackEnd::LocalBackEnd(): _consumerShouldDie(false), _eventsReady(false), _mapSource(0) {
+LocalBackEnd::LocalBackEnd(): _consumerShouldDie(false), _eventsReady(false), _mapSource(0), _characterID(0) {
   wrefresh(stdscr);
 
   int w, h;
   getmaxyx(stdscr, h, w);
 
   int mapHeight;
-  if(h > 20) {
-    mapHeight = h - 10;
-    _logWindow = newwin(10, w, h - 10, 0);
-    box(_logWindow, 0, 0);
+  int desiredLogHeight = 5;
+  if(h > 4 * desiredLogHeight) {
+    mapHeight = h - desiredLogHeight;
+    _logWindow = newwin(desiredLogHeight, w, h - desiredLogHeight, 0);
     wrefresh(_logWindow);
     _logPanel = new CursesLogWindow(_logWindow);
   } else {
@@ -88,6 +88,7 @@ void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
     case CharacterReady:
       Debug("Character is ready");
       changeArea();
+      _characterID = ((CharacterReadyEvent*)event)->ID;
       break;
     case CharacterNotReady:
       Debug("Character not ready - " << ((CharacterNotReadyEvent*)event)->reason);
@@ -129,41 +130,51 @@ void LocalBackEnd::updateMap(TileDataEvent *event) {
 
   IVec2 mapDimensions = _mapSource->getDimensions();
 
+  char character;
+  attr_t attributes;
   if(!event) {
     // No tile data update, just regenerate the whole area
     IVec2 areaSize = currentArea->getSize();
     for(int j = 0; j < areaSize.y; j++) {
       for(int i = 0; i < areaSize.x; i++) {
-        auto tile = currentArea->getTile(IVec2(i, j));
-        if(tile) {
-          char tileCharacter = getTileRepresentation(tile->getType());
-          attr_t tileAttributes = currentArea->isTileShrouded(IVec2(i, j)) ? A_NORMAL : A_BOLD;
-          _mapSource->setData(i, j, tileCharacter, tileAttributes);
-        } else {
-          _mapSource->setData(i, j, ' ', A_NORMAL);
-        }
+        updateTileRepresentation(IVec2(i, j), currentArea);
       }
     }
   } else {
     // We got tile data from the server, update only the updated tiles
     for(auto tileData : event->updated) {
-      char tileCharacter = getTileRepresentation(tileData.second.type);
-      _mapSource->setData(tileData.first.x, tileData.first.y, tileCharacter, A_BOLD);
+      updateTileRepresentation(tileData.first, currentArea);
     }
     for(auto shroudedTile : event->shrouded) {
-      _mapSource->setAttributes(shroudedTile.x, shroudedTile.y, A_NORMAL);
+      updateTileRepresentation(shroudedTile, currentArea);
     }
     for(auto visibleTile : event->visible) {
-      _mapSource->setAttributes(visibleTile.x, visibleTile.y, A_BOLD);
+      updateTileRepresentation(visibleTile, currentArea);
     }
   }
+
   _mapPanel->render();
 }
 
-char LocalBackEnd::getTileRepresentation(TileType type) {
-  switch(type) {
-    case TileType::Wall: return 'X';
-    case TileType::Ground: return '.';
-    default: return '?';
+void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* currentArea) {
+  auto tile = currentArea->getTile(coords);
+  if(!tile) {
+    _mapSource->setData(coords.x, coords.y, ' ', A_NORMAL);
+    return;
   }
+
+  const set<BObjectID>& contents = tile->getContents();
+  if(contents.find(_characterID) != contents.end()) {
+    Debug("Character object (" << _characterID << ") found at " << coords);
+    _mapSource->setData(coords.x, coords.y, '@', A_BOLD | COLOR_PAIR(RED_ON_BLACK));
+    return;
+  }
+
+  char c;
+  switch(tile->getType()) {
+    case TileType::Wall:   c = 'X'; break;
+    case TileType::Ground: c = '.'; break;
+    default:               c = '?'; break;
+  }
+  _mapSource->setData(coords.x, coords.y, c, currentArea->isTileShrouded(coords) ? A_NORMAL : A_BOLD);
 }

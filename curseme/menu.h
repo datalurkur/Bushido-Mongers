@@ -26,9 +26,9 @@ namespace std
 {
 template<>
 struct hash<StringPair> {
-    size_t operator()(const StringPair &sp) const {
-        return hash<string>()(sp.first) ^ hash<string>()(sp.second);
-    }
+  size_t operator()(const StringPair &sp) const {
+    return hash<string>()(sp.first) ^ hash<string>()(sp.second);
+  }
 };
 }
 typedef unordered_map<StringPair, function<void()> > StringPairFunctionMap;

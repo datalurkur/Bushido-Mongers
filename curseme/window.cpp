@@ -1,7 +1,7 @@
-#include <string>
-#include <curses.h>
 #include "curseme/window.h"
 #include "util/log.h"
+
+#include <string>
 
 static Window* StdScr = new Window(stdscr);
 

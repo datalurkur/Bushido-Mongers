@@ -31,7 +31,7 @@ private:
   void changeArea();
   void updateMap(TileDataEvent* event);
 
-  char getTileRepresentation(TileType type);
+  void updateTileRepresentation(const IVec2& coords, ClientArea* currentArea);
 
 private:
   // Event queueing and consumption
@@ -45,6 +45,7 @@ private:
   // Local representation of the world
   ClientWorld _world;
   RenderSource* _mapSource;
+  BObjectID _characterID;
 
   // UI
   WINDOW* _logWindow;

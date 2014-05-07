@@ -180,8 +180,8 @@ void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventQueue& resu
   getViewFrom(player, newCoordinates, newView);
 
   // Compare it to the old perspective
-  set<IVec2> newlyVisible, newlyShrouded;
-  symmetricDiff(newView, _previousView[player], newlyVisible, newlyShrouded);
+  set<IVec2> newlyVisible, newlyShrouded, unchanged;
+  symmetricDiff(newView, _previousView[player], newlyVisible, newlyShrouded, unchanged);
 
   time_t currentTime = Clock.getTime();
 
@@ -190,16 +190,25 @@ void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventQueue& resu
   for(auto c : newlyVisible) {
     if(!sentAt->has(c) || (sentAt->get(c) < area->getTile(c)->lastChanged())) {
       if(!sentAt->has(c)) {
-        Debug("Tile data at " << c << " has not yet been sent");
+        Debug("Newly visible tile " << c << " has not yet been sent");
       } else {
-        Debug("Tile at " << c << " was last updated at " << area->getTile(c)->lastChanged() << ", which is later than the last sent data at " << sentAt->get(c));
+        Debug("Newly visible tile " << c << " has been updated since " << sentAt->get(c));
       }
       updated.insert(c);
       sentAt->set(c, currentTime);
     } else {
-      Debug("Tile at " << c << " was last updated at " << area->getTile(c)->lastChanged() << ", which is NEWER than the last sent data at " << sentAt->get(c));
+      Debug("Newly visible tile " << c << " has seen no updates since " << sentAt->get(c));
     }
   }
+  for(auto c : unchanged) {
+    if(sentAt->get(c) < area->getTile(c)->lastChanged()) {
+      Debug("Previously visible tile " << c << " has been updated since " << sentAt->get(c));
+      updated.insert(c);
+      newlyVisible.insert(c);
+      sentAt->set(c, currentTime);
+    }
+  }
+  Debug("Sending tile data with " << newlyVisible.size() << " visible tiles, " << updated.size() << " updated tiles, and " << newlyShrouded.size() << " shrouded tiles");
   results.pushEvent(new TileDataEvent(area, newlyVisible, updated, move(newlyShrouded)));
 
   _previousView[player] = move(newView);

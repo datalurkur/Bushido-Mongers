@@ -20,7 +20,7 @@ void cleanup(int signal) {
     delete server;
   }
 
-  CurseMeTeardown();
+  CurseMe::Teardown();
   Log::Teardown();
 
   exit(signal);
@@ -28,7 +28,7 @@ void cleanup(int signal) {
 
 void setup() {
   Log::Setup("server.log");
-  CurseMeSetup();
+  CurseMe::Setup();
   signal(SIGINT, cleanup);
 }
 
@@ -65,6 +65,7 @@ int main(int argc, char** argv) {
   Info("Client is connected and ready to issue commands");
   string characterName = "Test Character Name";
   client->createCharacter(characterName);
+  sleep(1);
 
   // Test movement
   Info("Client is attempting to move");
@@ -80,7 +81,6 @@ int main(int argc, char** argv) {
   Info("=======================================");
   client->moveCharacter(IVec2(0, -1));
 
-  string testString(128, 'q');
   while(server->isRunning()) {
     sleep(1);
   }

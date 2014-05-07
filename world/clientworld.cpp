@@ -28,6 +28,8 @@ void ClientWorld::processWorldEvent(GameEvent* event, EventQueue& results) {
 
       struct TileDataEvent* e = (struct TileDataEvent*)event;
 
+      Debug("Received tile data event with " << e->visible.size() << " visible tiles, " << e->updated.size() << " updated tiles, and " << e->shrouded.size() << " shrouded tiles");
+
       // Deal with visible tiles
       for(auto v : e->visible) {
         Debug("Tile at " << v << " is now visible");

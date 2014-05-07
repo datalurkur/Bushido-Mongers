@@ -26,7 +26,7 @@ set<T>&& operator-(const set<T>& lhs, const set<T>& rhs) {
 }
 
 template <typename T>
-void symmetricDiff(const set<T>& lhs, const set<T>& rhs, set<T>& onlyInLeft, set<T>& onlyInRight) {
+void symmetricDiff(const set<T>& lhs, const set<T>& rhs, set<T>& onlyInLeft, set<T>& onlyInRight, set<T>& inBoth) {
   typename set<T>::const_iterator lItr = lhs.begin();
   typename set<T>::const_iterator rItr = rhs.begin();
   while(lItr != lhs.end() && rItr != rhs.end()) {
@@ -37,6 +37,7 @@ void symmetricDiff(const set<T>& lhs, const set<T>& rhs, set<T>& onlyInLeft, set
       onlyInRight.insert(*rItr);
       rItr++;
     } else {
+      inBoth.insert(*lItr);
       lItr++;
       rItr++;
     }

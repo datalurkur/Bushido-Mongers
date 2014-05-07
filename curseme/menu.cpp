@@ -1,5 +1,4 @@
 #include "curseme/menu.h"
-#include "curseme/window.h"
 #include "util/log.h"
 
 #include <iostream>

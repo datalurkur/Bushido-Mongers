@@ -42,4 +42,4 @@ bool EventQueue::empty() {
   return _events.empty();
 }
 
-list<SharedGameEvent>&& EventQueue::getMovableEvents() { return move(_events); }
+list<SharedGameEvent> EventQueue::getMovableEvents() { return _events; }

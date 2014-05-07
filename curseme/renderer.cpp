@@ -1,5 +1,6 @@
 #include "curseme/renderer.h"
 #include "util/log.h"
+#include "util/filesystem.h"
 
 #include <stdlib.h>
 #include <cstring>
@@ -11,7 +12,7 @@ RenderSource::RenderSource(const IVec2& dims): _dims(dims) {
   size_t size = _dims.x * _dims.y;
   _data       = new char  [size];
   _attributes = new attr_t[size];
-  setData('.', A_NORMAL);
+  setData('~', A_NORMAL);
 }
 RenderSource::~RenderSource() {
   delete _data;
@@ -40,6 +41,21 @@ void RenderSource::setData(char data, attr_t attributes) {
 }
 const IVec2& RenderSource::getDimensions() const {
   return _dims;
+}
+
+void RenderSource::writeDebug(const string& filename) {
+  int size = (_dims.x + 1) * _dims.y;
+  char* data = (char*)calloc(size, sizeof(char));
+  int index = 0;
+  for(int i = 0; i < _dims.y; i++) {
+    memcpy((void*)&data[index], (void*)&_data[i * _dims.x], _dims.y);
+    index += _dims.y;
+    data[index] = '\n';
+    index ++;
+  }
+  if(!FileSystem::SaveFileData(filename, data, size)) {
+    Error("Failed to write RenderSource debug data to " << filename);
+  }
 }
 
 bool RenderSource::checkBounds(int x, int y) {

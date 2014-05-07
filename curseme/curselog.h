@@ -2,7 +2,7 @@
 #define CURSELOG_H
 
 #include "util/log.h"
-#include <curses.h>
+#include "curseme/curseme.h"
 #include <list>
 #include <string>
 

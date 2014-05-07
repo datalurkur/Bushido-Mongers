@@ -1,7 +1,8 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
-#include <curses.h>
+#include "curseme/curseme.h"
+
 #include <string>
 #include <sstream>
 

@@ -91,7 +91,6 @@ Log& Log::operator<<(const T &rhs) {
       stream << msg; \
       Log::SendToListeners(channel, stream.str()); \
     } \
-    lock.unlock(); \
   } while(false)
 
 #define Debug(msg) LogToChannel(LOG_DEBUG,   msg)

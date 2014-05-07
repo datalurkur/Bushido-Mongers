@@ -3,16 +3,23 @@
 
 #include <curses.h>
 
-extern void CurseMeSetup();
-extern void CurseMeTeardown();
+enum {
+  RED_ON_BLACK = 1,
+  BLUE_ON_BLACK,
+  CYAN_ON_BLACK,
+  GREEN_ON_BLACK,
+  WHITE_ON_BLACK
+};
 
 class CurseMe {
 public:
-  static void MainScreenTurnOn();
-  static bool Enabled();
+  static void Setup();
+  static void Teardown();
+  static bool IsEnabled();
   static void Cursor(bool state);
+
 private:
-  static bool NcursesEnabled;
+  static bool Enabled;
 };
 
 #endif

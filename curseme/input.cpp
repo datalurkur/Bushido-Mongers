@@ -1,8 +1,7 @@
-#include <math.h>
-#include <curses.h>
 #include "curseme/input.h"
 #include "curseme/curseme.h"
 #include "curseme/window.h"
+#include <math.h>
 
 void Input::GetWord(const string& title, string& word) {
   string buffer = GetString(title);

@@ -32,7 +32,7 @@ public:
   bool empty();
 
 protected:
-  list<SharedGameEvent>&& getMovableEvents();
+  list<SharedGameEvent> getMovableEvents();
 
 private:
   list<SharedGameEvent> _events;
