@@ -1,30 +1,28 @@
 #include "tools/raw_editor_ncurses/common.h"
 
-#include "curseme/menu.h"
-#include "curseme/input.h"
+#include "ui/menu.h"
+#include "ui/prompt.h"
 
 void editObjectKeywords(ProtoBObject* object) {
   vector<string> choices;
 
-  Menu keywordMenu("Add or Remove Keywords");
+  DynamicMenu keywordMenu("Add or Remove Keywords");
 
-  keywordMenu.addChoice("Add Keyword", [&]() {
-    string keyword;
-    Input::GetWord("Enter the new keyword:", keyword);
-
-    keywordMenu.addChoice(keyword);
-
-    object->keywords.push_back(keyword);
-    object->keywords.unique();
+  keywordMenu.setDefaultAction([&](string st) {
+    object->keywords.remove(st);
   });
 
-  for(string kw : object->keywords) { keywordMenu.addChoice(kw); }
+  do {
+    keywordMenu.clearChoices();
 
-  keywordMenu.setDefaultAction([&](StringPair kw) {
-    keywordMenu.removeChoice(kw);
+    keywordMenu.addChoice("Add Keyword", [&]() {
+      string keyword;
+      Prompt::Word("Enter the new keyword:", keyword);
 
-    object->keywords.remove(kw.first);
-  });
+      object->keywords.push_back(keyword);
+      object->keywords.unique();
+    });
 
-  keywordMenu.listen();
+    for(string st : object->keywords) { keywordMenu.addChoice(st); }
+  } while(keywordMenu.act());
 }

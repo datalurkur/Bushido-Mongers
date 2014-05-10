@@ -12,4 +12,18 @@ bool ConvertString(const string& source, T& dest) {
   return !(stream >> dest).fail();
 }
 
+template <typename T>
+string ConvertNumeric(T& source) {
+  ostringstream stream;
+  stream << source;
+  return source.str();
+}
+
+template <typename T>
+string operator + (const string& lhs, const T& rhs) {
+  ostringstream stream;
+  stream << lhs << rhs;
+  return stream.str();
+}
+
 #endif

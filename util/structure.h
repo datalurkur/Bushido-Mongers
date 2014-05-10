@@ -6,7 +6,7 @@
 using namespace std;
 
 template <typename T>
-set<T>&& operator-(const set<T>& lhs, const set<T>& rhs) {
+set<T> operator-(const set<T>& lhs, const set<T>& rhs) {
   set<T> ret;
   typename set<T>::const_iterator lItr = lhs.begin();
   typename set<T>::const_iterator rItr = rhs.begin();

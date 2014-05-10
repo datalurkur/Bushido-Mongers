@@ -23,4 +23,17 @@ void TokenizeString(const string &source, const string &delims, T &tokens) {
   }
 }
 
+/*
+typedef pair<string, string> StringPair;
+
+// A hash method for StringPair, so we can use it as a key-type for an unordered_map.
+template<>
+struct hash<StringPair> {
+  size_t operator()(const StringPair &sp) const {
+    return hash<string>()(sp.first) ^ hash<string>()(sp.second);
+  }
+};
+typedef unordered_map<StringPair, function<void()> > StringPairFunctionMap;
+*/
+
 #endif

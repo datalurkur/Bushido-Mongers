@@ -2,6 +2,7 @@
 #define WINDOW_H
 
 #include "curseme/curseme.h"
+#include "util/vector.h"
 
 #include <string>
 #include <sstream>
@@ -10,73 +11,53 @@ using namespace std;
 
 class Window {
 public:
-  Window(WINDOW* win);
+  enum Alignment {
+    TOP_LEFT,
+    TOP_CENTER,
+    TOP_RIGHT,
+    CENTER,
+    CENTER_LEFT,
+    CENTER_RIGHT,
+    BOTTOM_LEFT,
+    BOTTOM_CENTER,
+    BOTTOM_RIGHT
+  };
 
 public:
+  Window(int w, int h, int x, int y, Window* parent = 0);
+  Window(Alignment anchor, float wRatio, float hRatio, int wPad, int hPad, int xPad, int yPad, Window* parent = 0);
+  Window(Alignment anchor, int w, int h, int xPad, int yPad, Window* parent = 0);
   ~Window();
 
-public:
-  void setup();
-  void teardown();
-
-  WINDOW* window() const;
-  void refresh();
-
-  static Window* StdScr;
-
-private:
-  WINDOW* _win;
-};
-
-
-// contains a window and subwindow in a box. the user has full reign in the subwindow.
-class TitleBox {
-public:
-  TitleBox(WINDOW* parent, int subwin_nlines, int subwin_ncols, int y, int x, const string& title);
-  ~TitleBox();
-
-public:
-	void setup();
-  void teardown();
+  const IVec2& getDims() const;
 
   void refresh();
   void clear();
 
-  WINDOW* window() const;
-  WINDOW* outer_window() const;
+  void setBox();
+  void setAsMenuWindow(MENU* menu);
+  void setAsMenuSubwindow(MENU* menu);
+  void setCursorPosition(int x, int y);
 
-  size_t text_columns();
+  void printText(int x, int y, const char* fmt, ...);
+  void printChar(int x, int y, const chtype c);
+  void printHRule(int x, int y, chtype c, int n);
+
+  int getChar();
+  int getString(string& str);
+
+protected:
+  WINDOW* createSubWindow(int w, int h, int dX, int dY);
+
 private:
-  void LogPlacement();
+  void determineMaxDimensions(int& mW, int& mH);
+  void determineCoordinates(Alignment anchor, int mW, int mH, int xPad, int yPad, int w, int h, int& x, int& y);
+  void setupWindow(int w, int h, int x, int y);
 
-  static const int LinePadding = 4; // top line, title, title line, bottom line.
-  static const int ColPadding  = 2; // left column of box, right column of box.
-
-private:
-  WINDOW* _parent;
-  Window* _inner;
-	Window* _outer;
-
-  int _subwin_nlines;
-  int _subwin_ncols;
-  int _y;
-  int _x;
-
-  string _title;
-
-  bool _deployed;
+protected:
+  Window* _parent;
+  WINDOW* _win;
+  IVec2 _dims;
 };
-
-class PopupRec {
-public:
-  PopupRec(const string& message);
-};
-
-#define Popup(msg) \
-do { \
-  stringstream ss; \
-  ss << msg; \
-  PopupRec(ss.str()); \
-} while(0);
 
 #endif

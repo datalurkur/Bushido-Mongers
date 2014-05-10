@@ -1,7 +1,7 @@
-#include "curseme/window.h"
-#include "util/log.h"
 #include "io/gameserver.h"
 #include "io/localgameclient.h"
+#include "ui/prompt.h"
+#include "util/log.h"
 
 #include <signal.h>
 #include <unistd.h>
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
   setup();
 
   if(argc < 2) {
-    Popup("usage: server <raws directory>");
+    Prompt::Popup("usage: server <raws directory>");
     cleanup(1);
   }
 

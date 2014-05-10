@@ -5,6 +5,7 @@
 #include <sstream>
 
 bool CurseMe::Enabled = false;
+mutex CurseMe::Mutex;
 
 void CurseMe::Setup() {
   // Init ncurses
@@ -31,16 +32,20 @@ void CurseMe::Setup() {
 
   Log::DisableStdout();
 
+  wrefresh(stdscr);
+
   Enabled = true;
 }
 
 void CurseMe::Teardown() {
+  Enabled = false;
   Log::EnableStdout();
-
   endwin();
 }
 
 void CurseMe::Cursor(bool state) {
+  unique_lock<mutex> Lock(Mutex);
+
   if(state) {
     echo();
     // enable cursor
