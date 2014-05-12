@@ -11,13 +11,7 @@ public:
   TitleBox(Window::Alignment anchor, int w, int h, const string& title, Window* parent = 0);
   virtual ~TitleBox();
 
-  // These are basically just forwarder methods for the inner window
-  const IVec2& getDims() const;
-  void refresh();
-  void clear();
-  int getChar();
-  int getString(string& str);
-  void setCursorPosition(int x, int y);
+  Window* usableArea() const;
 
   void setTitle(const string& title);
   void attachMenu(MENU* menu);

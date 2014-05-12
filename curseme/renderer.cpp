@@ -73,12 +73,6 @@ RenderTarget::RenderTarget(WINDOW* window, RenderSource* source): _window(window
   reportSize();
 }
 
-void RenderTarget::reportSize() {
-  int w, h;
-  getmaxyx(_window, h, w);
-  Debug("Render target reports window size " << IVec2(w, h));
-}
-
 void RenderTarget::setOffset(const IVec2& offset) {
   _offset = offset;
 }
@@ -88,6 +82,8 @@ void RenderTarget::nudgeOffset(const IVec2& nudge) {
 }
 
 void RenderTarget::render() {
+  BeginCursesOperation;
+
   int tW, tH;
   getmaxyx(_window, tH, tW);
 

@@ -41,6 +41,7 @@ public:
 
   void printText(int x, int y, const char* fmt, ...);
   void printChar(int x, int y, const chtype c);
+  void printFormattedChar(int x, int y, const chtype c, attr_t attributes);
   void printHRule(int x, int y, chtype c, int n);
 
   int getChar();

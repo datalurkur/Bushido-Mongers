@@ -1,7 +1,6 @@
 #include "ui/titlebox.h"
 
 TitleBox::TitleBox(int w, int h, int x, int y, const string& title, Window* parent) {
-  Info("Setting up titlebox " + title);
   _outer = new Window(w + 2, h + 2 + TitleDepth, x, y, parent);
   _outer->setBox();
   _inner = new Window(Window::BOTTOM_CENTER, w, h, 0, 1, _outer);
@@ -10,7 +9,6 @@ TitleBox::TitleBox(int w, int h, int x, int y, const string& title, Window* pare
 }
 
 TitleBox::TitleBox(Window::Alignment anchor, float wRatio, float hRatio, const string& title, Window* parent) {
-  Info("Setting up titlebox " + title);
   _outer = new Window(anchor, wRatio, hRatio, 0, 0, parent);
   _outer->setBox();
   _inner = new Window(Window::BOTTOM_CENTER, 1.0f, 1.0f, 2, 2, 0, 1, _outer);
@@ -19,7 +17,6 @@ TitleBox::TitleBox(Window::Alignment anchor, float wRatio, float hRatio, const s
 }
 
 TitleBox::TitleBox(Window::Alignment anchor, int w, int h, const string& title, Window* parent) {
-  Info("Setting up titlebox " + title);
   _outer = new Window(anchor, w + 2, h + 2 + TitleDepth, 0, 0, parent);
   _outer->setBox();
   _inner = new Window(Window::BOTTOM_CENTER, w, h, 0, 1, _outer);
@@ -28,7 +25,6 @@ TitleBox::TitleBox(Window::Alignment anchor, int w, int h, const string& title, 
 }
 
 TitleBox::~TitleBox() {
-  Info("Tearing down TitleBox");
   delete _inner;
   delete _outer;
 }
@@ -46,9 +42,6 @@ void TitleBox::attachMenu(MENU* menu) {
   _inner->setAsMenuSubwindow(menu);
 }
 
-const IVec2& TitleBox::getDims() const { return _inner->getDims(); }
-void TitleBox::refresh() { _inner->refresh(); }
-void TitleBox::clear() { _inner->clear(); }
-int TitleBox::getChar() { return _inner->getChar(); }
-int TitleBox::getString(string& str) { return _inner->getString(str); }
-void TitleBox::setCursorPosition(int x, int y) { _inner->setCursorPosition(x, y); }
+Window* TitleBox::usableArea() const {
+  return _inner;
+}

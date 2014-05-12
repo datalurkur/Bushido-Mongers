@@ -24,9 +24,9 @@ bool Prompt::String(const string& title, string& str, Window* parent) {
 
   TitleBox box(Window::CENTER, width_needed, 1, title, parent);
 
-  box.setCursorPosition(0, 0);
+  box.usableArea()->setCursorPosition(0, 0);
   CurseMe::Cursor(true);
-  int ret = box.getString(str);
+  int ret = box.usableArea()->getString(str);
   CurseMe::Cursor(false);
 
   return (ret == OK);

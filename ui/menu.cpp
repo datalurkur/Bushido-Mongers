@@ -1,5 +1,5 @@
 #include "ui/menu.h"
-#include "curseme/menudriver.h"
+#include "curseme/hotkeymenudriver.h"
 #include "util/log.h"
 
 #include <iostream>
@@ -40,7 +40,7 @@ void MenuBase::clearChoices() {
 }
 
 size_t MenuBase::listen() {
-  MenuDriver driver(_title, _choices, " * ");
+  HotkeyMenuDriver driver(_title, _choices);
 
   int c;
   while((c = driver.getChar()) != KEY_F(1)) {
@@ -61,9 +61,16 @@ size_t MenuBase::listen() {
       case KEY_REALENTER:
         return driver.makeSelection();
         break;
-      default:
-        Info("Character pressed: " << c << " (char: " << ((char)c) << ")");
+      default: {
+        size_t choice;
+        if(driver.makeHotkeySelection(c, choice)) {
+          Info("Selecting item " << choice << " using hotkey " << c);
+          return choice;
+        } else {
+          Info("Character " << c << " not recognized as a valid hotkey");
+        }
         break;
+      }
     }
   }
 

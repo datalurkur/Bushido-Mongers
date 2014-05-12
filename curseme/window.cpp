@@ -164,6 +164,18 @@ void Window::printChar(int x, int y, const chtype c) {
   wrefresh(_win);
 }
 
+void Window::printFormattedChar(int x, int y, const chtype c, attr_t attributes) {
+  BeginCursesOperation;
+  attr_t originalAttributes;
+  short originalColor;
+  void* unused = 0;
+  wattr_get(_win, &originalAttributes, &originalColor, unused);
+  wattrset(_win, attributes);
+  mvwaddch(_win, y, x, c);
+  wattr_set(_win, originalAttributes, originalColor, unused);
+  wrefresh(_win);
+}
+
 void Window::printHRule(int x, int y, chtype c, int n) {
   BeginCursesOperation;
   mvwhline(_win, y, x, c, n);
