@@ -66,12 +66,8 @@ bool RenderSource::checkBounds(int x, int y) {
   return true;
 }
 
-RenderTarget::RenderTarget(WINDOW* window): _window(window), _source(0), _offset(0, 0) {
-  reportSize();
-}
-RenderTarget::RenderTarget(WINDOW* window, RenderSource* source): _window(window), _source(source), _offset(0, 0) {
-  reportSize();
-}
+RenderTarget::RenderTarget(WINDOW* window): _window(window), _source(0), _offset(0, 0) {}
+RenderTarget::RenderTarget(WINDOW* window, RenderSource* source): _window(window), _source(source), _offset(0, 0) {}
 
 void RenderTarget::setOffset(const IVec2& offset) {
   _offset = offset;

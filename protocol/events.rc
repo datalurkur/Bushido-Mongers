@@ -1,0 +1,44 @@
+ServerDisconnected {
+};
+
+CreateCharacter {
+  string name;
+};
+
+LoadCharacter {
+  BObjectID ID;
+};
+
+UnloadCharacter {
+};
+
+CharacterReady {
+  BObjectID ID;
+};
+
+CharacterNotReady {
+  string reason;
+};
+
+AreaData {
+  string name;
+  IVec2 position;
+  IVec2 size;
+};
+
+TileData {
+  set<IVec2> shrouded;
+  set<IVec2> visible;
+  map<IVec2, TileDatum> updated;
+};
+
+MoveCharacter {
+  IVec2 direction;
+};
+
+CharacterMoved {
+};
+
+MoveFailed {
+  string reason;
+};

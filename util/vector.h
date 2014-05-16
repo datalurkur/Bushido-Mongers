@@ -161,4 +161,18 @@ VectorBase<T>& VectorBase<T>::operator+=(const VectorBase<T>& other) {
   return *this;
 }
 
+template <typename T>
+ostream& operator<<(ostream& stream, const IVec2& vec) {
+  stream << vec.x << vec.y;
+  return stream;
+}
+
+template <typename T>
+istream& operator>>(istream& stream, IVec2& vec) {
+  T x, y;
+  stream >> x >> y;
+  vec = IVec2(x, y);
+  return stream;
+}
+
 #endif
