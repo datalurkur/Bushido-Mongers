@@ -20,4 +20,16 @@ private:
   TileType _type;
 };
 
+// For event packing
+struct TileDatum {
+  TileType type;
+  set<BObjectID> contents;
+
+  TileDatum();
+  TileDatum(TileBase* tile);
+};
+
+extern ostream& operator<<(ostream& stream, TileDatum& data);
+extern istream& operator>>(istream& stream, TileDatum& data);
+
 #endif

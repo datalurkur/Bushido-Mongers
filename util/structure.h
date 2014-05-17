@@ -26,6 +26,49 @@ set<T> operator-(const set<T>& lhs, const set<T>& rhs) {
 }
 
 template <typename T>
+ostream& operator<<(ostream& stream, set<T>& s) {
+  stream << s.size();
+  for(auto i : s) {
+    stream << i;
+  }
+  return stream;
+}
+
+template <typename T>
+istream& operator>>(istream& stream, set<T>& s) {
+  size_t size;
+  stream >> size;
+  for(size_t i = 0; i < size; i++) {
+    T temp;
+    stream >> temp;
+    s.insert(temp);
+  }
+  return stream;
+}
+
+template <typename S, typename T>
+ostream& operator<<(ostream& stream, map<S,T>& m) {
+  stream << m.size();
+  for(auto pair : m) {
+    stream << pair.first << pair.second;
+  }
+  return stream;
+}
+
+template <typename S, typename T>
+istream& operator>>(istream& stream, map<S,T>& m) {
+  size_t size;
+  stream >> size;
+  for(size_t i = 0; i < size; i++) {
+    S key;
+    T value;
+    stream >> key >> value;
+    m.insert(make_pair(key, value));
+  }
+  return stream;
+}
+
+template <typename T>
 void symmetricDiff(const set<T>& lhs, const set<T>& rhs, set<T>& onlyInLeft, set<T>& onlyInRight, set<T>& inBoth) {
   typename set<T>::const_iterator lItr = lhs.begin();
   typename set<T>::const_iterator rItr = rhs.begin();
@@ -38,6 +81,25 @@ void symmetricDiff(const set<T>& lhs, const set<T>& rhs, set<T>& onlyInLeft, set
       rItr++;
     } else {
       inBoth.insert(*lItr);
+      lItr++;
+      rItr++;
+    }
+  }
+}
+
+template <typename T>
+void setComplement(const set<T>& lhs, const set<T>& rhs, set<T>& onlyInLeft, set<T>& complement) {
+  typename set<T>::const_iterator lItr = lhs.begin();
+  typename set<T>::const_iterator rItr = rhs.begin();
+  while(lItr != lhs.end() && rItr != rhs.end()) {
+    if(*lItr < *rItr) {
+      onlyInLeft.insert(*lItr);
+      lItr++;
+    } else if(*rItr < *lItr) {
+      complement.insert(*rItr);
+      rItr++;
+    } else {
+      complement.insert(*lItr);
       lItr++;
       rItr++;
     }

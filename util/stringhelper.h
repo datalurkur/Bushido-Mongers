@@ -2,7 +2,6 @@
 #define STRING_HELPER_H
 
 #include <string>
-
 using namespace std;
 
 template <typename T>
@@ -22,6 +21,10 @@ void TokenizeString(const string &source, const string &delims, T &tokens) {
     token_end   = source.find_first_of(delims, token_begin);
   }
 }
+
+extern string ToUpcase(const string& str);
+extern string ToDowncase(const string& str);
+extern string ToClassName(const string& str);
 
 /*
 typedef pair<string, string> StringPair;

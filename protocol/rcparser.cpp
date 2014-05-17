@@ -1,4 +1,5 @@
 #include "protocol/rcparser.h"
+#include "util/log.h"
 
 const char* RCParser::Whitespace = " \r\n\t";
 const char* RCParser::Syntax = "{};";
@@ -17,7 +18,7 @@ bool RCParser::ExtractObjects(const string& data, vector<RCObject>& objects) {
       case '}':
         scope--;
         if(scope < 0) {
-          printf("Mismatched braces\n");
+          Debug("Mismatched braces");
           return false;
         }
         break;
@@ -27,7 +28,7 @@ bool RCParser::ExtractObjects(const string& data, vector<RCObject>& objects) {
           size_t actual_begin = tokenData.find_first_not_of(Whitespace),
                  actual_end   = tokenData.find_last_not_of(Whitespace);
           if(actual_begin == string::npos || actual_end == string::npos) {
-            printf("Failed to trim whitespace from token '%s'\n", tokenData.c_str());
+            Debug("Failed to trim whitespace from token " << tokenData);
             return false;
           }
           string token = tokenData.substr(actual_begin, actual_end - actual_begin + 1);
@@ -41,7 +42,7 @@ bool RCParser::ExtractObjects(const string& data, vector<RCObject>& objects) {
         }
         break;
       default:
-        printf("Invalid character found at index %lu (%c)\n", token_end, data[token_end]);
+        Debug("Invalid character found at index " << token_end << " (" << data[token_end] << ")");
         return false;
     }
     token_end = data.find_first_of(Syntax, token_end + 1);
@@ -53,14 +54,14 @@ bool RCParser::ExtractObjectDetails(const string& data, vector<RCObject>& object
   size_t scope_begin = data.find_first_of('{'),
          scope_end   = data.find_last_of('}');
   if(scope_begin == string::npos || scope_end == string::npos) {
-    printf("Invalid token '%s'\n", data.c_str());
+    Debug("Invalid token " << data);
     return false;
   }
 
   string header = data.substr(0, scope_begin);
   size_t name_end = header.find_last_not_of(' ');
   if(name_end == string::npos) {
-    printf("Invalid header\n");
+    Debug("Invalid header");
     return false;
   }
 
@@ -88,7 +89,7 @@ bool RCParser::ExtractObjectFields(const string& data, RCObject& object) {
     size_t actual_begin = token.find_first_not_of(Whitespace),
            actual_end   = token.find_last_not_of(Whitespace);
     if(actual_begin == string::npos || actual_end == string::npos) {
-      printf("Invalid field\n");
+      Debug("Invalid field");
       return false;
     }
 
@@ -105,15 +106,15 @@ bool RCParser::ExtractObjectFields(const string& data, RCObject& object) {
 bool RCParser::ExtractFieldDetails(const string& data, RCField& field) {
   size_t name_start = data.find_last_of(Whitespace);
   if(name_start == string::npos) {
-    printf("Failed to extract field name from '%s'\n", data.c_str());
+    Debug("Failed to extract field name from " << data);
     return false;
   }
 
-  field.name = data.substr(name_start);
+  field.name = data.substr(name_start + 1);
   string typeData = data.substr(0, name_start);
   size_t type_end = typeData.find_last_not_of(Whitespace);
   if(type_end == string::npos) {
-    printf("Failed to extract field type\n");
+    Debug("Failed to extract field type");
     return false;
   }
   field.type = typeData.substr(0, type_end + 1);

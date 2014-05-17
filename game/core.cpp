@@ -61,7 +61,7 @@ void GameCore::processPlayerEvent(PlayerID player, GameEvent* event, EventQueue&
       unloadCharacter(player, results);
       break;
     case MoveCharacter:
-      moveCharacter(player, ((MoveCharacterEvent*)event)->dir, results);
+      moveCharacter(player, ((MoveCharacterEvent*)event)->direction, results);
       break;
     default:
       Warn("Unhandled game event type " << event->type);
@@ -110,7 +110,11 @@ void GameCore::createCharacter(PlayerID player, const string& characterType, Eve
   getViewFrom(player, startTile->getCoordinates(), visibleCoords);
 
   Debug("Visible coordinates at start:");
-  results.pushEvent(new TileDataEvent(startArea, visibleCoords));
+  TileDataEvent* tileData = new TileDataEvent();
+  for(auto c : visibleCoords) {
+    tileData->updated.insert(make_pair(c, TileDatum(startArea->getTile(c))));
+  }
+  results.pushEvent(tileData);
 
   // Update tile data cache timing for player
   TimedMap<IVec2>* sentAt = getTileTimedMap(player);
@@ -180,36 +184,29 @@ void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventQueue& resu
   getViewFrom(player, newCoordinates, newView);
 
   // Compare it to the old perspective
-  set<IVec2> newlyVisible, newlyShrouded, unchanged;
-  symmetricDiff(newView, _previousView[player], newlyVisible, newlyShrouded, unchanged);
+  set<IVec2> shrouded, visible;
+  setComplement(_previousView[player], newView, shrouded, visible);
 
-  time_t currentTime = Clock.getTime();
-
-  set<IVec2> updated;
+  map<IVec2, TileDatum> updated;
+  set<IVec2> newlyVisible;
   TimedMap<IVec2>* sentAt = getTileTimedMap(player);
-  for(auto c : newlyVisible) {
+  time_t currentTime = Clock.getTime();
+  for(auto c : visible) {
     if(!sentAt->has(c) || (sentAt->get(c) < area->getTile(c)->lastChanged())) {
       if(!sentAt->has(c)) {
         Debug("Newly visible tile " << c << " has not yet been sent");
       } else {
         Debug("Newly visible tile " << c << " has been updated since " << sentAt->get(c));
       }
-      updated.insert(c);
+      updated.insert(make_pair(c, TileDatum(area->getTile(c))));
       sentAt->set(c, currentTime);
     } else {
       Debug("Newly visible tile " << c << " has seen no updates since " << sentAt->get(c));
-    }
-  }
-  for(auto c : unchanged) {
-    if(sentAt->get(c) < area->getTile(c)->lastChanged()) {
-      Debug("Previously visible tile " << c << " has been updated since " << sentAt->get(c));
-      updated.insert(c);
       newlyVisible.insert(c);
-      sentAt->set(c, currentTime);
     }
   }
-  Debug("Sending tile data with " << newlyVisible.size() << " visible tiles, " << updated.size() << " updated tiles, and " << newlyShrouded.size() << " shrouded tiles");
-  results.pushEvent(new TileDataEvent(area, newlyVisible, updated, move(newlyShrouded)));
+  Debug("Sending tile data with " << newlyVisible.size() << " newly visible tiles, " << updated.size() << " updated tiles, and " << shrouded.size() << " shrouded tiles");
+  results.pushEvent(new TileDataEvent(shrouded, newlyVisible, updated));
 
   _previousView[player] = move(newView);
 }

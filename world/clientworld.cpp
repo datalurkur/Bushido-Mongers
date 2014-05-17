@@ -13,7 +13,7 @@ void ClientWorld::processWorldEvent(GameEvent* event, EventQueue& results) {
       if(hasArea(e->name)) {
         Debug("Area data already present for " << e->name);
       } else {
-        ClientArea* area = new ClientArea(e->name, e->pos, e->size);
+        ClientArea* area = new ClientArea(e->name, e->position, e->size);
         addArea(area);
         _currentArea = area;
         Debug("Current area set to " << _currentArea);

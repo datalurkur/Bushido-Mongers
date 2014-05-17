@@ -162,13 +162,13 @@ VectorBase<T>& VectorBase<T>::operator+=(const VectorBase<T>& other) {
 }
 
 template <typename T>
-ostream& operator<<(ostream& stream, const IVec2& vec) {
+ostream& operator<<(ostream& stream, VectorBase<T>& vec) {
   stream << vec.x << vec.y;
   return stream;
 }
 
 template <typename T>
-istream& operator>>(istream& stream, IVec2& vec) {
+istream& operator>>(istream& stream, VectorBase<T>& vec) {
   T x, y;
   stream >> x >> y;
   vec = IVec2(x, y);

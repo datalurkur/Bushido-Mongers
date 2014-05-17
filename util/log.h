@@ -75,7 +75,7 @@ Log& Log::operator<<(const T &rhs) {
   (*_outputStream) << rhs;
 
   if(StdoutEnabled) {
-    std::cout << rhs;
+    cout << rhs;
   }
 
   return *this;

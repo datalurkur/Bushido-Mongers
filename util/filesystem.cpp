@@ -87,3 +87,14 @@ void FileSystem::CleanFilename(const string& filename, string& cleaned) {
 string FileSystem::JoinFilename(const string& dir, const string& file) {
   return dir + "/" + file;
 }
+
+string FileSystem::TrimPath(const string& filename) {
+  size_t i = filename.find_last_of("/\\");
+  if(i == string::npos) { return filename; }
+  else { return filename.substr(i+1); }
+}
+
+string FileSystem::TrimExtension(const string& filename) {
+  size_t i = filename.find_last_of('.');
+  return filename.substr(0, i);
+}

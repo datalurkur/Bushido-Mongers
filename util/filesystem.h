@@ -28,6 +28,9 @@ public:
   static void CleanFilename(const string& filename, string& cleaned);
 
   static string JoinFilename(const string& dir, const string& file);
+
+  static string TrimExtension(const string& filename);
+  static string TrimPath(const string& filename);
 };
 
 template <typename T>
