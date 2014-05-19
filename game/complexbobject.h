@@ -13,7 +13,7 @@
 
 class ProtoComplexBObject : public ProtoBObject {
 public:
-  ProtoComplexBObject();
+  ProtoComplexBObject(BObjectType t = ComplexType);
   virtual ~ProtoComplexBObject();
 
   virtual void pack(SectionedData<ObjectSectionType>& sections) const;

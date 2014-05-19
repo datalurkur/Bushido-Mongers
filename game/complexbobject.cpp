@@ -1,7 +1,7 @@
 #include "game/complexbobject.h"
 #include "game/bobjectmanager.h"
 
-ProtoComplexBObject::ProtoComplexBObject(): ProtoBObject(ComplexType) {}
+ProtoComplexBObject::ProtoComplexBObject(BObjectType t): ProtoBObject(t) {}
 ProtoComplexBObject::~ProtoComplexBObject() {}
 
 void ProtoComplexBObject::pack(SectionedData<ObjectSectionType>& sections) const {
@@ -27,7 +27,7 @@ void ProtoComplexBObject::pack(SectionedData<ObjectSectionType>& sections) const
   }
   complexData.addSubSections(ConnectionMap, connectionMap);
 
-  return sections.addSubSections(ComplexData, complexData);
+  sections.addSubSections(ComplexData, complexData);
 }
 
 bool ProtoComplexBObject::unpack(const SectionedData<ObjectSectionType>& sections) {

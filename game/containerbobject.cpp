@@ -1,10 +1,26 @@
 #include "game/container.h"
 #include "game/bobjectmanager.h"
 
-Container::Container(BObjectManager* manager, BObjectID id, const ProtoComplexBObject* proto): ComplexBObject(manager, id, proto) {
+ProtoContainerBObject::ProtoContainerBObject(BObjectType t): ProtoComplexBObject(t) {}
+ProtoContainerBObject::~ProtoContainerBObject() {}
+
+void ProtoContainerBObject::pack(SectionedData<ObjectSectionType>& sections) const {
+  ProtoComplexBObject::pack(sections);
+
+  #pragma message "TODO - Add container data packing"
 }
 
-Container::~Container() {
+bool ProtoContainerBObject::unpack(const SectionedData<ObjectSectionType>& sections) {
+  if(!ProtoComplexBObject::unpack(sections)) { return false; }
+
+  #pragma message "TODO - Add container data unpacking"
+}
+
+ContainerBObject::ContainerBObject(BObjectManager* manager, BObjectID id, const ProtoContainerBObject* proto): ComplexBObject(manager, id, proto) {
+}
+  #pragma message "TODO - Add container setup"
+
+ContainerBObject::~ContainerBObject() {
   list<BObject*> objectsToRelocate;
   for(auto objectID : _contents) {
     // Attempt to spill this container's contents into its parent container
@@ -22,10 +38,10 @@ Container::~Container() {
   }
 }
 
-Area* Container::getArea() const {
+Area* ContainerBObject::getArea() const {
   return getLocation()->getArea();
 }
 
-const IVec2& Container::getCoordinates() const {
+const IVec2& ContainerBObject::getCoordinates() const {
   return getLocation()->getCoordinates();
 }

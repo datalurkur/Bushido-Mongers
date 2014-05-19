@@ -2,6 +2,7 @@
 #include "game/atomicbobject.h"
 #include "game/compositebobject.h"
 #include "game/complexbobject.h"
+#include "game/containerbobject.h"
 
 #include "util/filesystem.h"
 
@@ -52,6 +53,8 @@ BObject* BObjectManager::createObject(const string& type) {
     return createTypedObject<CompositeBObject, ProtoCompositeBObject>(proto);
   case ComplexType:
     return createTypedObject<ComplexBObject, ProtoComplexBObject>(proto);
+  case ContainerType:
+    return createTypedObject<ContainerBObject, ProtoContainerBObject>(proto);
   default:
     Error("Object creation not implemented for object type " << proto->type);
     return 0;

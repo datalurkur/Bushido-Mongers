@@ -1,7 +1,7 @@
 #include "game/compositebobject.h"
 #include "game/bobjectmanager.h"
 
-ProtoCompositeBObject::ProtoCompositeBObject(): ProtoBObject(CompositeType) {}
+ProtoCompositeBObject::ProtoCompositeBObject(BObjectType t): ProtoBObject(t) {}
 ProtoCompositeBObject::~ProtoCompositeBObject() {}
 
 void ProtoCompositeBObject::pack(SectionedData<ObjectSectionType>& sections) const {

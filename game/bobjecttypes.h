@@ -6,6 +6,7 @@ enum BObjectType {
   AtomicType,
   CompositeType,
   ComplexType,
+  ContainerType,
   LastObjectType
 };
 
