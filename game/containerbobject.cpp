@@ -1,4 +1,4 @@
-#include "game/container.h"
+#include "game/containerbobject.h"
 #include "game/bobjectmanager.h"
 
 ProtoContainerBObject::ProtoContainerBObject(BObjectType t): ProtoComplexBObject(t) {}

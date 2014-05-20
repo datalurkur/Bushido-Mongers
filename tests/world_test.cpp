@@ -16,7 +16,7 @@ Area* m_area = 0;
 
 void cleanup(int signal) {
 #if ENABLE_CURSES == 1
-  CurseMeTeardown();
+  CurseMe::Teardown();
 #endif
   Log::Teardown();
 
@@ -31,7 +31,7 @@ void cleanup(int signal) {
 void setup() {
   Log::Setup("stdout");
 #if ENABLE_CURSES == 1
-  CurseMeSetup();
+  CurseMe::Setup();
   init_pair(1, COLOR_WHITE, COLOR_YELLOW);
   init_pair(2, COLOR_GREEN, COLOR_BLACK);
 #endif
