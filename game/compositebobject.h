@@ -1,21 +1,8 @@
 #ifndef COMPOSITE_BOBJECT_H
 #define COMPOSITE_BOBJECT_H
 
-#include "util/sectioneddata.h"
-
 #include "game/bobject.h"
-#include "game/bobjecttypes.h"
-
-class ProtoCompositeBObject : public ProtoBObject {
-public:
-  ProtoCompositeBObject(BObjectType t = CompositeType);
-  virtual ~ProtoCompositeBObject();
-
-  virtual void pack(SectionedData<ObjectSectionType>& sections) const;
-  virtual bool unpack(const SectionedData<ObjectSectionType>& sections);
-
-  list<string> layers;
-};
+#include "resource/protocomposite.h"
 
 class CompositeBObject : public BObject {
 public:

@@ -3,15 +3,7 @@
 
 #include "game/containerbase.h"
 #include "game/complexbobject.h"
-
-class ProtoContainerBObject : public ProtoComplexBObject {
-public:
-  ProtoContainerBObject(BObjectType t = ContainerType);
-  virtual ~ProtoContainerBObject();
-
-  virtual void pack(SectionedData<ObjectSectionType>& sections) const;
-  virtual bool unpack(const SectionedData<ObjectSectionType>& sections);
-};
+#include "resource/protocontainer.h"
 
 class ContainerBObject : public ContainerBase, public ComplexBObject {
 public:

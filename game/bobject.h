@@ -1,33 +1,16 @@
 #ifndef BOBJECT_H
 #define BOBJECT_H
 
-#include "util/propertymap.h"
-#include "util/sectioneddata.h"
-
 #include "game/observable.h"
 #include "game/bobjectextension.h"
 #include "game/bobjecttypes.h"
+#include "resource/protobobject.h"
 
 #include <map>
 #include <list>
+using namespace std;
 
 typedef int BObjectID;
-
-class ProtoBObject {
-public:
-  typedef map<ExtensionType, ProtoBObjectExtension*> ProtoExtensionMap;
-
-public:
-  ProtoBObject(BObjectType t);
-  virtual ~ProtoBObject();
-
-  virtual void pack(SectionedData<ObjectSectionType>& sections) const;
-  virtual bool unpack(const SectionedData<ObjectSectionType>& sections);
-
-  BObjectType type;
-  ProtoExtensionMap extensions;
-  list<string> keywords;
-};
 
 class BObjectManager;
 class ContainerBase;

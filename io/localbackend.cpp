@@ -130,8 +130,6 @@ void LocalBackEnd::updateMap(TileDataEvent *event) {
 
   IVec2 mapDimensions = _mapSource->getDimensions();
 
-  char character;
-  attr_t attributes;
   if(!event) {
     // No tile data update, just regenerate the whole area
     IVec2 areaSize = currentArea->getSize();

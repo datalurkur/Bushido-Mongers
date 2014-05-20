@@ -5,6 +5,8 @@ ifeq ($(shell uname -s),Darwin)
 endif
 LDFLAGS = -lncurses -lmenu -lpthread
 
+BOB_RESOURCES = resource/protobobject.o resource/protoatomic.o resource/protocomposite.o resource/protocomplex.o resource/protocontainer.o resource/protoextension.o
+
 all: tools tests server
 
 tools: raw_editor_ncurses
@@ -14,7 +16,7 @@ tests: treetest worldtest sockettest geomtest
 genproto: protocol/rcparser.o util/stringhelper.o util/filesystem.o protocol/codegenerator.o protocol/protocol_generator.o util/log.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-server: io/gameevent.o io/eventmeta.o curseme/curseme.o curseme/menudriver.o curseme/cursesmenudriver.o curseme/renderer.o curseme/window.o curseme/curselog.o util/log.o util/filesystem.o util/packing.o util/timer.o util/noise.o util/geom.o game/bobject.o game/complexbobject.o game/compositebobject.o game/atomicbobject.o game/containerbase.o game/containerbobject.o game/bobjectmanager.o game/core.o resource/raw.o world/generator.o world/world.o world/area.o world/tile.o server.o io/localgameclient.o io/clientbase.o io/gameserver.o io/serverbase.o io/localfrontend.o io/localbackend.o io/eventqueue.o game/observable.o util/timestamp.o world/worldbase.o world/clientworld.o world/areabase.o world/clientarea.o world/tilebase.o world/clienttile.o util/uniquestringpair.o util/sectioneddata.o ui/menu.o ui/titlebox.o ui/prompt.o curseme/hotkeymenudriver.o util/serialize.o
+server: io/gameevent.o io/eventmeta.o curseme/curseme.o curseme/menudriver.o curseme/cursesmenudriver.o curseme/renderer.o curseme/window.o curseme/curselog.o util/log.o util/filesystem.o util/packing.o util/timer.o util/noise.o util/geom.o game/bobject.o game/complexbobject.o game/compositebobject.o game/atomicbobject.o game/containerbase.o game/containerbobject.o game/bobjectmanager.o game/core.o resource/raw.o world/generator.o world/world.o world/area.o world/tile.o server.o io/localgameclient.o io/clientbase.o io/gameserver.o io/serverbase.o io/localfrontend.o io/localbackend.o io/eventqueue.o game/observable.o util/timestamp.o world/worldbase.o world/clientworld.o world/areabase.o world/clientarea.o world/tilebase.o world/clienttile.o util/uniquestringpair.o util/sectioneddata.o ui/menu.o ui/titlebox.o ui/prompt.o curseme/hotkeymenudriver.o util/serialize.o $(BOB_RESOURCES)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 raw_editor_ncurses: curseme/curseme.o curseme/curselog.o curseme/window.o util/log.o tools/raw_editor_ncurses/main.o resource/raw.o game/bobject.o game/complexbobject.o game/atomicbobject.o game/compositebobject.o util/filesystem.o tools/raw_editor_ncurses/common.o tools/raw_editor_ncurses/complex.o tools/raw_editor_ncurses/composite.o util/packing.o game/bobjectmanager.o game/containerbase.o game/containerbobject.o game/observable.o util/timestamp.o util/uniquestringpair.o util/sectioneddata.o ui/menu.o curseme/menudriver.o ui/titlebox.o ui/prompt.o curseme/cursesmenudriver.o curseme/hotkeymenudriver.o util/serialize.o

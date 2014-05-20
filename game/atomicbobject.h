@@ -2,19 +2,7 @@
 #define ATOMIC_BOBJECT_H
 
 #include "game/bobject.h"
-#include "game/bobjecttypes.h"
-#include "util/sectioneddata.h"
-
-class ProtoAtomicBObject: public ProtoBObject {
-public:
-  ProtoAtomicBObject(BObjectType t = AtomicType);
-  virtual ~ProtoAtomicBObject();
-
-  virtual void pack(SectionedData<ObjectSectionType>& sections) const;
-  virtual bool unpack(const SectionedData<ObjectSectionType>& sections);
-
-  float weight;
-};
+#include "resource/protoatomic.h"
 
 class AtomicBObject : public BObject {
 public:

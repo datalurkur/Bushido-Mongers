@@ -1,21 +1,6 @@
 #include "game/containerbobject.h"
 #include "game/bobjectmanager.h"
 
-ProtoContainerBObject::ProtoContainerBObject(BObjectType t): ProtoComplexBObject(t) {}
-ProtoContainerBObject::~ProtoContainerBObject() {}
-
-void ProtoContainerBObject::pack(SectionedData<ObjectSectionType>& sections) const {
-  ProtoComplexBObject::pack(sections);
-
-  #pragma message "TODO - Add container data packing"
-}
-
-bool ProtoContainerBObject::unpack(const SectionedData<ObjectSectionType>& sections) {
-  if(!ProtoComplexBObject::unpack(sections)) { return false; }
-
-  #pragma message "TODO - Add container data unpacking"
-}
-
 ContainerBObject::ContainerBObject(BObjectManager* manager, BObjectID id, const ProtoContainerBObject* proto): ComplexBObject(manager, id, proto) {
 }
   #pragma message "TODO - Add container setup"
