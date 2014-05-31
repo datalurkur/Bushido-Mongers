@@ -6,12 +6,12 @@
 
 class CompositeBObject : public BObject {
 public:
-  CompositeBObject(BObjectManager* manager, BObjectID id, const ProtoCompositeBObject* proto);
-
-  virtual bool atCreation();
-  virtual bool atDestruction();
+  CompositeBObject(BObjectManager* manager, const ProtoCompositeBObject* proto);
+  virtual ~CompositeBObject();
 
   float getWeight() const;
+
+  virtual DamageResult damage(const Damage& dmg);
 
 private:
   // After object creation, all layers are explicit and can be flattened into a single list

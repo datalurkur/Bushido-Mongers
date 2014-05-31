@@ -1,13 +1,10 @@
 #include "game/complexbobject.h"
 #include "game/bobjectmanager.h"
 
-ComplexBObject::ComplexBObject(BObjectManager* manager, BObjectID id, const ProtoComplexBObject* proto): BObject(manager, ComplexType, id, proto) {}
-
-bool ComplexBObject::atCreation() {
+ComplexBObject::ComplexBObject(BObjectManager* manager, const ProtoComplexBObject* proto): BObject(manager, ComplexType, proto) {
   ProtoComplexBObject* p = (ProtoComplexBObject*)_proto;
-  if(!BObject::atCreation()) { return false; }
   for(auto componentInfo : p->components) {
-    BObject* object = _manager->createObject(componentInfo.second);
+    BObject* object = _manager->createObjectFromPrototype(componentInfo.second);
     _components[object->getID()] = object;
     _nicknamed[componentInfo.second] = object;
   }
@@ -20,16 +17,30 @@ bool ComplexBObject::atCreation() {
       itr->second.insert(b);
     }
   }
-  return true;
 }
 
-bool ComplexBObject::atDestruction() {
-  if(!BObject::atDestruction()) { return false; }
-  return true;
+ComplexBObject::~ComplexBObject() {
+  for(auto component : _components) {
+    _manager->destroyObject(component.second->getID());
+  }
 }
 
 float ComplexBObject::getWeight() const {
   float total = 0;
   for(auto& componentData : _components) { total += componentData.second->getWeight(); }
   return total;
+}
+
+DamageResult ComplexBObject::damage(const Damage& dmg) {
+  #pragma message "TODO - Add called shots (where we don't just randomly choose a body part to hit)"
+  size_t index = rand() % _components.size();
+  auto itr = _components.begin();
+  advance(itr, index);
+  BObject* target = itr->second;
+
+  DamageResult targetResult = target->damage(dmg);
+  if(targetResult.destroyed) {
+    #pragma message "TODO - Figure out how to split complex objects if connecting parts are destroyed"
+  }
+  return targetResult;
 }

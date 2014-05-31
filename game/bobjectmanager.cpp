@@ -28,13 +28,13 @@ BObjectManager::BObjectManager(const string& rawSet): _objectCount(0) {
 
 BObjectManager::~BObjectManager() {
   for(auto itr : _objectMap) {
-    teardownObject(itr.second);
+    delete itr.second;
   }
   _objectMap.clear();
   delete _raws;
 }
 
-BObject* BObjectManager::createObject(const string& type) {
+BObject* BObjectManager::createObjectFromPrototype(const string& type) {
   ProtoBObject* proto = _raws->getObject(type);
   if(!proto) {
     // Check keywords
@@ -46,19 +46,26 @@ BObject* BObjectManager::createObject(const string& type) {
     }
   }
 
+  BObject* newObject = 0;
   switch(proto->type) {
   case AtomicType:
-    return createTypedObject<AtomicBObject, ProtoAtomicBObject>(proto);
+    newObject = (BObject*)new AtomicBObject(this, (ProtoAtomicBObject*)proto);
+    break;
   case CompositeType:
-    return createTypedObject<CompositeBObject, ProtoCompositeBObject>(proto);
+    newObject = (BObject*)new CompositeBObject(this, (ProtoCompositeBObject*)proto);
+    break;
   case ComplexType:
-    return createTypedObject<ComplexBObject, ProtoComplexBObject>(proto);
+    newObject = (BObject*)new ComplexBObject(this, (ProtoComplexBObject*)proto);
+    break;
   case ContainerType:
-    return createTypedObject<ContainerBObject, ProtoContainerBObject>(proto);
+    newObject = (BObject*)new ContainerBObject(this, (ProtoContainerBObject*)proto);
+    break;
   default:
     Error("Object creation not implemented for object type " << proto->type);
     return 0;
   }
+  addObject(newObject);
+  return newObject;
 }
 
 void BObjectManager::destroyObject(BObjectID id) {
@@ -68,16 +75,14 @@ void BObjectManager::destroyObject(BObjectID id) {
     return;
   }
 
-  teardownObject(itr->second);
-
+  delete itr->second;
   _objectMap.erase(itr);
 }
 
-void BObjectManager::teardownObject(BObject* object) {
-  if(!object->atDestruction()) {
-    Error("Object " << object->getID() << " failed to tear down properly");
-  }
-  delete object;
+void BObjectManager::addObject(BObject* object) {
+  BObjectID nextID = ++_objectCount;
+  _objectMap[nextID] = object;
+  object->assignID(nextID);
 }
 
 BObject* BObjectManager::getObject(BObjectID id) {

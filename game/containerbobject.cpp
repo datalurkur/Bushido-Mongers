@@ -1,7 +1,7 @@
 #include "game/containerbobject.h"
 #include "game/bobjectmanager.h"
 
-ContainerBObject::ContainerBObject(BObjectManager* manager, BObjectID id, const ProtoContainerBObject* proto): ComplexBObject(manager, id, proto) {
+ContainerBObject::ContainerBObject(BObjectManager* manager, const ProtoContainerBObject* proto): ComplexBObject(manager, proto) {
 }
   #pragma message "TODO - Add container setup"
 

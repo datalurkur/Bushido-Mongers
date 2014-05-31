@@ -2,8 +2,8 @@
 #include "game/containerbase.h"
 #include "util/assertion.h"
 
-BObject::BObject(BObjectManager* manager, BObjectType type, BObjectID id, const ProtoBObject* proto):
-  _manager(manager), _proto(proto), _type(type), _id(id), _keywords(proto->keywords), _location(0) {
+BObject::BObject(BObjectManager* manager, BObjectType type, const ProtoBObject* proto):
+  _manager(manager), _proto(proto), _type(type), _id(0), _keywords(proto->keywords), _location(0) {
   for(auto& pExt : proto->extensions) {
     addExtension(pExt.first, *pExt.second);
   }
@@ -13,11 +13,9 @@ BObject::~BObject() {
   setLocation(0);
 }
 
-bool BObject::atCreation() {
-  return true;
-}
-bool BObject::atDestruction() {
-  return true;
+void BObject::assignID(BObjectID id) {
+  ASSERT(_id == 0, "Object has already been assigned an ID");
+  _id = id;
 }
 
 bool BObject::addExtension(ExtensionType type, const ProtoBObjectExtension& data) {

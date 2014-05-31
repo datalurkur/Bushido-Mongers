@@ -5,7 +5,7 @@
 #include "game/atomicbobject.h"
 #include "game/compositebobject.h"
 #include "game/complexbobject.h"
-#include "game/container.h"
+#include "game/containerbobject.h"
 
 #include "ui/prompt.h"
 #include "ui/menu.h"

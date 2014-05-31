@@ -5,23 +5,25 @@
 #include "game/bobjectextension.h"
 #include "game/bobjecttypes.h"
 #include "resource/protobobject.h"
+#include "game/combat.h"
 
 #include <map>
 #include <list>
 using namespace std;
-
-typedef int BObjectID;
 
 class BObjectManager;
 class ContainerBase;
 
 class BObject: virtual public Observable {
 public:
-  BObject(BObjectManager* manager, BObjectType type, BObjectID id, const ProtoBObject* proto);
+  BObject(BObjectManager* manager, BObjectType type, const ProtoBObject* proto);
   virtual ~BObject();
 
-  virtual bool atCreation();
-  virtual bool atDestruction();
+  void assignID(BObjectID id);
+
+  // Nomenclature
+  const string& getName() const;
+  const string& getArchetype() const;
 
   // Extension management
   bool addExtension(ExtensionType type, const ProtoBObjectExtension& data);
@@ -38,6 +40,9 @@ public:
   // Location management
   void setLocation(ContainerBase* location);
   ContainerBase* getLocation() const;
+
+  // Generic points of interaction
+  virtual DamageResult damage(const Damage& dmg) = 0;
 
 protected:
   BObjectManager* _manager;

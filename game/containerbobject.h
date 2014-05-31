@@ -7,7 +7,7 @@
 
 class ContainerBObject : public ContainerBase, public ComplexBObject {
 public:
-  ContainerBObject(BObjectManager* manager, BObjectID id, const ProtoContainerBObject* proto);
+  ContainerBObject(BObjectManager* manager, const ProtoContainerBObject* proto);
   virtual ~ContainerBObject();
 
   Area* getArea() const;

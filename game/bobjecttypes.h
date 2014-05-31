@@ -1,6 +1,8 @@
 #ifndef BOBJECT_TYPES_H
 #define BOBJECT_TYPES_H
 
+typedef int BObjectID;
+
 enum BObjectType {
   FirstObjectType = 0,
   AtomicType,

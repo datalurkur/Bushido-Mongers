@@ -6,15 +6,16 @@
 
 class AtomicBObject : public BObject {
 public:
-  AtomicBObject(BObjectManager* manager, BObjectID id, const ProtoAtomicBObject* proto);
-
-  virtual bool atCreation();
-  virtual bool atDestruction();
+  AtomicBObject(BObjectManager* manager, const ProtoAtomicBObject* proto);
+  ~AtomicBObject();
 
   float getWeight() const;
 
+  virtual DamageResult damage(const Damage& dmg);
+
 private:
   float _weight;
+  float _integrity;
 };
 
 #endif

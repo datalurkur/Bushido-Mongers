@@ -45,9 +45,6 @@ ProtoBObject* Raw::unpackProto(const void* data, unsigned int size) {
   SectionedData<ObjectSectionType> sections;
   sections.unpack(data, size);
 
-  // Debug print
-  //sections.debug();
-
   // Get the object type and check it for sanity
   BObjectType type;
   if(!sections.getSection<BObjectType>(TypeSection, type)) {

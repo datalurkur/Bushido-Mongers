@@ -79,7 +79,7 @@ void GameCore::createCharacter(PlayerID player, const string& characterType, Eve
     results.pushEvent(new CharacterNotReadyEvent("Character currently active"));
     return;
   }
-  BObject* character = _objectManager->createObject(characterType);
+  BObject* character = _objectManager->createObjectFromPrototype(characterType);
   if(!character) {
     results.pushEvent(new CharacterNotReadyEvent("Character creation failed"));
     return;

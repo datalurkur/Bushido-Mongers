@@ -11,14 +11,14 @@ public:
   typedef map<BObject*, ObjectSet> ConnectivityMap;
 
 public:
-  ComplexBObject(BObjectManager* manager, BObjectID id, const ProtoComplexBObject* proto);
-
-  virtual bool atCreation();
-  virtual bool atDestruction();
+  ComplexBObject(BObjectManager* manager, const ProtoComplexBObject* proto);
+  ~ComplexBObject();
 
   float getWeight() const;
 
-private:
+  virtual DamageResult damage(const Damage& dmg);
+
+protected:
   // Map by ID
   BObjectMap _components;
   // Map by nickname
