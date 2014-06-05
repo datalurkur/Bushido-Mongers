@@ -11,12 +11,14 @@ public:
   time_t get(const T& k);
   bool has(const T& k);
   void set(const T& k, time_t last);
+  void set(const T& k);
 
   void cleanup();
 
 private:
   time_t _timeout;
   map<T, time_t> _timestamps;
+  queue<T> _insertions;
 };
 
 template <typename T>
@@ -37,14 +39,28 @@ bool TimedMap<T>::has(const T& k) {
 template <typename T>
 void TimedMap<T>::set(const T& k, time_t last) {
   _timestamps[k] = last;
+  _insertions.push(k);
+}
+
+template <typename T>
+void TimedMap<T>::set(const T& k) {
+  set(k, Clock.getTime());
 }
 
 template <typename T>
 void TimedMap<T>::cleanup() {
-  time_t newTime = Clock.getTime() + _timeout;
-  for(auto itr = _timestamps.begin(); itr != _timestamps.end();) {
-    if(itr.second < newTime) { _timestamps.erase(itr++); }
-    else { ++itr; }
+  time_t threshold = Clock.getTime() - _timeout;
+  while(!_insertions.empty()) {
+    T key = _insertions.front();
+    auto itr = _timestamps.find(key);
+    if(itr == _timestamps.end()) {
+      _insertions.pop();
+    } else if(itr.second < threshold) {
+      _timestamps.erase(itr);
+      _insertions.pop();
+    } else {
+      break;
+    }
   }
 }
 
