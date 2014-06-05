@@ -1,15 +1,10 @@
 #include "game/objectobserver.h"
 
-ObjectObserver::ObjectObserver() {
+ObjectObserver::ObjectObserver(): _currentArea(0) {
 }
 
-bool ObjectObserver::needsUpdate(const BObject* bobject);
-  BObjectID id = bobject->getID();
+void ObjectObserver::areaChanges(Area* area) {
+}
 
-  // FIXME
-  time_t lastUpdated = ;
-
-  bool ret = (!_lastSeen.has(id) || _lastSeen.get(id) < lastupdated);
-  _lastSeen.set();
-  return ret;
+void ObjectObserver::viewChanges(const set<IVec2>* previousView, const set<IVec2>& currentView) {
 }

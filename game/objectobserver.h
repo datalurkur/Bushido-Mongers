@@ -1,19 +1,20 @@
-#ifndef OBJECT_OBSERVER_H
-#define OBJECT_OBSERVER_H
+#ifndef OBJECTOBSERVER_H
+#define OBJECTOBSERVER_H
+
+#include "util/timedmap.h"
+#include "game/bobjecttypes.h"
 
 class ObjectObserver {
 public:
   ObjectObserver();
-  ~ObjectObserver();
 
-  bool isObjectUpToDate(BObjectID id);
-
-  void createOrUpdateObject();
-
-  BObject* getObject(BObjectID id);
+  void areaChanges(Area* area);
+  void viewChanges(const set<IVec2>* previousView, const set<IVec2>& currentView);
 
 private:
-  BObjectMap _objectMap;
+  Area* _currentArea;
+  TimedMap<IVec2> _tileData;
+  TimedMap<BObjectID> _objectData;
 };
 
 #endif
