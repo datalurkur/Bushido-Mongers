@@ -2,11 +2,11 @@
 #define GAMECORE_H
 
 #include "game/bobjectmanager.h"
+#include "game/objectobserver.h"
 #include "io/gameevent.h"
 #include "io/eventqueue.h"
 #include "world/world.h"
 #include "util/bimap.h"
-#include "util/timedmap.h"
 
 #include <string>
 
@@ -38,20 +38,17 @@ private:
   void getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibleTiles);
   bool checkCharacterSanity(PlayerID player);
 
-  TimedMap<IVec2>* getTileTimedMap(PlayerID id);
-  TimedMap<BObjectID>* getTileObjectMap(PlayerID id);
-
 private:
+  // World and objects
   BObjectManager* _objectManager;
   World* _world;
 
+  // Player <-> Character mapping
   BiMap<PlayerID, BObjectID> _playerMap;
 
+  // Visibility
   map<int, list<IVec2> > _precomputedSight;
-  map<PlayerID, set<IVec2> > _previousView;
-
-  map<PlayerID, TimedMap<IVec2> > _tileDataSent;
-  map<PlayerID, TimedMap<BObjectID> > _objectDataSent;
+  map<PlayerID, ObjectObserver> _observers;
 };
 
 #endif

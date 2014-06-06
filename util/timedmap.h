@@ -18,6 +18,7 @@ public:
   void set(const T& k);
 
   void cleanup();
+  void clear();
 
 private:
   time_t _timeout;
@@ -66,6 +67,14 @@ void TimedMap<T>::cleanup() {
       break;
     }
   }
+}
+
+template <typename T>
+void TimedMap<T>::clear() {
+  _timestamps.clear();
+
+  // Apparently std::queue doesn't support clear?  So we do this fuckery instead
+  queue<T>().swap(_insertions);
 }
 
 #endif

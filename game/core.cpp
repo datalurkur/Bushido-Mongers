@@ -100,31 +100,12 @@ void GameCore::createCharacter(PlayerID player, const string& characterType, Eve
   _playerMap.insert(player, character->getID());
   results.pushEvent(new CharacterReadyEvent(character->getID()));
 
-  // Send the area information
-  Debug("Sending area info to " << player);
-  results.pushEvent(new AreaDataEvent(startArea->getName(), startArea->getPos(), startArea->getSize()));
-
-  // Send information about the surrounding tiles
-  Debug("Sending visible tile info to " << player);
+  // Find out what the player can see
   set<IVec2> visibleCoords;
   getViewFrom(player, startTile->getCoordinates(), visibleCoords);
 
-  Debug("Visible coordinates at start:");
-  TileDataEvent* tileData = new TileDataEvent();
-  for(auto c : visibleCoords) {
-    tileData->updated.insert(make_pair(c, TileDatum(startArea->getTile(c))));
-  }
-  results.pushEvent(tileData);
-
-  // Update tile data cache timing for player
-  TimedMap<IVec2>* sentAt = getTileTimedMap(player);
-  time_t currentTime = Clock.getTime();
-  for(auto c : visibleCoords) {
-    sentAt->set(c, currentTime);
-  }
-
-  // Cache visible tiles
-  _previousView[player] = move(visibleCoords);
+  _observers[player] = ObjectObserver();
+  _observers[player].areaChanges(startArea, visibleCoords, results);
 }
 
 void GameCore::loadCharacter(PlayerID player, BObjectID characterID, EventQueue& results) {
@@ -183,32 +164,8 @@ void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventQueue& resu
   set<IVec2> newView;
   getViewFrom(player, newCoordinates, newView);
 
-  // Compare it to the old perspective
-  set<IVec2> shrouded, visible;
-  setComplement(_previousView[player], newView, shrouded, visible);
-
-  map<IVec2, TileDatum> updated;
-  set<IVec2> newlyVisible;
-  TimedMap<IVec2>* sentAt = getTileTimedMap(player);
-  time_t currentTime = Clock.getTime();
-  for(auto c : visible) {
-    if(!sentAt->has(c) || (sentAt->get(c) < area->getTile(c)->lastChanged())) {
-      if(!sentAt->has(c)) {
-        Debug("Newly visible tile " << c << " has not yet been sent");
-      } else {
-        Debug("Newly visible tile " << c << " has been updated since " << sentAt->get(c));
-      }
-      updated.insert(make_pair(c, TileDatum(area->getTile(c))));
-      sentAt->set(c, currentTime);
-    } else {
-      Debug("Newly visible tile " << c << " has seen no updates since " << sentAt->get(c));
-      newlyVisible.insert(c);
-    }
-  }
-  Debug("Sending tile data with " << newlyVisible.size() << " newly visible tiles, " << updated.size() << " updated tiles, and " << shrouded.size() << " shrouded tiles");
-  results.pushEvent(new TileDataEvent(shrouded, newlyVisible, updated));
-
-  _previousView[player] = move(newView);
+  // Collect any events that result from the view change
+  _observers[player].viewChanges(newView, results);
 }
 
 bool GameCore::isCharacterActive(PlayerID player) {
@@ -278,15 +235,4 @@ void GameCore::getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibl
     }
   }
   Info("There are " << visibleTiles.size() << " tiles visible to " << player << " from " << pos);
-}
-
-// Set data resend timeouts to about a minute - this might need tuning later
-TimedMap<IVec2>* GameCore::getTileTimedMap(PlayerID id) {
-  auto result = _tileDataSent.insert(make_pair(id, TimedMap<IVec2>(60)));
-  return &(result.first->second);
-}
-
-TimedMap<BObjectID>* GameCore::getTileObjectMap(PlayerID id) {
-  auto result = _objectDataSent.insert(make_pair(id, TimedMap<BObjectID>(60)));
-  return &(result.first->second);
 }

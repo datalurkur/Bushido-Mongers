@@ -91,17 +91,23 @@ template <typename T>
 void setComplement(const set<T>& lhs, const set<T>& rhs, set<T>& onlyInLeft, set<T>& complement) {
   typename set<T>::const_iterator lItr = lhs.begin();
   typename set<T>::const_iterator rItr = rhs.begin();
-  while(lItr != lhs.end() && rItr != rhs.end()) {
-    if(*lItr < *rItr) {
-      onlyInLeft.insert(*lItr);
-      lItr++;
-    } else if(*rItr < *lItr) {
-      complement.insert(*rItr);
-      rItr++;
-    } else {
-      complement.insert(*lItr);
-      lItr++;
-      rItr++;
+  if(lItr == lhs.end()) {
+    complement = rhs;
+  } else if(rItr == lhs.end()) {
+    onlyInLeft = lhs;
+  } else {
+    while(lItr != lhs.end() && rItr != rhs.end()) {
+      if(*lItr < *rItr) {
+        onlyInLeft.insert(*lItr);
+        lItr++;
+      } else if(*rItr < *lItr) {
+        complement.insert(*rItr);
+        rItr++;
+      } else {
+        complement.insert(*lItr);
+        lItr++;
+        rItr++;
+      }
     }
   }
 }
