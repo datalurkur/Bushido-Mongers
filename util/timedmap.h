@@ -3,6 +3,10 @@
 
 #include "util/timestamp.h"
 
+#include <queue>
+#include <map>
+using namespace std;
+
 template <typename T>
 class TimedMap {
 public:
