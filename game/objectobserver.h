@@ -11,12 +11,14 @@ public:
   ObjectObserver();
 
   void areaChanges(Area* area, const set<IVec2>& view, EventQueue& results);
-  void viewChanges(const set<IVec2>& currentView, EventQueue& results);
+  void viewChanges(const set<IVec2>& newView, EventQueue& results);
+
+  bool canSee(Area* area, const IVec2& location);
 
 private:
   Area* _currentArea;
 
-  set<IVec2> _previousView;
+  set<IVec2> _currentView;
 
   TimedMap<IVec2> _tileData;
   TimedMap<BObjectID> _objectData;

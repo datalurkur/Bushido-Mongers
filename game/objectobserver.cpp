@@ -7,7 +7,7 @@ void ObjectObserver::areaChanges(Area* area, const set<IVec2>& view, EventQueue&
   // Reset state
   _currentArea = area;
   _tileData.clear();
-  _previousView.clear();
+  _currentView.clear();
 
   // Send the area information
   results.pushEvent(new AreaDataEvent(area->getName(), area->getPos(), area->getSize()));
@@ -16,14 +16,14 @@ void ObjectObserver::areaChanges(Area* area, const set<IVec2>& view, EventQueue&
   viewChanges(view, results);
 }
 
-void ObjectObserver::viewChanges(const set<IVec2>& currentView, EventQueue& results) {
+void ObjectObserver::viewChanges(const set<IVec2>& newView, EventQueue& results) {
   time_t currentTime = Clock.getTime();
 
   set<IVec2> shrouded, visible;
   map<IVec2, TileDatum> updated;
 
   // Compare the new and old perspectives
-  setComplement(_previousView, currentView, shrouded, visible);
+  setComplement(_currentView, newView, shrouded, visible);
 
   // Determine which tiles (or contents) have changed since they were last seen
   set<IVec2> newlyVisible;
@@ -49,5 +49,9 @@ void ObjectObserver::viewChanges(const set<IVec2>& currentView, EventQueue& resu
   //Debug("Sending tile data with " << newlyVisible.size() << " newly visible tiles, " << updated.size() << " updated tiles, and " << shrouded.size() << " shrouded tiles");
   results.pushEvent(new TileDataEvent(shrouded, newlyVisible, updated));
 
-  _previousView = currentView;
+  _currentView = newView;
+}
+
+bool ObjectObserver::canSee(Area* area, const IVec2& location) {
+  return (_currentArea == area) && (_currentView.find(location) != _currentView.end());
 }
