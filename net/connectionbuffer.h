@@ -3,6 +3,7 @@
 
 #include "net/packet.h"
 
+#include <atomic>
 #include <mutex>
 #include <thread>
 #include <queue>

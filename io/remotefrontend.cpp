@@ -25,7 +25,7 @@ bool RemoteFrontEnd::connectSender() {
 void RemoteFrontEnd::disconnectSender() {
   if(!_tcpBuffer) {
     Error("Client is not connected");
-    return false;
+    return;
   }
   _tcpBuffer->stopBuffering();
   delete _tcpBuffer;

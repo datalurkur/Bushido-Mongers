@@ -7,7 +7,7 @@ LDFLAGS = -lncurses -lmenu -lpthread
 
 BOB_RESOURCES = resource/protobobject.o resource/protoatomic.o resource/protocomposite.o resource/protocomplex.o resource/protocontainer.o resource/protoextension.o
 
-all: tools tests server
+all: tools tests server client
 
 tools: raw_editor
 
@@ -17,6 +17,9 @@ genproto: protocol/rcparser.o util/stringhelper.o util/filesystem.o protocol/cod
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 server: io/gameevent.o io/eventmeta.o curseme/curseme.o curseme/menudriver.o curseme/cursesmenudriver.o curseme/renderer.o curseme/window.o curseme/curselog.o util/log.o util/filesystem.o util/packing.o util/timer.o util/noise.o util/geom.o game/bobject.o game/complexbobject.o game/compositebobject.o game/atomicbobject.o game/containerbase.o game/containerbobject.o game/bobjectmanager.o game/core.o resource/raw.o world/generator.o world/world.o world/area.o world/tile.o server.o io/localgameclient.o io/clientbase.o io/gameserver.o io/serverbase.o io/localfrontend.o io/localbackend.o io/eventqueue.o game/observable.o util/timestamp.o world/worldbase.o world/clientworld.o world/areabase.o world/clientarea.o world/tilebase.o world/clienttile.o util/uniquestringpair.o util/sectioneddata.o ui/menu.o ui/titlebox.o ui/prompt.o curseme/hotkeymenudriver.o util/serialize.o $(BOB_RESOURCES) game/combat.o game/objectobserver.o
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
+
+client: io/gameevent.o io/eventmeta.o curseme/curseme.o curseme/menudriver.o curseme/cursesmenudriver.o curseme/renderer.o curseme/window.o curseme/curselog.o util/log.o client.o io/remotegameclient.o io/localbackend.o io/remotefrontend.o world/clientworld.o world/worldbase.o io/clientbase.o io/eventqueue.o world/clientarea.o world/areabase.o net/tcpbuffer.o net/netaddress.o ui/prompt.o ui/titlebox.o net/packet.o net/tcpsocket.o net/socket.o game/containerbase.o net/connectionbuffer.o util/filesystem.o world/tilebase.o game/observable.o util/timestamp.o world/clienttile.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 raw_editor: curseme/curseme.o curseme/curselog.o curseme/window.o util/log.o tools/raw_editor_ncurses/main.o resource/raw.o game/bobject.o game/complexbobject.o game/atomicbobject.o game/compositebobject.o util/filesystem.o tools/raw_editor_ncurses/common.o tools/raw_editor_ncurses/complex.o tools/raw_editor_ncurses/composite.o util/packing.o game/bobjectmanager.o game/containerbase.o game/containerbobject.o game/observable.o util/timestamp.o util/uniquestringpair.o util/sectioneddata.o ui/menu.o curseme/menudriver.o ui/titlebox.o ui/prompt.o curseme/cursesmenudriver.o curseme/hotkeymenudriver.o util/serialize.o $(BOB_RESOURCES) game/combat.o
@@ -41,10 +44,7 @@ sockettest: tests/socket_test.o util/log.o net/netaddress.o net/socket.o net/tcp
 %.o : %.cpp
 	$(CC) $(CFLAGS) $^ -c -o $@
 %.cpp : %.rc genproto
-	./genproto $^
-
-regen:
-	rm -f io/gameevent.h io/gameevent.cpp
+	./genproto $<
 
 clean:
 	rm -f genproto geomtest server sockettest raw_editor test treetest worldtest io/*.o net/*.o util/*.o world/*.o tests/*.o resource/*.o curseme/*.o tools/raw_editor_ncurses/*.o game/*.o ui/*.o *.o protocol/*.o io/gameevent.h io/gameevent.cpp

@@ -114,21 +114,23 @@ void CodeGenerator::GenerateSource(const RCObject& object, ostringstream& source
          deserialization = "";
 
   if(object.fields.size() > 0) {
-    serialization += "str";
-    deserialization += "str";
+    serialization += "  str";
+    deserialization += "  str";
     for(auto field : object.fields) {
       serialization += " << " + field.name;
       deserialization += " >> " + field.name;
     }
+    serialization += ";\n";
+    deserialization += ";\n";
     sourceData << ArgumentConstructor(object);
   }
 
   sourceData << DefaultConstructor(object) <<
                 "void " << object.header << "Event::pack(ostringstream& str) {\n" <<
-                serialization << ";\n" <<
+                serialization <<
                 "}\n" <<
                 "void " << object.header << "Event::unpack(istringstream& str) {\n" <<
-                deserialization << ";\n" <<
+                deserialization <<
                 "}\n\n";
 }
 

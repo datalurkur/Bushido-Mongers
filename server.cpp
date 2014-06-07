@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
   setup();
 
   if(argc < 2) {
-    Prompt::Popup("usage: server <raws directory>");
+    Prompt::Popup("Usage: server <raws directory>");
     cleanup(1);
   }
 
