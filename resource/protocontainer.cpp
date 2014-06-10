@@ -13,5 +13,7 @@ bool ProtoContainerBObject::unpack(const SectionedData<ObjectSectionType>& secti
   if(!ProtoComplexBObject::unpack(sections)) { return false; }
 
   #pragma message "TODO - Add container data unpacking"
+
+  return true;
 }
 

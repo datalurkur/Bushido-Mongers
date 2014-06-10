@@ -14,6 +14,8 @@ istream& operator>>(istream& stream, GameEventType& type) {
 
 GameEvent::GameEvent(GameEventType t): type(t) {}
 
+GameEvent::~GameEvent() {}
+
 void GameEvent::Pack(GameEvent* event, ostringstream& str) {
   str << event->type;
   event->pack(str);

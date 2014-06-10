@@ -15,7 +15,7 @@ public:
   ClientBase();
   virtual ~ClientBase();
 
-  virtual bool connectSender() = 0;
+  virtual bool connectSender(const string& name) = 0;
   virtual void disconnectSender() = 0;
   virtual void sendToServer(GameEvent* event) = 0;
   virtual void sendToClient(SharedGameEvent event) = 0;

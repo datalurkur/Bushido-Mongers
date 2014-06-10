@@ -57,6 +57,7 @@ bool TCPSocket::connectSocket(const NetAddress &dest, unsigned short localPort) 
       return false;
     };
   } else {
+    Debug("Connected");
     _state = Connected;
     return true;
   }

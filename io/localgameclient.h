@@ -8,7 +8,7 @@ class ServerBase;
 
 class LocalGameClient: public LocalFrontEnd, public LocalBackEnd {
 public:
-  LocalGameClient(ServerBase* server, const string& name);
+  LocalGameClient(ServerBase* server);
   ~LocalGameClient();
 };
 

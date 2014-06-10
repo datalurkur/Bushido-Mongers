@@ -41,9 +41,9 @@ bool CodeGenerator::Generate(const string& resource) {
 
   sourceData << "GameEvent* GameEvent::Unpack(istringstream& str) {\n" <<
                 "  GameEvent* ret;\n" <<
-                "  char temp;\n" <<
+                "  GameEventType temp;\n" <<
                 "  str >> temp;\n" <<
-                "  switch(static_cast<GameEventType>(temp)) {\n";
+                "  switch(temp) {\n";
   for(auto object : objects) {
     string constructorArgs = "";
     bool first = true;
@@ -59,8 +59,8 @@ bool CodeGenerator::Generate(const string& resource) {
     sourceData << "    case " << object.header << ": ret = new " << object.header << "Event(); break;\n";
   }
   sourceData << "    default:\n" <<
-                "      Error(\"Invalid event type\");\n" <<
-                "      break;\n" <<
+                "      Error(\"Invalid event type\" << temp);\n" <<
+                "      return 0;\n" <<
                 "  }\n" <<
                 "  ret->unpack(str);\n" <<
                 "  return ret;\n" <<

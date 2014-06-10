@@ -36,12 +36,17 @@ int main(int argc, char** argv) {
   setup();
 
   if(argc < 2) {
-    Prompt::Popup("Usage: server <raws directory>");
+    Prompt::Popup("Usage: server <raws directory> [port]");
     cleanup(1);
   }
 
+  unsigned short port;
+  if(argc < 3 || !ConvertString(string(argv[2]), port)) {
+    port = 9999;
+  }
+
   #pragma message "The creation of the server will eventually be controllable via config files"
-  server = new GameServer(string(argv[1]));
+  server = new GameServer(string(argv[1]), port);
   server->start();
 
   #pragma message "Create a prompt to get client login / issue commands to the server directly"
@@ -56,8 +61,8 @@ int main(int argc, char** argv) {
 */
   // For now, we'll just test out local client stuff
   string clientName = "Test Client Name";
-  client = new LocalGameClient(server, clientName);
-  if(!client->connectSender()) {
+  client = new LocalGameClient(server);
+  if(!client->connectSender(clientName)) {
     Error("Failed to connect local client to server");
     cleanup(1);
   }
@@ -67,6 +72,7 @@ int main(int argc, char** argv) {
   client->createCharacter(characterName);
   sleep(1);
 
+/*
   // Test movement
   Info("Client is attempting to move");
   Info("=======================================");
@@ -80,6 +86,7 @@ int main(int argc, char** argv) {
   sleep(1);
   Info("=======================================");
   client->moveCharacter(IVec2(0, -1));
+*/
 
   while(server->isRunning()) {
     sleep(1);

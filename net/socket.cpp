@@ -177,3 +177,7 @@ void Socket::recv(char *data, int &size, unsigned int maxSize, sockaddr *addr, i
   unique_lock<mutex> lock(_mutex);
   size = (int)recvfrom(_socketHandle, data, maxSize, 0, addr, (socklen_t*)&addrSize);
 }
+
+void Socket::disconnect() {
+  closeSocket();
+}

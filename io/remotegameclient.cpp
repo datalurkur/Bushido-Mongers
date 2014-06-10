@@ -1,6 +1,6 @@
 #include "io/remotegameclient.h"
 
-RemoteGameClient::RemoteGameClient(const NetAddress& addr, const string& name): RemoteFrontEnd(addr, name) {
+RemoteGameClient::RemoteGameClient(const NetAddress& addr): RemoteFrontEnd(addr) {
 }
 
 RemoteGameClient::~RemoteGameClient() {

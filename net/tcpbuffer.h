@@ -1,35 +1,28 @@
 #ifndef TCPBUFFER_H
 #define TCPBUFFER_H
 
-#include "net/connectionbuffer.h"
 #include "net/tcpsocket.h"
 
-class TCPBuffer: public ConnectionBuffer {
+struct PacketBufferInfo {
+  size_t size;
+  size_t offset;
+  bool hasSize;
+  ostringstream str;
+
+  PacketBufferInfo();
+};
+
+class TCPBuffer {
 public:
-  TCPBuffer(unsigned short localPort = 0);
-  TCPBuffer(TCPSocket *establishedSocket);
-  virtual ~TCPBuffer();
+  TCPBuffer(size_t bufferSize = 8192);
+  ~TCPBuffer();
 
-  bool isConnected();
-  bool connect(const NetAddress& dest);
-
-  void startBuffering();
-  void stopBuffering();
-
-protected:
-  void doInboundBuffering();
-  void doOutboundBuffering();
+  void sendPacket(TCPSocket* socket, const ostringstream& str);
+  bool getPacket(TCPSocket* socket, PacketBufferInfo& i);
 
 private:
-  // Make sure the Socket* is properly cast so the correct functions get called
-  inline TCPSocket *getSocket() { return (TCPSocket*)_socket; }
-
-  int tcpSerialize(char *dest, const char *src, unsigned int size, unsigned int maxSize);
-  int tcpDeserialize(const char *srcData, char **data, unsigned int &size);
-
-private:
-  char *_serializationBuffer;
-  unsigned short _localPort;
+  size_t _bufferSize;
+  char* _buffer;
 };
 
 #endif

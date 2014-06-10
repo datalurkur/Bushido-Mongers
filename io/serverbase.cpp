@@ -84,9 +84,20 @@ void ServerBase::clientEvent(ClientBase* client, GameEvent* event) {
 
   auto playerIDItr = _assignedIDs.reverseFind(client);
   if(playerIDItr == _assignedIDs.reverseEnd()) {
-    #pragma message "We should hang up on any client that does this"
-    Error("Unassigned client attempting to send data to the server");
-    return;
+    if(event->type == AssignName) {
+      Info("Attempting to assign name to client");
+      AssignNameEvent* e = (AssignNameEvent*)event;
+      lock.unlock();
+      if(!assignClient(client, e->name)) {
+        Error("Failed to assign client to name " << e->name);
+      } else {
+        Info("Accepted client " << e->name);
+      }
+      return;
+    } else {
+      Error("Unassigned client attempting to send data to the server");
+      return;
+    }
   }
   PlayerID playerID = playerIDItr->second;
 

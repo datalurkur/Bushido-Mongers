@@ -1,4 +1,9 @@
 ServerDisconnected {
+  string reason;
+};
+
+AssignName {
+  string name;
 };
 
 CreateCharacter {

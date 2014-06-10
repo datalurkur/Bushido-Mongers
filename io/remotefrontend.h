@@ -5,22 +5,31 @@
 #include "net/netaddress.h"
 #include "net/tcpbuffer.h"
 
+#include <atomic>
+#include <thread>
+
 using namespace std;
 
 class RemoteFrontEnd: virtual public ClientBase {
 public:
-  RemoteFrontEnd(const NetAddress& addr, const string& name);
+  RemoteFrontEnd(const NetAddress& addr);
   ~RemoteFrontEnd();
 
-  bool connectSender();
+  bool connectSender(const string& name);
   void disconnectSender();
   void sendToServer(GameEvent* event);
 
 private:
-  NetAddress _addr;
-  string _name;
+  void bufferIncoming();
 
-  TCPBuffer* _tcpBuffer;
+private:
+  NetAddress _addr;
+
+  TCPSocket _socket;
+  TCPBuffer _buffer;
+
+  atomic<bool> _shouldDie;
+  thread _incoming;
 };
 
 #endif

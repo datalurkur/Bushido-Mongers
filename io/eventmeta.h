@@ -21,6 +21,7 @@ struct GameEvent {
   GameEventType type;
 
   GameEvent(GameEventType t);
+  virtual ~GameEvent();
 
   virtual void unpack(istringstream& str) = 0;
   virtual void pack(ostringstream& str) = 0;
