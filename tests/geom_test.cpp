@@ -10,7 +10,7 @@
 RenderSource* renderSource = 0;
 
 void cleanup(int signal) {
-  CurseMeTeardown();
+  CurseMe::Teardown();
   Log::Teardown();
 
   if(renderSource) {
@@ -23,7 +23,7 @@ void cleanup(int signal) {
 
 void setup() {
   Log::Setup("stdout");
-  CurseMeSetup();
+  CurseMe::Setup();
   init_pair(1, COLOR_RED, COLOR_BLACK);
   signal(SIGINT, cleanup);
 }
