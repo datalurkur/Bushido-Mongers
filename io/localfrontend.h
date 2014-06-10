@@ -9,10 +9,10 @@ class ServerBase;
 
 class LocalFrontEnd: virtual public ClientBase {
 public:
-  LocalFrontEnd(ServerBase* server, const string& name);
+  LocalFrontEnd(ServerBase* server);
   virtual ~LocalFrontEnd();
 
-  bool connectSender();
+  bool connectSender(const string& name);
   void disconnectSender();
   void sendToServer(GameEvent* event);
 

@@ -4,6 +4,7 @@
 #include "net/tcpsocket.h"
 #include "net/netaddress.h"
 
+#include <atomic>
 #include <mutex>
 #include <thread>
 

@@ -1,31 +1,29 @@
 #include "io/remotebackend.h"
 #include "io/gameevent.h"
 
-RemoteBackEnd::RemoteBackEnd(TCPSocket* socket): _shouldDie(false) {
-  _buffer = new TCPBuffer(socket);
-  _buffer->startBuffering();
-
+RemoteBackEnd::RemoteBackEnd(TCPSocket* socket): _socket(socket), _shouldDie(false) {
   _incoming = thread(&RemoteBackEnd::bufferIncoming, this);
 }
 
 RemoteBackEnd::~RemoteBackEnd() {
+  Info("Shutting down remote backend");
   if(_incoming.joinable()) {
     _shouldDie = true;
     _incoming.join();
   }
 
-  _buffer->stopBuffering();
-  delete _buffer;
+  delete _socket;
 }
 
 void RemoteBackEnd::sendToClient(SharedGameEvent event) {
+  GameEvent* e = event.get();
+
   // Serialize the event
   ostringstream str;
-  GameEvent::Pack(event, str);
+  GameEvent::Pack(e, str);
 
-  // Construct the packet and send it
-  Packet pkt(str.c_str(), str.size());
-  _buffer->providePacket(pkt);
+  Debug("Sending game event");
+  _buffer.sendPacket(_socket, str);
 }
 
 void RemoteBackEnd::sendToClient(EventQueue&& queue) {
@@ -35,11 +33,21 @@ void RemoteBackEnd::sendToClient(EventQueue&& queue) {
 }
 
 void RemoteBackEnd::bufferIncoming() {
-  while(!_shouldDie) {
-    Packet pkt;
-    if(_buffer->consumePacket(pkt)) {
-      istringstream str(pkt.data);
-      GameEvent* event = GameEvent::Unpack(str);
+  Info("Listening for incoming game events");
+  while(true) {
+    PacketBufferInfo i;
+    while(!_shouldDie && !_buffer.getPacket(_socket, i)) {}
+    if(_shouldDie) { return; }
+
+    Debug("Received game event");
+    istringstream stream(i.str.str());
+    GameEvent* event = GameEvent::Unpack(stream);
+    if(event) {
+      sendToServer(event);
+      delete event;
+    } else {
+      Warn("Failed to deserialize event");
     }
   }
+  Info("Stopped listening for game events");
 }

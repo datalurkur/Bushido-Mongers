@@ -1,11 +1,11 @@
 #include "io/localfrontend.h"
 #include "io/serverbase.h"
 
-LocalFrontEnd::LocalFrontEnd(ServerBase* server, const string& name): _server(server), _name(name) {}
+LocalFrontEnd::LocalFrontEnd(ServerBase* server): _server(server) {}
 LocalFrontEnd::~LocalFrontEnd() {}
 
-bool LocalFrontEnd::connectSender() {
-  return _server->assignClient(this, _name);
+bool LocalFrontEnd::connectSender(const string& name) {
+  return _server->assignClient(this, name);
 }
 
 void LocalFrontEnd::disconnectSender() {

@@ -16,7 +16,7 @@ struct GameEvent;
 class ServerBase {
 public:
   ServerBase(const string& rawSet);
-  ~ServerBase();
+  virtual ~ServerBase();
 
   void start();
   void stop();

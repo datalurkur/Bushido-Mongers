@@ -1,128 +1,59 @@
 #include "net/tcpbuffer.h"
-#include "util/assertion.h"
+#include "util/packing.h"
 
-#include <cstring>
-
-TCPBuffer::TCPBuffer(unsigned short localPort): _serializationBuffer(0), _localPort(localPort) {
-  _socket = new TCPSocket();
+PacketBufferInfo::PacketBufferInfo():
+  size(0), offset(0), hasSize(false) {
 }
 
-TCPBuffer::TCPBuffer(TCPSocket *establishedSocket): _serializationBuffer(0), _localPort(0) {
-  _socket = establishedSocket;
+TCPBuffer::TCPBuffer(size_t bufferSize): _bufferSize(bufferSize) {
+  _buffer = new char[bufferSize];
 }
 
 TCPBuffer::~TCPBuffer() {
-  if(_socket) { delete getSocket(); }
+  delete _buffer;
 }
 
-bool TCPBuffer::isConnected() {
-  return getSocket()->isConnected();
+void TCPBuffer::sendPacket(TCPSocket* socket, const ostringstream& str) {
+  string data = str.str();
+  size_t size = data.size();
+  const char* cstr = data.c_str();
+
+  Info("Sending " << size << " byte packet");
+  // Send the payload size ahead of time
+  socket->send((char*)&size, sizeof(size_t));
+
+  // Send the actual payload, one chunk at a time
+  size_t offset = 0;
+  while(offset < size) {
+    size_t chunkSize = min(size - offset, _bufferSize);
+    socket->send(&cstr[offset], chunkSize);
+    offset += chunkSize;
+  }
 }
 
-bool TCPBuffer::connect(const NetAddress& dest) {
-  if(!getSocket()->isConnected()) {
-    return getSocket()->connectSocket(dest, _localPort);
+bool TCPBuffer::getPacket(TCPSocket* socket, PacketBufferInfo& i) {
+  if(i.hasSize) {
+    size_t maxSize = min(_bufferSize, i.size - i.offset);
+    int s;
+    if(socket->recvBlocking(_buffer, s, maxSize, 1) && s > 0) {
+      i.offset += s;
+      i.str << string(_buffer, s);
+
+      Debug("Socket buffer received " << s << " bytes from socket");
+      return (i.offset == i.size);
+    } else {
+      return false;
+    }
   } else {
-    Error("Already connected");
-    return false;
-  }
-}
+    int s;
+    if(socket->recvBlocking((char*)&(i.size), s, sizeof(i.size), 1) && s > 0) {
+      Debug("Socket buffer anticipating " << i.size << " byte packet");
 
-void TCPBuffer::startBuffering() {
-  if(!_serializationBuffer) {
-    _serializationBuffer = (char*)calloc(_maxPacketSize, sizeof(char));
-  }
-  ConnectionBuffer::startBuffering();
-}
-
-void TCPBuffer::stopBuffering() {
-  ConnectionBuffer::stopBuffering();
-  if(_serializationBuffer) {
-    free(_serializationBuffer);
-  }
-}
-
-void TCPBuffer::doInboundBuffering() {
-  int totalBufferSize, currentOffset,
-    packetSize;
-  unsigned int dataSize;
-  char *dataBuffer;
-  char *currentPacket;
-
-  Debug("Waiting for TCPSocket to connect before starting inbound buffering");
-  while(!getSocket()->isConnected()) { sleep(1); }
-
-  Debug("Entering TCPBuffer inbound packet buffering loop");
-  while(!_inboundShouldDie) {
-    unique_lock<mutex> lock(_inboundQueueLock);
-
-    // Get the next packet from the socket
-    if(!getSocket()->recvBlocking(_packetBuffer, totalBufferSize, _maxBufferSize, 1)) {
-      continue;
-    }
-    currentOffset = 0;
-    dataBuffer = 0;
-    while(currentOffset < totalBufferSize) {
-      currentPacket = _packetBuffer + currentOffset;
-      packetSize = tcpDeserialize(currentPacket, &dataBuffer, dataSize);
-
-      // Update received stats
-      _receivedPackets++;
-
-      // Push the incoming packet onto the queue
-      _inbound.push(Packet(dataBuffer, dataSize));
-      if(_inbound.size() > _maxBufferSize) {
-        _inbound.pop();
-        _droppedPackets++;
-      } else {
-        _inboundPackets++;
-      }
-
-      currentOffset += packetSize;
+      // We have a size, but the packet is not ready yet
+      i.hasSize = true;
+      return false;
+    } else {
+      return false;
     }
   }
-}
-
-void TCPBuffer::doOutboundBuffering() {
-  Packet packet;
-  int serializedSize;
-
-  Debug("Waiting for TCPSocket to connect before starting outbound buffering");
-  while(!getSocket()->isConnected()) { sleep(1); }
-
-  Debug("Entering TCPBuffer outbound packet buffering loop");
-  while(!_outboundShouldDie) {
-    unique_lock<mutex> lock(_outboundQueueLock);
-    if(!_outbound.empty()) {
-      // Pop the next outgoing packet off the queue
-      packet = _outbound.front();
-      _outbound.pop();
-      _outboundPackets--;
-
-      // TODO - This is where we'd sleep the thread when throttling bandwidth
-
-      // Send the next outgoing packet to the socket
-      serializedSize = tcpSerialize(_serializationBuffer, packet.data, (unsigned int)packet.size, _maxPacketSize);
-      getSocket()->send(_serializationBuffer, serializedSize);
-      _sentPackets++;
-    }
-  }
-}
-
-int TCPBuffer::tcpSerialize(char *dest, const char *src, unsigned int size, unsigned int maxSize) {
-  uint32_t totalSize = sizeof(uint32_t) + size;
-
-  ASSERT(totalSize <= maxSize, "Total packet size exceeds maximum size");
-  ((uint32_t*)dest)[0] = totalSize;
-
-  memcpy((void*)(dest + sizeof(uint32_t)), (void*)src, size);
-
-  return totalSize;
-}
-
-int TCPBuffer::tcpDeserialize(const char *srcData, char **data, unsigned int &size) {
-  size = ((uint32_t*)srcData)[0] - sizeof(uint32_t);
-  *data = (char*)(srcData + sizeof(uint32_t));
-
-  return sizeof(int) + size;
 }

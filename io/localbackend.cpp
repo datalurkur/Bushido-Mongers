@@ -10,8 +10,8 @@ LocalBackEnd::LocalBackEnd(): _consumerShouldDie(false), _eventsReady(false), _m
   getmaxyx(stdscr, h, w);
 
   int mapHeight;
-  int desiredLogHeight = 5;
-  if(h > 4 * desiredLogHeight) {
+  int desiredLogHeight = 10;
+  if(h > 2 * desiredLogHeight) {
     mapHeight = h - desiredLogHeight;
     _logWindow = newwin(desiredLogHeight, w, h - desiredLogHeight, 0);
     wrefresh(_logWindow);

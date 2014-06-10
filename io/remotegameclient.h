@@ -6,7 +6,7 @@
 
 class RemoteGameClient: public LocalBackEnd, public RemoteFrontEnd {
 public:
-  RemoteGameClient(const NetAddress& addr, const string& name);
+  RemoteGameClient(const NetAddress& addr);
   ~RemoteGameClient();
 
 private:

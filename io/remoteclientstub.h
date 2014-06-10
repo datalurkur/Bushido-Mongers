@@ -5,6 +5,9 @@
 #include "io/remotebackend.h"
 
 class RemoteClientStub: public LocalFrontEnd, public RemoteBackEnd {
+public:
+  RemoteClientStub(ServerBase* server, TCPSocket* socket);
+  ~RemoteClientStub();
 };
 
 #endif

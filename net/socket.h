@@ -49,6 +49,8 @@ public:
   void recv(char *data, int &size, unsigned int maxSize, sockaddr *addr, int &addrSize);
   void recvBlocking(char *data, int &size, unsigned int maxSize, sockaddr *addr, int &addrSize);
 
+  void disconnect();
+
 protected:
   bool createSocket(int type, int proto = 0);
   bool bindSocket(unsigned short localPort);

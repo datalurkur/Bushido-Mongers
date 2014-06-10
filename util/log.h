@@ -8,6 +8,7 @@
 #include <mutex>
 
 #include "util/config.h"
+#include "util/timestamp.h"
 
 using namespace std;
 
@@ -85,7 +86,7 @@ Log& Log::operator<<(const T &rhs) {
   do { \
     unique_lock<mutex> lock(Log::Mutex); \
     if(Log::IsChannelEnabled(channel)) { \
-      Log::GetLogStream() << "[" << __FILE__ << ":" << __LINE__ << "] " << msg << "\n"; \
+      Log::GetLogStream() << "[" << __FILE__ << ":" << __LINE__ << " | " << Clock.getTime() << "] " << msg << "\n"; \
       Log::Flush(); \
       ostringstream stream; \
       stream << msg; \

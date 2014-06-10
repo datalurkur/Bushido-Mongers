@@ -22,7 +22,7 @@ void cleanup(int signal) {
 }
 
 void setup() {
-  Log::Setup("server.log");
+  Log::Setup("client.log");
   CurseMe::Setup();
   signal(SIGINT, cleanup);
 }
@@ -43,11 +43,12 @@ int main(int argc, char** argv) {
   }
   NetAddress addr(argv[2], port);
 
-  client = new RemoteGameClient(addr, name);
-  if(!client->connectSender()) {
+  client = new RemoteGameClient(addr);
+  if(!client->connectSender(name)) {
     Prompt::Popup("Failed to connect to server at " + string(argv[2]) + ":" + port);
     cleanup(1);
   }
+  sleep(1);
 
   Info("Client is connected and ready to issue commands");
   string characterName = "Test Remote Character Name";
@@ -67,6 +68,11 @@ int main(int argc, char** argv) {
   sleep(1);
   Info("=======================================");
   client->moveCharacter(IVec2(0, -1));
+
+  while(true) {
+    Info("Client thinking...");
+    sleep(1);
+  }
 
   client->disconnectSender();
 

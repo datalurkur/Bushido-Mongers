@@ -43,7 +43,7 @@ void ListenSocket::stopListening() {
 
 void ListenSocket::doListening() {
   while(!_shouldDie) {
-    Debug("Listen socket waiting for connections");
+    //Debug("Listen socket waiting for connections");
     int newSocketHandle;
     sockaddr_in clientAddr;
     socklen_t clientAddrLength;
@@ -55,7 +55,7 @@ void ListenSocket::doListening() {
     timeval timeout{1, 0};
 
     if(select(FD_SETSIZE, &readSet, 0, 0, &timeout) <= 0) {
-      Debug("Select shows no waiting connections");
+      //Debug("Select shows no waiting connections");
       continue;
     }
     newSocketHandle = accept(_socketHandle, (sockaddr*)&clientAddr, &clientAddrLength);
