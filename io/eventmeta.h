@@ -4,8 +4,7 @@
 #include "game/bobject.h"
 #include "world/tilebase.h"
 
-#include "util/vector.h"
-#include "util/structure.h"
+#include "util/streambuffering.h"
 
 #include <sstream>
 #include <string>
@@ -15,7 +14,6 @@ typedef unsigned short GameEventTypeSize;
 enum GameEventType : GameEventTypeSize;
 
 extern ostream& operator<<(ostream& stream, const GameEventType& type);
-extern istream& operator>>(istream& stream, GameEventType& type);
 
 struct GameEvent {
   GameEventType type;
@@ -29,5 +27,6 @@ struct GameEvent {
   static void Pack(GameEvent* event, ostringstream& str);
   static GameEvent* Unpack(istringstream& str);
 };
+
 
 #endif

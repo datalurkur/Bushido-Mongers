@@ -25,7 +25,6 @@ bool RemoteFrontEnd::connectSender(const string& name) {
     _incoming = thread(&RemoteFrontEnd::bufferIncoming, this);
   }
 
-  Debug("Attempting to assign name");
   AssignNameEvent event(name);
   sendToServer(&event);
 
@@ -41,21 +40,18 @@ void RemoteFrontEnd::disconnectSender() {
 }
 
 void RemoteFrontEnd::sendToServer(GameEvent* event) {
-  ostringstream str;
+  ostringstream str(ios_base::binary);
   GameEvent::Pack(event, str);
 
-  Debug("Sending event");
   _buffer.sendPacket(&_socket, str);
 }
 
 void RemoteFrontEnd::bufferIncoming() {
-  Debug("Waiting for incoming events");
   while(true) {
     PacketBufferInfo i;
     while(!_shouldDie && !_buffer.getPacket(&_socket, i)) {}
     if(_shouldDie) { return; }
 
-    Debug("Received event");
     istringstream stream(i.str.str());
     GameEvent* event = GameEvent::Unpack(stream);
     if(event) {
@@ -65,5 +61,4 @@ void RemoteFrontEnd::bufferIncoming() {
       Warn("Failed to deserialize event");
     }
   }
-  Debug("Stopped listening for game events");
 }

@@ -1,4 +1,5 @@
 #include "game/objectobserver.h"
+#include "util/structure.h"
 
 ObjectObserver::ObjectObserver(): _currentArea(0), _tileData(300), _objectData(300) {
 }

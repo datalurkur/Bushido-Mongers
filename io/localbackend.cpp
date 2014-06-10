@@ -78,10 +78,12 @@ void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
   EventQueue results;
   switch(event->type) {
     case AreaData:
+      Debug("Area data received from server");
       _world.processWorldEvent(event, results);
       changeArea();
       break;
     case TileData:
+      Debug("Tile data received from server");
       _world.processWorldEvent(event, results);
       updateMap((TileDataEvent*)event);
       break;

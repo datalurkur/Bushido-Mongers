@@ -26,6 +26,8 @@ extern string ToUpcase(const string& str);
 extern string ToDowncase(const string& str);
 extern string ToClassName(const string& str);
 
+extern string AsHex(const string& str);
+
 /*
 typedef pair<string, string> StringPair;
 

@@ -29,7 +29,4 @@ struct TileDatum {
   TileDatum(TileBase* tile);
 };
 
-extern ostream& operator<<(ostream& stream, TileDatum& data);
-extern istream& operator>>(istream& stream, TileDatum& data);
-
 #endif

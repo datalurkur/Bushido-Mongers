@@ -42,7 +42,7 @@ bool CodeGenerator::Generate(const string& resource) {
   sourceData << "GameEvent* GameEvent::Unpack(istringstream& str) {\n" <<
                 "  GameEvent* ret;\n" <<
                 "  GameEventType temp;\n" <<
-                "  str >> temp;\n" <<
+                "  bufferFromStream(str, temp);\n" <<
                 "  switch(temp) {\n";
   for(auto object : objects) {
     string constructorArgs = "";
@@ -59,7 +59,7 @@ bool CodeGenerator::Generate(const string& resource) {
     sourceData << "    case " << object.header << ": ret = new " << object.header << "Event(); break;\n";
   }
   sourceData << "    default:\n" <<
-                "      Error(\"Invalid event type\" << temp);\n" <<
+                "      Error(\"Invalid event type \" << temp);\n" <<
                 "      return 0;\n" <<
                 "  }\n" <<
                 "  ret->unpack(str);\n" <<
@@ -114,14 +114,10 @@ void CodeGenerator::GenerateSource(const RCObject& object, ostringstream& source
          deserialization = "";
 
   if(object.fields.size() > 0) {
-    serialization += "  str";
-    deserialization += "  str";
     for(auto field : object.fields) {
-      serialization += " << " + field.name;
-      deserialization += " >> " + field.name;
+      serialization   += "  bufferToStream(str, " + field.name + ");\n";
+      deserialization += "  bufferFromStream(str, " + field.name + ");\n";
     }
-    serialization += ";\n";
-    deserialization += ";\n";
     sourceData << ArgumentConstructor(object);
   }
 

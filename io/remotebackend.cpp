@@ -6,7 +6,6 @@ RemoteBackEnd::RemoteBackEnd(TCPSocket* socket): _socket(socket), _shouldDie(fal
 }
 
 RemoteBackEnd::~RemoteBackEnd() {
-  Info("Shutting down remote backend");
   if(_incoming.joinable()) {
     _shouldDie = true;
     _incoming.join();
@@ -19,10 +18,9 @@ void RemoteBackEnd::sendToClient(SharedGameEvent event) {
   GameEvent* e = event.get();
 
   // Serialize the event
-  ostringstream str;
+  ostringstream str(ios_base::binary);
   GameEvent::Pack(e, str);
 
-  Debug("Sending game event");
   _buffer.sendPacket(_socket, str);
 }
 
@@ -33,13 +31,11 @@ void RemoteBackEnd::sendToClient(EventQueue&& queue) {
 }
 
 void RemoteBackEnd::bufferIncoming() {
-  Info("Listening for incoming game events");
   while(true) {
     PacketBufferInfo i;
     while(!_shouldDie && !_buffer.getPacket(_socket, i)) {}
     if(_shouldDie) { return; }
 
-    Debug("Received game event");
     istringstream stream(i.str.str());
     GameEvent* event = GameEvent::Unpack(stream);
     if(event) {
@@ -49,5 +45,4 @@ void RemoteBackEnd::bufferIncoming() {
       Warn("Failed to deserialize event");
     }
   }
-  Info("Stopped listening for game events");
 }

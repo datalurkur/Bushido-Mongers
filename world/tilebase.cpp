@@ -1,5 +1,6 @@
 #include "world/tilebase.h"
 #include "util/structure.h"
+#include "util/streambuffering.h"
 
 TileBase::TileBase(TileType type): _type(type) {}
 
@@ -12,15 +13,14 @@ TileType TileBase::getType() const { return _type; }
 TileDatum::TileDatum() {}
 TileDatum::TileDatum(TileBase* tile): type(tile->getType()), contents(tile->getContents()) {}
 
-ostream& operator<<(ostream& stream, TileDatum& data) {
-  stream << data.type << data.contents;
-  return stream;
+template <>
+void bufferToStream(ostringstream& stream, const TileDatum& data) {
+  bufferToStream(stream, data.type);
+  bufferToStream(stream, data.contents);
 }
 
-istream& operator>>(istream& stream, TileDatum& data) {
-  char temp;
-  stream >> temp;
-  data.type = static_cast<TileType>(temp);
-  stream >> data.contents;
-  return stream;
+template<>
+void bufferFromStream(istringstream& stream, TileDatum& data) {
+  bufferFromStream(stream, data.type);
+  bufferFromStream(stream, data.contents);
 }

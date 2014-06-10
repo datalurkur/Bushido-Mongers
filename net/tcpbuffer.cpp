@@ -2,7 +2,7 @@
 #include "util/packing.h"
 
 PacketBufferInfo::PacketBufferInfo():
-  size(0), offset(0), hasSize(false) {
+  size(0), offset(0), hasSize(false), str(ios_base::binary) {
 }
 
 TCPBuffer::TCPBuffer(size_t bufferSize): _bufferSize(bufferSize) {
@@ -18,7 +18,6 @@ void TCPBuffer::sendPacket(TCPSocket* socket, const ostringstream& str) {
   size_t size = data.size();
   const char* cstr = data.c_str();
 
-  Info("Sending " << size << " byte packet");
   // Send the payload size ahead of time
   socket->send((char*)&size, sizeof(size_t));
 
@@ -36,10 +35,9 @@ bool TCPBuffer::getPacket(TCPSocket* socket, PacketBufferInfo& i) {
     size_t maxSize = min(_bufferSize, i.size - i.offset);
     int s;
     if(socket->recvBlocking(_buffer, s, maxSize, 1) && s > 0) {
+      string data(_buffer, s);
       i.offset += s;
-      i.str << string(_buffer, s);
-
-      Debug("Socket buffer received " << s << " bytes from socket");
+      i.str << data;
       return (i.offset == i.size);
     } else {
       return false;
@@ -47,8 +45,6 @@ bool TCPBuffer::getPacket(TCPSocket* socket, PacketBufferInfo& i) {
   } else {
     int s;
     if(socket->recvBlocking((char*)&(i.size), s, sizeof(i.size), 1) && s > 0) {
-      Debug("Socket buffer anticipating " << i.size << " byte packet");
-
       // We have a size, but the packet is not ready yet
       i.hasSize = true;
       return false;
