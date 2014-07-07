@@ -9,17 +9,18 @@
 #include <sstream>
 #include <math.h>
 
-World* WorldGenerator::GenerateWorld(int size, float sparseness, float connectedness, ConnectionMethod connectionMethod) {
+#define WORLD_SIZE 1000
+
+World* WorldGenerator::GenerateWorld(int numFeatures, float sparseness, float connectedness, ConnectionMethod connectionMethod) {
   // Determine the number of features the world should contain
-  int numFeatures = size - (int)((size - 1) * sparseness);
-  int averageFeatureSize = max(1, (int)(size * sparseness / 2));
-  int midSize = size / 2;
+  int averageFeatureSize = max(1, (int)(WORLD_SIZE * sparseness / 2));
+  int midSize = WORLD_SIZE / 2;
   float midSizeSquared = midSize * midSize;
 
   float maxConnectionDistance = averageFeatureSize * connectedness; 
   float maxConnDistSquared = maxConnectionDistance * maxConnectionDistance;
 
-  Debug("Generating " << numFeatures << " features in a " << size << "-sized world");
+  Debug("Generating " << numFeatures << " features in a " << WORLD_SIZE << "-sized world");
   Debug("Average feature size " << averageFeatureSize << " and maximum connected feature distance " << maxConnectionDistance);
 
   // Generate a random point cloud
@@ -27,8 +28,8 @@ World* WorldGenerator::GenerateWorld(int size, float sparseness, float connected
 
   int i;
   for(i = 0; i < numFeatures; i++) {
-    int x = rand() % size,
-        y = rand() % size,
+    int x = rand() % WORLD_SIZE,
+        y = rand() % WORLD_SIZE,
         r = rand() % averageFeatureSize + (averageFeatureSize / 2);
     //Debug("Created a feature at (" << x << "," << y << ") with approximate size " << r);
     features[i] = new Feature(x, y, r);

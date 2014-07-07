@@ -11,7 +11,7 @@ GameCore::~GameCore() {
   destroyWorld();
 }
 
-bool GameCore::generateWorld(const string &rawSet, int size) {
+bool GameCore::generateWorld(const string &rawSet) {
   if(_world) {
     Error("World already created");
     return false;
@@ -21,7 +21,8 @@ bool GameCore::generateWorld(const string &rawSet, int size) {
   _objectManager = new BObjectManager(rawSet);
 
   // Maybe it'll be interesting in the future to allow tweaks to these parameters, but for now let's just focus on getting a world created with minimal user interaction
-  _world = WorldGenerator::GenerateWorld(size, 0.5, 0.5, WorldGenerator::ConnectionMethod::MaxDistance);
+  // Just 1 feature for simplicity
+  _world = WorldGenerator::GenerateWorld(1, 0.5, 0.5, WorldGenerator::ConnectionMethod::MaxDistance);
 
   return (_world != 0);
 }

@@ -42,7 +42,7 @@ int main() {
   setup();
 /*
   // Whole world generation test
-  World* world = WorldGenerator::GenerateWorld(1024, 0.5, 0.5, WorldGenerator::ConnectionMethod::MaxDistance);
+  World* world = WorldGenerator::GenerateWorld(100, 0.5, 0.5, WorldGenerator::ConnectionMethod::MaxDistance);
   if(world) {
     world->generateGraphVizFile("graphviz_test.txt");
     delete world;

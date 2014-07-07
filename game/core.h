@@ -19,7 +19,7 @@ public:
   GameCore();
   ~GameCore();
 
-  bool generateWorld(const string& rawSet, int size);
+  bool generateWorld(const string& rawSet);
   bool destroyWorld();
 
   void update(int elapsed, EventQueue& events);
