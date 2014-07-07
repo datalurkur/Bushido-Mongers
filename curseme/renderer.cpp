@@ -73,6 +73,13 @@ void RenderTarget::setOffset(const IVec2& offset) {
   _offset = offset;
 }
 
+void RenderTarget::setCenter(const IVec2& center) {
+  int tW, tH;
+  getmaxyx(_window, tH, tW);
+
+  _offset = Vec2(center.x - (tW / 2), center.y - (tH / 2));
+}
+
 void RenderTarget::nudgeOffset(const IVec2& nudge) {
   _offset += nudge;
 }

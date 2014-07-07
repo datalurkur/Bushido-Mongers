@@ -167,6 +167,7 @@ void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* cur
   if(contents.find(_characterID) != contents.end()) {
     Debug("Character object (" << _characterID << ") found at " << coords);
     _mapSource->setData(coords.x, coords.y, '@', A_BOLD | COLOR_PAIR(RED_ON_BLACK));
+    _mapPanel->setCenter(coords);
     return;
   }
 

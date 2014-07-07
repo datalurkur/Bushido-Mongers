@@ -35,6 +35,7 @@ public:
   RenderTarget(WINDOW* window, RenderSource* source);
 
   void setOffset(const IVec2& offset);
+  void setCenter(const IVec2& center);
   void nudgeOffset(const IVec2& nudge);
 
   void setRenderSource(RenderSource* source);
