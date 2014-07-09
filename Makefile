@@ -25,7 +25,7 @@ client: io/gameevent.o io/eventmeta.o curseme/curseme.o curseme/menudriver.o cur
 raw_editor: curseme/curseme.o curseme/curselog.o curseme/window.o util/log.o tools/raw_editor_ncurses/main.o resource/raw.o game/bobject.o game/complexbobject.o game/atomicbobject.o game/compositebobject.o util/filesystem.o tools/raw_editor_ncurses/common.o tools/raw_editor_ncurses/complex.o tools/raw_editor_ncurses/composite.o util/packing.o game/bobjectmanager.o game/containerbase.o game/containerbobject.o game/observable.o util/timestamp.o util/uniquestringpair.o util/sectioneddata.o ui/menu.o curseme/menudriver.o ui/titlebox.o ui/prompt.o curseme/cursesmenudriver.o curseme/hotkeymenudriver.o util/serialize.o $(BOB_RESOURCES) game/combat.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
-treetest: tests/treetest.o util/log.o curseme/curseme.o curseme/curselog.o curseme/window.o util/timestamp.o
+treetest: tests/treetest.o util/timestamp.o util/log.o curseme/curseme.o curseme/curselog.o curseme/window.o
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 geomtest: tests/geom_test.o util/log.o curseme/curselog.o util/geom.o util/filesystem.o curseme/window.o curseme/renderer.o curseme/curseme.o util/timestamp.o
@@ -44,6 +44,6 @@ worldtest: io/gameevent.o tests/world_test.o util/log.o curseme/curselog.o world
 	./genproto $<
 
 clean:
-	rm -f genproto geomtest client server sockettest raw_editor test treetest worldtest io/*.o net/*.o util/*.o world/*.o tests/*.o resource/*.o curseme/*.o tools/raw_editor_ncurses/*.o game/*.o ui/*.o *.o protocol/*.o io/gameevent.h io/gameevent.cpp
+	rm -f genproto geomtest client server raw_editor test treetest worldtest io/*.o net/*.o util/*.o world/*.o tests/*.o resource/*.o curseme/*.o tools/raw_editor_ncurses/*.o game/*.o ui/*.o *.o protocol/*.o io/gameevent.h io/gameevent.cpp
 
 .SECONDARY:
