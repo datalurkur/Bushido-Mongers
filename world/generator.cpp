@@ -158,6 +158,8 @@ void WorldGenerator::PlaceAreaTransitions(Area* area) {
 }
 
 void WorldGenerator::GenerateArea(Area* area, const AreaDescriptor& descriptor, BObjectManager* objectManager) {
+  int i, j;
+
   Debug("Generating " << descriptor.name << " area");
 
   // Construct the raw area
@@ -181,10 +183,26 @@ void WorldGenerator::GenerateArea(Area* area, const AreaDescriptor& descriptor, 
 
   #pragma message "Generate this using the openness value"
   int averageOpenness = 3;
+  set<Vec2> wallWindow;
+  for(i = 0; i < averageOpenness; i++) {
+    for(j = 0; j < averageOpenness; j++) {
+      if(i == j && i == 0) { continue; }
+      wallWindow.insert(Vec2( i,  j));
+      if(i != 0) {
+        wallWindow.insert(Vec2(-i,  j));
+      }
+      if(j != 0) {
+        wallWindow.insert(Vec2( i, -j));
+      }
+      if(i != 0 && j != 0) {
+        wallWindow.insert(Vec2(-i, -j));
+      }
+    }
+  }
 
   #pragma message "Consider other ways of doing this"
-  for(int i = 0; i < areaSize.x; i++) {
-    for(int j = 0; j < areaSize.y; j++) {
+  for(i = 0; i < areaSize.x; i++) {
+    for(j = 0; j < areaSize.y; j++) {
       TileBase* tile = area->getTile(Vec2(i,j));
       if(tile->getType() != Ground) { continue; }
       // Determine the potential object density at this location (based on the object sparsity)
@@ -196,25 +214,19 @@ void WorldGenerator::GenerateArea(Area* area, const AreaDescriptor& descriptor, 
       #pragma message "Consider allowing multiple objects to be generated per-tile"
       if(rand() > iThresh) { continue; }
 
-      // Determine the type of object to generate
+      // Determine proximity to walls
       bool nearWall = false;
-      // This code is so painful, I just...I can't right now.  Just no
-      /*
-      for(int r = 1; r < averageOpenness; r++) {
-        int rSquared = r * r;
-        for(int k = -rSquared; k < rSquared; k++) {
-          if(((i + k        <  areaSize.x) && (j - rSquared >= 0         ) && area->getTile(Vec2(i + k,        j - rSquared))->getType() == Wall) ||
-             ((i + rSquared <  areaSize.x) && (j + k        <  areaSize.y) && area->getTile(Vec2(i + rSquared, j + k       ))->getType() == Wall) ||
-             ((i - k        >= 0         ) && (j + rSquared <  areaSize.y) && area->getTile(Vec2(i - k,        j + rSquared))->getType() == Wall) ||
-             ((i - rSquared >= 0         ) && (j - k        >= 0         ) && area->getTile(Vec2(i - rSquared, j - k       ))->getType() == Wall)) {
-            nearWall = true;
-            break;
-          }
+      Vec2 p(i, j);
+      for(auto w : wallWindow) {
+        Vec2 o = p + w;
+        if(o.x < 0 || o.x >= areaSize.x || o.y < 0 || o.y >= areaSize.y) { continue; }
+        if(area->getTile(o)->getType() == Wall) {
+          nearWall = true;
+          break;
         }
       }
-      */
-      nearWall = true;
 
+      // Determine the type of object to generate
       string objectType;
       if(nearWall && descriptor.peripheralObjects.size() > 0) {
         rand(descriptor.peripheralObjects, objectType);
@@ -224,14 +236,15 @@ void WorldGenerator::GenerateArea(Area* area, const AreaDescriptor& descriptor, 
         continue;
       }
 
+      // Create the object
       BObject* newObject = objectManager->createObjectFromPrototype(objectType);
       if(!newObject) {
         Error("Failed to create " << objectType);
         continue;
       }
 
+      // Set the object's initial location
       newObject->setLocation(tile);
-      Debug("Object successfully generated");
     }
   }
 }

@@ -34,7 +34,7 @@ bool Raw::unpack(const void* data, unsigned int size) {
       Error("Failed to load object " << section.first);
       return false;
     }
-    _objectMap[section.first] = object;
+    addObject(section.first, object);
   }
 
   return true;
