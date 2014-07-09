@@ -172,10 +172,16 @@ void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* cur
   }
 
   char c;
-  switch(tile->getType()) {
-    case TileType::Wall:   c = 'X'; break;
-    case TileType::Ground: c = '.'; break;
-    default:               c = '?'; break;
+  if(contents.size() > 0) {
+    // Generate a symbol by content
+    c = '+';
+  } else {
+    // Generate a symbol by terrain
+    switch(tile->getType()) {
+      case TileType::Wall:   c = 'X'; break;
+      case TileType::Ground: c = '.'; break;
+      default:               c = '?'; break;
+    }
   }
   _mapSource->setData(coords.x, coords.y, c, currentArea->isTileShrouded(coords) ? A_NORMAL : A_BOLD);
 }
