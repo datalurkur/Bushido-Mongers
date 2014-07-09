@@ -1,6 +1,7 @@
 #ifndef GENERATOR_H
 #define GENERATOR_H
 
+#include "world/descriptor.h"
 #include "world/world.h"
 #include "util/vector.h"
 
@@ -21,10 +22,13 @@ public:
     Random
   };
 
-  static World* GenerateWorld(int size, float sparseness, float connectedness, ConnectionMethod connectionMethod);
+  static World* GenerateWorld(int size, float sparseness, float connectedness, ConnectionMethod connectionMethod, BObjectManager* objectManager);
   static void PlaceAreaTransitions(Area* area);
-  static void GenerateCave(Area* area, float openness, float density);
-  static void GenerateHallways(Area* area, float density);
+
+  static void GenerateArea(Area* area, const AreaDescriptor& descriptor, BObjectManager* objectManager);
+
+  static void CarveNatural(Area* area, float openness, float density);
+  static void CarveHallways(Area* area, float density);
 
 //private:
   static void ParseAreas(Area* area, map<int, set<IVec2> >& grouped);

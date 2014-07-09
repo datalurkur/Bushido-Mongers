@@ -3,6 +3,8 @@
 #include "util/timer.h"
 #include "util/geom.h"
 #include "util/noise.h"
+#include "util/structure.h"
+#include "game/bobjectmanager.h"
 
 #include <vector>
 #include <set>
@@ -11,7 +13,7 @@
 
 #define WORLD_SIZE 1000
 
-World* WorldGenerator::GenerateWorld(int numFeatures, float sparseness, float connectedness, ConnectionMethod connectionMethod) {
+World* WorldGenerator::GenerateWorld(int numFeatures, float sparseness, float connectedness, ConnectionMethod connectionMethod, BObjectManager* objectManager) {
   // Determine the number of features the world should contain
   int averageFeatureSize = max(1, (int)(WORLD_SIZE * sparseness / 2));
   int midSize = WORLD_SIZE / 2;
@@ -110,8 +112,15 @@ World* WorldGenerator::GenerateWorld(int numFeatures, float sparseness, float co
     Area* area = new Area(name, feature->pos, Vec2(feature->radius, feature->radius));
 
     #pragma message "Do interesting area type generation"
-    // For now, just generate a bunch of caves
-    GenerateCave(area, 0.5, 0.5);
+    // ============ BEGIN HACK =============
+    // For now, hack in a cave area descriptor and use it to generate caves statically
+    AreaDescriptor desc("cave");
+    desc.isOutdoors = false;
+    desc.objectDensity = 0.2f;
+    desc.peripheralObjects.insert("rock");
+    // ============  END HACK  =============
+
+    GenerateArea(area, desc, objectManager);
 
     world->addArea(area);
     feature->area = area;
@@ -145,11 +154,89 @@ World* WorldGenerator::GenerateWorld(int numFeatures, float sparseness, float co
 void WorldGenerator::PlaceAreaTransitions(Area* area) {
   for(string connectedName : area->getConnections()) {
     // Determine the unit vector that points in the direction of the connected area
-    
   }
 }
 
-void WorldGenerator::GenerateCave(Area* area, float openness, float density) {
+void WorldGenerator::GenerateArea(Area* area, const AreaDescriptor& descriptor, BObjectManager* objectManager) {
+  Debug("Generating " << descriptor.name << " area");
+
+  // Construct the raw area
+  if(descriptor.isConstructed) {
+    if(descriptor.isOutdoors) {
+      #pragma message "Write a factory for this"
+    } else {
+      #pragma message "Write a factory for this"
+    }
+  } else {
+    if(descriptor.isOutdoors) {
+      #pragma message "Write a factory for this"
+    } else {
+      CarveNatural(area, descriptor.openness, descriptor.density);
+    }
+  }
+
+  // Populate the area with objects
+  const Vec2& areaSize = (Vec2)area->getSize();
+  Vec2 halfAreaSize = areaSize / 2.0f;
+
+  #pragma message "Generate this using the openness value"
+  int averageOpenness = 3;
+
+  #pragma message "Consider other ways of doing this"
+  for(int i = 0; i < areaSize.x; i++) {
+    for(int j = 0; j < areaSize.y; j++) {
+      TileBase* tile = area->getTile(Vec2(i,j));
+      if(tile->getType() != Ground) { continue; }
+      // Determine the potential object density at this location (based on the object sparsity)
+      float ratioToCenter = (halfAreaSize - Vec2(i, j)).magnitude() / halfAreaSize.magnitude();
+      float threshold = (2.0f * descriptor.objectDensity * (1.0f - descriptor.objectSparsity) * ratioToCenter) + (descriptor.objectDensity * descriptor.objectSparsity);
+      float iThresh = threshold * RAND_MAX;
+      //Debug("Ground at " << Vec2(i, j) << " has ratio to center " << ratioToCenter << " and object occurence threshold of " << threshold);
+
+      #pragma message "Consider allowing multiple objects to be generated per-tile"
+      if(rand() > iThresh) { continue; }
+
+      // Determine the type of object to generate
+      bool nearWall = false;
+      // This code is so painful, I just...I can't right now.  Just no
+      /*
+      for(int r = 1; r < averageOpenness; r++) {
+        int rSquared = r * r;
+        for(int k = -rSquared; k < rSquared; k++) {
+          if(((i + k        <  areaSize.x) && (j - rSquared >= 0         ) && area->getTile(Vec2(i + k,        j - rSquared))->getType() == Wall) ||
+             ((i + rSquared <  areaSize.x) && (j + k        <  areaSize.y) && area->getTile(Vec2(i + rSquared, j + k       ))->getType() == Wall) ||
+             ((i - k        >= 0         ) && (j + rSquared <  areaSize.y) && area->getTile(Vec2(i - k,        j + rSquared))->getType() == Wall) ||
+             ((i - rSquared >= 0         ) && (j - k        >= 0         ) && area->getTile(Vec2(i - rSquared, j - k       ))->getType() == Wall)) {
+            nearWall = true;
+            break;
+          }
+        }
+      }
+      */
+      nearWall = true;
+
+      string objectType;
+      if(nearWall && descriptor.peripheralObjects.size() > 0) {
+        rand(descriptor.peripheralObjects, objectType);
+      } else if(descriptor.prominentObjects.size() > 0) {
+        rand(descriptor.prominentObjects, objectType);
+      } else {
+        continue;
+      }
+
+      BObject* newObject = objectManager->createObjectFromPrototype(objectType);
+      if(!newObject) {
+        Error("Failed to create " << objectType);
+        continue;
+      }
+
+      newObject->setLocation(tile);
+      Debug("Object successfully generated");
+    }
+  }
+}
+
+void WorldGenerator::CarveNatural(Area* area, float openness, float density) {
   Perlin p(256);
   Vec2 scalar = (Vec2)area->getSize() / (32 * density);
   double cutoff = 0.5 - openness;
@@ -178,7 +265,7 @@ void WorldGenerator::GenerateCave(Area* area, float openness, float density) {
 */
 }
 
-void WorldGenerator::GenerateHallways(Area* area, float density) {
+void WorldGenerator::CarveHallways(Area* area, float density) {
 }
 
 void WorldGenerator::ParseAreas(Area* area, map<int, set<IVec2> >& grouped) {

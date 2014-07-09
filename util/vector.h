@@ -22,8 +22,8 @@ public:
   void normalize();
   void clampLower(T l);
   void clampUpper(T u);
-  T magnitude() const;
-  T magnitudeSquared() const;
+  T magnitude();
+  T magnitudeSquared();
 
   template <typename S>
   operator VectorBase<S>();
@@ -77,7 +77,7 @@ void VectorBase<T>::clampUpper(T u) {
 }
 
 template <typename T>
-T VectorBase<T>::magnitude() const {
+T VectorBase<T>::magnitude() {
   if(!_magnitudeCached) {
     _cachedMagnitude = sqrt(magnitudeSquared());
     _magnitudeCached = true;
@@ -86,7 +86,7 @@ T VectorBase<T>::magnitude() const {
 }
 
 template <typename T>
-T VectorBase<T>::magnitudeSquared() const {
+T VectorBase<T>::magnitudeSquared() {
   return (x * x) + (y * y);
 }
 

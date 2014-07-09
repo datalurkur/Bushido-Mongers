@@ -22,7 +22,7 @@ bool GameCore::generateWorld(const string &rawSet) {
 
   // Maybe it'll be interesting in the future to allow tweaks to these parameters, but for now let's just focus on getting a world created with minimal user interaction
   // Just 1 feature for simplicity
-  _world = WorldGenerator::GenerateWorld(1, 0.5, 0.5, WorldGenerator::ConnectionMethod::MaxDistance);
+  _world = WorldGenerator::GenerateWorld(1, 0.5, 0.5, WorldGenerator::ConnectionMethod::MaxDistance, _objectManager);
 
   return (_world != 0);
 }
