@@ -105,7 +105,7 @@ void GameCore::createCharacter(PlayerID player, const string& characterType, Eve
   set<IVec2> visibleCoords;
   getViewFrom(player, startTile->getCoordinates(), visibleCoords);
 
-  _observers[player] = ObjectObserver();
+  _observers[player] = ObjectObserver(_objectManager);
   _observers[player].areaChanges(startArea, visibleCoords, results);
 }
 

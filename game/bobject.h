@@ -21,6 +21,8 @@ public:
 
   void assignID(BObjectID id);
 
+  void onChanged();
+
   // Nomenclature
   const string& getName() const;
   const string& getArchetype() const;

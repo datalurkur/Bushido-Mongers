@@ -18,6 +18,13 @@ void BObject::assignID(BObjectID id) {
   _id = id;
 }
 
+// When an object changes, mark its location as having changed (this removes the need for us to check recursively for changes)
+void BObject::onChanged() {
+  if(_location) {
+    _location->markChanged();
+  }
+}
+
 bool BObject::addExtension(ExtensionType type, const ProtoBObjectExtension& data) {
   ExtensionMap::iterator itr = _extensions.find(type);
   if(itr == _extensions.end()) {

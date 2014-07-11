@@ -1,7 +1,11 @@
 #include "game/objectobserver.h"
 #include "util/structure.h"
 
+// This basically only exists so that std::map can instantiate it properly
 ObjectObserver::ObjectObserver(): _currentArea(0), _tileData(300), _objectData(300) {
+}
+
+ObjectObserver::ObjectObserver(BObjectManager* manager): _manager(manager), _currentArea(0), _tileData(300), _objectData(300) {
 }
 
 void ObjectObserver::areaChanges(Area* area, const set<IVec2>& view, EventQueue& results) {
@@ -35,13 +39,19 @@ void ObjectObserver::viewChanges(const set<IVec2>& newView, EventQueue& results)
       if(!_tileData.has(c)) {
         Debug("Newly visible tile " << c << " has not yet been sent");
       } else {
-        Debug("Newly visible tile " << c << " has been updated since " << _tileData.get(c));
+        Debug("Newly visible tile " << c << " was last updated " << _tileData.get(c) << ", new data will be sent");
       }
 */
-      updated.insert(make_pair(c, TileDatum(_currentArea->getTile(c))));
+      TileBase* tile = _currentArea->getTile(c);
+      updated.insert(make_pair(c, tile));
       _tileData.set(c, currentTime);
+
+      // Check for updated object data
+      for(auto object : tile->getContents()) {
+        objectViewed(object, results);
+      }
     } else {
-      //Debug("Newly visible tile " << c << " has seen no updates since " << tileData.get(c));
+      //Debug("Newly visible tile " << c << " was last updated " << tileData.get(c) << ", and is up-to-date");
       newlyVisible.insert(c);
     }
   }
@@ -51,6 +61,18 @@ void ObjectObserver::viewChanges(const set<IVec2>& newView, EventQueue& results)
   results.pushEvent(new TileDataEvent(shrouded, newlyVisible, updated));
 
   _currentView = newView;
+}
+
+void ObjectObserver::objectViewed(BObjectID id, EventQueue& results) {
+  Debug("Player observes object " << id);
+  BObject* object = _manager->getObject(id);
+  if(!_objectData.has(id) || (_objectData.get(id) < object->lastChanged())) {
+    Debug("Object has updated, data will be sent");
+    #pragma message "Push object data onto the results stack"
+    _objectData.set(id, Clock.getTime());
+  } else {
+    Debug("Object has not updated since being seen last");
+  }
 }
 
 bool ObjectObserver::canSee(Area* area, const IVec2& location) {

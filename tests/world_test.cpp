@@ -53,7 +53,14 @@ int main() {
   int area_size = 128;
   m_area = new Area("Test Area", IVec2(10, 20), IVec2(area_size, area_size));
   const IVec2& areaSize = m_area->getSize();
-  WorldGenerator::GenerateCave(m_area, 0.5, 1.0);
+
+  AreaDescriptor desc("cave");
+  desc.isOutdoors = false;
+  desc.objectDensity = 0.2f;
+  desc.peripheralObjects.insert("rock");
+  // ============  END HACK  =============
+
+  GenerateArea(m_area, desc, 0);
 
   map<int, set<IVec2>> grouped;
   WorldGenerator::ParseAreas(m_area, grouped);

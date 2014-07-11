@@ -177,6 +177,8 @@ void WorldGenerator::GenerateArea(Area* area, const AreaDescriptor& descriptor, 
     }
   }
 
+  if(!objectManager) { return; }
+
   // Populate the area with objects
   const Vec2& areaSize = (Vec2)area->getSize();
   Vec2 halfAreaSize = areaSize / 2.0f;
