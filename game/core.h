@@ -37,6 +37,7 @@ public:
 private:
   void getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibleTiles);
   bool checkCharacterSanity(PlayerID player);
+  void packRaws(EventQueue& results);
 
 private:
   // World and objects

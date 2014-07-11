@@ -77,6 +77,10 @@ void LocalBackEnd::consumeEvents() {
 void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
   EventQueue results;
   switch(event->type) {
+    case RawData:
+      Debug("Received raw data from server");
+      unpackRaws((RawDataEvent*)event);
+      break;
     case AreaData:
       Debug("Area data received from server");
       _world.processWorldEvent(event, results);
@@ -112,6 +116,12 @@ void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
 
   for(auto result : results) {
     sendToServer(result.get());
+  }
+}
+
+void LocalBackEnd::unpackRaws(RawDataEvent* event) {
+  if(!_raw.unpack((void*)(event->packed.c_str()), event->packed.size())) {
+    Error("Failed to unpack raws from server");
   }
 }
 

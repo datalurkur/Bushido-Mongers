@@ -25,6 +25,10 @@ CharacterNotReady {
   string reason;
 };
 
+RawData {
+  string packed;
+};
+
 AreaData {
   string name;
   IVec2 position;

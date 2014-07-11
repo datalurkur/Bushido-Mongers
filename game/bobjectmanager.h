@@ -15,6 +15,8 @@ public:
 
   BObject* getObject(BObjectID id);
 
+  Raw* getRaws() const;
+
 private:
   BObjectID _objectCount;
   BObjectMap _objectMap;

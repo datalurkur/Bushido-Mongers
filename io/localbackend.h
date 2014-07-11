@@ -5,6 +5,7 @@
 #include "world/clientworld.h"
 #include "curseme/curselog.h"
 #include "curseme/renderer.h"
+#include "resource/raw.h"
 
 #include <thread>
 #include <mutex>
@@ -28,6 +29,7 @@ private:
   void consumeEvents();
   void consumeSingleEvent(GameEvent* event);
 
+  void unpackRaws(RawDataEvent* event);
   void changeArea();
   void updateMap(TileDataEvent* event);
   void updateObject(ObjectDataEvent* event);
@@ -45,6 +47,7 @@ private:
 
   // Local representation of the world
   ClientWorld _world;
+  Raw _raw;
   RenderSource* _mapSource;
   BObjectID _characterID;
 

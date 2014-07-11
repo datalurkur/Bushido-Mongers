@@ -97,6 +97,9 @@ void GameCore::createCharacter(PlayerID player, const string& characterType, Eve
   Debug("Character given initial location " << startTile);
   character->setLocation(startTile);
 
+  // Transfer raw data
+  packRaws(results);
+
   // Set active character
   _playerMap.insert(player, character->getID());
   results.pushEvent(new CharacterReadyEvent(character->getID()));
@@ -236,4 +239,19 @@ void GameCore::getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibl
     }
   }
   Info("There are " << visibleTiles.size() << " tiles visible to " << player << " from " << pos);
+}
+
+void GameCore::packRaws(EventQueue& results) {
+  // DEBUG - Comment this out for now - it's fucking with the I/O somehow
+  return;
+
+  void* rawData;
+  unsigned int rawDataSize;
+  if(!_objectManager->getRaws()->pack(&rawData, rawDataSize)) {
+    Error("Failed to pack raws for client");
+    return;
+  }
+  string rawDataString((char*)rawData, rawDataSize);
+  results.pushEvent(new RawDataEvent(rawDataString));
+  free(rawData);
 }

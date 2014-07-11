@@ -93,3 +93,7 @@ BObject* BObjectManager::getObject(BObjectID id) {
   }
   return itr->second;
 }
+
+Raw* BObjectManager::getRaws() const {
+  return _raws;
+}
