@@ -1,6 +1,6 @@
 #include "resource/protoatomic.h"
 
-ProtoAtomicBObject::ProtoAtomicBObject(BObjectType t): ProtoBObject(t), weight(0) {}
+ProtoAtomicBObject::ProtoAtomicBObject(const string& n, BObjectType t): ProtoBObject(n, t), weight(0) {}
 ProtoAtomicBObject::~ProtoAtomicBObject() {}
 
 void ProtoAtomicBObject::pack(SectionedData<ObjectSectionType>& sections) const {

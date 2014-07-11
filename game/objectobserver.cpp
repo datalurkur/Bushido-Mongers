@@ -64,14 +64,14 @@ void ObjectObserver::viewChanges(const set<IVec2>& newView, EventQueue& results)
 }
 
 void ObjectObserver::objectViewed(BObjectID id, EventQueue& results) {
-  Debug("Player observes object " << id);
+  //Debug("Player observes object " << id);
   BObject* object = _manager->getObject(id);
   if(!_objectData.has(id) || (_objectData.get(id) < object->lastChanged())) {
-    Debug("Object has updated, data will be sent");
-    #pragma message "Push object data onto the results stack"
+    //Debug("Object has updated, data will be sent");
+    results.pushEvent(new ObjectDataEvent(id, object->getProto()->name));
     _objectData.set(id, Clock.getTime());
   } else {
-    Debug("Object has not updated since being seen last");
+    //Debug("Object has not updated since being seen last");
   }
 }
 

@@ -19,6 +19,8 @@ public:
   BObject(BObjectManager* manager, BObjectType type, const ProtoBObject* proto);
   virtual ~BObject();
 
+  const ProtoBObject* getProto() const;
+
   void assignID(BObjectID id);
 
   void onChanged();

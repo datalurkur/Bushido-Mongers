@@ -7,6 +7,7 @@
 #include "game/atomicbobject.h"
 #include "game/compositebobject.h"
 #include "game/complexbobject.h"
+#include "game/containerbobject.h"
 
 bool Raw::unpack(const void* data, unsigned int size) {
   unsigned int offset = 0;
@@ -29,7 +30,7 @@ bool Raw::unpack(const void* data, unsigned int size) {
   //sections.debug();
 
   for(auto& section : sections) {
-    ProtoBObject* object = unpackProto(section.second.data, section.second.size);
+    ProtoBObject* object = unpackProto(section.first, section.second.data, section.second.size);
     if(!object) {
       Error("Failed to load object " << section.first);
       return false;
@@ -40,7 +41,7 @@ bool Raw::unpack(const void* data, unsigned int size) {
   return true;
 }
 
-ProtoBObject* Raw::unpackProto(const void* data, unsigned int size) {
+ProtoBObject* Raw::unpackProto(const string& name, const void* data, unsigned int size) {
   // Instantiate and unpack the section data
   SectionedData<ObjectSectionType> sections;
   sections.unpack(data, size);
@@ -60,13 +61,16 @@ ProtoBObject* Raw::unpackProto(const void* data, unsigned int size) {
   ProtoBObject* object;
   switch(type) {
   case AtomicType:
-    object = new ProtoAtomicBObject();
+    object = new ProtoAtomicBObject(name);
     break;
   case CompositeType:
-    object = new ProtoCompositeBObject();
+    object = new ProtoCompositeBObject(name);
     break;
   case ComplexType:
-    object = new ProtoComplexBObject();
+    object = new ProtoComplexBObject(name);
+    break;
+  case ContainerType:
+    object = new ProtoContainerBObject(name);
     break;
   default:
     Error("Proto unpacking not implemented for object type " << type);

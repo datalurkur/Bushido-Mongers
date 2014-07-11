@@ -5,7 +5,7 @@
 
 class ProtoAtomicBObject: public ProtoBObject {
 public:
-  ProtoAtomicBObject(BObjectType t = AtomicType);
+  ProtoAtomicBObject(const string& name, BObjectType t = AtomicType);
   virtual ~ProtoAtomicBObject();
 
   virtual void pack(SectionedData<ObjectSectionType>& sections) const;

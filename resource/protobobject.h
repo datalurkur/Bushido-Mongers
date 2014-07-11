@@ -15,12 +15,13 @@ public:
   typedef map<ExtensionType, ProtoBObjectExtension*> ProtoExtensionMap;
 
 public:
-  ProtoBObject(BObjectType t);
+  ProtoBObject(const string& name, BObjectType type);
   virtual ~ProtoBObject();
 
   virtual void pack(SectionedData<ObjectSectionType>& sections) const;
   virtual bool unpack(const SectionedData<ObjectSectionType>& sections);
 
+  string name;
   BObjectType type;
   ProtoExtensionMap extensions;
   list<string> keywords;

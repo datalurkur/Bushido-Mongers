@@ -1,6 +1,6 @@
 #include "resource/protocomposite.h"
 
-ProtoCompositeBObject::ProtoCompositeBObject(BObjectType t): ProtoBObject(t) {}
+ProtoCompositeBObject::ProtoCompositeBObject(const string& n, BObjectType t): ProtoBObject(n, t) {}
 ProtoCompositeBObject::~ProtoCompositeBObject() {}
 
 void ProtoCompositeBObject::pack(SectionedData<ObjectSectionType>& sections) const {

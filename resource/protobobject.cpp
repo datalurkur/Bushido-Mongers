@@ -1,6 +1,6 @@
 #include "resource/protobobject.h"
 
-ProtoBObject::ProtoBObject(BObjectType t): type(t) {}
+ProtoBObject::ProtoBObject(const string& n, BObjectType t): name(n), type(t) {}
 ProtoBObject::~ProtoBObject() {}
 
 void ProtoBObject::pack(SectionedData<ObjectSectionType>& sections) const {

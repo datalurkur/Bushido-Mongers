@@ -35,7 +35,7 @@ public:
   bool deleteObject(const string& name);
 
 private:
-  ProtoBObject* unpackProto(const void* data, unsigned int size);
+  ProtoBObject* unpackProto(const string& name, const void* data, unsigned int size);
 
 private:
   typedef map<string, ProtoBObject*> ProtoMap;

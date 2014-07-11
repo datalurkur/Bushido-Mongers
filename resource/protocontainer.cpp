@@ -1,6 +1,6 @@
 #include "resource/protocontainer.h"
 
-ProtoContainerBObject::ProtoContainerBObject(BObjectType t): ProtoComplexBObject(t) {}
+ProtoContainerBObject::ProtoContainerBObject(const string& n, BObjectType t): ProtoComplexBObject(n, t) {}
 ProtoContainerBObject::~ProtoContainerBObject() {}
 
 void ProtoContainerBObject::pack(SectionedData<ObjectSectionType>& sections) const {

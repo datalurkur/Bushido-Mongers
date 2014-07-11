@@ -87,6 +87,10 @@ void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
       _world.processWorldEvent(event, results);
       updateMap((TileDataEvent*)event);
       break;
+    case ObjectData:
+      //Debug("Object data received from server");
+      updateObject((ObjectDataEvent*)event);
+      break;
     case CharacterReady:
       Debug("Character is ready");
       changeArea();
@@ -154,6 +158,11 @@ void LocalBackEnd::updateMap(TileDataEvent *event) {
   }
 
   _mapPanel->render();
+}
+
+void LocalBackEnd::updateObject(ObjectDataEvent* event) {
+  Debug("Updating data for object " << event->ID << " (typed " << event->prototype << ")");
+  #pragma message "Do something with this data"
 }
 
 void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* currentArea) {

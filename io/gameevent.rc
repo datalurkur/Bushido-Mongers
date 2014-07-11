@@ -37,6 +37,11 @@ TileData {
   map<IVec2, TileDatum> updated;
 };
 
+ObjectData {
+  BObjectID ID;
+  string prototype;
+};
+
 MoveCharacter {
   IVec2 direction;
 };

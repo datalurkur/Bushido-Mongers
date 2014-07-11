@@ -13,6 +13,10 @@ BObject::~BObject() {
   setLocation(0);
 }
 
+const ProtoBObject* BObject::getProto() const {
+  return _proto;
+}
+
 void BObject::assignID(BObjectID id) {
   ASSERT(_id == 0, "Object has already been assigned an ID");
   _id = id;

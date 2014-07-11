@@ -5,7 +5,7 @@
 
 class ProtoComplexBObject : public ProtoBObject {
 public:
-  ProtoComplexBObject(BObjectType t = ComplexType);
+  ProtoComplexBObject(const string& name, BObjectType t = ComplexType);
   virtual ~ProtoComplexBObject();
 
   virtual void pack(SectionedData<ObjectSectionType>& sections) const;

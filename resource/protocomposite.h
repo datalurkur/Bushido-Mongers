@@ -5,7 +5,7 @@
 
 class ProtoCompositeBObject : public ProtoBObject {
 public:
-  ProtoCompositeBObject(BObjectType t = CompositeType);
+  ProtoCompositeBObject(const string& name, BObjectType t = CompositeType);
   virtual ~ProtoCompositeBObject();
 
   virtual void pack(SectionedData<ObjectSectionType>& sections) const;
