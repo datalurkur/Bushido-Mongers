@@ -23,7 +23,7 @@ public:
   void clampLower(T l);
   void clampUpper(T u);
   T magnitude();
-  T magnitudeSquared();
+  T magnitudeSquared() const;
 
   template <typename S>
   operator VectorBase<S>();
@@ -86,7 +86,7 @@ T VectorBase<T>::magnitude() {
 }
 
 template <typename T>
-T VectorBase<T>::magnitudeSquared() {
+T VectorBase<T>::magnitudeSquared() const {
   return (x * x) + (y * y);
 }
 

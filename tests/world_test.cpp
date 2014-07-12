@@ -60,7 +60,7 @@ int main() {
   desc.peripheralObjects.insert("rock");
   // ============  END HACK  =============
 
-  GenerateArea(m_area, desc, 0);
+  WorldGenerator::GenerateArea(m_area, desc, 0);
 
   map<int, set<IVec2>> grouped;
   WorldGenerator::ParseAreas(m_area, grouped);
