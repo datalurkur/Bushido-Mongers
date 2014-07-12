@@ -92,13 +92,13 @@ void addObject(Raw& raw) {
   DynamicMenu objectTypeMenu("Choose an object type");
 
   objectTypeMenu.addChoice("Atomic (single-material object)", [&]() {
-    raw.addObject(objectName, (ProtoBObject*)new ProtoAtomicBObject());
+    raw.addObject(objectName, (ProtoBObject*)new ProtoAtomicBObject(objectName));
   });
   objectTypeMenu.addChoice("Composite (layered object)", [&]() {
-    raw.addObject(objectName, (ProtoBObject*)new ProtoCompositeBObject());
+    raw.addObject(objectName, (ProtoBObject*)new ProtoCompositeBObject(objectName));
   });
   objectTypeMenu.addChoice("Complex (component objects connected in arbitrary ways)", [&]() {
-    raw.addObject(objectName, (ProtoBObject*)new ProtoComplexBObject());
+    raw.addObject(objectName, (ProtoBObject*)new ProtoComplexBObject(objectName));
   });
 
   objectTypeMenu.act();
