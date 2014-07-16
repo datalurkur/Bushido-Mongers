@@ -54,7 +54,7 @@ template <typename T>
 void SectionedData<T>::debug() const {
   Info("SectionedData contains " << _sections.size() << " sections");
   for(auto& section : _sections) {
-    Info("\tSection " << section.first << " contains " << section.second.size() << " bytes");
+    Info("  Section " << section.first << " contains " << section.second.size() << " bytes");
   }
 }
 
