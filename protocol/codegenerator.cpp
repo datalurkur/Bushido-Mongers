@@ -42,7 +42,7 @@ bool CodeGenerator::Generate(const string& resource) {
   sourceData << "GameEvent* GameEvent::Unpack(istringstream& str) {\n" <<
                 "  GameEvent* ret;\n" <<
                 "  GameEventType temp;\n" <<
-                "  bufferFromStream(str, temp);\n" <<
+                "  genericBufferFromStream(str, temp);\n" <<
                 "  switch(temp) {\n";
   for(auto object : objects) {
     string constructorArgs = "";

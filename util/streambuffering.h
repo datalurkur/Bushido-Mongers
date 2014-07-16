@@ -5,23 +5,47 @@
 #include "util/stringhelper.h"
 #include "util/vector.h"
 
+#include <list>
 #include <map>
 #include <set>
 #include <sstream>
 
 using namespace std;
 
+class EndOfStreamException : public exception {
+  virtual const char* what() const throw() { return "Prematurely reached the end of the stream"; }
+};
+
 // Generic numeric type buffering
 template <typename T>
-void bufferToStream(ostringstream& stream, const T& value) {
+void genericBufferToStream(ostringstream& stream, const T& value) {
   stream.write((char*)&value, sizeof(T));
 }
 
 template <typename T>
-void bufferFromStream(istringstream& stream, T& value) {
+void genericBufferFromStream(istringstream& stream, T& value) {
   stream.read((char*)&value, sizeof(T));
-  ASSERT(stream, "Failed to read value from stream");
+  if(!stream) { throw EndOfStreamException(); }
 }
+
+// Basic type buffering
+// We define these explicitly to avoid complex types being lumped into overly simplistic buffering functions
+extern void bufferToStream(ostringstream& stream, const char& value);
+extern void bufferFromStream(istringstream& stream, char& value);
+extern void bufferToStream(ostringstream& stream, const short& value);
+extern void bufferFromStream(istringstream& stream, short& value);
+extern void bufferToStream(ostringstream& stream, const int& value);
+extern void bufferFromStream(istringstream& stream, int& value);
+extern void bufferToStream(ostringstream& stream, const float& value);
+extern void bufferFromStream(istringstream& stream, float& value);
+extern void bufferToStream(ostringstream& stream, const double& value);
+extern void bufferFromStream(istringstream& stream, double& value);
+extern void bufferToStream(ostringstream& stream, const size_t& value);
+extern void bufferFromStream(istringstream& stream, size_t& value);
+
+// std::string buffering
+extern void bufferToStream(ostringstream& stream, const string& value);
+extern void bufferFromStream(istringstream& stream, string& value);
 
 // vector buffering
 template <typename T>
@@ -34,6 +58,25 @@ template <typename T>
 void bufferFromStream(istringstream& stream, VectorBase<T>& v) {
   bufferFromStream(stream, v.x);
   bufferFromStream(stream, v.y);
+}
+
+// std::list buffering
+template <typename T>
+void bufferToStream(ostringstream& stream, const list<T>& l) {
+  bufferToStream(stream, l.size());
+  for(auto i : l) {
+    bufferToStream(stream, i);
+  }
+}
+template <typename T>
+void bufferFromStream(istringstream& stream, list<T>& l) {
+  size_t size;
+  bufferFromStream(stream, size);
+  for(size_t i = 0; i < size; i++) {
+    T val;
+    bufferFromStream(stream, val);
+    l.push_back(val);
+  }
 }
 
 // std::set buffering

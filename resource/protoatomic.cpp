@@ -8,14 +8,14 @@ void ProtoAtomicBObject::pack(SectionedData<ObjectSectionType>& sections) const 
 
   SectionedData<AttributeSectionType> atomicData;
   atomicData.addSection<float>(WeightAttribute, weight);
-  sections.addSubSections(AtomicData, atomicData);
+  sections.addSection(AtomicData, atomicData);
 }
 
 bool ProtoAtomicBObject::unpack(const SectionedData<ObjectSectionType>& sections) {
   if(!ProtoBObject::unpack(sections)) { return false; }
 
   SectionedData<AttributeSectionType> atomicData;
-  if(!sections.getSubSections(AtomicData, atomicData)) { return false; }
+  if(!sections.getSection(AtomicData, atomicData)) { return false; }
 
   if(!atomicData.getSection<float>(WeightAttribute, weight)) {
     Error("Weight data not present");

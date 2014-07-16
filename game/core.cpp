@@ -242,16 +242,12 @@ void GameCore::getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibl
 }
 
 void GameCore::packRaws(EventQueue& results) {
-  // DEBUG - Comment this out for now - it's fucking with the I/O somehow
+  // HOW is this still screwing with the I/O?  Something is weird here...
   return;
-
-  void* rawData;
-  unsigned int rawDataSize;
-  if(!_objectManager->getRaws()->pack(&rawData, rawDataSize)) {
+  ostringstream stream(ios_base::binary);
+  if(!_objectManager->getRaws()->pack(stream)) {
     Error("Failed to pack raws for client");
     return;
   }
-  string rawDataString((char*)rawData, rawDataSize);
-  results.pushEvent(new RawDataEvent(rawDataString));
-  free(rawData);
+  //results.pushEvent(new RawDataEvent(rawDataString));
 }

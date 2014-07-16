@@ -28,5 +28,4 @@ struct GameEvent {
   static GameEvent* Unpack(istringstream& str);
 };
 
-
 #endif

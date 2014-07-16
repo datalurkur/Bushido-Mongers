@@ -19,7 +19,8 @@ BObjectManager::BObjectManager(const string& rawSet): _objectCount(0) {
       Error("Failed to read data from " << rawName);
       continue;
     }
-    if(!_raws->unpack(data, dataSize)) {
+    istringstream stream(string((char*)data, dataSize));
+    if(!_raws->unpack(stream)) {
       Error("Failed to load data from " << rawName);
     }
     free(data);

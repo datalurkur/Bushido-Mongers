@@ -40,17 +40,16 @@ bool getRawsList(const string& dir, list<string> &raws) {
 }
 
 void saveRaw(Raw& raw, const string& dir, const string& name) {
-  void* rawData;
-  unsigned int size;
-  if(!raw.pack(&rawData, size)) {
+  ostringstream stream;
+  if(!raw.pack(stream)) {
     Error("Failed to pack raw data");
     return;
   }
+  string packedData = stream.str();
 
-  if(!FileSystem::SaveFileData(FileSystem::JoinFilename(dir, name), rawData, size)) {
+  if(!FileSystem::SaveFileData(FileSystem::JoinFilename(dir, name), (void*)packedData.c_str(), packedData.size())) {
     Error("Failed to save raw data to " << name);
   }
-  free(rawData);
 }
 
 void createRaw(const string& dir) {
@@ -167,9 +166,12 @@ void editRaw(const string& dir, const string& name) {
     return;
   }
 
-  Raw raw;
-  raw.unpack(fileData, fileSize);
+  string stringData((char*)fileData, fileSize);
   free(fileData);
+
+  istringstream stream(stringData);
+  Raw raw;
+  raw.unpack(stream);
 
   DynamicMenu rawMenu("Editing " + name);
 

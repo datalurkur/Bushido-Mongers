@@ -7,18 +7,18 @@ void ProtoCompositeBObject::pack(SectionedData<ObjectSectionType>& sections) con
   ProtoBObject::pack(sections);
 
   SectionedData<AttributeSectionType> compositeData;
-  compositeData.addStringListSection(LayersList, layers);
+  compositeData.addSection(LayersList, layers);
 
-  sections.addSubSections(CompositeData, compositeData);
+  sections.addSection(CompositeData, compositeData);
 }
 
 bool ProtoCompositeBObject::unpack(const SectionedData<ObjectSectionType>& sections) {
   if(!ProtoBObject::unpack(sections)) { return false; }
 
   SectionedData<AttributeSectionType> compositeData;
-  if(!sections.getSubSections(CompositeData, compositeData)) { return false; }
+  if(!sections.getSection(CompositeData, compositeData)) { return false; }
 
-  if(!compositeData.getStringListSection(LayersList, layers)) { return false; }
+  if(!compositeData.getSection(LayersList, layers)) { return false; }
 
   return true;
 }

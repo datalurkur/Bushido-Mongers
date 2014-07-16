@@ -1,7 +1,7 @@
 #include "resource/raw.h"
 
 #include "util/log.h"
-#include "util/packing.h"
+#include "util/streambuffering.h"
 #include "util/sectioneddata.h"
 
 #include "game/atomicbobject.h"
@@ -9,10 +9,9 @@
 #include "game/complexbobject.h"
 #include "game/containerbobject.h"
 
-bool Raw::unpack(const void* data, unsigned int size) {
-  unsigned int offset = 0;
+bool Raw::unpack(istringstream& stream) {
   RawHeader header;
-  ReadFromBuffer<RawHeader>(data, size, offset, header);
+  genericBufferFromStream(stream, header);
 
   if(header.magic != MAGIC) {
     Error("Raw magic string does not match");
@@ -24,13 +23,13 @@ bool Raw::unpack(const void* data, unsigned int size) {
   }
 
   SectionedData<string> sections;
-  sections.unpack(&((char*)data)[offset], size - offset);
+  sections.unpack(stream);
 
   // Debug print
   //sections.debug();
 
   for(auto& section : sections) {
-    ProtoBObject* object = unpackProto(section.first, section.second.data, section.second.size);
+    ProtoBObject* object = unpackProto(section.first, section.second);
     if(!object) {
       Error("Failed to load object " << section.first);
       return false;
@@ -41,10 +40,12 @@ bool Raw::unpack(const void* data, unsigned int size) {
   return true;
 }
 
-ProtoBObject* Raw::unpackProto(const string& name, const void* data, unsigned int size) {
+ProtoBObject* Raw::unpackProto(const string& name, const string& objectData) {
+  istringstream str(objectData);
+
   // Instantiate and unpack the section data
   SectionedData<ObjectSectionType> sections;
-  sections.unpack(data, size);
+  sections.unpack(str);
 
   // Get the object type and check it for sanity
   BObjectType type;
@@ -86,31 +87,21 @@ ProtoBObject* Raw::unpackProto(const string& name, const void* data, unsigned in
   return object;
 }
 
-bool Raw::pack(void** data, unsigned int& size) const {
+bool Raw::pack(ostringstream& str) const {
   RawHeader header;
   header.magic = MAGIC;
   header.version = VERSION;
+  genericBufferToStream(str, header);
 
   SectionedData<string> sections;
   for(auto& itr : _objectMap) {
     SectionedData<ObjectSectionType> objectSections;
     objectSections.addSection<BObjectType>(TypeSection, itr.second->type);
     itr.second->pack(objectSections);
-    sections.addSubSections(itr.first, objectSections);
+    sections.addSection<SectionedData<ObjectSectionType> >(itr.first, objectSections);
   }
-
   sections.debug();
-
-  unsigned int sectionDataSize = sections.getPackedSize();
-  size = sectionDataSize + sizeof(RawHeader);
-
-  (*data) = malloc(size);
-  if(!*data) {
-    Error("Failed to allocate memory for packed raw data");
-    return false;
-  }
-  memcpy(*data, &header, sizeof(RawHeader));
-  sections.pack(&((char*)*data)[sizeof(RawHeader)], sectionDataSize);
+  sections.pack(str);
 
   return true;
 }

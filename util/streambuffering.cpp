@@ -1,16 +1,26 @@
 #include "util/streambuffering.h"
 
-// string implementation
-template <>
+void bufferToStream(ostringstream& stream, const char& value)   { genericBufferToStream(stream, value); }
+void bufferFromStream(istringstream& stream, char& value)       { genericBufferFromStream(stream, value); }
+void bufferToStream(ostringstream& stream, const short& value)  { genericBufferToStream(stream, value); }
+void bufferFromStream(istringstream& stream, short& value)      { genericBufferFromStream(stream, value); }
+void bufferToStream(ostringstream& stream, const int& value)    { genericBufferToStream(stream, value); }
+void bufferFromStream(istringstream& stream, int& value)        { genericBufferFromStream(stream, value); }
+void bufferToStream(ostringstream& stream, const float& value)  { genericBufferToStream(stream, value); }
+void bufferFromStream(istringstream& stream, float& value)      { genericBufferFromStream(stream, value); }
+void bufferToStream(ostringstream& stream, const double& value) { genericBufferToStream(stream, value); }
+void bufferFromStream(istringstream& stream, double& value)     { genericBufferFromStream(stream, value); }
+void bufferToStream(ostringstream& stream, const size_t& value) { genericBufferToStream(stream, value); }
+void bufferFromStream(istringstream& stream, size_t& value)     { genericBufferFromStream(stream, value); }
+
 void bufferToStream(ostringstream& stream, const string& value) {
-  bufferToStream(stream, value.size());
+  genericBufferToStream(stream, value.size());
   stream.write(value.c_str(), value.size());
 }
 
-template <>
 void bufferFromStream(istringstream& stream, string& value) {
-  auto size = value.size();
-  bufferFromStream(stream, size);
+  size_t size;
+  genericBufferFromStream(stream, size);
 
   char* buffer = new char[size];
   stream.read(buffer, size);

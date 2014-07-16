@@ -11,6 +11,6 @@ GameEvent::GameEvent(GameEventType t): type(t) {}
 GameEvent::~GameEvent() {}
 
 void GameEvent::Pack(GameEvent* event, ostringstream& str) {
-  bufferToStream(str, event->type);
+  genericBufferToStream(str, event->type);
   event->pack(str);
 }

@@ -11,9 +11,9 @@ void ProtoComplexBObject::pack(SectionedData<ObjectSectionType>& sections) const
   // Pack the component map
   SectionedData<string> componentMap;
   for(auto component : components) {
-    componentMap.addSection(component.first, component.second.c_str(), component.second.size() + 1);
+    componentMap.addSection(component.first, component.second);
   }
-  complexData.addSubSections(ComponentMap, componentMap);
+  complexData.addSection(ComponentMap, componentMap);
 
   // Pack the connection map
   SectionedData<string> connectionMap;
@@ -22,32 +22,34 @@ void ProtoComplexBObject::pack(SectionedData<ObjectSectionType>& sections) const
     for(auto connectedObject : connection.second) {
       connectedObjects.push_back(connectedObject);
     }
-    connectionMap.addStringListSection(connection.first, connectedObjects);
+    connectionMap.addSection(connection.first, connectedObjects);
   }
-  complexData.addSubSections(ConnectionMap, connectionMap);
+  complexData.addSection(ConnectionMap, connectionMap);
 
-  sections.addSubSections(ComplexData, complexData);
+  sections.addSection(ComplexData, complexData);
 }
 
 bool ProtoComplexBObject::unpack(const SectionedData<ObjectSectionType>& sections) {
   if(!ProtoBObject::unpack(sections)) { return false; }
 
   SectionedData<AttributeSectionType> complexData;
-  if(!sections.getSubSections(ComplexData, complexData)) { return false; }
+  if(!sections.getSection(ComplexData, complexData)) { return false; }
 
   // Unpack the component map
   SectionedData<string> componentMap;
-  if(!complexData.getSubSections(ComponentMap, componentMap)) { return false; }
+  if(!complexData.getSection(ComponentMap, componentMap)) { return false; }
   for(auto component : componentMap) {
-    components.insert(make_pair(component.first, string((char*)component.second.data)));
+    string componentData;
+    componentMap.getSection(component.first, componentData);
+    components.insert(make_pair(component.first, componentData));
   }
 
   // Unpack the connection list
   SectionedData<string> connectionMap;
-  if(!complexData.getSubSections(ConnectionMap, connectionMap)) { return false; }
+  if(!complexData.getSection(ConnectionMap, connectionMap)) { return false; }
   for(auto connection : connectionMap) {
     list<string> connectionData;
-    if(!connectionMap.getStringListSection(connection.first, connectionData)) { return false; }
+    if(!connectionMap.getSection(connection.first, connectionData)) { return false; }
 
     connections.insert(make_pair(connection.first, set<string>()));
     for(auto connectedObject : connectionData) {

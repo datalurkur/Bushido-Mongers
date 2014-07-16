@@ -120,7 +120,8 @@ void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
 }
 
 void LocalBackEnd::unpackRaws(RawDataEvent* event) {
-  if(!_raw.unpack((void*)(event->packed.c_str()), event->packed.size())) {
+  istringstream stream(event->packed);
+  if(!_raw.unpack(stream)) {
     Error("Failed to unpack raws from server");
   }
 }

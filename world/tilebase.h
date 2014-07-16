@@ -29,4 +29,7 @@ struct TileDatum {
   TileDatum(TileBase* tile);
 };
 
+extern void bufferFromStream(istringstream& stream, TileDatum& data);
+extern void bufferToStream(ostringstream& stream, const TileDatum& data);
+
 #endif

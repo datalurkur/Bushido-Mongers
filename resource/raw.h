@@ -21,8 +21,8 @@ public:
   Raw();
   ~Raw();
 
-  bool unpack(const void* data, unsigned int size);
-  bool pack(void** data, unsigned int& size) const;
+  bool pack(ostringstream& str) const;
+  bool unpack(istringstream& str);
 
   unsigned int getNumObjects() const;
   void getObjectNames(list<string>& names) const;
@@ -35,7 +35,7 @@ public:
   bool deleteObject(const string& name);
 
 private:
-  ProtoBObject* unpackProto(const string& name, const void* data, unsigned int size);
+  ProtoBObject* unpackProto(const string& name, const string& objectData);
 
 private:
   typedef map<string, ProtoBObject*> ProtoMap;
