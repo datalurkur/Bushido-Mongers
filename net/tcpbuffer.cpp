@@ -1,5 +1,4 @@
 #include "net/tcpbuffer.h"
-#include "util/packing.h"
 
 PacketBufferInfo::PacketBufferInfo():
   size(0), offset(0), hasSize(false), str(ios_base::binary) {
