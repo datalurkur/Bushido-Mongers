@@ -27,6 +27,8 @@ LocalBackEnd::LocalBackEnd(): _consumerShouldDie(false), _eventsReady(false), _m
   _mapPanel = new RenderTarget(_mapWindow);
 
   _eventConsumer = thread(&LocalBackEnd::consumeEvents, this);
+
+  _objectRepresentation.load("object.rep");
 }
 
 LocalBackEnd::~LocalBackEnd() {
@@ -173,7 +175,8 @@ void LocalBackEnd::updateMap(TileDataEvent *event) {
 
 void LocalBackEnd::updateObject(ObjectDataEvent* event) {
   Debug("Updating data for object " << event->ID << " (typed " << event->prototype << ")");
-  #pragma message "Do something with this data"
+  _objects[event->ID] = BObjectStub();
+  _objects[event->ID].prototype = event->prototype;
 }
 
 void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* currentArea) {
@@ -193,8 +196,18 @@ void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* cur
 
   char c;
   if(contents.size() > 0) {
-    // Generate a symbol by content
-    c = '+';
+    set<const ProtoBObject*> protos;
+    for(auto obj : contents) {
+      auto objectStub = _objects.find(obj);
+      if(objectStub == _objects.end()) { continue; }
+      const ProtoBObject* proto = _raw.getObject(objectStub->second.prototype);
+      if(proto) {
+        protos.insert(proto);
+      } else {
+        Debug("No prototype found for " << objectStub->second.prototype);
+      }
+    }
+    c = _objectRepresentation.get(protos);
   } else {
     // Generate a symbol by terrain
     switch(tile->getType()) {

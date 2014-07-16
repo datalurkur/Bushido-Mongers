@@ -119,4 +119,12 @@ void setComplement(const set<T>& lhs, const set<T>& rhs, set<T>& onlyInLeft, set
   }
 }
 
+template <typename T>
+bool contains(const list<T>& l, const T& val) {
+  for(auto i : l) {
+    if(i == val) { return true; }
+  }
+  return false;
+}
+
 #endif

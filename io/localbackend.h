@@ -6,6 +6,7 @@
 #include "curseme/curselog.h"
 #include "curseme/renderer.h"
 #include "resource/raw.h"
+#include "resource/visualization.h"
 
 #include <thread>
 #include <mutex>
@@ -15,6 +16,10 @@
 using namespace std;
 
 class RenderSource;
+
+struct BObjectStub {
+  string prototype;
+};
 
 class LocalBackEnd: virtual public ClientBase {
 public:
@@ -50,12 +55,16 @@ private:
   Raw _raw;
   RenderSource* _mapSource;
   BObjectID _characterID;
+  map<BObjectID, BObjectStub> _objects;
 
   // UI
   WINDOW* _logWindow;
   CursesLogWindow* _logPanel;
   WINDOW* _mapWindow;
   RenderTarget* _mapPanel;
+
+  // Config
+  VisualizationMap _objectRepresentation;
 };
 
 #endif
