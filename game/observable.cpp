@@ -1,4 +1,5 @@
 #include "game/observable.h"
+#include "util/log.h"
 
 Observable::Observable() { markChanged(); }
 
@@ -7,6 +8,7 @@ void Observable::setLastChanged(time_t changed) { _lastChanged = changed; }
 
 void Observable::markChanged() {
   _lastChanged = Clock.getTime();
+  //Debug("Object is marked as changed at " << _lastChanged);
   onChanged();
 }
 

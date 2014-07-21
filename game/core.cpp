@@ -160,7 +160,7 @@ void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventQueue& resu
   }
 
   // Move the character
-  Info("Moving character " << character->getID() << " to " << newCoordinates);
+  Info("Moving character " << character->getID() << " from " << character->getLocation()->getCoordinates() << " to " << newCoordinates);
   character->setLocation(destinationTile);
   results.pushEvent(new CharacterMovedEvent());
 

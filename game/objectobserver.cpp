@@ -33,7 +33,8 @@ void ObjectObserver::viewChanges(const set<IVec2>& newView, EventQueue& results)
   // Determine which tiles (or contents) have changed since they were last seen
   set<IVec2> newlyVisible;
   for(auto c : visible) {
-    if(!_tileData.has(c) || (_tileData.get(c) < _currentArea->getTile(c)->lastChanged())) {
+    auto lastChanged = _currentArea->getTile(c)->lastChanged();
+    if(!_tileData.has(c) || (_tileData.get(c) <= lastChanged)) {
 /*
       // DEBUG
       if(!_tileData.has(c)) {
@@ -42,6 +43,7 @@ void ObjectObserver::viewChanges(const set<IVec2>& newView, EventQueue& results)
         Debug("Newly visible tile " << c << " was last updated " << _tileData.get(c) << ", new data will be sent");
       }
 */
+
       TileBase* tile = _currentArea->getTile(c);
       updated.insert(make_pair(c, tile));
       _tileData.set(c, currentTime);
@@ -51,7 +53,7 @@ void ObjectObserver::viewChanges(const set<IVec2>& newView, EventQueue& results)
         objectViewed(object, results);
       }
     } else {
-      //Debug("Newly visible tile " << c << " was last updated " << tileData.get(c) << ", and is up-to-date");
+      //Debug("Visible tile " << c << " was last updated " << _tileData.get(c) << ", and is up-to-date (last changed " << lastChanged << ")");
       newlyVisible.insert(c);
     }
   }

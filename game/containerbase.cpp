@@ -10,7 +10,10 @@ bool ContainerBase::addObject(BObjectID object) {
   //Debug("Adding object " << object << " to container");
 
   auto result = _contents.insert(object);
-  if(result.second) { markChanged(); }
+  if(result.second) {
+    //Debug("  -Object successfully added");
+    markChanged();
+  }
 
   return result.second;
 }
@@ -19,7 +22,10 @@ bool ContainerBase::removeObject(BObjectID object) {
   //Debug("Removing object " << object << " from container");
 
   bool ret = _contents.erase(object);
-  if(ret) { markChanged(); }
+  if(ret) {
+    //Debug("  -Object successfully removed");
+    markChanged();
+  }
 
   return ret;
 }

@@ -44,11 +44,11 @@ void ClientWorld::processWorldEvent(GameEvent* event, EventQueue& results) {
 
       // Deal with updated tiles
       for(auto u : e->updated) {
-        //Debug("Tile data at " << u.first << " has been updated");
+        //Debug("  -Tile data at " << u.first << " has been updated");
         _currentArea->revealTile(u.first);
         _currentArea->setTile(u.first, new ClientTile(
           u.second.type,
-          move(u.second.contents)
+          u.second.contents
         ));
       }
 

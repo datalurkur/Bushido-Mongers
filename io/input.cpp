@@ -10,7 +10,8 @@ void input_poll(WINDOW* input_window, ClientBase* client) {
   case 'k': action = MoveNorth; break;
   case 'l': action = MoveEast; break;
   default:
-    Info("KEY_" << (char)input << " pressed");
+    // If we want to print this sort of stuff, we should really not print non-printable characters
+    //Info("KEY_" << (char)input << " pressed");
     action = None;
   }
   send_action(client, action);

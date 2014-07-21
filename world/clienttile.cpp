@@ -1,7 +1,7 @@
 #include "world/clienttile.h"
 
-ClientTile::ClientTile(TileType type, set<BObjectID>&& contents): TileBase(type), _fakeCoordinates(0,0) {
-  _contents = move(contents);
+ClientTile::ClientTile(TileType type, const set<BObjectID>& contents): TileBase(type), _fakeCoordinates(0,0) {
+  _contents = contents;
 }
 
 ClientTile::~ClientTile() {

@@ -5,7 +5,7 @@
 
 class ClientTile: public TileBase {
 public:
-  ClientTile(TileType type, set<BObjectID>&& contents);
+  ClientTile(TileType type, const set<BObjectID>& contents);
   virtual ~ClientTile();
 
   Area* getArea() const;
