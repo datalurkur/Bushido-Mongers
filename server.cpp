@@ -76,6 +76,15 @@ int main(int argc, char** argv) {
 
   while(server->isRunning()) {
     input_poll(stdscr, client);
+    /*
+    // Go CRAZY!
+    switch(rand() % 4) {
+    case 0: client->moveCharacter(IVec2( 0, -1)); break;
+    case 1: client->moveCharacter(IVec2( 0,  1)); break;
+    case 2: client->moveCharacter(IVec2(-1,  0)); break;
+    case 3: client->moveCharacter(IVec2( 1,  0)); break;
+    }
+    */
   }
 
   cleanup(0);

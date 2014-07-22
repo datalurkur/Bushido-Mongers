@@ -48,6 +48,7 @@ void CursesLogWindow::update() {
 }
 
 void CursesLogWindow::printLine(int row, int width, const string& line) {
+  BeginCursesOperation;
   string toPrint = line + string(width - line.size(), ' ');
   mvwprintw(_window, row, 1, toPrint.c_str());
 }
