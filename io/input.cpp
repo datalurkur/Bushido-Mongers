@@ -9,9 +9,23 @@ void input_poll(WINDOW* input_window, ClientBase* client) {
   case 'j': action = MoveSouth; break;
   case 'k': action = MoveNorth; break;
   case 'l': action = MoveEast; break;
+
+  case 'u': action = MoveNorthWest; break;
+  case 'i': action = MoveNorthEast; break;
+  case 'n': action = MoveSouthWest; break;
+  case 'm': action = MoveSouthEast; break;
+
+  case KEY_UP:   action = MoveNorth; break;
+  case KEY_DOWN: action = MoveSouth; break;
+  case KEY_LEFT: action = MoveWest; break;
+  case KEY_RIGHT: action = MoveEast; break;
+
   default:
-    // If we want to print this sort of stuff, we should really not print non-printable characters
-    //Info("KEY_" << (char)input << " pressed");
+    if(input > 31 && input != 127) {
+      Info("KEY_" << (char)input << " pressed");
+    } else {
+      Info("KEY_" << input << " pressed");
+    }
     action = None;
   }
   send_action(client, action);
@@ -21,17 +35,31 @@ void input_poll(WINDOW* input_window, ClientBase* client) {
 
 void send_action(ClientBase* client, Action action) {
   switch(action) {
+  case MoveNorthWest:
+    client->moveCharacter(IVec2(-1, -1));
+    break;
   case MoveNorth:
     client->moveCharacter(IVec2(0, -1));
+    break;
+  case MoveNorthEast:
+    client->moveCharacter(IVec2(1, -1));
+    break;
+  case MoveEast:
+    client->moveCharacter(IVec2(1, 0));
+    break;
+  case MoveSouthEast:
+    client->moveCharacter(IVec2(1, 1));
     break;
   case MoveSouth:
     client->moveCharacter(IVec2(0, 1));
     break;
+  case MoveSouthWest:
+    client->moveCharacter(IVec2(-1, 1));
+    break;
   case MoveWest:
     client->moveCharacter(IVec2(-1, 0));
     break;
-  case MoveEast:
-    client->moveCharacter(IVec2(1, 0));
+
   default:
     Warn("No handler for action " << action);
   }
