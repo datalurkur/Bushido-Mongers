@@ -1,5 +1,5 @@
-#include <chrono> # sleep_for
-#include <thread> # sleep_for
+#include <chrono>
+#include <thread>
 
 #include "io/clientbase.h"
 #include "curseme/curseme.h"
