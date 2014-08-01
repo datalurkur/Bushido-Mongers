@@ -124,3 +124,12 @@ void computeRasterizedLine(const IVec2& p0, const IVec2& p1, list<IVec2>& points
     points.push_back(IVec2(x, y));
   }
 }
+
+IVec2 rotate(const IVec2& p, float rad) {
+  float cV = cos(rad),
+        sV = sin(rad);
+  return IVec2(
+    (p.x * cV) - (p.y * sV),
+    (p.x * sV) + (p.y * cV)
+  );
+}

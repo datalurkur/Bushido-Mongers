@@ -274,13 +274,81 @@ void WorldGenerator::CarveNatural(Area* area, float openness, float density) {
     }
   }
 
-/*
-  map<int, set<Vec2>> grouped;
-  ParseAreas(area, grouped);
-*/
+  map<int, int> pathways;
+  ConnectGroupCenters(area);
 }
 
-void WorldGenerator::CarveHallways(Area* area, float density) {
+void WorldGenerator::ConnectGroupCenters(Area* area) {
+  map<int, set<IVec2>> grouped;
+  ParseAreas(area, grouped);
+
+  map<int, IVec2> groupCenters;
+  map<int, int> groupSizes;
+  FindGroupCenters(grouped, groupCenters, groupSizes);
+
+  map<int, int> pathways;
+  //Debug("Determining unique pathways between group centers to maximize connectivity");
+  for(auto sourceCenter : groupCenters) {
+    //Debug("-Determining relative position of group center " << sourceCenter.second);
+    vector<pair<int, int> > distanceToTargets;
+    for(auto targetCenter : groupCenters) {
+      if(sourceCenter.first == targetCenter.first) { continue; }
+      int roughDistance = (targetCenter.second - sourceCenter.second).magnitudeSquared();
+      //Debug("  -Rough distance to " << targetCenter.second << " is " << roughDistance);
+      distanceToTargets.push_back(make_pair(targetCenter.first, roughDistance));
+    }
+    //Debug(" -Sorting and examining target data");
+    sort(distanceToTargets.begin(), distanceToTargets.end(), LessPairValues);
+    for(auto targetData : distanceToTargets) {
+      //Debug("  -Considering target index " << targetData.first << " with distance " << targetData.second);
+      int keyIndex   = min(sourceCenter.first, targetData.first),
+          valueIndex = max(sourceCenter.first, targetData.first);
+      auto itr = pathways.find(keyIndex);
+      if(itr == pathways.end()) {
+        //Debug("   A new pathway will be created");
+        pathways.insert(make_pair(keyIndex, valueIndex));
+        break;
+      }
+      //Debug("   A pathway already exists between these two centers");
+    }
+  }
+
+  const Vec2& areaSize = area->getSize();
+  for(auto pathway : pathways) {
+    //Debug("Carving pathway from " << groupCenters[pathway.first] << " (sized " << groupSizes[pathway.first] <<
+          //") to " << groupCenters[pathway.second] << " sized (" << groupSizes[pathway.second] << ")");
+    list<IVec2> pathPoints;
+    computeRasterizedLine(groupCenters[pathway.first], groupCenters[pathway.second], pathPoints);
+    int startSize = sqrt(groupSizes[pathway.first]) / 4,
+        endSize   = sqrt(groupSizes[pathway.second]) / 4,
+        midSize   = (startSize + endSize) / 3;
+    float midPoint  = pathPoints.size() / 2;
+    Vec2 ortho = rotate(groupCenters[pathway.first] - groupCenters[pathway.second], M_PI / 2.0f);
+    ortho.normalize();
+    if(ortho.x >= ortho.y) { ortho.y = 0.0f; }
+    else if(ortho.y > ortho.x) { ortho.y = 0.0f; }
+
+    //Debug(" -Sizes will range from " << startSize << " to " << midSize << " at index " << midPoint << " to " << endSize << ", extending outwards in the direction of " << ortho);
+
+    int index = 0;
+    for(auto pathPoint : pathPoints) {
+      int width;
+      if(index < midPoint) {
+        width = midSize + ((startSize - midSize) * ((midPoint - index) / midPoint));
+      } else {
+        width = midSize + ((endSize - midSize) * ((index - midPoint) / midPoint));
+      }
+      index++;
+      Debug("   " << index << " -Width " << width);
+      for(int i = -width; i <= width; i++) {
+        Vec2 offsetPoint(pathPoint.x, pathPoint.y);
+        offsetPoint += (ortho * (float)i);
+        if(offsetPoint.x >= 0 && offsetPoint.y >= 0 && offsetPoint.x < areaSize.x && offsetPoint.y < areaSize.y) {
+          area->getTile(offsetPoint)->setType(TileType::Ground);
+        }
+      }
+    }
+  }
 }
 
 void WorldGenerator::ParseAreas(Area* area, map<int, set<IVec2> >& grouped) {
@@ -364,4 +432,33 @@ void WorldGenerator::ParseAreas(Area* area, map<int, set<IVec2> >& grouped) {
 #undef GROUP
 
   free(groups);
+}
+
+void WorldGenerator::FindGroupCenters(const map<int, set<IVec2> >& groups, map<int, IVec2>& centers, map<int, int>& sizes) {
+  for(auto groupData : groups) {
+    //Debug("Finding the center of group " << groupData.first);
+    IVec2 sum(0,0);
+    int count = 0;
+    for(auto tile : groupData.second) {
+      //Debug("  -Component " << tile);
+      sum += tile;
+      count++;
+    }
+    IVec2 avg = sum / (int)groupData.second.size();
+    //Debug("  Average found to be " << avg);
+
+    IVec2 closest = *(groupData.second.begin());
+    for(auto tile : groupData.second) {
+      if(magnitudeLess(tile - avg, closest - avg)) {
+        closest = tile;
+      }
+    }
+    //Debug("  Tile closest to average " << closest);
+    centers[groupData.first] = closest;
+    sizes[groupData.first] = count;
+  }
+}
+
+bool WorldGenerator::LessPairValues(const pair<int, int>& lhs, const pair<int, int>& rhs) {
+  return lhs.second < rhs.second;
 }

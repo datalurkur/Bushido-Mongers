@@ -16,4 +16,6 @@ extern void computeRasterizedDisc(int r, list<IVec2>& points);
 
 extern void computeRasterizedLine(const IVec2& p0, const IVec2& p1, list<IVec2>& points);
 
+extern IVec2 rotate(const IVec2& p, float rad);
+
 #endif
