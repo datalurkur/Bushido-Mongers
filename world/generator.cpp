@@ -339,7 +339,7 @@ void WorldGenerator::ConnectGroupCenters(Area* area) {
         width = midSize + ((endSize - midSize) * ((index - midPoint) / midPoint));
       }
       index++;
-      Debug("   " << index << " -Width " << width);
+      //Debug("   " << index << " -Width " << width);
       for(int i = -width; i <= width; i++) {
         Vec2 offsetPoint(pathPoint.x, pathPoint.y);
         offsetPoint += (ortho * (float)i);

@@ -35,8 +35,9 @@ public:
 
   static void CarveNatural(Area* area, float openness, float density);
 
-private:
   static void ParseAreas(Area* area, map<int, set<IVec2> >& grouped);
+
+private:
   static void FindGroupCenters(const map<int, set<IVec2> >& groups, map<int, IVec2>& centers, map<int, int>& sizes);
   static void ConnectGroupCenters(Area* area);
 

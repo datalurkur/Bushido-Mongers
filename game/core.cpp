@@ -238,7 +238,7 @@ void GameCore::getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibl
       }
     }
   }
-  Info("There are " << visibleTiles.size() << " tiles visible to " << player << " from " << pos);
+  //Info("There are " << visibleTiles.size() << " tiles visible to " << player << " from " << pos);
 }
 
 void GameCore::packRaws(EventQueue& results) {

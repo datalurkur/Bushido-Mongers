@@ -100,14 +100,14 @@ void setComplement(const set<T>& lhs, const set<T>& rhs, set<T>& onlyInLeft, set
   typename set<T>::const_iterator rItr = rhs.begin();
   if(lItr == lhs.end()) {
     complement = rhs;
-  } else if(rItr == lhs.end()) {
+  } else if(rItr == rhs.end()) {
     onlyInLeft = lhs;
   } else {
-    while(lItr != lhs.end() && rItr != rhs.end()) {
-      if(*lItr < *rItr) {
+    while(lItr != lhs.end() || rItr != rhs.end()) {
+      if(rItr == rhs.end() || *lItr < *rItr) {
         onlyInLeft.insert(*lItr);
         lItr++;
-      } else if(*rItr < *lItr) {
+      } else if(lItr == lhs.end() || *rItr < *lItr) {
         complement.insert(*rItr);
         rItr++;
       } else {

@@ -32,13 +32,13 @@ void ClientWorld::processWorldEvent(GameEvent* event, EventQueue& results) {
 
       // Deal with visible tiles
       for(auto v : e->visible) {
-        //Debug("Tile at " << v << " is now visible");
+        //Debug("  -Tile at " << v << " is now visible");
         _currentArea->revealTile(v);
       }
 
       // Deal with shrouded tiles
       for(auto s : e->shrouded) {
-        //Debug("Tile at " << s << " is now shrouded");
+        //Debug("  -Tile at " << s << " is now shrouded");
         _currentArea->shroudTile(s);
       }
 
