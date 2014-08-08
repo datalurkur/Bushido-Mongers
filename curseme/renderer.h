@@ -10,11 +10,11 @@ public:
   RenderSource(const IVec2& dims);
   ~RenderSource();
 
-  void getData(int x, int y, char& data, attr_t& attributes);
-  void setData(int x, int y, char data, attr_t attributes);
+  void getData(int x, int y, chtype& data, attr_t& attributes);
+  void setData(int x, int y, chtype data, attr_t attributes);
   void setAttributes(int x, int y, attr_t attributes);
 
-  void setData(char data, attr_t attributes);
+  void setData(chtype data, attr_t attributes);
 
   const IVec2& getDimensions() const;
 
@@ -24,7 +24,7 @@ private:
   bool checkBounds(int x, int y);
 
 private:
-  char* _data;
+  chtype* _data;
   attr_t* _attributes;
   IVec2 _dims;
 };

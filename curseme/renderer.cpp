@@ -10,7 +10,7 @@ using namespace std;
 RenderSource::RenderSource(int w, int h): RenderSource(IVec2(w, h)) {}
 RenderSource::RenderSource(const IVec2& dims): _dims(dims) {
   size_t size = _dims.x * _dims.y;
-  _data       = new char  [size];
+  _data       = new chtype[size];
   _attributes = new attr_t[size];
   setData('~', A_NORMAL);
 }
@@ -18,21 +18,22 @@ RenderSource::~RenderSource() {
   delete _data;
   delete _attributes;
 }
-void RenderSource::getData(int x, int y, char& data, attr_t& attributes) {
+void RenderSource::getData(int x, int y, chtype& data, attr_t& attributes) {
   if(!checkBounds(x, y)) { return; }
   data       = _data      [y * _dims.x + x];
   attributes = _attributes[y * _dims.x + x];
 }
-void RenderSource::setData(int x, int y, char data, attr_t attributes) {
+void RenderSource::setData(int x, int y, chtype data, attr_t attributes) {
   if(!checkBounds(x, y)) { return; }
-  _data      [y * _dims.x + x] = data;
-  _attributes[y * _dims.x + x] = attributes;
+  size_t index = y * _dims.x + x;
+  _data      [index] = data;
+  _attributes[index] = attributes;
 }
 void RenderSource::setAttributes(int x, int y, attr_t attributes) {
   if(!checkBounds(x, y)) { return; }
   _attributes[y * _dims.x + x] = attributes;
 }
-void RenderSource::setData(char data, attr_t attributes) {
+void RenderSource::setData(chtype data, attr_t attributes) {
   for(int i = 0; i < _dims.x; i++) {
     for(int j = 0; j < _dims.y; j++) {
       setData(i, j, data, attributes);
@@ -45,7 +46,7 @@ const IVec2& RenderSource::getDimensions() const {
 
 void RenderSource::writeDebug(const string& filename) {
   int size = (_dims.x + 1) * _dims.y;
-  char* data = (char*)calloc(size, sizeof(char));
+  chtype* data = (chtype*)calloc(size, sizeof(chtype));
   int index = 0;
   for(int i = 0; i < _dims.y; i++) {
     memcpy((void*)&data[index], (void*)&_data[i * _dims.x], _dims.y);
@@ -124,22 +125,29 @@ void RenderTarget::render() {
     string run = runStart;
 
     for(int x = xLower; x < xUpper; x++) {
-      char data;
+      chtype data;
       attr_t attributes;
       _source->getData(x + _offset.x, y + _offset.y, data, attributes);
 
-      if(attributes != prevAttrs) {
+      if(attributes != prevAttrs || data > 255) {
         // Previous character run terminates, begin the new one
         mvwprintw(_window, y, x - run.size(), run.c_str());
         run = "";
 
-        // Set the attributes for the new character run
-        prevAttrs = attributes;
-        wattrset(_window, attributes);
+        if(attributes != prevAttrs) {
+          // Set the attributes for the new character run
+          prevAttrs = attributes;
+          wattrset(_window, attributes);
+        }
+        if(data > 255) {
+          mvwaddch(_window, y, x, data);
+        }
       }
 
-      // Append this character to the character run
-      run += data;
+      if(data <= 255) {
+        // Append this character to the character run
+        run += data;
+      }
     }
 
     // Finish up this row

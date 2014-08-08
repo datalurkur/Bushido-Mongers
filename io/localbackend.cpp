@@ -194,7 +194,7 @@ void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* cur
     return;
   }
 
-  char c;
+  chtype c;
   if(contents.size() > 0) {
     set<const ProtoBObject*> protos;
     for(auto obj : contents) {
@@ -210,10 +210,48 @@ void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* cur
     c = _objectRepresentation.get(protos);
   } else {
     // Generate a symbol by terrain
-    switch(tile->getType()) {
-      case TileType::Wall:   c = 'X'; break;
-      case TileType::Ground: c = '.'; break;
-      default:               c = '?'; break;
+    TileType tileType = tile->getType();
+    if(tileType == TileType::Wall) {
+      char wallBits = 0;
+      if(coords.x - 1 >= 0) {
+        auto leftTile = currentArea->getTile(IVec2(coords.x - 1, coords.y));
+        if(leftTile && leftTile->getType() == TileType::Wall) { wallBits |= 0x1; }
+      }
+      if(coords.x + 1 < currentArea->getSize().x) {
+        auto rightTile = currentArea->getTile(IVec2(coords.x + 1, coords.y));
+        if(rightTile && rightTile->getType() == TileType::Wall) { wallBits |= 0x2; }
+      }
+      if(coords.y - 1 >= 0) {
+        auto bottomTile = currentArea->getTile(IVec2(coords.x, coords.y - 1));
+        if(bottomTile && bottomTile->getType() == TileType::Wall) { wallBits |= 0x4; }
+      }
+      if(coords.y + 1 < currentArea->getSize().y) {
+        auto topTile = currentArea->getTile(IVec2(coords.x, coords.y + 1));
+        if(topTile && topTile->getType() == TileType::Wall) { wallBits |= 0x8; }
+      }
+      switch(wallBits) {
+      case 0:
+      case 1:
+      case 2:
+      case 4:
+      case 8:  c = 'O'; break; // wall either stands alone or is only connected on one side
+
+      case 3:  c = ACS_HLINE; break; // left and right
+      case 5:  c = ACS_LRCORNER; break; // bottom and left
+      case 6:  c = ACS_LLCORNER; break; // bottom and right
+      case 7:  c = ACS_TTEE; break; // bottom, left, and right
+      case 9:  c = ACS_URCORNER; break; // top and left
+      case 10: c = ACS_ULCORNER; break; // top and right
+      case 11: c = ACS_BTEE; break; // top, left, and right
+      case 12: c = ACS_VLINE; break; // top and bottom
+      case 13: c = ACS_RTEE; break; // top, bottom, and left
+      case 14: c = ACS_LTEE; break; // top, bottom, and right
+      default: c = ACS_PLUS; break; // all four sides connected
+      }
+    } else if(tileType == TileType::Ground) {
+      c = '.';
+    } else {
+      c = '?';
     }
   }
   _mapSource->setData(coords.x, coords.y, c, currentArea->isTileShrouded(coords) ? A_NORMAL : A_BOLD);

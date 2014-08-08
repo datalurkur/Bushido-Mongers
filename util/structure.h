@@ -103,11 +103,11 @@ void setComplement(const set<T>& lhs, const set<T>& rhs, set<T>& onlyInLeft, set
   } else if(rItr == rhs.end()) {
     onlyInLeft = lhs;
   } else {
-    while(lItr != lhs.end() || rItr != rhs.end()) {
-      if(rItr == rhs.end() || *lItr < *rItr) {
+    while(lItr != lhs.end() && rItr != rhs.end()) {
+      if(*lItr < *rItr) {
         onlyInLeft.insert(*lItr);
         lItr++;
-      } else if(lItr == lhs.end() || *rItr < *lItr) {
+      } else if(*rItr < *lItr) {
         complement.insert(*rItr);
         rItr++;
       } else {
@@ -115,6 +115,11 @@ void setComplement(const set<T>& lhs, const set<T>& rhs, set<T>& onlyInLeft, set
         lItr++;
         rItr++;
       }
+    }
+    if(lItr != lhs.end()) {
+      onlyInLeft.insert(lItr, lhs.end());
+    } else if(rItr != rhs.end()) {
+      complement.insert(rItr, rhs.end());
     }
   }
 }
