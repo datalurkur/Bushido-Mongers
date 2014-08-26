@@ -239,10 +239,10 @@ void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* cur
       case 3:  c = ACS_HLINE; break; // left and right
       case 5:  c = ACS_LRCORNER; break; // bottom and left
       case 6:  c = ACS_LLCORNER; break; // bottom and right
-      case 7:  c = ACS_TTEE; break; // bottom, left, and right
+      case 7:  c = ACS_BTEE; break; // bottom, left, and right
       case 9:  c = ACS_URCORNER; break; // top and left
       case 10: c = ACS_ULCORNER; break; // top and right
-      case 11: c = ACS_BTEE; break; // top, left, and right
+      case 11: c = ACS_TTEE; break; // top, left, and right
       case 12: c = ACS_VLINE; break; // top and bottom
       case 13: c = ACS_RTEE; break; // top, bottom, and left
       case 14: c = ACS_LTEE; break; // top, bottom, and right
