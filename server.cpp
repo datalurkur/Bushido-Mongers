@@ -1,8 +1,8 @@
 #include "io/gameserver.h"
 #include "io/localgameclient.h"
-#include "io/input.h"
 #include "ui/prompt.h"
 #include "util/log.h"
+#include "state/gamestate.h"
 
 #include <signal.h>
 #include <unistd.h>
@@ -51,16 +51,6 @@ int main(int argc, char** argv) {
   server->start();
 
   #pragma message "Create a prompt to get client login / issue commands to the server directly"
-/*
-  Menu clientInputMenu("Server active at server->ip():server->post()", [&](menu clientInputMenu) {
-    clientInputMenu.addChoice("Use Client", [&] {
-      CursesClient cc();
-      string clientName;
-      Input::GetWord("Username:", clientName);
-    }
-  }
-*/
-
   // For now, we'll just test out local client stuff
   string clientName = "Test Client Name";
   client = new LocalGameClient(server);
@@ -74,17 +64,8 @@ int main(int argc, char** argv) {
   client->createCharacter(characterName);
   sleep(1);
 
-  while(server->isRunning()) {
-    input_poll(stdscr, client);
-    /*
-    // Go CRAZY!
-    switch(rand() % 4) {
-    case 0: client->moveCharacter(IVec2( 0, -1)); break;
-    case 1: client->moveCharacter(IVec2( 0,  1)); break;
-    case 2: client->moveCharacter(IVec2(-1,  0)); break;
-    case 3: client->moveCharacter(IVec2( 1,  0)); break;
-    }
-    */
+  GameState gameState(client);
+  while(gameState.execute()) {
   }
 
   cleanup(0);

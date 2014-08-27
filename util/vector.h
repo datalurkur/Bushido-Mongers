@@ -33,6 +33,7 @@ public:
 
   bool operator<(const VectorBase<T>& other) const;
   bool operator==(const VectorBase<T>& rhs) const;
+  bool operator!=(const VectorBase<T>& rhs) const;
 
 protected:
   bool _magnitudeCached;
@@ -128,6 +129,10 @@ bool VectorBase<T>::operator<(const VectorBase<T>& other) const {
 template <typename T>
 bool VectorBase<T>::operator==(const VectorBase<T>& rhs) const {
   return (x == rhs.x && y == rhs.y);
+}
+template <typename T>
+bool VectorBase<T>::operator!=(const VectorBase<T>& rhs) const {
+  return (x != rhs.x || y != rhs.y);
 }
 template <typename T>
 bool magnitudeLess(const T& lhs, const T& rhs) {

@@ -1,7 +1,15 @@
-#include "io/input.h"
+#include "state/inspectstate.h"
 
-void input_poll(WINDOW* input_window, ClientBase* client) {
-  int input = wgetch(input_window);
+InspectState::InspectState(LocalGameClient* client): UIState(stdscr), _client(client) {
+  _client->enableCursor(true);
+}
+
+InspectState::~InspectState() {
+  _client->enableCursor(false);
+}
+
+bool InspectState::operate() {
+  int input = wgetch(_window);
 
   Action action;
   switch(input) {
@@ -20,6 +28,8 @@ void input_poll(WINDOW* input_window, ClientBase* client) {
   case KEY_LEFT: action = MoveWest; break;
   case KEY_RIGHT: action = MoveEast; break;
 
+  case 'v': action = Exit; break;
+
   default:
     if(input > 31 && input != 127) {
       Info("KEY_" << (char)input << " pressed");
@@ -28,39 +38,42 @@ void input_poll(WINDOW* input_window, ClientBase* client) {
     }
     action = None;
   }
-  send_action(client, action);
-
-	std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  return act(action);
 }
 
-void send_action(ClientBase* client, Action action) {
+bool InspectState::act(Action action) {
   switch(action) {
   case MoveNorthWest:
-    client->moveCharacter(IVec2(-1, -1));
+    _client->moveCursor(IVec2(-1, -1));
     break;
   case MoveNorth:
-    client->moveCharacter(IVec2(0, -1));
+    _client->moveCursor(IVec2(0, -1));
     break;
   case MoveNorthEast:
-    client->moveCharacter(IVec2(1, -1));
+    _client->moveCursor(IVec2(1, -1));
     break;
   case MoveEast:
-    client->moveCharacter(IVec2(1, 0));
+    _client->moveCursor(IVec2(1, 0));
     break;
   case MoveSouthEast:
-    client->moveCharacter(IVec2(1, 1));
+    _client->moveCursor(IVec2(1, 1));
     break;
   case MoveSouth:
-    client->moveCharacter(IVec2(0, 1));
+    _client->moveCursor(IVec2(0, 1));
     break;
   case MoveSouthWest:
-    client->moveCharacter(IVec2(-1, 1));
+    _client->moveCursor(IVec2(-1, 1));
     break;
   case MoveWest:
-    client->moveCharacter(IVec2(-1, 0));
+    _client->moveCursor(IVec2(-1, 0));
+    break;
+  case Exit:
+    return false;
     break;
 
   default:
     Warn("No handler for action " << action);
   }
+
+  return true;
 }

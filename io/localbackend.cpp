@@ -3,7 +3,7 @@
 #include "world/clientarea.h"
 #include "curseme/renderer.h"
 
-LocalBackEnd::LocalBackEnd(): _consumerShouldDie(false), _eventsReady(false), _mapSource(0), _characterID(0) {
+LocalBackEnd::LocalBackEnd(): _consumerShouldDie(false), _eventsReady(false), _mapSource(0), _characterID(0), _lastPlayerLocation(0,0), _cursorEnabled(false), _cursorLocation(0,0) {
   wrefresh(stdscr);
 
   int w, h;
@@ -45,6 +45,36 @@ LocalBackEnd::~LocalBackEnd() {
 
   if(_logPanel) { delete _logPanel; }
   if(_logWindow) { delwin(_logWindow); }
+}
+
+void LocalBackEnd::enableCursor(bool enabled) {
+  _cursorEnabled = enabled;
+  if(enabled) {
+    _cursorLocation = _lastPlayerLocation;
+  } else {
+    _mapPanel->setCenter(_lastPlayerLocation);
+  }
+  ClientArea* currentArea = _world.getCurrentArea();
+  updateTileRepresentation(_cursorLocation, currentArea);
+  _mapPanel->render();
+}
+
+void LocalBackEnd::moveCursor(const IVec2& dir) {
+  IVec2 oldLocation = _cursorLocation;
+  _cursorLocation += dir;
+
+  ClientArea* currentArea = _world.getCurrentArea();
+  const IVec2 areaSize = currentArea->getSize();
+  if(_cursorLocation.x < 0) { _cursorLocation.x = 0; }
+  if(_cursorLocation.y < 0) { _cursorLocation.y = 0; }
+  if(_cursorLocation.x >= areaSize.x) { _cursorLocation.x = areaSize.x - 1; }
+  if(_cursorLocation.y >= areaSize.y) { _cursorLocation.y = areaSize.y - 1; }
+
+  if(oldLocation != _cursorLocation) {
+    updateTileRepresentation(oldLocation, currentArea);
+    updateTileRepresentation(_cursorLocation, currentArea);
+    _mapPanel->render();
+  }
 }
 
 void LocalBackEnd::sendToClient(SharedGameEvent event) {
@@ -180,6 +210,12 @@ void LocalBackEnd::updateObject(ObjectDataEvent* event) {
 }
 
 void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* currentArea) {
+  if(_cursorEnabled && _cursorLocation == coords) {
+    _mapSource->setData(coords.x, coords.y, 'X', A_NORMAL | COLOR_PAIR(BLUE_ON_BLACK));
+    _mapPanel->setCenter(coords);
+    return;
+  }
+
   auto tile = currentArea->getTile(coords);
   if(!tile) {
     _mapSource->setData(coords.x, coords.y, ' ', A_NORMAL);
@@ -188,9 +224,11 @@ void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* cur
 
   const set<BObjectID>& contents = tile->getContents();
   if(contents.find(_characterID) != contents.end()) {
-    Debug("Character object (" << _characterID << ") found at " << coords);
     _mapSource->setData(coords.x, coords.y, '@', A_BOLD | COLOR_PAIR(RED_ON_BLACK));
-    _mapPanel->setCenter(coords);
+    _lastPlayerLocation = coords;
+    if(!_cursorEnabled) {
+      _mapPanel->setCenter(coords);
+    }
     return;
   }
 

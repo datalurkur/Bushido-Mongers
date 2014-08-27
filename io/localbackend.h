@@ -26,6 +26,9 @@ public:
   LocalBackEnd();
   ~LocalBackEnd();
 
+  void enableCursor(bool enabled);
+  void moveCursor(const IVec2& dir);
+
 protected:
   void sendToClient(SharedGameEvent event);
   void sendToClient(EventQueue&& queue);
@@ -56,6 +59,7 @@ private:
   RenderSource* _mapSource;
   BObjectID _characterID;
   map<BObjectID, BObjectStub> _objects;
+  IVec2 _lastPlayerLocation;
 
   // UI
   WINDOW* _logWindow;
@@ -65,6 +69,10 @@ private:
 
   // Config
   VisualizationMap _objectRepresentation;
+
+  // Cursor
+  bool _cursorEnabled;
+  IVec2 _cursorLocation;
 };
 
 #endif
