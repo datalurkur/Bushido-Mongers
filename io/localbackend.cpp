@@ -9,21 +9,18 @@ LocalBackEnd::LocalBackEnd(): _consumerShouldDie(false), _eventsReady(false), _m
   int w, h;
   getmaxyx(stdscr, h, w);
 
-  int mapHeight;
-  int desiredLogHeight = 10;
-  if(h > 2 * desiredLogHeight) {
-    mapHeight = h - desiredLogHeight;
-    _logWindow = newwin(desiredLogHeight, w, h - desiredLogHeight, 0);
-    wrefresh(_logWindow);
-    _logPanel = new CursesLogWindow(_logWindow);
-  } else {
-    mapHeight = h;
-    _logWindow = 0;
-    _logPanel = 0;
-  }
+  // Create the main window to fill the whole screen, with 10 rows of padding at the bottom for the log window
+  _mainWindow = new Window(Window::Alignment::TOP_CENTER, 1.0f, 1.0f, 0, 10, 0, 0, 0);
+  // Create the log window as a 10-row high bar at the bottom of the screen
+  _logWindow = new Window(Window::Alignment::BOTTOM_CENTER, w, 10, 0, 0, 0);
+  // Split the main window 85 / 15 between the map and the info bar
+  _mapWindow = new Window(Window::Alignment::CENTER_LEFT, 0.85f, 1.0f, 0, 0, 0, 0, _mainWindow);
+  _infoWindow = new Window(Window::Alignment::CENTER_RIGHT, 0.15f, 1.0f, 0, 0, 0, 0, _mainWindow);
 
-  _mapWindow = newwin(mapHeight, w, 0, 0);
-  wrefresh(_mapWindow);
+  // Create the log panel
+  _logPanel = new CursesLogWindow(_logWindow);
+
+  // Create the map panel
   _mapPanel = new RenderTarget(_mapWindow);
 
   _eventConsumer = thread(&LocalBackEnd::consumeEvents, this);
@@ -39,12 +36,12 @@ LocalBackEnd::~LocalBackEnd() {
     _eventConsumer.join();
   }
 
-  // Tear down the UI
   delete _mapPanel;
-  delwin(_mapWindow);
-
-  if(_logPanel) { delete _logPanel; }
-  if(_logWindow) { delwin(_logWindow); }
+  delete _mapWindow;
+  delete _infoWindow;
+  delete _mainWindow;
+  delete _logWindow;
+  delete _logPanel;
 }
 
 void LocalBackEnd::enableCursor(bool enabled) {

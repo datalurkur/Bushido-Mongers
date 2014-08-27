@@ -67,18 +67,15 @@ bool RenderSource::checkBounds(int x, int y) {
   return true;
 }
 
-RenderTarget::RenderTarget(WINDOW* window): _window(window), _source(0), _offset(0, 0) {}
-RenderTarget::RenderTarget(WINDOW* window, RenderSource* source): _window(window), _source(source), _offset(0, 0) {}
+RenderTarget::RenderTarget(Window* window): _window(window), _source(0), _offset(0, 0) {}
+RenderTarget::RenderTarget(Window* window, RenderSource* source): _window(window), _source(source), _offset(0, 0) {}
 
 void RenderTarget::setOffset(const IVec2& offset) {
   _offset = offset;
 }
 
 void RenderTarget::setCenter(const IVec2& center) {
-  int tW, tH;
-  getmaxyx(_window, tH, tW);
-
-  _offset = Vec2(center.x - (tW / 2), center.y - (tH / 2));
+  _offset = center - (_window->getDims() / 2);
 }
 
 void RenderTarget::nudgeOffset(const IVec2& nudge) {
@@ -86,16 +83,13 @@ void RenderTarget::nudgeOffset(const IVec2& nudge) {
 }
 
 void RenderTarget::render() {
-  BeginCursesOperation;
-
-  int tW, tH;
-  getmaxyx(_window, tH, tW);
+  const IVec2& wDims = _window->getDims();
 
   // If there's no render source, clear the window
-  string emptyLine(tW, ' ');
+  string emptyLine(wDims.x, ' ');
   if(!_source) {
-    for(int i = 0; i < tH; i++) {
-      mvwprintw(_window, i, 0, emptyLine.c_str());
+    for(int i = 0; i < wDims.y; i++) {
+      _window->printText(0, i, emptyLine.c_str());
     }
     return;
   }
@@ -103,21 +97,21 @@ void RenderTarget::render() {
   IVec2 sDims = _source->getDimensions();
 
   // Get the current window attributes and store them off for restoring later
-  void* unused = 0;
   attr_t originalAttributes;
   short originalColor;
-  wattr_get(_window, &originalAttributes, &originalColor, unused);
+  _window->getAttributes(originalAttributes, originalColor);
+
   attr_t prevAttrs = originalAttributes;
 
   string runStart(max(0, -_offset.x), ' ');
-  string runEnd(max(0, tW - sDims.x + _offset.x), ' ');
+  string runEnd(max(0, wDims.x - sDims.x + _offset.x), ' ');
 
   int xLower = max(0, -_offset.x),
-      xUpper = min(tW, sDims.x - _offset.x);
+      xUpper = min(wDims.x, sDims.x - _offset.x);
 
-  for(int y = 0; y < tH; y++) {
+  for(int y = 0; y < wDims.y; y++) {
     if(y < -_offset.y || (y + _offset.y) >= sDims.y) {
-      mvwprintw(_window, y, 0, emptyLine.c_str());
+      _window->printText(0, y, emptyLine.c_str());
       continue;
     }
 
@@ -131,16 +125,16 @@ void RenderTarget::render() {
 
       if(attributes != prevAttrs || data > 255) {
         // Previous character run terminates, begin the new one
-        mvwprintw(_window, y, x - run.size(), run.c_str());
+        _window->printText(x - run.size(), y, run.c_str());
         run = "";
 
         if(attributes != prevAttrs) {
           // Set the attributes for the new character run
           prevAttrs = attributes;
-          wattrset(_window, attributes);
+          _window->setAttributes(attributes);
         }
         if(data > 255) {
-          mvwaddch(_window, y, x, data);
+          _window->printChar(x, y, data);
         }
       }
 
@@ -151,17 +145,17 @@ void RenderTarget::render() {
     }
 
     // Finish up this row
-    mvwprintw(_window, y, tW - runEnd.size() - run.size(), run.c_str());
-    wattr_set(_window, originalAttributes, originalColor, unused);
+    _window->printText(wDims.x - runEnd.size() - run.size(), y, run.c_str());
+    _window->setAttributes(originalAttributes, originalColor);
     prevAttrs = originalAttributes;
     if(runEnd.size() > 0) {
-      mvwprintw(_window, y, tW - runEnd.size(), runEnd.c_str());
+      _window->printText(wDims.x - runEnd.size(), y, runEnd.c_str());
     }
   }
 
   // Restore the previous attributes
-  wattr_set(_window, originalAttributes, originalColor, unused);
-  wrefresh(_window);
+  _window->setAttributes(originalAttributes, originalColor);
+  _window->refresh();
 }
 
 void RenderTarget::setRenderSource(RenderSource* source) {

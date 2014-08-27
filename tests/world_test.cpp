@@ -1,3 +1,4 @@
+#include "curseme/window.h"
 #include "curseme/renderer.h"
 #include "world/generator.h"
 #include "util/log.h"
@@ -103,8 +104,8 @@ int main() {
     }
   }
 
-  wrefresh(stdscr);
-  RenderTarget renderTarget(stdscr, &areaData);
+  Window mainWin(Window::Alignment::CENTER, 1.0f, 1.0f, 0, 0, 0, 0, 0);
+  RenderTarget renderTarget(&mainWin, &areaData);
   renderTarget.render();
 
   int ch;

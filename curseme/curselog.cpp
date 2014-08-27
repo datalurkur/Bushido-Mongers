@@ -3,10 +3,9 @@
 #include <string>
 #include <math.h>
 
-CursesLogWindow::CursesLogWindow(WINDOW* window): _window(window), _historyLength(1024) {
+CursesLogWindow::CursesLogWindow(Window* window): _window(window), _historyLength(1024) {
   Log::RegisterListener(this);
-  box(_window, 0, 0);
-  wrefresh(_window);
+  _window->setBox();
 }
 
 CursesLogWindow::~CursesLogWindow() {
@@ -22,33 +21,29 @@ void CursesLogWindow::logMessage(LogChannel channel, const string& message) {
 }
 
 void CursesLogWindow::update() {
-  int w, h;
-  getmaxyx(_window, h, w);
+  const IVec2& dims = _window->getDims();
 
-  int adjustedWidth = w - 2;
+  int adjustedWidth = dims.x - 2;
 
   auto itr = _logs.rbegin();
 
-  int row = h - 2;
+  int row = dims.y - 2;
   while(itr != _logs.rend() && row > 0) {
     string nextLog = *itr++;
-    if((int)nextLog.size() < w) {
+    if((int)nextLog.size() < dims.x) {
       printLine(row--, adjustedWidth, nextLog.c_str());
     } else {
-      int leftover = nextLog.size() % w;
-      int lines = nextLog.size() / w;
+      int leftover = nextLog.size() % dims.x;
+      int lines = nextLog.size() / dims.x;
       printLine(row--, adjustedWidth, nextLog.substr(lines * adjustedWidth, leftover).c_str());
       for(int i = lines - 1; i > 0 && row > 0; i--) {
         printLine(row--, adjustedWidth, nextLog.substr(i * adjustedWidth, adjustedWidth).c_str());
       }
     }
   }
-
-  wrefresh(_window);
 }
 
 void CursesLogWindow::printLine(int row, int width, const string& line) {
-  BeginCursesOperation;
   string toPrint = line + string(width - line.size(), ' ');
-  mvwprintw(_window, row, 1, toPrint.c_str());
+  _window->printText(1, row, toPrint.c_str());
 }

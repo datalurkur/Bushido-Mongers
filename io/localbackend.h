@@ -5,6 +5,7 @@
 #include "world/clientworld.h"
 #include "curseme/curselog.h"
 #include "curseme/renderer.h"
+#include "curseme/window.h"
 #include "resource/raw.h"
 #include "resource/visualization.h"
 
@@ -62,9 +63,11 @@ private:
   IVec2 _lastPlayerLocation;
 
   // UI
-  WINDOW* _logWindow;
+  Window* _logWindow;
   CursesLogWindow* _logPanel;
-  WINDOW* _mapWindow;
+  Window* _mainWindow;
+  Window* _infoWindow;
+  Window* _mapWindow;
   RenderTarget* _mapPanel;
 
   // Config

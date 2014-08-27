@@ -47,6 +47,10 @@ public:
   int getChar();
   int getString(string& str);
 
+  void getAttributes(attr_t& attributes, short& color);
+  void setAttributes(attr_t attributes);
+  void setAttributes(attr_t attributes, short color);
+
 protected:
   WINDOW* createSubWindow(int w, int h, int dX, int dY);
 

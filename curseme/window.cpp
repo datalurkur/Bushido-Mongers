@@ -197,6 +197,23 @@ int Window::getString(string& str) {
   return ret;
 }
 
+void Window::setAttributes(attr_t attributes) {
+  BeginCursesOperation;
+  wattrset(_win, attributes);
+}
+
+void Window::setAttributes(attr_t attributes, short color) {
+  BeginCursesOperation;
+  void* unused = 0;
+  wattr_set(_win, attributes, color, unused);
+}
+
+void Window::getAttributes(attr_t& attributes, short& color) {
+  BeginCursesOperation;
+  void* unused = 0;
+  wattr_get(_win, &attributes, &color, unused);
+}
+
 WINDOW* Window::createSubWindow(int w, int h, int dX, int dY) {
   BeginCursesOperation;
   return derwin(_win, h, w, dY, dX);

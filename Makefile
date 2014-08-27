@@ -46,6 +46,6 @@ worldtest: io/gameevent.o resource/raw.o util/streambuffering.o game/bobjecttype
 	./genproto $<
 
 clean:
-	rm -f genproto geomtest client server raw_editor test treetest worldtest io/*.o net/*.o util/*.o world/*.o tests/*.o resource/*.o curseme/*.o tools/raw_editor_ncurses/*.o game/*.o ui/*.o *.o protocol/*.o io/gameevent.h io/gameevent.cpp
+	rm -f genproto geomtest client server raw_editor test treetest worldtest io/*.o net/*.o util/*.o world/*.o tests/*.o resource/*.o curseme/*.o tools/raw_editor_ncurses/*.o game/*.o ui/*.o *.o protocol/*.o io/gameevent.h io/gameevent.cpp state/*.o
 
 .SECONDARY:

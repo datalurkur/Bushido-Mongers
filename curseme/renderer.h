@@ -1,8 +1,7 @@
 #ifndef RENDERER_H
 #define RENDERER_H
 
-#include "util/vector.h"
-#include "curseme/curseme.h"
+#include "curseme/window.h"
 
 class RenderSource {
 public:
@@ -31,8 +30,8 @@ private:
 
 class RenderTarget {
 public:
-  RenderTarget(WINDOW* window);
-  RenderTarget(WINDOW* window, RenderSource* source);
+  RenderTarget(Window* window);
+  RenderTarget(Window* window, RenderSource* source);
 
   void setOffset(const IVec2& offset);
   void setCenter(const IVec2& center);
@@ -43,7 +42,7 @@ public:
   void render();
 
 private:
-  WINDOW* _window;
+  Window* _window;
   RenderSource* _source;
   IVec2 _offset;
 };
