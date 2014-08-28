@@ -23,7 +23,6 @@ bool HotkeyMenuDriver::makeHotkeySelection(int c, size_t& index) {
 
 void HotkeyMenuDriver::onSelectionUpdate() {
   _container->usableArea()->clear();
-  const IVec2& dims = _container->usableArea()->getDims();
 
   string blankCursor(Cursor.size(), ' ');
   for(size_t i = 0; i < _choices.size(); i++) {

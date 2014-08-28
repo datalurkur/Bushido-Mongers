@@ -46,7 +46,7 @@ public:
   StaticMenu(const string& title, Window* window = 0);
 
   template <typename T>
-  StaticMenu(const string& title, const T& choices, Window* window);
+  StaticMenu(const string& title, const T& choices, Window* window = 0);
 
   bool getChoice(string& choice);
   bool getChoiceIndex(size_t& index);
