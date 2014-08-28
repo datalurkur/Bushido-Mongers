@@ -31,7 +31,8 @@ TitleBox::~TitleBox() {
 
 void TitleBox::setTitle(const string& title) {
   const IVec2& outerDims = _outer->getDims();
-  _outer->printText(2, 1, title.c_str());
+  string trimmedTitle = title.substr(0, outerDims.x - 4);
+  _outer->printText(2, 1, trimmedTitle.c_str());
   _outer->printChar(0, 2, ACS_LTEE);
   _outer->printHRule(1, 2, ACS_HLINE, outerDims.x - 2);
   _outer->printChar(outerDims.x - 1, 2, ACS_RTEE);
@@ -44,4 +45,8 @@ void TitleBox::attachMenu(MENU* menu) {
 
 Window* TitleBox::usableArea() const {
   return _inner;
+}
+
+void TitleBox::rebuild() {
+  _outer->setBox();
 }

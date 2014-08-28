@@ -8,6 +8,7 @@
 #include "curseme/window.h"
 #include "resource/raw.h"
 #include "resource/visualization.h"
+#include "ui/menu.h"
 
 #include <thread>
 #include <mutex>
@@ -45,6 +46,8 @@ private:
 
   void updateTileRepresentation(const IVec2& coords, ClientArea* currentArea);
 
+  void updateInfoPanel();
+
 private:
   // Event queueing and consumption
   thread _eventConsumer;
@@ -69,6 +72,7 @@ private:
   Window* _infoWindow;
   Window* _mapWindow;
   RenderTarget* _mapPanel;
+  DynamicMenu* _objectMenu;
 
   // Config
   VisualizationMap _objectRepresentation;

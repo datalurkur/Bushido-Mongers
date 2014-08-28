@@ -1,5 +1,6 @@
 #include "curseme/window.h"
 #include "util/log.h"
+#include "util/assertion.h"
 
 #include <string>
 #include <math.h>
@@ -22,6 +23,8 @@ Window::Window(Alignment anchor, float wRatio, float hRatio, int wPad, int hPad,
 Window::Window(Alignment anchor, int w, int h, int xPad, int yPad, Window* parent): _parent(parent) {
   int mW, mH, x, y;
   determineMaxDimensions(mW, mH);
+  if(mW < w) { w = mW; }
+  if(mH < h) { h = mH; }
   determineCoordinates(anchor, mW, mH, xPad, yPad, w, h, x, y);
   setupWindow(w, h, x, y);
 }
@@ -86,13 +89,13 @@ void Window::determineCoordinates(Alignment anchor, int mW, int mH, int xPad, in
 }
 
 void Window::setupWindow(int w, int h, int x, int y) {
-
   if(_parent) {
     _win = _parent->createSubWindow(w, h, x, y);
   } else {
     BeginCursesOperation;
     _win = newwin(h, w, y, x);
   }
+  ASSERT(_win, "Failed to create window");
 
   _dims = IVec2(w, h);
 

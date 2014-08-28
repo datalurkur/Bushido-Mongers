@@ -13,15 +13,18 @@ LocalBackEnd::LocalBackEnd(): _consumerShouldDie(false), _eventsReady(false), _m
   _mainWindow = new Window(Window::Alignment::TOP_CENTER, 1.0f, 1.0f, 0, 10, 0, 0, 0);
   // Create the log window as a 10-row high bar at the bottom of the screen
   _logWindow = new Window(Window::Alignment::BOTTOM_CENTER, w, 10, 0, 0, 0);
-  // Split the main window 85 / 15 between the map and the info bar
-  _mapWindow = new Window(Window::Alignment::CENTER_LEFT, 0.85f, 1.0f, 0, 0, 0, 0, _mainWindow);
-  _infoWindow = new Window(Window::Alignment::CENTER_RIGHT, 0.15f, 1.0f, 0, 0, 0, 0, _mainWindow);
+  // Split the main window 80 / 20 between the map and the info bar
+  _mapWindow = new Window(Window::Alignment::CENTER_LEFT, 0.8f, 1.0f, 0, 0, 0, 0, _mainWindow);
+  _infoWindow = new Window(Window::Alignment::CENTER_RIGHT, 0.2f, 1.0f, 0, 0, 0, 0, _mainWindow);
 
   // Create the log panel
   _logPanel = new CursesLogWindow(_logWindow);
 
   // Create the map panel
   _mapPanel = new RenderTarget(_mapWindow);
+
+  // Create the object menu
+  _objectMenu = new DynamicMenu("Objects in tile", _infoWindow);
 
   _eventConsumer = thread(&LocalBackEnd::consumeEvents, this);
 
@@ -54,6 +57,7 @@ void LocalBackEnd::enableCursor(bool enabled) {
   ClientArea* currentArea = _world.getCurrentArea();
   updateTileRepresentation(_cursorLocation, currentArea);
   _mapPanel->render();
+  updateInfoPanel();
 }
 
 void LocalBackEnd::moveCursor(const IVec2& dir) {
@@ -72,6 +76,7 @@ void LocalBackEnd::moveCursor(const IVec2& dir) {
     updateTileRepresentation(_cursorLocation, currentArea);
     _mapPanel->render();
   }
+  updateInfoPanel();
 }
 
 void LocalBackEnd::sendToClient(SharedGameEvent event) {
@@ -134,6 +139,7 @@ void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
       break;
     case CharacterMoved:
       Debug("Character moved");
+      updateInfoPanel();
       break;
     case MoveFailed:
       Debug("Failed to move - " << ((MoveFailedEvent*)event)->reason);
@@ -290,4 +296,30 @@ void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* cur
     }
   }
   _mapSource->setData(coords.x, coords.y, c, currentArea->isTileShrouded(coords) ? A_NORMAL : A_BOLD);
+}
+
+void LocalBackEnd::updateInfoPanel() {
+  IVec2 p;
+  if(_cursorEnabled) {
+    p = _cursorLocation;
+  } else {
+    p = _lastPlayerLocation;
+  }
+  _objectMenu->clearChoices();
+
+  ClientArea* currentArea = _world.getCurrentArea();
+  if(!currentArea) {
+    return;
+  }
+  TileBase* tile = currentArea->getTile(p);
+  if(!tile) {
+    return;
+  }
+
+  for(auto obj : tile->getContents()) {
+    auto objectStub = _objects.find(obj);
+    if(objectStub == _objects.end()) { continue; }
+    const ProtoBObject* proto = _raw.getObject(objectStub->second.prototype);
+    _objectMenu->addChoice(proto->name);
+  }
 }

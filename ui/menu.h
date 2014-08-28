@@ -7,8 +7,7 @@
 #include <string>
 #include <sstream>
 
-#include <menu.h>
-
+#include "curseme/hotkeymenudriver.h"
 #include "util/stringhelper.h"
 #include "ui/titlebox.h"
 
@@ -20,7 +19,8 @@ using namespace std;
 
 class MenuBase {
 public:
-  MenuBase(const string& title);
+  MenuBase(const string& title, Window* window);
+  virtual ~MenuBase();
 
   virtual size_t addChoice(const string& choice);
   virtual size_t removeChoice(const string& choice);
@@ -30,30 +30,36 @@ public:
 protected:
   size_t listen();
 
+private:
+  void refreshDriver();
+
 protected:
   string _title;
   vector<string> _choices;
+
+  Window* _window;
+  HotkeyMenuDriver* _driver;
 };
 
 class StaticMenu : public MenuBase {
 public:
-  StaticMenu(const string& title);
+  StaticMenu(const string& title, Window* window = 0);
 
   template <typename T>
-  StaticMenu(const string& title, const T& choices);
+  StaticMenu(const string& title, const T& choices, Window* window);
 
   bool getChoice(string& choice);
   bool getChoiceIndex(size_t& index);
 };
 
 template <typename T>
-StaticMenu::StaticMenu(const string& title, const T& choices): MenuBase(title) {
+StaticMenu::StaticMenu(const string& title, const T& choices, Window* window): MenuBase(title, window) {
   copy(choices.begin(), choices.end(), back_inserter(_choices));
 }
 
 class DynamicMenu : public MenuBase {
 public:
-  DynamicMenu(const string& title);
+  DynamicMenu(const string& title, Window* window = 0);
 
   size_t addChoice(const string& choice);
   size_t addChoice(const string& choice, function<void()> func);

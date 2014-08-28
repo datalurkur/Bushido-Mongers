@@ -12,11 +12,18 @@
 #define CTRLD   4
 
 // ============= MENU BASE ===============
-MenuBase::MenuBase(const string& title): _title(title) {}
+MenuBase::MenuBase(const string& title, Window* window): _title(title), _window(window), _driver(0) {
+  refreshDriver();
+}
+
+MenuBase::~MenuBase() {
+  if(_driver) { delete _driver; }
+}
 
 size_t MenuBase::addChoice(const string& choice) {
   size_t ret = _choices.size();
   _choices.push_back(choice);
+  refreshDriver();
   return ret;
 }
 
@@ -28,42 +35,43 @@ size_t MenuBase::removeChoice(const string& choice) {
       break;
     }
   }
+  if(index != _choices.size()) { refreshDriver(); }
   return index;
 }
 
 void MenuBase::removeChoice(size_t index) {
   _choices.erase(_choices.begin() + index);
+  refreshDriver();
 }
 
 void MenuBase::clearChoices() {
   _choices.clear();
+  refreshDriver();
 }
 
 size_t MenuBase::listen() {
-  HotkeyMenuDriver driver(_title, _choices);
-
   int c;
-  while((c = driver.getChar()) != KEY_F(1)) {
+  while((c = _driver->getChar()) != KEY_F(1)) {
     switch(c) {
       case KEY_DOWN:
-        driver.nextItem();
+        _driver->nextItem();
         break;
       case KEY_UP:
-        driver.previousItem();
+        _driver->previousItem();
         break;
       case KEY_NPAGE:
-        driver.previousPage();
+        _driver->previousPage();
         break;
       case KEY_PPAGE:
-        driver.nextPage();
+        _driver->nextPage();
         break;
       case KEY_LLDBENTER:
       case KEY_REALENTER:
-        return driver.makeSelection();
+        return _driver->makeSelection();
         break;
       default: {
         size_t choice;
-        if(driver.makeHotkeySelection(c, choice)) {
+        if(_driver->makeHotkeySelection(c, choice)) {
           Info("Selecting item " << choice << " using hotkey " << c);
           return choice;
         } else {
@@ -74,11 +82,16 @@ size_t MenuBase::listen() {
     }
   }
 
-  return driver.getNumItems();
+  return _driver->getNumItems();
+}
+
+void MenuBase::refreshDriver() {
+  if(_driver) { delete _driver; }
+  _driver = new HotkeyMenuDriver(_title, _choices, _window);
 }
 
 // ============= STATIC MENU ===============
-StaticMenu::StaticMenu(const string& title): MenuBase(title) {}
+StaticMenu::StaticMenu(const string& title, Window* window): MenuBase(title, window) {}
 
 bool StaticMenu::getChoice(string& choice) {
   size_t index = listen();
@@ -95,7 +108,7 @@ bool StaticMenu::getChoiceIndex(size_t& index) {
 }
 
 // ============= DYNAMIC MENU ===============
-DynamicMenu::DynamicMenu(const string& title): MenuBase(title) {
+DynamicMenu::DynamicMenu(const string& title, Window* window): MenuBase(title, window) {
 }
 
 size_t DynamicMenu::addChoice(const string& choice) {
