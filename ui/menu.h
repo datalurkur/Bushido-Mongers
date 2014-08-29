@@ -30,9 +30,6 @@ public:
 protected:
   size_t listen();
 
-private:
-  void refreshDriver();
-
 protected:
   string _title;
   vector<string> _choices;

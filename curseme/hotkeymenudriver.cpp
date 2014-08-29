@@ -1,11 +1,17 @@
 #include "curseme/hotkeymenudriver.h"
 
-HotkeyMenuDriver::HotkeyMenuDriver(const string& title, const vector<string>& choices, Window* parent): MenuDriver(title, choices, 4, parent), _choices(choices) {
-  assignHotkeys();
-  onSelectionUpdate();
+HotkeyMenuDriver::HotkeyMenuDriver(const string& title, Window* parent): MenuDriver(title, parent) {}
+
+HotkeyMenuDriver::~HotkeyMenuDriver() {}
+
+size_t HotkeyMenuDriver::numChoices() const {
+  return _choices.size();
 }
 
-HotkeyMenuDriver::~HotkeyMenuDriver() {
+void HotkeyMenuDriver::redraw(const vector<string>& choices) {
+  _choices = choices;
+  assignHotkeys();
+  onSelectionUpdate();
 }
 
 void HotkeyMenuDriver::previousPage() { ASSERT(0, "NOT IMPLEMENTED"); }
@@ -32,11 +38,10 @@ void HotkeyMenuDriver::onSelectionUpdate() {
     _container->usableArea()->printFormattedChar(lineText.size() + 2, i, _hotkeys.reverseFind(i)->second, COLOR_PAIR(GREEN_ON_BLACK));
     _container->usableArea()->printChar(lineText.size() + 3, i, ')');
   }
-  // This is kind of a hack, because I can't for the life of me figure out why the box around the title window is getting clobbered
-  _container->rebuild();
 }
 
 void HotkeyMenuDriver::assignHotkeys() {
+  _hotkeys.clear();
   for(size_t i = 0; i < _choices.size(); i++) {
     const string& c = _choices[i];
 

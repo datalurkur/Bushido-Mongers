@@ -1,12 +1,39 @@
 #include "curseme/cursesmenudriver.h"
 
-CursesMenuDriver::CursesMenuDriver(const string& title, const vector<string>& choices, Window* parent): MenuDriver(title, choices, 1, parent), _items(0), _menu(0) {
-  if(_numItems == 0) { return; }
+CursesMenuDriver::CursesMenuDriver(const string& title, Window* parent): MenuDriver(title, parent), _numItems(0), _items(0), _menu(0) {}
+
+CursesMenuDriver::~CursesMenuDriver() {
+  cleanup();
+}
+
+size_t CursesMenuDriver::numChoices() const { return _numItems; }
+
+void CursesMenuDriver::cleanup() {
+  // Clean up menu if it exists
+  if(!_menu) { return; }
+
+  BeginCursesOperation;
+
+  unpost_menu(_menu);
+  free_menu(_menu);
+  _menu = 0;
+
+  for(size_t i = 0; i < _numItems; ++i) {
+    free_item(_items[i]);
+  }
+  _items = 0;
+}
+
+void CursesMenuDriver::redraw(const vector<string>& choices) {
+  cleanup();
+
+  if(choices.size() == 0) { return; }
+  _numItems = choices.size();
 
   {
     BeginCursesOperation;
     _items = (ITEM **)calloc(_numItems + 1, sizeof(ITEM *));
-    for(size_t i = 0; i < choices.size(); i++) {
+    for(size_t i = 0; i < _numItems; i++) {
       _items[i] = new_item(choices[i].c_str(), "");
     }
     _items[_numItems] = (ITEM*)NULL;
@@ -23,21 +50,6 @@ CursesMenuDriver::CursesMenuDriver(const string& title, const vector<string>& ch
   }
 
   _container->usableArea()->refresh();
-}
-
-CursesMenuDriver::~CursesMenuDriver() {
-  if(!_menu) { return; }
-
-  BeginCursesOperation;
-
-  unpost_menu(_menu);
-  free_menu(_menu);
-  _menu = 0;
-
-  for(size_t i = 0; i < _numItems; ++i) {
-    free_item(_items[i]);
-  }
-  _items = 0;
 }
 
 void CursesMenuDriver::previousPage() {

@@ -9,9 +9,9 @@ TitleBox::TitleBox(int w, int h, int x, int y, const string& title, Window* pare
 }
 
 TitleBox::TitleBox(Window::Alignment anchor, float wRatio, float hRatio, const string& title, Window* parent) {
-  _outer = new Window(anchor, wRatio, hRatio, 0, 0, parent);
+  _outer = new Window(anchor, wRatio, hRatio, 0, 0, 0, 0, parent);
   _outer->setBox();
-  _inner = new Window(Window::BOTTOM_CENTER, 1.0f, 1.0f, 2, 2, 0, 1, _outer);
+  _inner = new Window(Window::BOTTOM_CENTER, 1.0f, 1.0f, 2, 3, 0, 1, _outer);
 
   setTitle(title);
 }
@@ -45,8 +45,4 @@ void TitleBox::attachMenu(MENU* menu) {
 
 Window* TitleBox::usableArea() const {
   return _inner;
-}
-
-void TitleBox::rebuild() {
-  _outer->setBox();
 }

@@ -126,7 +126,6 @@ void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
       updateMap((TileDataEvent*)event);
       break;
     case ObjectData:
-      //Debug("Object data received from server");
       updateObject((ObjectDataEvent*)event);
       break;
     case CharacterReady:
@@ -139,7 +138,6 @@ void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
       break;
     case CharacterMoved:
       Debug("Character moved");
-      updateInfoPanel();
       break;
     case MoveFailed:
       Debug("Failed to move - " << ((MoveFailedEvent*)event)->reason);
@@ -231,6 +229,7 @@ void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* cur
     _lastPlayerLocation = coords;
     if(!_cursorEnabled) {
       _mapPanel->setCenter(coords);
+      updateInfoPanel();
     }
     return;
   }

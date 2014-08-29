@@ -12,19 +12,21 @@ class TitleBox;
 
 class MenuDriver {
 public:
-  MenuDriver(const string& title, const vector<string>& choices, size_t choicePadding, Window* parent);
+  MenuDriver(const string& title, Window* parent);
   virtual ~MenuDriver();
 
   void previousItem();
   void nextItem();
 
   size_t makeSelection();
-  size_t getNumItems();
 
   int getChar();
 
   virtual void previousPage() = 0;
   virtual void nextPage() = 0;
+
+  virtual void redraw(const vector<string>& choices) = 0;
+  virtual size_t numChoices() const = 0;
 
 protected:
   virtual void onSelectionUpdate() = 0;
@@ -33,7 +35,6 @@ protected:
   static const string Cursor;
 
 protected:
-  size_t _numItems;
   size_t _index;
 
   TitleBox* _container;

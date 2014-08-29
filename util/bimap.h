@@ -29,6 +29,8 @@ public:
   void reverseErase(const S& value);
   void reverseErase(typename map<S,T>::const_iterator itr);
 
+  void clear();
+
 private:
   map<T, S> _forwardMap;
   map<S, T> _backwardMap;
@@ -111,6 +113,12 @@ template <typename T, typename S>
 void BiMap<T,S>::reverseErase(typename map<S,T>::const_iterator itr) {
   _forwardMap.erase(itr->second);
   _backwardMap.erase(itr);
+}
+
+template <typename T, typename S>
+void BiMap<T,S>::clear() {
+  _forwardMap.clear();
+  _backwardMap.clear();
 }
 
 #endif

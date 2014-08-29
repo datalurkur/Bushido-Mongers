@@ -5,16 +5,23 @@
 
 class CursesMenuDriver : public MenuDriver {
 public:
-  CursesMenuDriver(const string& title, const vector<string>& choices, Window* parent = 0);
+  CursesMenuDriver(const string& title, Window* parent = 0);
   virtual ~CursesMenuDriver();
 
   void previousPage();
   void nextPage();
 
+  size_t numChoices() const;
+  void redraw(const vector<string>& choices);
+
 protected:
   void onSelectionUpdate();
 
 private:
+  void cleanup();
+
+private:
+  size_t _numItems;
   ITEM** _items;
   MENU* _menu;
 };

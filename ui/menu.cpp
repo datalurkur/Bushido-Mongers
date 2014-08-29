@@ -12,18 +12,18 @@
 #define CTRLD   4
 
 // ============= MENU BASE ===============
-MenuBase::MenuBase(const string& title, Window* window): _title(title), _window(window), _driver(0) {
-  refreshDriver();
+MenuBase::MenuBase(const string& title, Window* window): _title(title), _window(window) {
+  _driver = new HotkeyMenuDriver(_title, _window);
 }
 
 MenuBase::~MenuBase() {
-  if(_driver) { delete _driver; }
+  delete _driver;
 }
 
 size_t MenuBase::addChoice(const string& choice) {
   size_t ret = _choices.size();
   _choices.push_back(choice);
-  refreshDriver();
+  _driver->redraw(_choices);
   return ret;
 }
 
@@ -35,18 +35,20 @@ size_t MenuBase::removeChoice(const string& choice) {
       break;
     }
   }
-  if(index != _choices.size()) { refreshDriver(); }
+  if(index != _choices.size()) {
+    _driver->redraw(_choices);
+  }
   return index;
 }
 
 void MenuBase::removeChoice(size_t index) {
   _choices.erase(_choices.begin() + index);
-  refreshDriver();
+  _driver->redraw(_choices);
 }
 
 void MenuBase::clearChoices() {
   _choices.clear();
-  refreshDriver();
+  _driver->redraw(_choices);
 }
 
 size_t MenuBase::listen() {
@@ -82,12 +84,7 @@ size_t MenuBase::listen() {
     }
   }
 
-  return _driver->getNumItems();
-}
-
-void MenuBase::refreshDriver() {
-  if(_driver) { delete _driver; }
-  _driver = new HotkeyMenuDriver(_title, _choices, _window);
+  return _driver->numChoices();
 }
 
 // ============= STATIC MENU ===============

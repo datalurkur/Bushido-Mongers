@@ -6,13 +6,16 @@
 
 class HotkeyMenuDriver: public MenuDriver {
 public:
-  HotkeyMenuDriver(const string& title, const vector<string>& choices, Window* parent = 0);
+  HotkeyMenuDriver(const string& title, Window* parent = 0);
   ~HotkeyMenuDriver();
 
   void previousPage();
   void nextPage();
 
   bool makeHotkeySelection(int c, size_t& index);
+
+  void redraw(const vector<string>& choices);
+  size_t numChoices() const;
 
 protected:
   void onSelectionUpdate();
