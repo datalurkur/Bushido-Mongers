@@ -28,16 +28,23 @@ bool HotkeyMenuDriver::makeHotkeySelection(int c, size_t& index) {
 }
 
 void HotkeyMenuDriver::onSelectionUpdate() {
-  _container->usableArea()->clear();
+  Window* win = _container->usableArea();
+  win->clear();
 
   string blankCursor(Cursor.size(), ' ');
-  for(size_t i = 0; i < _choices.size(); i++) {
-    string lineText(" " + ((i == _index) ? Cursor : blankCursor) + " " + _choices[i]);
-    _container->usableArea()->printText(0, i, lineText.c_str());
-    _container->usableArea()->printChar(lineText.size() + 1, i, '(');
-    _container->usableArea()->printFormattedChar(lineText.size() + 2, i, _hotkeys.reverseFind(i)->second, COLOR_PAIR(GREEN_ON_BLACK));
-    _container->usableArea()->printChar(lineText.size() + 3, i, ')');
+  if(_choices.size() > 0) {
+    for(size_t i = 0; i < _choices.size(); i++) {
+      string lineText(" " + ((i == _index) ? Cursor : blankCursor) + " " + _choices[i]);
+      win->printText(0, i, lineText.c_str());
+      win->printChar(lineText.size() + 1, i, '(');
+      win->printFormattedChar(lineText.size() + 2, i, _hotkeys.reverseFind(i)->second, COLOR_PAIR(GREEN_ON_BLACK));
+      win->printChar(lineText.size() + 3, i, ')');
+    }
+  } else {
+    win->printText(1, 0, "-no selection-");
   }
+
+  win->refresh();
 }
 
 void HotkeyMenuDriver::assignHotkeys() {

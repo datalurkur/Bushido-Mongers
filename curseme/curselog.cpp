@@ -41,6 +41,8 @@ void CursesLogWindow::update() {
       }
     }
   }
+
+  _window->refresh();
 }
 
 void CursesLogWindow::printLine(int row, int width, const string& line) {

@@ -212,7 +212,7 @@ void LocalBackEnd::updateObject(ObjectDataEvent* event) {
 
 void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* currentArea) {
   if(_cursorEnabled && _cursorLocation == coords) {
-    _mapSource->setData(coords.x, coords.y, 'X', A_NORMAL | COLOR_PAIR(BLUE_ON_BLACK));
+    _mapSource->setData(coords.x, coords.y, 'X', A_BLINK | COLOR_PAIR(BLUE_ON_BLACK));
     _mapPanel->setCenter(coords);
     return;
   }

@@ -36,7 +36,7 @@ int main() {
   getmaxyx(stdscr, maxY, maxX);
   Window mainWin(Window::Alignment::CENTER, 1.0f, 1.0f, 0, 0, 0, 0, 0);
   renderSource = new RenderSource(maxX - 2, maxY - 2);
-  RenderTarget renderTarget(mainWin, renderSource);
+  RenderTarget renderTarget(&mainWin, renderSource);
   renderTarget.setOffset(IVec2(1, 1));
 
   int plotSize = 40;

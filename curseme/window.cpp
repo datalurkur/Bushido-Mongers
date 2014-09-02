@@ -121,13 +121,13 @@ void Window::refresh() {
 
 void Window::clear() {
   BeginCursesOperation;
-  wclear(_win);
+  //wclear(_win);
+  werase(_win);
 }
 
 void Window::setBox() {
   BeginCursesOperation;
   box(_win, 0, 0);
-  wrefresh(_win);
 }
 
 void Window::setAsMenuWindow(MENU* menu) {
@@ -148,8 +148,6 @@ void Window::setCursorPosition(int x, int y) {
   int dY, dX;
   getbegyx(_win, dY, dX);
   wmove(stdscr, y + dY, x + dX);
-
-  wrefresh(_win);
 }
 
 void Window::printText(int x, int y, const char* fmt, ...) {
@@ -158,13 +156,11 @@ void Window::printText(int x, int y, const char* fmt, ...) {
   va_start(v, fmt);
   mvwprintw(_win, y, x, fmt, v);
   va_end(v);
-  wrefresh(_win);
 }
 
 void Window::printChar(int x, int y, const chtype c) {
   BeginCursesOperation;
   mvwaddch(_win, y, x, c);
-  wrefresh(_win);
 }
 
 void Window::printFormattedChar(int x, int y, const chtype c, attr_t attributes) {
@@ -176,13 +172,11 @@ void Window::printFormattedChar(int x, int y, const chtype c, attr_t attributes)
   wattrset(_win, attributes);
   mvwaddch(_win, y, x, c);
   wattr_set(_win, originalAttributes, originalColor, unused);
-  wrefresh(_win);
 }
 
 void Window::printHRule(int x, int y, chtype c, int n) {
   BeginCursesOperation;
   mvwhline(_win, y, x, c, n);
-  wrefresh(_win);
 }
 
 int Window::getChar() {

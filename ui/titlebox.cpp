@@ -36,6 +36,7 @@ void TitleBox::setTitle(const string& title) {
   _outer->printChar(0, 2, ACS_LTEE);
   _outer->printHRule(1, 2, ACS_HLINE, outerDims.x - 2);
   _outer->printChar(outerDims.x - 1, 2, ACS_RTEE);
+  _outer->refresh();
 }
 
 void TitleBox::attachMenu(MENU* menu) {
