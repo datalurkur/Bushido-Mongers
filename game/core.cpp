@@ -110,6 +110,9 @@ void GameCore::createCharacter(PlayerID player, const string& characterType, Eve
 
   _observers[player] = ObjectObserver(_objectManager);
   _observers[player].areaChanges(startArea, visibleCoords, results);
+
+  // Set up the player as an event observer
+  setObjectAwareness(character->getID(), startArea);
 }
 
 void GameCore::loadCharacter(PlayerID player, BObjectID characterID, EventQueue& results) {
@@ -160,9 +163,13 @@ void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventQueue& resu
   }
 
   // Move the character
+  GameEvent* moveEvent = new ThingMovedEvent(character->getID(), 0, character->getLocation()->getCoordinates(), newCoordinates);
   Info("Moving character " << character->getID() << " from " << character->getLocation()->getCoordinates() << " to " << newCoordinates);
   character->setLocation(destinationTile);
-  results.pushEvent(new CharacterMovedEvent());
+  results.pushEvent(moveEvent);
+
+  // Inform the world
+  onEvent(moveEvent);
 
   // Get the new perspective
   set<IVec2> newView;
@@ -249,4 +256,57 @@ void GameCore::packRaws(EventQueue& results) {
     return;
   }
   results.pushEvent(new RawDataEvent(stream.str()));
+}
+
+void GameCore::setObjectAwareness(BObjectID id, Area* area) {
+  auto previousArea = _listenerAreas.find(id);
+  if(previousArea == _listenerAreas.end()) {
+    Debug("Object " << id << "'s awareness being set to area " << area->getName() << " from nowhere");
+    _listenerAreas.insert(make_pair(id, area));
+  } else {
+    auto previousPair = _areaListeners.find(previousArea->second);
+    if(previousPair != _areaListeners.end()) {
+      previousPair->second.erase(id);
+      Debug("Object " << id << "'s awareness being moved from " << previousPair->first->getName() << " to area " << area->getName());
+    } else {
+      Error("Object " << id << " should have an awareness source but does not");
+    }
+    _listenerAreas[id] = area;
+  }
+  auto newPair = _areaListeners.find(area);
+  if(newPair == _areaListeners.end()) {
+    Debug("Object " << id << " is the first to be a listener here");
+    _areaListeners.insert(make_pair(area, set<BObjectID> { id }));
+  } else {
+    Debug("Object " << id << " added to listeners here");
+    _areaListeners[area].insert(id);
+  }
+}
+
+void GameCore::onEvent(GameEvent* event) {
+  switch(event->type) {
+  case ThingMoved: {
+    ThingMovedEvent* e = (ThingMovedEvent*)event;
+    BObject* object = _objectManager->getObject(e->object);
+    if(!object) {
+      Error("Unknown object " << e->object << " moving");
+      break;
+    }
+    Area* affectedArea = object->getLocation()->getArea();
+    if(!affectedArea) {
+      Error("Object moving through unknown area");
+      break;
+    }
+    auto observersPair = _areaListeners.find(affectedArea);
+    if(observersPair != _areaListeners.end()) {
+      for(auto observer : observersPair->second) {
+        #pragma message "FIXME - Here we should be sending an event to another player"
+        Debug("Event being sent to observer " << observer);
+      }
+    }
+  } break;
+  default:
+    Debug("Unhandled game event type " << event->type);
+    break;
+  }
 }

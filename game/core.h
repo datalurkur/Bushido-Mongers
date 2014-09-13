@@ -7,6 +7,7 @@
 #include "io/eventqueue.h"
 #include "world/world.h"
 #include "util/bimap.h"
+#include "util/boxquadtree.h"
 
 #include <string>
 
@@ -39,6 +40,9 @@ private:
   bool checkCharacterSanity(PlayerID player);
   void packRaws(EventQueue& results);
 
+  void setObjectAwareness(BObjectID id, Area* area);
+  void onEvent(GameEvent* event);
+
 private:
   // World and objects
   BObjectManager* _objectManager;
@@ -50,6 +54,10 @@ private:
   // Visibility
   map<int, list<IVec2> > _precomputedSight;
   map<PlayerID, ObjectObserver> _observers;
+
+  // Rough awareness map
+  map<Area*, set<BObjectID> > _areaListeners;
+  map<BObjectID, Area*> _listenerAreas;
 };
 
 #endif

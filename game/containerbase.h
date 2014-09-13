@@ -22,6 +22,7 @@ public:
 
 protected:
   friend class BObject;
+  friend class LocalBackEnd;
 
   bool addObject(BObjectID object);
   bool removeObject(BObjectID object);

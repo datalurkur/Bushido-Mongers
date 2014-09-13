@@ -43,6 +43,7 @@ private:
   void changeArea();
   void updateMap(TileDataEvent* event);
   void updateObject(ObjectDataEvent* event);
+  void moveObject(ThingMovedEvent* event);
 
   void updateTileRepresentation(const IVec2& coords, ClientArea* currentArea);
 

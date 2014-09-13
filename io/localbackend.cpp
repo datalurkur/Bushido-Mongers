@@ -136,8 +136,13 @@ void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
     case CharacterNotReady:
       Debug("Character not ready - " << ((CharacterNotReadyEvent*)event)->reason);
       break;
-    case CharacterMoved:
-      Debug("Character moved");
+    case ThingMoved:
+      if(((ThingMovedEvent*)event)->object == _characterID) {
+        Debug("Character moved");
+      } else {
+        moveObject((ThingMovedEvent*)event);
+        #pragma message "FIXME - Deal with a thing moving here"
+      }
       break;
     case MoveFailed:
       Debug("Failed to move - " << ((MoveFailedEvent*)event)->reason);
@@ -208,6 +213,29 @@ void LocalBackEnd::updateObject(ObjectDataEvent* event) {
   Debug("Updating data for object " << event->ID << " (typed " << event->prototype << ")");
   _objects[event->ID] = BObjectStub();
   _objects[event->ID].prototype = event->prototype;
+}
+
+void LocalBackEnd::moveObject(ThingMovedEvent* event) {
+  ClientArea* currentArea = _world.getCurrentArea();
+
+  #pragma message "Fix this so it displays something intelligent and useful"
+  if(!currentArea) { return; }
+
+  auto sourceTile = currentArea->getTile(event->source);
+  auto destTile   = currentArea->getTile(event->destination);
+
+  if(sourceTile) {
+    sourceTile->removeObject(event->object);
+    updateTileRepresentation(event->source, currentArea);
+  }
+  if(destTile) {
+    destTile->addObject(event->object);
+    updateTileRepresentation(event->destination, currentArea);
+  }
+
+  if(sourceTile || destTile) {
+    _mapPanel->render();
+  }
 }
 
 void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* currentArea) {

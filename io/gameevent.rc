@@ -50,7 +50,11 @@ MoveCharacter {
   IVec2 direction;
 };
 
-CharacterMoved {
+ThingMoved {
+  BObjectID object;
+  BObjectID subject;
+  IVec2 source;
+  IVec2 destination;
 };
 
 MoveFailed {
