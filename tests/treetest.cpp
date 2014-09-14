@@ -1,109 +1,36 @@
 #include "util/log.h"
-#include "util/boxquadtree.h"
-#include "util/pointquadtree.h"
+#include "util/quadtree.h"
+#include "util/assertion.h"
 
-#include <list>
+#include <set>
 
 using namespace std;
-
-typedef QuadTreeBoxObject<int> BoxObj;
-typedef QuadTreePointObject<int> PointObj;
-
-void setupBox(int x, int y, int mX, int mY, int numObjects, list<BoxObj*>& objects) {
-  for(int i = 0; i < numObjects; i++) { 
-    int oX = rand() % (mX - x) + x,
-        oY = rand() % (mY - y) + y,
-        oMX = rand() % (mX - oX) + oX,
-        oMY = rand() % (mY - oY) + oY;
-    objects.push_back(new BoxObj(oX, oY, oMX, oMY));
-    Info("\tAdding object from (" << oX << "," << oY << ") to (" << oMX << "," << oMY << ")");
-  }
-}
-
-void setupPoint(int x, int y, int mX, int mY, int numObjects, list<PointObj*>& objects) {
-  for(int i = 0; i < numObjects; i++) { 
-    int oX = rand() % (mX - x) + x,
-        oY = rand() % (mY - y) + y;
-    objects.push_back(new PointObj(oX, oY));
-    Info("\tAdding object at (" << oX << "," << oY << ")");
-  }
-}
-
-void testBox(int x, int y, int mX, int mY, int d, list<BoxObj*>& objects, int searches) {
-  BoxQuadTree<BoxObj*, int>* tree = new BoxQuadTree<BoxObj*, int>(x, y, mX, mY, d, objects);
-  for(int i = 0; i < searches; i++) {
-    int bX = rand() % (mX - x) + x,
-        bY = rand() % (mY - y) + y,
-        bmX = rand() % (mX - bX) + bX,
-        bmY = rand() % (mY - bY) + bY;
-    Info("Finding objects from (" << bX << "," << bY << ") to (" << bmX << "," << bmY << ")");
-
-    list<BoxObj*> bounded;
-    tree->getObjects(bX, bY, bmX, bmY, bounded);
-    for(auto obj : bounded) {
-      Info("\tFound object from (" << obj->getX() << "," << obj->getY() << ") to (" << obj->getMaxX() << "," << obj->getMaxY() << ")");
-    }
-  }
-  delete tree;
-}
-
-void testPoint(int x, int y, int mX, int mY, int d, list<PointObj*>& objects, int searches) {
-  PointQuadTree<PointObj*, int>* tree = new PointQuadTree<PointObj*, int>(x, y, mX, mY, d, objects);
-  for(int i = 0; i < searches; i++) {
-    int bX = rand() % (mX - x) + x,
-        bY = rand() % (mY - y) + y,
-        bmX = rand() % (mX - bX) + bX,
-        bmY = rand() % (mY - bY) + bY;
-    Info("Finding objects from (" << bX << "," << bY << ") to (" << bmX << "," << bmY << ")");
-
-    list<PointObj*> bounded;
-    tree->getObjects(bX, bY, bmX, bmY, bounded);
-    for(auto obj : bounded) {
-      Info("\tFound object at (" << obj->getX() << "," << obj->getY() << ")");
-    }
-
-    bounded.clear();
-    int numClosest = rand() % objects.size();
-    Info("Finding closest " << numClosest << " objects to (" << bX << "," << bY << ")");
-    tree->getClosestNObjects(bX, bY, numClosest, bounded);
-    for(auto obj : bounded) {
-      Info("\t Found object at (" << obj->getX() << "," << obj->getY() << ")");
-    }
-  }
-  delete tree;
-}
-
-void teardownBox(list<BoxObj*>& objects) {
-  for(auto object : objects) {
-    delete object;
-  }
-  objects.clear();
-}
-
-void teardownPoint(list<PointObj*>& objects) {
-  for(auto object : objects) {
-    delete object;
-  }
-  objects.clear();
-}
 
 int main() {
   Log::Setup();
 
-  int numObjects = 5;
-  int x = 0, y = 0, mx = 10, my = 10, d = 3;
+  int x = 0, y = 0, mx = 100, my = 100, d = 3;
 
-  Info("Testing box quadtree");
-  list<BoxObj*> boxObjects;
-  setupBox(x, y, mx, my, numObjects, boxObjects);
-  testBox(x, y, mx, my, d, boxObjects, 3);
-  teardownBox(boxObjects);
-  
-  Info("Testing point quadtree");
-  list<PointObj*> pointObjects;
-  setupPoint(x, y, mx, my, numObjects, pointObjects);
-  testPoint(x, y, mx, my, d, pointObjects, 3);
-  teardownPoint(pointObjects);
+  Info("Testing quadtree");
+  QuadTree<int> tree(x, y, mx, my, d);
+
+  tree.moveObject(1, 5, 10, 10, 15);
+  tree.moveObject(2, 10, 15, 20, 25);
+  tree.moveObject(3, 50, 50, 60, 60);
+
+  set<int> test;
+  tree.findObjects(10, 15, 10, 15, test);
+
+  ASSERT(test.find(1) != test.end(), "Expected to find object 1");
+  ASSERT(test.find(2) != test.end(), "Expected to find object 2");
+  ASSERT(test.find(3) == test.end(), "Did not expect to find object 3");
+
+  test.clear();
+  tree.removeObject(1);
+  tree.findObjects(10, 15, 10, 15, test);
+  ASSERT(test.find(1) == test.end(), "Expected to find object 1");
+  ASSERT(test.find(2) != test.end(), "Expected to find object 2");
+  ASSERT(test.find(3) == test.end(), "Did not expect to find object 3");
 
   Log::Teardown();
   return 0;

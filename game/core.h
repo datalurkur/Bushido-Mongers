@@ -7,7 +7,7 @@
 #include "io/eventqueue.h"
 #include "world/world.h"
 #include "util/bimap.h"
-#include "util/boxquadtree.h"
+#include "util/quadtree.h"
 
 #include <string>
 

@@ -1,5 +1,4 @@
 #include "world/generator.h"
-#include "util/pointquadtree.h"
 #include "util/timer.h"
 #include "util/geom.h"
 #include "util/noise.h"
