@@ -79,16 +79,16 @@ void LocalBackEnd::moveCursor(const IVec2& dir) {
   updateInfoPanel();
 }
 
-void LocalBackEnd::sendToClient(SharedGameEvent event) {
+void LocalBackEnd::sendToClient(EventQueue* queue) {
   unique_lock<mutex> lock(_eventLock);
-  _events.pushEvent(event);
+  _events.appendQueue(queue);
   _eventsReady = true;
   _eventsReadyCondition.notify_all();
 }
 
-void LocalBackEnd::sendToClient(EventQueue&& queue) {
+void LocalBackEnd::sendToClient(GameEvent* event) {
   unique_lock<mutex> lock(_eventLock);
-  _events.appendEvents(move(queue));
+  _events.pushEvent(event->clone());
   _eventsReady = true;
   _eventsReadyCondition.notify_all();
 }
@@ -98,13 +98,12 @@ void LocalBackEnd::consumeEvents() {
     unique_lock<mutex> lock(_eventLock);
     while(!_eventsReady && !_consumerShouldDie) _eventsReadyCondition.wait(lock);
 
-    if(_events.empty()) { continue; }
-    SharedGameEvent event = _events.popEvent();
-    if(_events.empty()) {
-      _eventsReady = false;
+    if(!_events.empty()) {
+      for(auto e : _events) {
+        consumeSingleEvent(e);
+      }
+      _events.clear();
     }
-    lock.unlock();
-    consumeSingleEvent(event.get());
   }
 }
 
@@ -153,7 +152,7 @@ void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
   }
 
   for(auto result : results) {
-    sendToServer(result.get());
+    sendToServer(result);
   }
 }
 

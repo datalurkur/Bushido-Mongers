@@ -6,9 +6,13 @@ ostream& operator<<(ostream& stream, const GameEventType& type) {
   return stream;
 }
 
-GameEvent::GameEvent(GameEventType t): type(t) {}
+GameEvent::GameEvent(GameEventType t): type(t) {
+  //Info("    Game event of type " << type << " being created (" << this << ")");
+}
 
-GameEvent::~GameEvent() {}
+GameEvent::~GameEvent() {
+  //Info("    Game event of type " << type << " begin torn down (" << this << ")");
+}
 
 void GameEvent::Pack(GameEvent* event, ostringstream& str) {
   genericBufferToStream(str, event->type);

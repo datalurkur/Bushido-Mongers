@@ -106,6 +106,7 @@ void CodeGenerator::GenerateStruct(const RCObject& object, ostringstream& struct
   structData << "  " << ClassName(object) << "();\n" << 
                 "  void pack(ostringstream& str);\n" <<
                 "  void unpack(istringstream& str);\n" <<
+                "  GameEvent* clone();\n" <<
                 "};\n\n";
 }
 
@@ -127,6 +128,9 @@ void CodeGenerator::GenerateSource(const RCObject& object, ostringstream& source
                 "}\n" <<
                 "void " << object.header << "Event::unpack(istringstream& str) {\n" <<
                 deserialization <<
+                "}\n" <<
+                "GameEvent* " << object.header << "Event::clone() {\n" <<
+                "  return new " << object.header << "Event(" << CloneArgs(object) << ");\n" <<
                 "}\n\n";
 }
 
@@ -157,6 +161,17 @@ string CodeGenerator::ConstructorInitializer(const RCObject& object) {
   string ret = "";
   for(auto field : object.fields) {
     ret += ", " + field.name + "(_" + field.name + ")";
+  }
+  return ret;
+}
+
+string CodeGenerator::CloneArgs(const RCObject& object) {
+  string ret = "";
+  bool first = true;
+  for(auto field : object.fields) {
+    if(!first) { ret += ", "; }
+    else { first = false; }
+    ret += field.name;
   }
   return ret;
 }

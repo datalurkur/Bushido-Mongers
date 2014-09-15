@@ -14,20 +14,18 @@ RemoteBackEnd::~RemoteBackEnd() {
   delete _socket;
 }
 
-void RemoteBackEnd::sendToClient(SharedGameEvent event) {
-  GameEvent* e = event.get();
-
-  // Serialize the event
-  ostringstream str(ios_base::binary);
-  GameEvent::Pack(e, str);
-
-  _buffer.sendPacket(_socket, str);
+void RemoteBackEnd::sendToClient(EventQueue* queue) {
+  for(auto e : *queue) {
+    sendToClient(e);
+  }
 }
 
-void RemoteBackEnd::sendToClient(EventQueue&& queue) {
-  for(auto event : queue) {
-    sendToClient(event);
-  }
+void RemoteBackEnd::sendToClient(GameEvent* event) {
+  // Serialize the event
+  ostringstream str(ios_base::binary);
+  GameEvent::Pack(event, str);
+
+  _buffer.sendPacket(_socket, str);
 }
 
 void RemoteBackEnd::bufferIncoming() {

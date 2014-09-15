@@ -4,7 +4,7 @@
 #include "game/bobjectmanager.h"
 #include "game/objectobserver.h"
 #include "io/gameevent.h"
-#include "io/eventqueue.h"
+#include "io/eventmap.h"
 #include "world/world.h"
 #include "util/bimap.h"
 #include "util/quadtree.h"
@@ -23,25 +23,24 @@ public:
   bool generateWorld(const string& rawSet);
   bool destroyWorld();
 
-  void update(int elapsed, EventQueue& events);
-  void processPlayerEvent(PlayerID player, GameEvent* event, EventQueue& results);
-  bool isEventVisibleToPlayer(PlayerID player, GameEvent* event);
+  void update(int elapsed, EventMap<PlayerID>& events);
+  void processPlayerEvent(PlayerID player, GameEvent* event, EventMap<PlayerID>& results);
 
   // Player/character maintenance
-  void createCharacter(PlayerID player, const string& characterType, EventQueue& results);
-  void loadCharacter(PlayerID player, BObjectID characterID, EventQueue& results);
-  void unloadCharacter(PlayerID player, EventQueue& results);
-  void moveCharacter(PlayerID player, const IVec2& dir, EventQueue& results);
+  void createCharacter(PlayerID player, const string& characterType, EventMap<PlayerID>& results);
+  void loadCharacter(PlayerID player, BObjectID characterID, EventMap<PlayerID>& results);
+  void unloadCharacter(PlayerID player, EventMap<PlayerID>& results);
+  void moveCharacter(PlayerID player, const IVec2& dir, EventMap<PlayerID>& results);
 
   bool isCharacterActive(PlayerID player);
 
 private:
   void getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibleTiles);
   bool checkCharacterSanity(PlayerID player);
-  void packRaws(EventQueue& results);
+  void packRaws(EventQueue* results);
 
   void setObjectAwareness(BObjectID id, Area* area);
-  void onEvent(GameEvent* event);
+  void onEvent(GameEvent* event, EventMap<PlayerID>& results);
 
 private:
   // World and objects

@@ -18,8 +18,8 @@ public:
   virtual bool connectSender(const string& name) = 0;
   virtual void disconnectSender() = 0;
   virtual void sendToServer(GameEvent* event) = 0;
-  virtual void sendToClient(SharedGameEvent event) = 0;
-  virtual void sendToClient(EventQueue&& queue) = 0;
+  virtual void sendToClient(EventQueue* queue) = 0;
+  virtual void sendToClient(GameEvent* event) = 0;
 
   void createCharacter(const string& name);
   void loadCharacter(BObjectID id);

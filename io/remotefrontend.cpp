@@ -55,8 +55,7 @@ void RemoteFrontEnd::bufferIncoming() {
     istringstream stream(i.str.str());
     GameEvent* event = GameEvent::Unpack(stream);
     if(event) {
-      SharedGameEvent e(event);
-      sendToClient(e);
+      sendToClient(event);
     } else {
       Warn("Failed to deserialize event");
     }

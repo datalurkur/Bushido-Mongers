@@ -8,20 +8,20 @@ ObjectObserver::ObjectObserver(): _currentArea(0), _tileData(300), _objectData(3
 ObjectObserver::ObjectObserver(BObjectManager* manager): _manager(manager), _currentArea(0), _tileData(300), _objectData(300) {
 }
 
-void ObjectObserver::areaChanges(Area* area, const set<IVec2>& view, EventQueue& results) {
+void ObjectObserver::areaChanges(Area* area, const set<IVec2>& view, EventQueue* results) {
   // Reset state
   _currentArea = area;
   _tileData.clear();
   _currentView.clear();
 
   // Send the area information
-  results.pushEvent(new AreaDataEvent(area->getName(), area->getPos(), area->getSize()));
+  results->pushEvent(new AreaDataEvent(area->getName(), area->getPos(), area->getSize()));
 
   // Send view information
   viewChanges(view, results);
 }
 
-void ObjectObserver::viewChanges(const set<IVec2>& newView, EventQueue& results) {
+void ObjectObserver::viewChanges(const set<IVec2>& newView, EventQueue* results) {
   time_t currentTime = Clock.getTime();
 
   set<IVec2> shrouded, visible;
@@ -60,17 +60,17 @@ void ObjectObserver::viewChanges(const set<IVec2>& newView, EventQueue& results)
 
   // Send tile data
   //Debug("Sending tile data with " << newlyVisible.size() << " newly visible tiles, " << updated.size() << " updated tiles, and " << shrouded.size() << " shrouded tiles");
-  results.pushEvent(new TileDataEvent(shrouded, newlyVisible, updated));
+  results->pushEvent(new TileDataEvent(shrouded, newlyVisible, updated));
 
   _currentView = newView;
 }
 
-void ObjectObserver::objectViewed(BObjectID id, EventQueue& results) {
+void ObjectObserver::objectViewed(BObjectID id, EventQueue* results) {
   //Debug("Player observes object " << id);
   BObject* object = _manager->getObject(id);
   if(!_objectData.has(id) || (_objectData.get(id) < object->lastChanged())) {
     //Debug("Object has updated, data will be sent");
-    results.pushEvent(new ObjectDataEvent(id, object->getProto()->name));
+    results->pushEvent(new ObjectDataEvent(id, object->getProto()->name));
     _objectData.set(id, Clock.getTime());
   } else {
     //Debug("Object has not updated since being seen last");

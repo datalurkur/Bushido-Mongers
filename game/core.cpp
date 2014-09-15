@@ -43,12 +43,12 @@ bool GameCore::destroyWorld() {
   return true;
 }
 
-void GameCore::update(int elapsed, EventQueue& results) {
+void GameCore::update(int elapsed, EventMap<PlayerID>& results) {
   #pragma message "Any activity controlled directly by the core will go here"
   // TODO - It will be worth looking into (to keep memory costs down) calling the timedmaps' cleanup functions
 }
 
-void GameCore::processPlayerEvent(PlayerID player, GameEvent* event, EventQueue& results) {
+void GameCore::processPlayerEvent(PlayerID player, GameEvent* event, EventMap<PlayerID>& results) {
   switch(event->type) {
     case CreateCharacter:
       createCharacter(player, "human", results);
@@ -70,19 +70,15 @@ void GameCore::processPlayerEvent(PlayerID player, GameEvent* event, EventQueue&
   }
 }
 
-bool GameCore::isEventVisibleToPlayer(PlayerID player, GameEvent* event) {
-  #pragma message "Perception and area checking will go here"
-  return true;
-}
-
-void GameCore::createCharacter(PlayerID player, const string& characterType, EventQueue& results) {
+void GameCore::createCharacter(PlayerID player, const string& characterType, EventMap<PlayerID>& results) {
+  EventQueue* playerResults = results.getEventQueue(player);
   if(isCharacterActive(player)) {
-    results.pushEvent(new CharacterNotReadyEvent("Character currently active"));
+    playerResults->pushEvent(new CharacterNotReadyEvent("Character currently active"));
     return;
   }
   BObject* character = _objectManager->createObjectFromPrototype(characterType);
   if(!character) {
-    results.pushEvent(new CharacterNotReadyEvent("Character creation failed"));
+    playerResults->pushEvent(new CharacterNotReadyEvent("Character creation failed"));
     return;
   }
 
@@ -90,7 +86,7 @@ void GameCore::createCharacter(PlayerID player, const string& characterType, Eve
   Area* startArea = _world->getRandomArea();
   Tile* startTile = startArea->getRandomEmptyTile();
   if(!startTile) {
-    results.pushEvent(new CharacterNotReadyEvent("Failed to find start location"));
+    playerResults->pushEvent(new CharacterNotReadyEvent("Failed to find start location"));
     _objectManager->destroyObject(character->getID());
     return;
   }
@@ -98,44 +94,44 @@ void GameCore::createCharacter(PlayerID player, const string& characterType, Eve
   character->setLocation(startTile);
 
   // Transfer raw data
-  packRaws(results);
+  packRaws(playerResults);
 
   // Set active character
   _playerMap.insert(player, character->getID());
-  results.pushEvent(new CharacterReadyEvent(character->getID()));
+  playerResults->pushEvent(new CharacterReadyEvent(character->getID()));
 
   // Find out what the player can see
   set<IVec2> visibleCoords;
   getViewFrom(player, startTile->getCoordinates(), visibleCoords);
 
   _observers[player] = ObjectObserver(_objectManager);
-  _observers[player].areaChanges(startArea, visibleCoords, results);
+  _observers[player].areaChanges(startArea, visibleCoords, playerResults);
 
   // Set up the player as an event observer
   setObjectAwareness(character->getID(), startArea);
 }
 
-void GameCore::loadCharacter(PlayerID player, BObjectID characterID, EventQueue& results) {
-  results.pushEvent(new CharacterNotReadyEvent("Character loading not implemented"));
+void GameCore::loadCharacter(PlayerID player, BObjectID characterID, EventMap<PlayerID>& results) {
+  results.pushEvent(player, new CharacterNotReadyEvent("Character loading not implemented"));
 }
 
-void GameCore::unloadCharacter(PlayerID player, EventQueue& results) {
+void GameCore::unloadCharacter(PlayerID player, EventMap<PlayerID>& results) {
   if(!isCharacterActive(player)) { return; }
   #pragma message "Store character data externally for reloading later"
   _objectManager->destroyObject(_playerMap.lookup(player));
   _playerMap.erase(player);
 }
 
-void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventQueue& results) {
+void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventMap<PlayerID>& results) {
   Debug("Player " << player << "'s character is moving");
   if(!checkCharacterSanity(player)) {
-    results.pushEvent(new MoveFailedEvent("No active player"));
+    results.pushEvent(player, new MoveFailedEvent("No active player"));
     return;
   }
 
   // This will get a little more complicated later when we have jumps / teleports / etc
   if(abs(dir.x) > 1 || abs(dir.y) > 1) {
-    results.pushEvent(new MoveFailedEvent("Move not legal"));
+    results.pushEvent(player, new MoveFailedEvent("Move not legal"));
     return;
   }
 
@@ -147,36 +143,35 @@ void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventQueue& resu
   // Check the destination coordinates (in-bounds?)
   IVec2 newCoordinates = character->getLocation()->getCoordinates() + dir;
   if(newCoordinates.x < 0 || newCoordinates.y < 0 || newCoordinates.x >= areaSize.x || newCoordinates.y >= areaSize.y) {
-    results.pushEvent(new MoveFailedEvent("Move out of bounds"));
+    results.pushEvent(player, new MoveFailedEvent("Move out of bounds"));
     return;
   }
 
   // Check the destination tile type
   Tile* destinationTile = (Tile*)area->getTile(newCoordinates);
   if(!destinationTile) {
-    results.pushEvent(new MoveFailedEvent("Internal server error - destination tile is null"));
+    results.pushEvent(player, new MoveFailedEvent("Internal server error - destination tile is null"));
     return;
   }
   if(destinationTile->getType() != TileType::Ground) {
-    results.pushEvent(new MoveFailedEvent("Movement blocked"));
+    results.pushEvent(player, new MoveFailedEvent("Movement blocked"));
     return;
   }
 
   // Move the character
-  GameEvent* moveEvent = new ThingMovedEvent(character->getID(), 0, character->getLocation()->getCoordinates(), newCoordinates);
+  ThingMovedEvent moveEvent(character->getID(), 0, character->getLocation()->getCoordinates(), newCoordinates);
   Info("Moving character " << character->getID() << " from " << character->getLocation()->getCoordinates() << " to " << newCoordinates);
   character->setLocation(destinationTile);
-  results.pushEvent(moveEvent);
 
   // Inform the world
-  onEvent(moveEvent);
+  onEvent(&moveEvent, results);
 
   // Get the new perspective
   set<IVec2> newView;
   getViewFrom(player, newCoordinates, newView);
 
   // Collect any events that result from the view change
-  _observers[player].viewChanges(newView, results);
+  _observers[player].viewChanges(newView, results.getEventQueue(player));
 }
 
 bool GameCore::isCharacterActive(PlayerID player) {
@@ -216,7 +211,7 @@ void GameCore::getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibl
     // Get the disc of tiles the player could potentially see
     list<IVec2> disc;
     computeRasterizedDisc(sightRadius, disc);
-    _precomputedSight[sightRadius] = move(disc);
+    _precomputedSight[sightRadius] = disc;
   }
 
   const IVec2& bounds = area->getSize();
@@ -248,14 +243,14 @@ void GameCore::getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibl
   //Info("There are " << visibleTiles.size() << " tiles visible to " << player << " from " << pos);
 }
 
-void GameCore::packRaws(EventQueue& results) {
+void GameCore::packRaws(EventQueue* results) {
   ostringstream stream(ios_base::binary);
   Raw* raws = _objectManager->getRaws();
   if(!raws->pack(stream)) {
     Error("Failed to pack raws for client");
     return;
   }
-  results.pushEvent(new RawDataEvent(stream.str()));
+  results->pushEvent(new RawDataEvent(stream.str()));
 }
 
 void GameCore::setObjectAwareness(BObjectID id, Area* area) {
@@ -283,7 +278,7 @@ void GameCore::setObjectAwareness(BObjectID id, Area* area) {
   }
 }
 
-void GameCore::onEvent(GameEvent* event) {
+void GameCore::onEvent(GameEvent* event, EventMap<PlayerID>& results) {
   switch(event->type) {
   case ThingMoved: {
     ThingMovedEvent* e = (ThingMovedEvent*)event;
@@ -300,8 +295,13 @@ void GameCore::onEvent(GameEvent* event) {
     auto observersPair = _areaListeners.find(affectedArea);
     if(observersPair != _areaListeners.end()) {
       for(auto observer : observersPair->second) {
-        #pragma message "FIXME - Here we should be sending an event to another player"
-        Debug("Event being sent to observer " << observer);
+        auto playerPair = _playerMap.reverseFind(observer);
+        if(playerPair == _playerMap.reverseEnd()) {
+          Error("Player not found for observer" << observer);
+          continue;
+        }
+        Debug("Event being sent to observer " << playerPair->second);
+        results.pushEvent(playerPair->second, event->clone());
       }
     }
   } break;

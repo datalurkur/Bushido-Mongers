@@ -3,7 +3,7 @@
 
 #include "util/bimap.h"
 #include "game/core.h"
-#include "io/eventqueue.h"
+#include "io/eventmap.h"
 
 #include <thread>
 #include <atomic>

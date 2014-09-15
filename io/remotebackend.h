@@ -14,8 +14,8 @@ public:
   RemoteBackEnd(TCPSocket* socket);
   ~RemoteBackEnd();
 
-  void sendToClient(SharedGameEvent event);
-  void sendToClient(EventQueue&& queue);
+  void sendToClient(EventQueue* queue);
+  void sendToClient(GameEvent* event);
 
 private:
   void bufferIncoming();

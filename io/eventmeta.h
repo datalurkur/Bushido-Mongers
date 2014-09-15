@@ -24,6 +24,8 @@ struct GameEvent {
   virtual void unpack(istringstream& str) = 0;
   virtual void pack(ostringstream& str) = 0;
 
+  virtual GameEvent* clone() = 0;
+
   static void Pack(GameEvent* event, ostringstream& str);
   static GameEvent* Unpack(istringstream& str);
 };

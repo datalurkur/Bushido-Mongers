@@ -12,10 +12,10 @@ public:
   ObjectObserver();
   ObjectObserver(BObjectManager* manager);
 
-  void areaChanges(Area* area, const set<IVec2>& view, EventQueue& results);
-  void viewChanges(const set<IVec2>& newView, EventQueue& results);
+  void areaChanges(Area* area, const set<IVec2>& view, EventQueue* results);
+  void viewChanges(const set<IVec2>& newView, EventQueue* results);
 
-  void objectViewed(BObjectID id, EventQueue& results);
+  void objectViewed(BObjectID id, EventQueue* results);
 
   bool canSee(Area* area, const IVec2& location);
 

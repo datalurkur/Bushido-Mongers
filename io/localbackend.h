@@ -31,9 +31,8 @@ public:
   void enableCursor(bool enabled);
   void moveCursor(const IVec2& dir);
 
-protected:
-  void sendToClient(SharedGameEvent event);
-  void sendToClient(EventQueue&& queue);
+  void sendToClient(EventQueue* queue);
+  void sendToClient(GameEvent* event);
 
 private:
   void consumeEvents();

@@ -108,9 +108,21 @@ void ServerBase::clientEvent(ClientBase* client, GameEvent* event) {
   string clientName = clientNameItr->second;
   Debug("Received client event from " << clientName << " (ID " << playerID << ")");
 
-  EventQueue results;
+  EventMap<PlayerID> results;
   _core->processPlayerEvent(playerID, event, results);
-  client->sendToClient(move(results));
+  auto itr = results.begin();
+  for(; itr != results.end(); itr++) {
+  //for(auto queuePair : results) {
+    auto clientPair = _assignedIDs.find(itr->first);
+    if(clientPair == _assignedIDs.end()) {
+      Error("Invalid PlayerID " << itr->first << " found in event map");
+      continue;
+    } else {
+      Info("Sending mapped events to player " << itr->first);
+    }
+    ClientBase* thisClient = clientPair->second;
+    thisClient->sendToClient(itr->second);
+  }
 }
 
 void ServerBase::innerLoop() {
@@ -120,7 +132,7 @@ void ServerBase::innerLoop() {
     sleep(1);
 
     Debug("...Server is thinking...");
-    EventQueue updateEvents;
+    EventMap<PlayerID> updateEvents;
 
     unique_lock<mutex> lock(_lock);
     clock_t next = clock();
@@ -128,16 +140,14 @@ void ServerBase::innerLoop() {
 
     last = next;
 
-    #pragma message "It would be great if this didn't have to be an O(n*m) operation..."
-    for(auto event : updateEvents) {
-      for(auto clientInfo : _assignedIDs) {
-        if(_core->isEventVisibleToPlayer(clientInfo.first, event.get())) {
-          Debug("Sending update event to player " << clientInfo.first);
-          clientInfo.second->sendToClient(event);
-        } else {
-          Debug("Event is not visible to player " << clientInfo.first);
-        }
+    for(auto clientQueuePair : updateEvents) {
+      auto clientPair = _assignedIDs.find(clientQueuePair.first);
+      if(clientPair == _assignedIDs.end()) {
+        Error("Invalid player ID " << clientQueuePair.first << " found in event map");
+        continue;
       }
+      ClientBase* thisClient = clientPair->second;
+      thisClient->sendToClient(clientQueuePair.second);
     }
   }
 }

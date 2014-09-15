@@ -19,6 +19,7 @@ private:
   static string ArgumentConstructor(const RCObject& object);
   static string ConstructorArgs(const RCObject& object);
   static string ConstructorInitializer(const RCObject& object);
+  static string CloneArgs(const RCObject& object);
   static string ClassName(const RCObject& object);
 
 private:
