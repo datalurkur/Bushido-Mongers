@@ -14,7 +14,8 @@ public:
 
   bool connectSender(const string& name);
   void disconnectSender();
-  void sendToServer(GameEvent* event);
+  bool sendToServer(EventQueue* queue);
+  bool sendToServer(GameEvent* event);
 
 private:
   ServerBase* _server;

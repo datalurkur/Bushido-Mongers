@@ -14,18 +14,19 @@ RemoteBackEnd::~RemoteBackEnd() {
   delete _socket;
 }
 
-void RemoteBackEnd::sendToClient(EventQueue* queue) {
+bool RemoteBackEnd::sendToClient(EventQueue* queue) {
   for(auto e : *queue) {
-    sendToClient(e);
+    if(!sendToClient(e)) {return false; }
   }
+  return true;
 }
 
-void RemoteBackEnd::sendToClient(GameEvent* event) {
+bool RemoteBackEnd::sendToClient(GameEvent* event) {
   // Serialize the event
   ostringstream str(ios_base::binary);
   GameEvent::Pack(event, str);
 
-  _buffer.sendPacket(_socket, str);
+  return _buffer.sendPacket(_socket, str);
 }
 
 void RemoteBackEnd::bufferIncoming() {
@@ -36,11 +37,14 @@ void RemoteBackEnd::bufferIncoming() {
 
     istringstream stream(i.str.str());
     GameEvent* event = GameEvent::Unpack(stream);
-    if(event) {
-      sendToServer(event);
-      delete event;
-    } else {
-      Warn("Failed to deserialize event");
+    if(!event) {
+      Error("Failed to deserialize event");
+      continue;
     }
+    sendToServer(event);
   }
+}
+
+bool RemoteBackEnd::isConnected() {
+  return _socket->isConnected();
 }

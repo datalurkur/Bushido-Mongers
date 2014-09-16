@@ -1,6 +1,7 @@
 #include "io/remotegameclient.h"
 #include "util/log.h"
 #include "ui/prompt.h"
+#include "state/gamestate.h"
 
 #include <signal.h>
 #include <unistd.h>
@@ -14,7 +15,7 @@ void cleanup(int signal) {
   if(client) {
     delete client;
   }
-
+  GameEvent::FinishTrackingAllocations();
   CurseMe::Teardown();
   Log::Teardown();
 
@@ -24,6 +25,7 @@ void cleanup(int signal) {
 void setup() {
   Log::Setup("client.log");
   CurseMe::Setup();
+  GameEvent::BeginTrackingAllocations();
   signal(SIGINT, cleanup);
 }
 
@@ -52,26 +54,10 @@ int main(int argc, char** argv) {
 
   Info("Client is connected and ready to issue commands");
   string characterName = "Test Remote Character Name";
-  client->createCharacter(characterName);
-  sleep(1);
+  client->sendToServer(new CreateCharacterEvent(characterName));
 
-  // Test movement
-  Info("Client is attempting to move");
-  Info("=======================================");
-  client->moveCharacter(IVec2(1, 0));
-  sleep(1);
-  Info("=======================================");
-  client->moveCharacter(IVec2(-1, 0));
-  sleep(1);
-  Info("=======================================");
-  client->moveCharacter(IVec2(0, 1));
-  sleep(1);
-  Info("=======================================");
-  client->moveCharacter(IVec2(0, -1));
-
-  while(true) {
-    Info("Client thinking...");
-    sleep(1);
+  GameState gameState(client);
+  while(gameState.execute()) {
   }
 
   client->disconnectSender();

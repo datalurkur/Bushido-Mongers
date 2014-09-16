@@ -16,15 +16,11 @@ public:
   virtual ~ClientBase();
 
   virtual bool connectSender(const string& name) = 0;
+  virtual bool isConnected() = 0;
   virtual void disconnectSender() = 0;
-  virtual void sendToServer(GameEvent* event) = 0;
-  virtual void sendToClient(EventQueue* queue) = 0;
-  virtual void sendToClient(GameEvent* event) = 0;
-
-  void createCharacter(const string& name);
-  void loadCharacter(BObjectID id);
-  void unloadCharacter();
-  void moveCharacter(const IVec2& dir);
+  virtual bool sendToServer(GameEvent* event) = 0;
+  virtual bool sendToClient(EventQueue* queue) = 0;
+  virtual bool sendToClient(GameEvent* event) = 0;
 
 private:
   void consumeEvents();

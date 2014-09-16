@@ -1,7 +1,7 @@
 #include "state/gamestate.h"
 #include "state/inspectstate.h"
 
-GameState::GameState(LocalGameClient* client): UIState(stdscr), _client(client) {
+GameState::GameState(LocalBackEnd* client): UIState(stdscr), _client(client) {
 }
 
 GameState::~GameState() {
@@ -43,36 +43,26 @@ bool GameState::operate() {
 bool GameState::act(Action action) {
   switch(action) {
   case MoveNorthWest:
-    _client->moveCharacter(IVec2(-1, -1));
-    break;
+    return _client->sendToServer(new MoveCharacterEvent(IVec2(-1, -1)));
   case MoveNorth:
-    _client->moveCharacter(IVec2(0, -1));
-    break;
+    return _client->sendToServer(new MoveCharacterEvent(IVec2( 0, -1)));
   case MoveNorthEast:
-    _client->moveCharacter(IVec2(1, -1));
-    break;
+    return _client->sendToServer(new MoveCharacterEvent(IVec2( 1, -1)));
   case MoveEast:
-    _client->moveCharacter(IVec2(1, 0));
-    break;
+    return _client->sendToServer(new MoveCharacterEvent(IVec2( 1,  0)));
   case MoveSouthEast:
-    _client->moveCharacter(IVec2(1, 1));
-    break;
+    return _client->sendToServer(new MoveCharacterEvent(IVec2( 1,  1)));
   case MoveSouth:
-    _client->moveCharacter(IVec2(0, 1));
-    break;
+    return _client->sendToServer(new MoveCharacterEvent(IVec2( 0,  1)));
   case MoveSouthWest:
-    _client->moveCharacter(IVec2(-1, 1));
-    break;
+    return _client->sendToServer(new MoveCharacterEvent(IVec2(-1,  1)));
   case MoveWest:
-    _client->moveCharacter(IVec2(-1, 0));
-    break;
+    return _client->sendToServer(new MoveCharacterEvent(IVec2(-1,  0)));
   case Inspect:
     _subState = new InspectState(_client);
-    break;
-
+    return true;
   default:
-    Warn("No handler for action " << action);
+    Error("No handler for action " << action);
+    return false;
   }
-
-  return true;
 }

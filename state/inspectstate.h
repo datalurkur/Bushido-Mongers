@@ -1,5 +1,5 @@
 #include "ui/state.h"
-#include "io/localgameclient.h"
+#include "io/localbackend.h"
 
 class InspectState: public UIState {
 public:
@@ -17,7 +17,7 @@ public:
   };
 
 public:
-  InspectState(LocalGameClient* client);
+  InspectState(LocalBackEnd* client);
   virtual ~InspectState();
 
   bool operate();
@@ -26,5 +26,5 @@ private:
   bool act(Action action);
 
 private:
-  LocalGameClient* _client;
+  LocalBackEnd* _client;
 };

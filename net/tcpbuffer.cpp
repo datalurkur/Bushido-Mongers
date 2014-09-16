@@ -12,21 +12,23 @@ TCPBuffer::~TCPBuffer() {
   delete _buffer;
 }
 
-void TCPBuffer::sendPacket(TCPSocket* socket, const ostringstream& str) {
+bool TCPBuffer::sendPacket(TCPSocket* socket, const ostringstream& str) {
   string data = str.str();
   size_t size = data.size();
   const char* cstr = data.c_str();
 
   // Send the payload size ahead of time
-  socket->send((char*)&size, sizeof(size_t));
+  if(!socket->send((char*)&size, sizeof(size_t))) { return false; }
 
   // Send the actual payload, one chunk at a time
   size_t offset = 0;
   while(offset < size) {
     size_t chunkSize = min(size - offset, _bufferSize);
-    socket->send(&cstr[offset], chunkSize);
+    if(!socket->send(&cstr[offset], chunkSize)) { return false; }
     offset += chunkSize;
   }
+
+  return true;
 }
 
 bool TCPBuffer::getPacket(TCPSocket* socket, PacketBufferInfo& i) {

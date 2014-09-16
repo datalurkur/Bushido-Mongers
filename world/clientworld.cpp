@@ -4,7 +4,7 @@
 
 ClientWorld::ClientWorld(): _currentArea(0) {}
 
-void ClientWorld::processWorldEvent(GameEvent* event, EventQueue& results) {
+void ClientWorld::processWorldEvent(GameEvent* event) {
   switch(event->type) {
     case AreaData: {
       struct AreaDataEvent* e = (struct AreaDataEvent*)event;

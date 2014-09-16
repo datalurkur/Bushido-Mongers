@@ -2,7 +2,7 @@
 #define GAMESTATE_H
 
 #include "ui/state.h"
-#include "io/localgameclient.h"
+#include "io/localbackend.h"
 
 class GameState: public UIState {
 public:
@@ -20,7 +20,7 @@ public:
   };
 
 public:
-  GameState(LocalGameClient* client);
+  GameState(LocalBackEnd* client);
   virtual ~GameState();
 
   bool operate();
@@ -29,7 +29,7 @@ private:
   bool act(Action action);
 
 private:
-  LocalGameClient* _client;
+  LocalBackEnd* _client;
 };
 
 #endif

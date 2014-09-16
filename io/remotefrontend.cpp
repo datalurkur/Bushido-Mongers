@@ -25,10 +25,13 @@ bool RemoteFrontEnd::connectSender(const string& name) {
     _incoming = thread(&RemoteFrontEnd::bufferIncoming, this);
   }
 
-  AssignNameEvent event(name);
-  sendToServer(&event);
+  sendToServer(new AssignNameEvent(name));
 
   return true;
+}
+
+bool RemoteFrontEnd::isConnected() {
+  return _socket.isConnected();
 }
 
 void RemoteFrontEnd::disconnectSender() {
@@ -39,11 +42,11 @@ void RemoteFrontEnd::disconnectSender() {
   _socket.disconnect();
 }
 
-void RemoteFrontEnd::sendToServer(GameEvent* event) {
+bool RemoteFrontEnd::sendToServer(GameEvent* event) {
   ostringstream str(ios_base::binary);
   GameEvent::Pack(event, str);
-
-  _buffer.sendPacket(&_socket, str);
+  delete event;
+  return _buffer.sendPacket(&_socket, str);
 }
 
 void RemoteFrontEnd::bufferIncoming() {
@@ -56,6 +59,7 @@ void RemoteFrontEnd::bufferIncoming() {
     GameEvent* event = GameEvent::Unpack(stream);
     if(event) {
       sendToClient(event);
+      delete event;
     } else {
       Warn("Failed to deserialize event");
     }

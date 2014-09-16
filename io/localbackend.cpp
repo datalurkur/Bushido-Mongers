@@ -79,18 +79,20 @@ void LocalBackEnd::moveCursor(const IVec2& dir) {
   updateInfoPanel();
 }
 
-void LocalBackEnd::sendToClient(EventQueue* queue) {
+bool LocalBackEnd::sendToClient(EventQueue* queue) {
   unique_lock<mutex> lock(_eventLock);
   _events.appendQueue(queue);
   _eventsReady = true;
   _eventsReadyCondition.notify_all();
+  return true;
 }
 
-void LocalBackEnd::sendToClient(GameEvent* event) {
+bool LocalBackEnd::sendToClient(GameEvent* event) {
   unique_lock<mutex> lock(_eventLock);
   _events.pushEvent(event->clone());
   _eventsReady = true;
   _eventsReadyCondition.notify_all();
+  return true;
 }
 
 void LocalBackEnd::consumeEvents() {
@@ -108,7 +110,6 @@ void LocalBackEnd::consumeEvents() {
 }
 
 void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
-  EventQueue results;
   switch(event->type) {
     case RawData:
       Debug("Received raw data from server");
@@ -116,12 +117,12 @@ void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
       break;
     case AreaData:
       Debug("Area data received from server");
-      _world.processWorldEvent(event, results);
+      _world.processWorldEvent(event);
       changeArea();
       break;
     case TileData:
       //Debug("Tile data received from server");
-      _world.processWorldEvent(event, results);
+      _world.processWorldEvent(event);
       updateMap((TileDataEvent*)event);
       break;
     case ObjectData:
@@ -144,10 +145,6 @@ void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
     default:
       Warn("Unhandled game event type " << event->type);
       break;
-  }
-
-  for(auto result : results) {
-    sendToServer(result);
   }
 }
 

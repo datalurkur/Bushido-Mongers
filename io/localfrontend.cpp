@@ -12,7 +12,15 @@ void LocalFrontEnd::disconnectSender() {
   _server->removeClient(this);
 }
 
-void LocalFrontEnd::sendToServer(GameEvent* event) {
-  _server->clientEvent(this, event);
+bool LocalFrontEnd::sendToServer(EventQueue* queue) {
+  for(auto e : *queue) {
+    _server->clientEvent(this, e);
+  }
+  return true;
 }
 
+bool LocalFrontEnd::sendToServer(GameEvent* event) {
+  _server->clientEvent(this, event);
+  delete event;
+  return true;
+}

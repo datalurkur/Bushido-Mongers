@@ -20,7 +20,7 @@ void cleanup(int signal) {
   if(server) {
     delete server;
   }
-
+  GameEvent::FinishTrackingAllocations();
   CurseMe::Teardown();
   Log::Teardown();
 
@@ -30,6 +30,7 @@ void cleanup(int signal) {
 void setup() {
   Log::Setup("server.log");
   CurseMe::Setup();
+  GameEvent::BeginTrackingAllocations();
   signal(SIGINT, cleanup);
 }
 
@@ -61,11 +62,11 @@ int main(int argc, char** argv) {
 
   Info("Client is connected and ready to issue commands");
   string characterName = "Test Character Name";
-  client->createCharacter(characterName);
+  client->sendToServer(new CreateCharacterEvent(characterName));
   sleep(1);
 
   GameState gameState(client);
-  while(gameState.execute()) {
+  while(gameState.execute() && client->isConnected()) {
   }
 
   cleanup(0);

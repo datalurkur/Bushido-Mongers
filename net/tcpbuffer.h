@@ -17,7 +17,7 @@ public:
   TCPBuffer(size_t bufferSize = 8192);
   ~TCPBuffer();
 
-  void sendPacket(TCPSocket* socket, const ostringstream& str);
+  bool sendPacket(TCPSocket* socket, const ostringstream& str);
   bool getPacket(TCPSocket* socket, PacketBufferInfo& i);
 
 private:

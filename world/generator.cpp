@@ -11,7 +11,7 @@
 #include <sstream>
 #include <math.h>
 
-#define WORLD_SIZE 1000
+#define WORLD_SIZE 100
 
 World* WorldGenerator::GenerateWorld(int numFeatures, float sparseness, float connectedness, ConnectionMethod connectionMethod, BObjectManager* objectManager) {
   // Determine the number of features the world should contain

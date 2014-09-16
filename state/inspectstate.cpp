@@ -1,6 +1,6 @@
 #include "state/inspectstate.h"
 
-InspectState::InspectState(LocalGameClient* client): UIState(stdscr), _client(client) {
+InspectState::InspectState(LocalBackEnd* client): UIState(stdscr), _client(client) {
   _client->enableCursor(true);
 }
 

@@ -28,6 +28,15 @@ struct GameEvent {
 
   static void Pack(GameEvent* event, ostringstream& str);
   static GameEvent* Unpack(istringstream& str);
+
+private:
+  // Debug tracking
+  static bool TrackAllocations;
+  static long Allocations;
+
+public:
+  static void BeginTrackingAllocations();
+  static void FinishTrackingAllocations();
 };
 
 #endif

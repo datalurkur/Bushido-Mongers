@@ -10,6 +10,8 @@ class LocalGameClient: public LocalFrontEnd, public LocalBackEnd {
 public:
   LocalGameClient(ServerBase* server);
   ~LocalGameClient();
+
+  bool isConnected();
 };
 
 #endif

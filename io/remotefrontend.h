@@ -16,8 +16,9 @@ public:
   ~RemoteFrontEnd();
 
   bool connectSender(const string& name);
+  bool isConnected();
   void disconnectSender();
-  void sendToServer(GameEvent* event);
+  bool sendToServer(GameEvent* event);
 
 private:
   void bufferIncoming();
