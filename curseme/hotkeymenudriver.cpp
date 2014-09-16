@@ -56,7 +56,7 @@ void HotkeyMenuDriver::assignHotkeys() {
     for(size_t j = 0; j < c.size(); j++) {
       char hotkey = tolower(c[j]);
       if(_hotkeys.find(hotkey) == _hotkeys.end()) {
-        Info("Assigning hotkey " << hotkey << " to " << c);
+        //Info("Assigning hotkey " << hotkey << " to " << c);
         _hotkeys.insert(hotkey, i);
         assigned = true;
         break;
@@ -67,7 +67,7 @@ void HotkeyMenuDriver::assignHotkeys() {
 
     for(char a = 'a'; a <= 'z'; a++) {
       if(_hotkeys.find(a) == _hotkeys.end()) {
-        Info("Assigning hotkey " << a << " to " << c);
+        //Info("Assigning hotkey " << a << " to " << c);
         _hotkeys.insert(a, i);
         assigned = true;
         break;

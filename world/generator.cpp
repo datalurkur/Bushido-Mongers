@@ -5,6 +5,7 @@
 #include "util/structure.h"
 #include "game/bobjectmanager.h"
 
+#include <algorithm>
 #include <vector>
 #include <set>
 #include <sstream>
