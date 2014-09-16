@@ -35,12 +35,15 @@ public:
   bool isCharacterActive(PlayerID player);
 
 private:
-  void getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibleTiles);
+  void getViewFrom(BObjectID object, const IVec2& pos, set<IVec2>& visibleTiles);
   bool checkCharacterSanity(PlayerID player);
   void packRaws(EventQueue* results);
 
-  void setObjectAwareness(BObjectID id, Area* area);
+  void objectBecomesUnaware(BObjectID id);
+  void updateObjectAwareness(BObjectID id);
   void onEvent(GameEvent* event, EventMap<PlayerID>& results);
+
+  QuadTree<BObjectID>* getAreaObserverMap(Area* area);
 
 private:
   // World and objects
@@ -55,8 +58,7 @@ private:
   map<PlayerID, ObjectObserver> _observers;
 
   // Rough awareness map
-  map<Area*, set<BObjectID> > _areaListeners;
-  map<BObjectID, Area*> _listenerAreas;
+  map<Area*, QuadTree<BObjectID>* > _areaObservers;
 };
 
 #endif

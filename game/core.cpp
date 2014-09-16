@@ -8,6 +8,9 @@
 GameCore::GameCore(): _objectManager(0), _world(0) {}
 
 GameCore::~GameCore() {
+  for(auto p : _areaObservers) {
+    delete p.second;
+  }
   destroyWorld();
 }
 
@@ -102,13 +105,13 @@ void GameCore::createCharacter(PlayerID player, const string& characterType, Eve
 
   // Find out what the player can see
   set<IVec2> visibleCoords;
-  getViewFrom(player, startTile->getCoordinates(), visibleCoords);
+  getViewFrom(character->getID(), startTile->getCoordinates(), visibleCoords);
 
   _observers[player] = ObjectObserver(_objectManager);
   _observers[player].areaChanges(startArea, visibleCoords, playerResults);
 
   // Set up the player as an event observer
-  setObjectAwareness(character->getID(), startArea);
+  updateObjectAwareness(character->getID());
 }
 
 void GameCore::loadCharacter(PlayerID player, BObjectID characterID, EventMap<PlayerID>& results) {
@@ -118,12 +121,14 @@ void GameCore::loadCharacter(PlayerID player, BObjectID characterID, EventMap<Pl
 void GameCore::unloadCharacter(PlayerID player, EventMap<PlayerID>& results) {
   if(!isCharacterActive(player)) { return; }
   #pragma message "Store character data externally for reloading later"
-  _objectManager->destroyObject(_playerMap.lookup(player));
+  BObjectID id = _playerMap.lookup(player);
+  objectBecomesUnaware(id);
+  _objectManager->destroyObject(id);
   _playerMap.erase(player);
 }
 
 void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventMap<PlayerID>& results) {
-  Debug("Player " << player << "'s character is moving");
+  //Debug("Player " << player << "'s character is moving");
   if(!checkCharacterSanity(player)) {
     results.pushEvent(player, new MoveFailedEvent("No active player"));
     return;
@@ -135,7 +140,8 @@ void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventMap<PlayerI
     return;
   }
 
-  BObject* character = _objectManager->getObject(_playerMap.lookup(player));
+  BObjectID characterID = _playerMap.lookup(player);
+  BObject* character = _objectManager->getObject(characterID);
 
   Area* area = character->getLocation()->getArea();
   const IVec2& areaSize = area->getSize();
@@ -168,10 +174,13 @@ void GameCore::moveCharacter(PlayerID player, const IVec2& dir, EventMap<PlayerI
 
   // Get the new perspective
   set<IVec2> newView;
-  getViewFrom(player, newCoordinates, newView);
+  getViewFrom(characterID, newCoordinates, newView);
 
   // Collect any events that result from the view change
   _observers[player].viewChanges(newView, results.getEventQueue(player));
+
+  // Update at what location the player listens for events
+  updateObjectAwareness(characterID);
 }
 
 bool GameCore::isCharacterActive(PlayerID player) {
@@ -198,9 +207,9 @@ bool GameCore::checkCharacterSanity(PlayerID player) {
   return true;
 }
 
-void GameCore::getViewFrom(PlayerID player, const IVec2& pos, set<IVec2>& visibleTiles) {
+void GameCore::getViewFrom(BObjectID object, const IVec2& pos, set<IVec2>& visibleTiles) {
   // Get the area that the player is in
-  Area* area = _objectManager->getObject(_playerMap.lookup(player))->getLocation()->getArea();
+  Area* area = _objectManager->getObject(object)->getLocation()->getArea();
 
   // Given the sight radius of a player, cast rays outwards to determine what tiles are visible
   // Hardcode this for now
@@ -253,29 +262,44 @@ void GameCore::packRaws(EventQueue* results) {
   results->pushEvent(new RawDataEvent(stream.str()));
 }
 
-void GameCore::setObjectAwareness(BObjectID id, Area* area) {
-  auto previousArea = _listenerAreas.find(id);
-  if(previousArea == _listenerAreas.end()) {
-    Debug("Object " << id << "'s awareness being set to area " << area->getName() << " from nowhere");
-    _listenerAreas.insert(make_pair(id, area));
+QuadTree<BObjectID>* GameCore::getAreaObserverMap(Area* area) {
+  auto r = _areaObservers.find(area);
+  if(r != _areaObservers.end()) {
+    return r->second;
   } else {
-    auto previousPair = _areaListeners.find(previousArea->second);
-    if(previousPair != _areaListeners.end()) {
-      previousPair->second.erase(id);
-      Debug("Object " << id << "'s awareness being moved from " << previousPair->first->getName() << " to area " << area->getName());
-    } else {
-      Error("Object " << id << " should have an awareness source but does not");
-    }
-    _listenerAreas[id] = area;
+    IVec2 areaSize = area->getSize();
+    int d = 1;
+    int minDim = min(areaSize.x, areaSize.y);
+    while(minDim > 16) { minDim >>= 1; d++; }
+    return _areaObservers.insert(make_pair(area, new QuadTree<BObjectID>(0, 0, areaSize.x, areaSize.y, d))).first->second;
   }
-  auto newPair = _areaListeners.find(area);
-  if(newPair == _areaListeners.end()) {
-    Debug("Object " << id << " is the first to be a listener here");
-    _areaListeners.insert(make_pair(area, set<BObjectID> { id }));
-  } else {
-    Debug("Object " << id << " added to listeners here");
-    _areaListeners[area].insert(id);
-  }
+}
+
+void GameCore::objectBecomesUnaware(BObjectID id) {
+  BObject* object = _objectManager->getObject(id);
+  ASSERT(object, "Object not found");
+  Area* currentArea = object->getLocation()->getArea();
+  getAreaObserverMap(currentArea)->removeObject(id);
+}
+
+void GameCore::updateObjectAwareness(BObjectID id) {
+  BObject* object = _objectManager->getObject(id);
+  ASSERT(object, "Object not found");
+  Area* currentArea = object->getLocation()->getArea();
+  IVec2 areaSize = currentArea->getSize();
+  ASSERT(currentArea, "Object area not set");
+  QuadTree<BObjectID>* currentAreaMap = getAreaObserverMap(currentArea);
+  IVec2 currentPosition = object->getLocation()->getCoordinates();
+
+  #pragma message "Hardcoded sight radii for now"
+  int sightRadius = 5;
+
+  int minX = max(0, currentPosition.x - sightRadius),
+      minY = max(0, currentPosition.y - sightRadius),
+      maxX = min(areaSize.x, currentPosition.x + sightRadius),
+      maxY = min(areaSize.y, currentPosition.y + sightRadius);
+
+  currentAreaMap->moveObject(id, minX, minY, maxX, maxY);
 }
 
 void GameCore::onEvent(GameEvent* event, EventMap<PlayerID>& results) {
@@ -292,14 +316,15 @@ void GameCore::onEvent(GameEvent* event, EventMap<PlayerID>& results) {
       Error("Object moving through unknown area");
       break;
     }
-    auto observersPair = _areaListeners.find(affectedArea);
-    if(observersPair != _areaListeners.end()) {
-      for(auto observer : observersPair->second) {
-        auto playerPair = _playerMap.reverseFind(observer);
-        if(playerPair == _playerMap.reverseEnd()) {
-          Error("Player not found for observer" << observer);
-          continue;
-        }
+    IVec2 affectedLocation = object->getLocation()->getCoordinates();
+    set<BObjectID> listeners;
+    getAreaObserverMap(affectedArea)->findObjects(affectedLocation.x, affectedLocation.y, affectedLocation.x, affectedLocation.y, listeners);
+    for(auto listener : listeners) {
+      #pragma message "At some point, we should delegate this behavior to an AI module"
+      auto playerPair = _playerMap.reverseFind(listener);
+      if(playerPair == _playerMap.reverseEnd()) {
+        ASSERT(0, "NPCs are unable to process messages currently");
+      } else {
         Debug("Event being sent to observer " << playerPair->second);
         results.pushEvent(playerPair->second, event->clone());
       }

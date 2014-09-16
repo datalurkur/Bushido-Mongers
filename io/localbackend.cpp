@@ -120,7 +120,7 @@ void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
       changeArea();
       break;
     case TileData:
-      Debug("Tile data received from server");
+      //Debug("Tile data received from server");
       _world.processWorldEvent(event, results);
       updateMap((TileDataEvent*)event);
       break;
@@ -136,12 +136,7 @@ void LocalBackEnd::consumeSingleEvent(GameEvent* event) {
       Debug("Character not ready - " << ((CharacterNotReadyEvent*)event)->reason);
       break;
     case ThingMoved:
-      if(((ThingMovedEvent*)event)->object == _characterID) {
-        Debug("Character moved");
-      } else {
-        moveObject((ThingMovedEvent*)event);
-        #pragma message "FIXME - Deal with a thing moving here"
-      }
+      moveObject((ThingMovedEvent*)event);
       break;
     case MoveFailed:
       Debug("Failed to move - " << ((MoveFailedEvent*)event)->reason);
