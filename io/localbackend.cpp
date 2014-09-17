@@ -271,42 +271,22 @@ void LocalBackEnd::updateTileRepresentation(const IVec2& coords, ClientArea* cur
     // Generate a symbol by terrain
     TileType tileType = tile->getType();
     if(tileType == TileType::Wall) {
-      char wallBits = 0;
-      if(coords.x - 1 >= 0) {
-        auto leftTile = currentArea->getTile(IVec2(coords.x - 1, coords.y));
-        if(leftTile && leftTile->getType() == TileType::Wall) { wallBits |= 0x1; }
-      }
-      if(coords.x + 1 < currentArea->getSize().x) {
-        auto rightTile = currentArea->getTile(IVec2(coords.x + 1, coords.y));
-        if(rightTile && rightTile->getType() == TileType::Wall) { wallBits |= 0x2; }
-      }
-      if(coords.y - 1 >= 0) {
-        auto bottomTile = currentArea->getTile(IVec2(coords.x, coords.y - 1));
-        if(bottomTile && bottomTile->getType() == TileType::Wall) { wallBits |= 0x4; }
-      }
-      if(coords.y + 1 < currentArea->getSize().y) {
-        auto topTile = currentArea->getTile(IVec2(coords.x, coords.y + 1));
-        if(topTile && topTile->getType() == TileType::Wall) { wallBits |= 0x8; }
-      }
-      switch(wallBits) {
-      case 0:
-      case 1:
-      case 2:
-      case 4:
-      case 8:  c = 'O'; break; // wall either stands alone or is only connected on one side
+      short wallBits = 0;
+      for(int i = -1; i <= 1; i++) {
+        for(int j = -1; j <= 1; j++) {
+          if(i == j && i == 0) { continue; }
+          IVec2 local = coords + IVec2(i, j);
 
-      case 3:  c = ACS_HLINE; break; // left and right
-      case 5:  c = ACS_LRCORNER; break; // bottom and left
-      case 6:  c = ACS_LLCORNER; break; // bottom and right
-      case 7:  c = ACS_BTEE; break; // bottom, left, and right
-      case 9:  c = ACS_URCORNER; break; // top and left
-      case 10: c = ACS_ULCORNER; break; // top and right
-      case 11: c = ACS_TTEE; break; // top, left, and right
-      case 12: c = ACS_VLINE; break; // top and bottom
-      case 13: c = ACS_RTEE; break; // top, bottom, and left
-      case 14: c = ACS_LTEE; break; // top, bottom, and right
-      default: c = ACS_PLUS; break; // all four sides connected
+          TileBase* tile = 0;
+          if(local.x < 0 || local.x >= currentArea->getSize().x ||
+             local.y < 0 || local.y >= currentArea->getSize().y ||
+             !(tile = currentArea->getTile(local)) ||
+             tile->getType() == TileType::Wall) {
+            wallBits |= MARCHING_SQUARES_BIT(i, j);
+          }
+        }
       }
+      c = getMarchingSquaresRepresentation(wallBits);
     } else if(tileType == TileType::Ground) {
       c = '.';
     } else {

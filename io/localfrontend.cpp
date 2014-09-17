@@ -9,7 +9,7 @@ bool LocalFrontEnd::connectSender(const string& name) {
 }
 
 void LocalFrontEnd::disconnectSender() {
-  _server->removeClient(this);
+  //_server->removeClient(this);
 }
 
 bool LocalFrontEnd::sendToServer(EventQueue* queue) {

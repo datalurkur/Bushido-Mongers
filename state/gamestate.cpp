@@ -63,6 +63,6 @@ bool GameState::act(Action action) {
     return true;
   default:
     Error("No handler for action " << action);
-    return false;
+    return true;
   }
 }

@@ -47,4 +47,8 @@ private:
   IVec2 _offset;
 };
 
+extern chtype getMarchingSquaresRepresentation(short wallBits);
+
+#define MARCHING_SQUARES_BIT(i, j) (0x1 << (((j + 1) * 3) + (i + 1)))
+
 #endif

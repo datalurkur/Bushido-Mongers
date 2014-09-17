@@ -91,11 +91,26 @@ int main() {
   for(int j = 0; j < areaSize.y; j++) {
     for(int i = 0; i < areaSize.x; i++) {
       switch(m_area->getTile(IVec2(i, j))->getType()) {
-      case TileType::Wall:
-        areaData.setData(i, j, 'X', COLOR_PAIR(1));
-        break;
+      case TileType::Wall: {
+        short bits = 0;
+        for(int m = -1; m <= 1; m++) {
+          for(int n = -1; n <= 1; n++) {
+            if(m == n && m == 0) { continue; }
+            int x = i + m,
+                y = j + n;
+            int bit = MARCHING_SQUARES_BIT(m, n);
+            if(x < 0 || x >= areaSize.x || y < 0 || y >= areaSize.y) {
+              bits |= bit;
+            } else {
+              TileType t = m_area->getTile(IVec2(x, y))->getType();
+              if(t == TileType::Wall) { bits |= bit; } 
+            }
+          }
+        }
+        areaData.setData(i, j, getMarchingSquaresRepresentation(bits), A_NORMAL);
+      } break;
       case TileType::Ground:
-        areaData.setData(i, j, '.', A_DIM | COLOR_PAIR(2));
+        areaData.setData(i, j, '.', A_NORMAL);
         break;
       default:
         areaData.setData(i, j, '?', A_NORMAL);

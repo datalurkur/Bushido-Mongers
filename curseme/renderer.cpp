@@ -161,3 +161,28 @@ void RenderTarget::render() {
 void RenderTarget::setRenderSource(RenderSource* source) {
   _source = source;
 }
+
+chtype getMarchingSquaresRepresentation(short wallBits) {
+  bool bl = wallBits & MARCHING_SQUARES_BIT(-1, -1),
+       bc = wallBits & MARCHING_SQUARES_BIT( 0, -1),
+       br = wallBits & MARCHING_SQUARES_BIT( 1, -1),
+       cl = wallBits & MARCHING_SQUARES_BIT(-1,  0),
+       cr = wallBits & MARCHING_SQUARES_BIT( 1,  0),
+       ul = wallBits & MARCHING_SQUARES_BIT(-1,  1),
+       uc = wallBits & MARCHING_SQUARES_BIT( 0,  1),
+       ur = wallBits & MARCHING_SQUARES_BIT( 1,  1);
+
+       if(bc && uc && cr && cl && !((ul || br) && (ur || bl))) { return ACS_PLUS; }
+  else if(uc && cl && cr && !((ul || ur) && ((ul && ur) || bc))) { return ACS_TTEE; }
+  else if(bc && cl && cr && !((bl || br) && ((bl && br) || uc))) { return ACS_BTEE; }
+  else if(bc && uc && cr && !((ur || br) && ((ur && br) || cl))) { return ACS_LTEE; }
+  else if(bc && uc && cl && !((ul || bl) && ((ul && bl) || cr))) { return ACS_RTEE; }
+  else if(cl && cr && !(uc && bc)) { return ACS_HLINE; }
+  else if(bc && uc && !(cl && cr)) { return ACS_VLINE; }
+  else if(bc && cr && ((!uc && !cl) || !br)) { return ACS_LLCORNER; }
+  else if(bc && cl && ((!cr && !uc) || !bl)) { return ACS_LRCORNER; }
+  else if(uc && cl && ((!bc && !cr) || !ul)) { return ACS_URCORNER; }
+  else if(uc && cr && ((!bc && !cl) || !ur)) { return ACS_ULCORNER; }
+  else if(!(uc || bc || cr) || !(uc || bc || cl) || !(bc || cl || cr) || !(uc || cl || cr)) { return 'O'; }
+  else { return ' '; }
+}
