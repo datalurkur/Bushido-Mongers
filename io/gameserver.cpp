@@ -9,8 +9,6 @@ GameServer::~GameServer() {
 
   Debug("Tearing down remote clients");
   for(auto remoteClient : _remoteClients) {
-    // I don't think this is strictly necessary
-    //removeClient(remoteClient);
     delete remoteClient;
   }
   _remoteClients.clear();

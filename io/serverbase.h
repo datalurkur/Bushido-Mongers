@@ -22,15 +22,18 @@ public:
   void stop();
   bool isRunning();
 
-  bool assignClient(ClientBase* client, const string& name);
-  void removeClient(ClientBase* client);
-
   void clientEvent(ClientBase* client, GameEvent* event);
+
+  bool assignClient(ClientBase* client, const string& name);
+
+protected:
+  void removeClient(ClientBase* client);
 
 private:
   void setup(const string& rawSet);
 
   void innerLoop();
+  void sendEvents(EventMap<PlayerID>& events);
 
 private:
   atomic<bool> _shouldDie;

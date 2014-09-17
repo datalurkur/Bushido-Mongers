@@ -327,6 +327,7 @@ void GameCore::onEvent(GameEvent* event, EventMap<PlayerID>& results) {
       } else {
         Debug("Event being sent to observer " << playerPair->second);
         results.pushEvent(playerPair->second, event->clone());
+        _observers[playerPair->second].objectViewed(e->object, results.getEventQueue(playerPair->second));
       }
     }
   } break;

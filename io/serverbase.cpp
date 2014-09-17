@@ -74,7 +74,11 @@ bool ServerBase::assignClient(ClientBase* client, const string& name) {
 }
 
 void ServerBase::removeClient(ClientBase* client) {
-  unique_lock<mutex> lock(_lock);
+  auto clientIDItr = _assignedIDs.reverseFind(client);
+  EventMap<PlayerID> results;
+  _core->unloadCharacter(clientIDItr->second, results);
+  sendEvents(results);
+
   _assignedClients.reverseErase(client);
   _assignedIDs.reverseErase(client);
 }
@@ -110,19 +114,7 @@ void ServerBase::clientEvent(ClientBase* client, GameEvent* event) {
 
   EventMap<PlayerID> results;
   _core->processPlayerEvent(playerID, event, results);
-  auto itr = results.begin();
-  for(; itr != results.end(); itr++) {
-  //for(auto queuePair : results) {
-    auto clientPair = _assignedIDs.find(itr->first);
-    if(clientPair == _assignedIDs.end()) {
-      Error("Invalid PlayerID " << itr->first << " found in event map");
-      continue;
-    } else {
-      Info("Sending mapped events to player " << itr->first);
-    }
-    ClientBase* thisClient = clientPair->second;
-    thisClient->sendToClient(itr->second);
-  }
+  sendEvents(results);
 }
 
 void ServerBase::innerLoop() {
@@ -140,14 +132,21 @@ void ServerBase::innerLoop() {
 
     last = next;
 
-    for(auto clientQueuePair : updateEvents) {
-      auto clientPair = _assignedIDs.find(clientQueuePair.first);
-      if(clientPair == _assignedIDs.end()) {
-        Error("Invalid player ID " << clientQueuePair.first << " found in event map");
-        continue;
-      }
-      ClientBase* thisClient = clientPair->second;
-      thisClient->sendToClient(clientQueuePair.second);
+    sendEvents(updateEvents);
+  }
+}
+
+void ServerBase::sendEvents(EventMap<PlayerID>& events) {
+  for(auto clientQueuePair : events) {
+    auto clientPair = _assignedIDs.find(clientQueuePair.first);
+    if(clientPair == _assignedIDs.end()) {
+      Error("Invalid player ID " << clientQueuePair.first << " found in event map");
+      continue;
+    }
+    ClientBase* thisClient = clientPair->second;
+    if(!thisClient->sendToClient(clientQueuePair.second)) {
+      Debug("Failed to send data to client");
+      removeClient(thisClient);
     }
   }
 }
