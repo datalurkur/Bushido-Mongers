@@ -27,6 +27,8 @@ public:
   virtual void removeChoice(size_t index);
   virtual void clearChoices();
 
+  void refresh();
+
 protected:
   size_t listen();
 
@@ -52,6 +54,7 @@ public:
 template <typename T>
 StaticMenu::StaticMenu(const string& title, const T& choices, Window* window): MenuBase(title, window) {
   copy(choices.begin(), choices.end(), back_inserter(_choices));
+  refresh();
 }
 
 class DynamicMenu : public MenuBase {

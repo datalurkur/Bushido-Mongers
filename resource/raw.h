@@ -12,8 +12,8 @@ using namespace std;
 #define VERSION 1
 
 struct RawHeader {
-  int magic;
-  short version;
+  int32_t magic;
+  int16_t version;
 };
 
 class Raw {

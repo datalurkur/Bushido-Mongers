@@ -12,6 +12,8 @@
 
 using namespace std;
 
+typedef int32_t invariant_size;
+
 class EndOfStreamException : public exception {
   virtual const char* what() const throw() { return "Prematurely reached the end of the stream"; }
 };
@@ -70,9 +72,9 @@ void bufferToStream(ostringstream& stream, const list<T>& l) {
 }
 template <typename T>
 void bufferFromStream(istringstream& stream, list<T>& l) {
-  size_t size;
+  invariant_size size;
   bufferFromStream(stream, size);
-  for(size_t i = 0; i < size; i++) {
+  for(invariant_size i = 0; i < size; i++) {
     T val;
     bufferFromStream(stream, val);
     l.push_back(val);
@@ -90,9 +92,9 @@ void bufferToStream(ostringstream& stream, const set<T>& s) {
 
 template <typename T>
 void bufferFromStream(istringstream& stream, set<T>& s) {
-  size_t size;
+  invariant_size size;
   bufferFromStream(stream, size);
-  for(size_t i = 0; i < size; i++) {
+  for(invariant_size i = 0; i < size; i++) {
     T val;
     bufferFromStream(stream, val);
     s.insert(val);
@@ -111,9 +113,9 @@ void bufferToStream(ostringstream& stream, const map<T,S>& m) {
 
 template <typename T, typename S>
 void bufferFromStream(istringstream& stream, map<T,S>& m) {
-  size_t size;
+  invariant_size size;
   bufferFromStream(stream, size);
-  for(size_t i = 0; i < size; i++) {
+  for(invariant_size i = 0; i < size; i++) {
     T key;
     S val;
     bufferFromStream(stream, key);

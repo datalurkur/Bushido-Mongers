@@ -1,9 +1,13 @@
-CC = clang++
 CFLAGS = -g -Wall -Wextra --pedantic -std=c++11 -I.
-ifeq ($(shell uname -s),Darwin)
-	CFLAGS += -stdlib=libc++
-endif
 LDFLAGS = -lncurses -lmenu -lpthread
+ifeq ($(shell uname -s),Darwin)
+  CC = clang++
+	CFLAGS += -stdlib=libc++
+else
+  CC = g++-4.8
+  CFLAGS += -ggdb
+  LDFLAGS += -lrt
+endif
 
 BASIC_UTIL_OBJS = util/timestamp.o util/log.o util/filesystem.o
 CURSES_OBJS = curseme/curseme.o curseme/curselog.o curseme/window.o curseme/renderer.o

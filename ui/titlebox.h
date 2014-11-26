@@ -16,6 +16,8 @@ public:
   void setTitle(const string& title);
   void attachMenu(MENU* menu);
 
+  void refresh();
+
 private:
   // One line for the title, one line for the horizontal rule
   static const int TitleDepth = 2;
@@ -23,6 +25,8 @@ private:
 private:
   Window* _inner;
 	Window* _outer;
+
+  string _title;
 };
 
 #endif

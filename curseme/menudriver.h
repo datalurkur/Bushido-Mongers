@@ -28,6 +28,8 @@ public:
   virtual void redraw(const vector<string>& choices) = 0;
   virtual size_t numChoices() const = 0;
 
+  void refresh(const vector<string>& choices);
+
 protected:
   virtual void onSelectionUpdate() = 0;
 

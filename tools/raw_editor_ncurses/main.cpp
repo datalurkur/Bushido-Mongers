@@ -124,7 +124,9 @@ void editAtomicBObject(const string& name, ProtoAtomicBObject* object) {
     }
   });
 
-  while(editMenu.act()) {}
+  while(editMenu.act()) {
+    editMenu.refresh();
+  }
 }
 
 void editObject(Raw& raw, const string& objectName) {
@@ -153,6 +155,7 @@ void selectAndEditObject(Raw& raw) {
   string objectName;
   while(objectSelectMenu.getChoice(objectName)) {
     editObject(raw, objectName);
+    objectSelectMenu.refresh();
   }
 }
 
@@ -213,7 +216,9 @@ void editRaw(const string& dir, const string& name) {
     saveRaw(raw, dir, name);
   });
 
-  while(rawMenu.act()) {}
+  while(rawMenu.act()) {
+    rawMenu.refresh();
+  }
 }
 
 void selectAndEditRaw(const string& dir) {
@@ -228,6 +233,7 @@ void selectAndEditRaw(const string& dir) {
   string raw;
   while(rawChoice.getChoice(raw)) {
     editRaw(dir, raw);
+    rawChoice.refresh();
   }
 }
 
@@ -251,9 +257,9 @@ int main(int argc, char** argv) {
     root = argv[1];
   }
 
-  mvprintw(0, 0, "Welcome to the raw editor");
-  mvprintw(1, 0, "Hit <F1> to go back");
-  mvprintw(2, 0, ("Searching for raws in " + root).c_str());
+  //mvprintw(0, 0, "Welcome to the raw editor");
+  //mvprintw(1, 0, "Hit <F1> to go back");
+  //mvprintw(2, 0, ("Searching for raws in " + root).c_str());
 
   DynamicMenu defaultMenu("Main Menu");
 
@@ -264,7 +270,9 @@ int main(int argc, char** argv) {
     selectAndEditRaw(root);
   });
 
-  while(defaultMenu.act()) {}
+  while(defaultMenu.act()) {
+    defaultMenu.refresh();
+  }
 
   CurseMe::Teardown();
   Log::Teardown();

@@ -87,8 +87,14 @@ size_t MenuBase::listen() {
   return _driver->numChoices();
 }
 
+void MenuBase::refresh() {
+  _driver->refresh(_choices);
+}
+
 // ============= STATIC MENU ===============
-StaticMenu::StaticMenu(const string& title, Window* window): MenuBase(title, window) {}
+StaticMenu::StaticMenu(const string& title, Window* window): MenuBase(title, window) {
+  refresh();
+}
 
 bool StaticMenu::getChoice(string& choice) {
   size_t index = listen();

@@ -10,8 +10,14 @@ void bufferToStream(ostringstream& stream, const float& value)  { genericBufferT
 void bufferFromStream(istringstream& stream, float& value)      { genericBufferFromStream(stream, value); }
 void bufferToStream(ostringstream& stream, const double& value) { genericBufferToStream(stream, value); }
 void bufferFromStream(istringstream& stream, double& value)     { genericBufferFromStream(stream, value); }
-void bufferToStream(ostringstream& stream, const size_t& value) { genericBufferToStream(stream, value); }
-void bufferFromStream(istringstream& stream, size_t& value)     { genericBufferFromStream(stream, value); }
+void bufferToStream(ostringstream& stream, const size_t& value) {
+  genericBufferToStream(stream, (invariant_size)value);
+}
+void bufferFromStream(istringstream& stream, size_t& value)     {
+  invariant_size temp;
+  genericBufferFromStream(stream, temp);
+  value = (size_t)temp;
+}
 
 void bufferToStream(ostringstream& stream, const string& value) {
   genericBufferToStream(stream, value.size());
@@ -19,7 +25,7 @@ void bufferToStream(ostringstream& stream, const string& value) {
 }
 
 void bufferFromStream(istringstream& stream, string& value) {
-  size_t size;
+  invariant_size size;
   genericBufferFromStream(stream, size);
 
   char* buffer = new char[size];

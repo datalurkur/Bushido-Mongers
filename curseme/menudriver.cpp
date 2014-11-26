@@ -38,3 +38,8 @@ size_t MenuDriver::makeSelection() {
 int MenuDriver::getChar() {
   return _container->usableArea()->getChar();
 }
+
+void MenuDriver::refresh(const vector<string>& choices) {
+  _container->refresh();
+  redraw(choices);
+}
