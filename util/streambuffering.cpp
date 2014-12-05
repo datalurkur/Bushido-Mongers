@@ -20,13 +20,22 @@ void bufferFromStream(istringstream& stream, size_t& value)     {
 }
 
 void bufferToStream(ostringstream& stream, const string& value) {
+#if STREAM_DEBUGGING
+  Debug("Buffering " << value.size() << " character string to stream");
+#endif
   genericBufferToStream(stream, value.size());
   stream.write(value.c_str(), value.size());
 }
 
 void bufferFromStream(istringstream& stream, string& value) {
   invariant_size size;
+#if STREAM_DEBUGGING
+  Debug("Buffering string from stream");
+#endif
   genericBufferFromStream(stream, size);
+#if STREAM_DEBUGGING
+  Debug("String is " << value.size() << " characters long");
+#endif
 
   char* buffer = new char[size];
   stream.read(buffer, size);

@@ -12,6 +12,8 @@
 
 using namespace std;
 
+#define STREAM_DEBUGGING 1
+
 typedef int32_t invariant_size;
 
 class EndOfStreamException : public exception {
@@ -21,11 +23,17 @@ class EndOfStreamException : public exception {
 // Generic numeric type buffering
 template <typename T>
 void genericBufferToStream(ostringstream& stream, const T& value) {
+#if STREAM_DEBUGGING
+  Debug("Buffering a generic type to stream with size " << sizeof(T));
+#endif
   stream.write((char*)&value, sizeof(T));
 }
 
 template <typename T>
 void genericBufferFromStream(istringstream& stream, T& value) {
+#if STREAM_DEBUGGING
+  Debug("Buffering a generic type from stream with size " << sizeof(T));
+#endif
   stream.read((char*)&value, sizeof(T));
   if(!stream) { throw EndOfStreamException(); }
 }
@@ -52,12 +60,18 @@ extern void bufferFromStream(istringstream& stream, string& value);
 // vector buffering
 template <typename T>
 void bufferToStream(ostringstream& stream, const VectorBase<T>& v) {
+#if STREAM_DEBUGGING
+  Debug("Buffering vector to stream : " << v);
+#endif
   bufferToStream(stream, v.x);
   bufferToStream(stream, v.y);
 }
 
 template <typename T>
 void bufferFromStream(istringstream& stream, VectorBase<T>& v) {
+#if STREAM_DEBUGGING
+  Debug("Buffering vector from stream : " << v);
+#endif
   bufferFromStream(stream, v.x);
   bufferFromStream(stream, v.y);
 }
@@ -65,6 +79,9 @@ void bufferFromStream(istringstream& stream, VectorBase<T>& v) {
 // std::list buffering
 template <typename T>
 void bufferToStream(ostringstream& stream, const list<T>& l) {
+#if STREAM_DEBUGGING
+  Debug("Buffering a list with " << l.size() << " elements (" << sizeof(T) << " bytes per element) to stream");
+#endif
   bufferToStream(stream, l.size());
   for(auto i : l) {
     bufferToStream(stream, i);
@@ -73,7 +90,13 @@ void bufferToStream(ostringstream& stream, const list<T>& l) {
 template <typename T>
 void bufferFromStream(istringstream& stream, list<T>& l) {
   invariant_size size;
+#if STREAM_DEBUGGING
+  Debug("Buffering a list of " << sizeof(T) << "-byte elements from stream");
+#endif
   bufferFromStream(stream, size);
+#if STREAM_DEBUGGING
+  Debug("List contains " << size << " elements");
+#endif
   for(invariant_size i = 0; i < size; i++) {
     T val;
     bufferFromStream(stream, val);
@@ -84,6 +107,9 @@ void bufferFromStream(istringstream& stream, list<T>& l) {
 // std::set buffering
 template <typename T>
 void bufferToStream(ostringstream& stream, const set<T>& s) {
+#if STREAM_DEBUGGING
+  Debug("Buffering a set of " << s.size() << " elements (" << sizeof(T) << " bytes per element) to stream");
+#endif
   bufferToStream(stream, s.size());
   for(auto i : s) {
     bufferToStream(stream, i);
@@ -93,7 +119,13 @@ void bufferToStream(ostringstream& stream, const set<T>& s) {
 template <typename T>
 void bufferFromStream(istringstream& stream, set<T>& s) {
   invariant_size size;
+#if STREAM_DEBUGGING
+  Debug("Buffering a set of " << sizeof(T) << "-byte elements from stream");
+#endif
   bufferFromStream(stream, size);
+#if STREAM_DEBUGGING
+  Debug("Set contains " << size << " elements");
+#endif
   for(invariant_size i = 0; i < size; i++) {
     T val;
     bufferFromStream(stream, val);
@@ -104,6 +136,9 @@ void bufferFromStream(istringstream& stream, set<T>& s) {
 // std::map buffering
 template <typename T, typename S>
 void bufferToStream(ostringstream& stream, const map<T,S>& m) {
+#if STREAM_DEBUGGING
+  Debug("Buffering a map of " << sizeof(T) << "-byte keys and " << sizeof(S) << "-byte values to stream with " << m.size() << " pairs");
+#endif
   bufferToStream(stream, m.size());
   for(auto i : m) {
     bufferToStream(stream, i.first);
@@ -114,7 +149,13 @@ void bufferToStream(ostringstream& stream, const map<T,S>& m) {
 template <typename T, typename S>
 void bufferFromStream(istringstream& stream, map<T,S>& m) {
   invariant_size size;
+#if STREAM_DEBUGGING
+  Debug("Buffering a map of " << sizeof(T) << "-byte keys and " << sizeof(S) << "-byte values from stream");
+#endif
   bufferFromStream(stream, size);
+#if STREAM_DEBUGGING
+  Debug("Map contains " << size << " elements");
+#endif
   for(invariant_size i = 0; i < size; i++) {
     T key;
     S val;

@@ -66,6 +66,14 @@ bool Socket::createSocket(int type, int proto) {
   } else {
     _state = Created;
   }
+#if SYS_PLATFORM == PLATFORM_APPLE
+  // Set up the socket to return an error code rather than to send a SIGPIPE signal if the socket closes unexpectedly
+  int optVal = 1;
+  if(setsockopt(_socketHandle, SOL_SOCKET, SO_NOSIGPIPE, (void*)&optVal, sizeof(int)) != 0) {
+    Error("Failed to set socket options");
+    ret = false;
+  }
+#endif
   lock.unlock();
 
   setBlockingFlag(_blocking);
@@ -156,7 +164,11 @@ bool Socket::send(const char *data, unsigned int size, const sockaddr *addr, int
   ASSERT(isOpen(), "Socket is not open");
 
   unique_lock<mutex> lock(_mutex);
+#if SYS_PLATFORM == PLATFORM_APPLE
+  bytesSent = (int)sendto(_socketHandle, data, size, 0, addr, addrSize);
+#else
   bytesSent = (int)sendto(_socketHandle, data, size, MSG_NOSIGNAL, addr, addrSize);
+#endif
 
   if(bytesSent < 0) {
     Error("Failed to write to socket");
