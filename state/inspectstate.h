@@ -3,27 +3,11 @@
 
 class InspectState: public UIState {
 public:
-  enum Action {
-    None,
-    MoveNorth,
-    MoveNorthEast,
-    MoveEast,
-    MoveSouthEast,
-    MoveSouth,
-    MoveSouthWest,
-    MoveWest,
-    MoveNorthWest,
-    Exit
-  };
-
-public:
   InspectState(LocalBackEnd* client);
   virtual ~InspectState();
 
-  bool operate();
-
-private:
-  bool act(Action action);
+protected:
+  bool act(int action);
 
 private:
   LocalBackEnd* _client;

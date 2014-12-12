@@ -7,26 +7,16 @@
 class GameState: public UIState {
 public:
   enum Action {
-    None,
-    MoveNorth,
-    MoveNorthEast,
-    MoveEast,
-    MoveSouthEast,
-    MoveSouth,
-    MoveSouthWest,
-    MoveWest,
-    MoveNorthWest,
-    Inspect
+    Inspect = NonDefaultBindingsStart,
+    Attack
   };
 
 public:
   GameState(LocalBackEnd* client);
   virtual ~GameState();
 
-  bool operate();
-
-private:
-  bool act(Action action);
+protected:
+  bool act(int action);
 
 private:
   LocalBackEnd* _client;

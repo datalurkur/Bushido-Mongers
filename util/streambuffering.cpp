@@ -21,7 +21,7 @@ void bufferFromStream(istringstream& stream, size_t& value)     {
 
 void bufferToStream(ostringstream& stream, const string& value) {
 #if STREAM_DEBUGGING
-  Debug("Buffering " << value.size() << " character string to stream");
+  Debug("Buffering " << value.size() << " character string to stream: '" << value << "'");
 #endif
   genericBufferToStream(stream, value.size());
   stream.write(value.c_str(), value.size());
@@ -40,5 +40,8 @@ void bufferFromStream(istringstream& stream, string& value) {
   char* buffer = new char[size];
   stream.read(buffer, size);
   value = string(buffer, size);
+#if STREAM_BUFFERING
+  Debug("String contains '" << value << "'");
+#endif
   delete buffer;
 }

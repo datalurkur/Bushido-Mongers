@@ -1,65 +1,38 @@
 #include "state/gamestate.h"
 #include "state/inspectstate.h"
+#include "state/directionalactionstate.h"
 
 GameState::GameState(LocalBackEnd* client): UIState(stdscr), _client(client) {
+  _bindings.insert(make_pair('v', Action::Inspect));
+  _bindings.insert(make_pair('a', Action::Attack));
 }
 
 GameState::~GameState() {
 }
 
-bool GameState::operate() {
-  int input = wgetch(_window);
-
-  Action action;
-  switch(input) {
-  case 'h': action = MoveWest;  break;
-  case 'j': action = MoveSouth; break;
-  case 'k': action = MoveNorth; break;
-  case 'l': action = MoveEast; break;
-
-  case 'u': action = MoveNorthWest; break;
-  case 'i': action = MoveNorthEast; break;
-  case 'n': action = MoveSouthWest; break;
-  case 'm': action = MoveSouthEast; break;
-
-  case KEY_UP:   action = MoveNorth; break;
-  case KEY_DOWN: action = MoveSouth; break;
-  case KEY_LEFT: action = MoveWest; break;
-  case KEY_RIGHT: action = MoveEast; break;
-
-  case 'v': action = Inspect; break;
-
-  default:
-    if(input > 31 && input != 127) {
-      Info("KEY_" << (char)input << " pressed");
-    } else {
-      Info("KEY_" << input << " pressed");
-    }
-    action = None;
-  }
-  return act(action);
-}
-
-bool GameState::act(Action action) {
+bool GameState::act(int action) {
   switch(action) {
-  case MoveNorthWest:
+  case UpLeft:
     return _client->sendToServer(new MoveCharacterEvent(IVec2(-1, -1)));
-  case MoveNorth:
+  case Up:
     return _client->sendToServer(new MoveCharacterEvent(IVec2( 0, -1)));
-  case MoveNorthEast:
+  case UpRight:
     return _client->sendToServer(new MoveCharacterEvent(IVec2( 1, -1)));
-  case MoveEast:
+  case Right:
     return _client->sendToServer(new MoveCharacterEvent(IVec2( 1,  0)));
-  case MoveSouthEast:
+  case DownRight:
     return _client->sendToServer(new MoveCharacterEvent(IVec2( 1,  1)));
-  case MoveSouth:
+  case Down:
     return _client->sendToServer(new MoveCharacterEvent(IVec2( 0,  1)));
-  case MoveSouthWest:
+  case DownLeft:
     return _client->sendToServer(new MoveCharacterEvent(IVec2(-1,  1)));
-  case MoveWest:
+  case Left:
     return _client->sendToServer(new MoveCharacterEvent(IVec2(-1,  0)));
   case Inspect:
     _subState = new InspectState(_client);
+    return true;
+  case Attack:
+    _subState = new DirectionalActionState(_client, DirectionalActionState::ActionType::Attack);
     return true;
   default:
     Error("No handler for action " << action);
