@@ -23,8 +23,9 @@ void bufferToStream(ostringstream& stream, const string& value) {
 #if STREAM_DEBUGGING
   Debug("Buffering " << value.size() << " character string to stream: '" << value << "'");
 #endif
-  genericBufferToStream(stream, value.size());
-  stream.write(value.c_str(), value.size());
+  invariant_size size = (invariant_size)value.size();
+  genericBufferToStream(stream, size);
+  stream.write(value.c_str(), size);
 }
 
 void bufferFromStream(istringstream& stream, string& value) {

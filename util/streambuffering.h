@@ -24,7 +24,7 @@ class EndOfStreamException : public exception {
 template <typename T>
 void genericBufferToStream(ostringstream& stream, const T& value) {
 #if STREAM_DEBUGGING
-  Debug("Buffering a generic type to stream with size " << sizeof(T));
+  Debug("Buffering " << typeid(T).name() << " to stream with size " << sizeof(T));
 #endif
   stream.write((char*)&value, sizeof(T));
 }
@@ -32,7 +32,7 @@ void genericBufferToStream(ostringstream& stream, const T& value) {
 template <typename T>
 void genericBufferFromStream(istringstream& stream, T& value) {
 #if STREAM_DEBUGGING
-  Debug("Buffering a generic type from stream with size " << sizeof(T));
+  Debug("Buffering " << typeid(T).name() << " from stream with size " << sizeof(T));
 #endif
   stream.read((char*)&value, sizeof(T));
   if(!stream) { throw EndOfStreamException(); }
